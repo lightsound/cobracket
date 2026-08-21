@@ -13,11 +13,15 @@
     "build": "vite build",
     "serve": "vite preview",
     "convex:dev": "convex dev",
-    "convex:codegen": "convex codegen"
+    "convex:codegen": "convex codegen",
+    "fallow": "fallow",
+    "fallow:audit": "fallow audit",
+    "fallow:dead-code": "fallow dead-code"
   },
   "license": "MIT",
   "devDependencies": {
     "@solidjs/vite-plugin": "^3.0.0-next.29",
+    "fallow": "^3.17.0",
     "typescript": "^7.1.0-dev.20260819.1",
     "vite": "^8.1.5"
   },

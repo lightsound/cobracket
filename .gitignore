@@ -13,6 +13,9 @@ app.config.timestamp_*.js
 # Convex local backend
 .convex/
 
+# Fallow cache
+.fallow/
+
 # dependencies
 /node_modules
 
