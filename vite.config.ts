@@ -93,7 +93,10 @@ export default defineConfig({
   server: {
     port: 3000,
     strictPort: true,
-    host: true,
+    // Bind IPv4 explicitly. `host: true` listens on :::3000 only, and
+    // Cursor's port forward looks for 0.0.0.0:3000 — otherwise the
+    // preview gets ERR_CONNECTION_REFUSED.
+    host: '0.0.0.0',
     allowedHosts: true,
   },
   build: {
