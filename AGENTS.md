@@ -12,7 +12,7 @@ This file gives coding agents project-specific context. Keep it short and update
 
 - Module boundaries: browser code stays in `src/`; Convex queries and mutations stay in `convex/`
 - Generated or vendored code: `convex/_generated/` (from `bun run convex:dev` / `bun run convex:codegen`). Do not edit by hand
-- Sensitive areas: `vite.config.ts` preview HTML buffering and `host: '0.0.0.0'` are required for Cursor's preview. Do not revert them. Keep `solid({ start: { devtools: false } })` unless `@solidjs/start-devtools` is installed
+- Sensitive areas: `vite.config.ts` must keep `host: '0.0.0.0'` for Cursor's preview. Keep `solid({ start: { devtools: false } })` unless `@solidjs/start-devtools` is installed
 
 ## Commands
 
@@ -28,7 +28,7 @@ This file gives coding agents project-specific context. Keep it short and update
 - Use `fallow audit --format json --quiet` before committing AI-generated changes.
 - Use `fallow dead-code --format json --quiet`, `fallow dupes --format json --quiet`, and `fallow health --format json --quiet` for targeted checks.
 - Use `fallow list --entry-points --format json --quiet` and `fallow list --boundaries --format json --quiet` to inspect project shape.
-- Solid 2 start mode has no `src/main.tsx`. Keep `src/App.tsx` and `src/Document.tsx` in `.fallowrc.json` `entry` or they look unused.
+- Solid 2 start mode has no `src/main.tsx`. Keep `src/App.tsx` and `src/Document.tsx` in `.fallowrc.jsonc` `entry` or they look unused.
 
 <!-- generated:task-matrix:start -->
 | When the agent is about to... | Run |
@@ -51,5 +51,5 @@ This file gives coding agents project-specific context. Keep it short and update
 ## Agent Rules
 
 - Do not edit `convex/_generated/`
-- Do not revert the Cursor preview workarounds in `vite.config.ts`
+- Do not change `host: '0.0.0.0'` or re-enable Solid devtools without installing its optional peer
 - Package manager is Bun 1.4 (`bun.lock`). Do not add npm or pnpm lockfiles

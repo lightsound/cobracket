@@ -58,14 +58,5 @@
     "dynamic-segment-name-conflict": "error",
     // Impossible until the repo has tests that form a dependency path into src/.
     "coverage-gaps": "off"
-  },
-  "health": {
-    "thresholdOverrides": [
-      {
-        "files": ["vite.config.ts"],
-        "maxCrap": 120,
-        "reason": "Cursor preview HTML buffering has no tests, so estimated CRAP is inflated"
-      }
-    ]
   }
 }
