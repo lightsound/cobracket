@@ -78,7 +78,14 @@ export default defineConfig({
   // dist/client/index.html and emits a purely static dist/client.
   plugins: [
     previewCompatibleHtml(),
-    solid({ start: true }), // add `ssr: true` for streaming SSR
+    solid({
+      start: {
+        // Optional peer `@solidjs/start-devtools` is not installed. Leaving
+        // the default on makes the client import a stub with no DevToolbar
+        // export, so the app never mounts.
+        devtools: false,
+      },
+    }),
   ],
   server: {
     port: 3000,
