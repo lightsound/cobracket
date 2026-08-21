@@ -10,6 +10,9 @@ app.config.timestamp_*.js
 .env
 .env*.local
 
+# Convex local backend
+.convex/
+
 # dependencies
 /node_modules
 

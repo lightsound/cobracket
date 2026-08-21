@@ -11,7 +11,9 @@
     "start": "vite",
     "dev": "vite",
     "build": "vite build",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "convex:dev": "convex dev",
+    "convex:codegen": "convex codegen"
   },
   "license": "MIT",
   "devDependencies": {
@@ -21,6 +23,7 @@
   },
   "dependencies": {
     "@solidjs/web": "^2.0.0-rc.0",
+    "convex": "^1.44.0",
     "solid-js": "^2.0.0-rc.0"
   }
 }

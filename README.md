@@ -16,14 +16,16 @@ curl -fsSL https://bun.sh/install | bash -s "bun-v1.4.0"
 
 ```bash
 bun install
+bun run convex:dev
 bun dev
 ```
 
-[http://localhost:3000](http://localhost:3000) を開きます。`src/App.tsx` を編集するとホットリロードされます。
+`convex:dev` はローカルの Convex バックエンドを起動し、`.env.local` に `VITE_CONVEX_URL` を書き込みます。別ターミナルで `bun dev` を実行し、[http://localhost:3000](http://localhost:3000) を開いてください。`src/App.tsx` を編集するとホットリロードされます。
 
 | コマンド | 内容 |
 | --- | --- |
-| `bun dev` / `bun start` | 開発サーバー |
+| `bun run convex:dev` | Convex のローカルバックエンド（関数の watch / 型生成） |
+| `bun dev` / `bun start` | Vite 開発サーバー |
 | `bun run build` | 静的サイトを `dist/client` に出力 |
 | `bun run serve` | 本番ビルドをローカルで確認 |
 
@@ -31,11 +33,15 @@ bun dev
 
 `index.html` とマウント用エントリはありません。`@solidjs/vite-plugin` の turnkey モード（`vite.config.ts` の `solid({ start: true })`）が、次の 2 ファイルからエントリを生成します。
 
-- `src/App.tsx` — アプリ本体
+- `src/App.tsx` — アプリ本体（Solid のデモと Convex のタスク一覧）
 - `src/Document.tsx` — HTML シェル（title / meta / favicon）
+- `src/lib/convex.ts` — `convex/browser` の `ConvexClient` と Solid 2 向けの query 購読
+- `convex/` — スキーマと query / mutation。`convex/_generated/` は `bun run convex:dev` が生成し、リポジトリに含めます
 
 `bun run build` はシェルを `dist/client/index.html` にプリレンダーし、静的ホストへそのままデプロイできる成果物を出します。
 
 Streaming SSR にする場合は、`vite.config.ts` で `ssr: true` を足します。
 
-詳細は [Solid 2 ドキュメント](https://v2.solidjs.com/) を参照してください。
+バックエンドは [Convex 1.44](https://docs.convex.dev/) です。クラウドへ繋ぐ場合は `bunx convex login` のあと `bun run convex:dev` でデプロイを選びます。
+
+詳細は [Solid 2 ドキュメント](https://v2.solidjs.com/) と [Convex ドキュメント](https://docs.convex.dev/) を参照してください。
