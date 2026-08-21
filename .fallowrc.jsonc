@@ -1,0 +1,71 @@
+{
+  "$schema": "./node_modules/fallow/schema.json",
+  // All rules are error. The only off rule is coverage-gaps: there are no tests yet.
+  "entry": ["src/App.tsx", "src/Document.tsx"],
+  "ignorePatterns": ["convex/_generated/**", "src/vite-env.d.ts"],
+  "rules": {
+    "unused-files": "error",
+    "unused-exports": "error",
+    "unused-types": "error",
+    "private-type-leaks": "error",
+    "unused-dependencies": "error",
+    "unused-dev-dependencies": "error",
+    "unused-optional-dependencies": "error",
+    "unused-enum-members": "error",
+    "unused-class-members": "error",
+    "unused-store-members": "error",
+    "unprovided-injects": "error",
+    "unrendered-components": "error",
+    "unused-component-props": "error",
+    "unused-component-emits": "error",
+    "unused-component-inputs": "error",
+    "unused-component-outputs": "error",
+    "unused-svelte-events": "error",
+    "unused-server-actions": "error",
+    "unused-load-data-keys": "error",
+    "prop-drilling": "error",
+    "thin-wrapper": "error",
+    "duplicate-prop-shape": "error",
+    "css-token-drift": "error",
+    "css-duplicate-block": "error",
+    "css-selector-complexity": "error",
+    "css-dead-surface": "error",
+    "css-broken-reference": "error",
+    "unresolved-imports": "error",
+    "unlisted-dependencies": "error",
+    "duplicate-exports": "error",
+    "type-only-dependencies": "error",
+    "test-only-dependencies": "error",
+    "dev-dependencies-in-production": "error",
+    "circular-dependencies": "error",
+    "re-export-cycle": "error",
+    "boundary-violation": "error",
+    "feature-flags": "error",
+    "stale-suppressions": "error",
+    "require-suppression-reason": "error",
+    "unused-catalog-entries": "error",
+    "empty-catalog-groups": "error",
+    "unresolved-catalog-references": "error",
+    "unused-dependency-overrides": "error",
+    "misconfigured-dependency-overrides": "error",
+    "security-client-server-leak": "error",
+    "security-sink": "error",
+    "policy-violation": "error",
+    "invalid-client-export": "error",
+    "mixed-client-server-barrel": "error",
+    "misplaced-directive": "error",
+    "route-collision": "error",
+    "dynamic-segment-name-conflict": "error",
+    // Impossible until the repo has tests that form a dependency path into src/.
+    "coverage-gaps": "off"
+  },
+  "health": {
+    "thresholdOverrides": [
+      {
+        "files": ["vite.config.ts"],
+        "maxCrap": 120,
+        "reason": "Cursor preview HTML buffering has no tests, so estimated CRAP is inflated"
+      }
+    ]
+  }
+}

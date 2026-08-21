@@ -24,6 +24,7 @@ This file gives coding agents project-specific context. Keep it short and update
 
 ## Fallow
 
+- Rules are all `error` except `coverage-gaps` (`off` until tests exist). Do not demote a rule to warn; turn it off only if the finding cannot be true for this repo, and say why in `.fallowrc.jsonc`.
 - Use `fallow audit --format json --quiet` before committing AI-generated changes.
 - Use `fallow dead-code --format json --quiet`, `fallow dupes --format json --quiet`, and `fallow health --format json --quiet` for targeted checks.
 - Use `fallow list --entry-points --format json --quiet` and `fallow list --boundaries --format json --quiet` to inspect project shape.

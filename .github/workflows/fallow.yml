@@ -15,3 +15,4 @@ jobs:
       - uses: fallow-rs/fallow@v3
         with:
           auto-changed-since: false
+          fail-on-issues: true

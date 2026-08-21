@@ -49,7 +49,7 @@ Streaming SSR にする場合は、`vite.config.ts` で `ssr: true` を足しま
 
 ## コード品質
 
-[Fallow](https://github.com/fallow-rs/fallow) 3.17 で未使用ファイル / export、循環依存、重複、複雑度を見ます。設定は `.fallowrc.json` です。Solid 2 の start モードは `src/main.tsx` を持たないので、`src/App.tsx` と `src/Document.tsx` を entry にしています。`convex/_generated/` は解析対象外です。
+[Fallow](https://github.com/fallow-rs/fallow) 3.17 で未使用ファイル / export、循環依存、重複、複雑度を見ます。設定は `.fallowrc.jsonc` です。ルールは原則すべて `error` です。いま off なのは `coverage-gaps` だけで、テストが無いと実行パスを検証できないためです。Solid 2 の start モードは `src/main.tsx` を持たないので、`src/App.tsx` と `src/Document.tsx` を entry にしています。`convex/_generated/` は解析対象外です。
 
 ```bash
 bun run fallow
