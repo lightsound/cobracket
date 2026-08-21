@@ -1,23 +1,43 @@
-import type { IncomingMessage, ServerResponse } from 'node:http';
 import { defineConfig, type Plugin } from 'vite';
 import solid from '@solidjs/vite-plugin';
 
-function toBuffer(chunk: unknown): Buffer {
-  if (Buffer.isBuffer(chunk)) return chunk;
-  if (chunk instanceof Uint8Array) return Buffer.from(chunk);
-  if (typeof chunk === 'string') return Buffer.from(chunk);
-  return Buffer.from(String(chunk));
+function toBytes(chunk: unknown): Uint8Array {
+  if (chunk instanceof Uint8Array) return chunk;
+  if (typeof chunk === 'string') return new TextEncoder().encode(chunk);
+  return new TextEncoder().encode(String(chunk));
 }
 
-function requestPath(req: IncomingMessage): string {
-  return (req.url ?? '/').split('?')[0] ?? '/';
+function concatBytes(chunks: Uint8Array[]): Uint8Array {
+  let total = 0;
+  for (const chunk of chunks) total += chunk.byteLength;
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    out.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return out;
 }
 
-function shouldBufferHtml(req: IncomingMessage): boolean {
-  if (req.method !== 'GET' && req.method !== 'HEAD') return false;
-  const path = requestPath(req);
+function requestPath(url: string | undefined): string {
+  return (url ?? '/').split('?')[0] ?? '/';
+}
+
+function shouldBufferHtml(req: object): boolean {
+  const method = Reflect.get(req, 'method');
+  if (method !== 'GET' && method !== 'HEAD') return false;
+  const url = Reflect.get(req, 'url');
+  const path = requestPath(typeof url === 'string' ? url : undefined);
   if (path.startsWith('/@') || path.includes('.')) return false;
-  return (req.headers.accept ?? '').includes('text/html');
+  const headers = Reflect.get(req, 'headers');
+  if (typeof headers !== 'object' || headers === null) return false;
+  const accept = Reflect.get(headers, 'accept');
+  const acceptHeader = Array.isArray(accept)
+    ? accept.join(',')
+    : typeof accept === 'string'
+      ? accept
+      : '';
+  return acceptHeader.includes('text/html');
 }
 
 /**
@@ -37,16 +57,16 @@ function previewCompatibleHtml(): Plugin {
           return;
         }
 
-        const chunks: Buffer[] = [];
+        const chunks: Uint8Array[] = [];
         const originalWrite = res.write.bind(res);
         const originalEnd = res.end.bind(res);
 
         res.write = ((chunk: unknown, encoding?: unknown, cb?: unknown) => {
           const callback = typeof encoding === 'function' ? encoding : cb;
-          if (chunk) chunks.push(toBuffer(chunk));
+          if (chunk) chunks.push(toBytes(chunk));
           if (typeof callback === 'function') (callback as () => void)();
           return true;
-        }) as ServerResponse['write'];
+        }) as typeof res.write;
 
         res.end = ((chunk?: unknown, encoding?: unknown, cb?: unknown) => {
           const callback =
@@ -55,15 +75,15 @@ function previewCompatibleHtml(): Plugin {
               : typeof cb === 'function'
                 ? cb
                 : undefined;
-          if (chunk && typeof chunk !== 'function') chunks.push(toBuffer(chunk));
-          const body = Buffer.concat(chunks);
+          if (chunk && typeof chunk !== 'function') chunks.push(toBytes(chunk));
+          const body = concatBytes(chunks);
           res.write = originalWrite;
           res.end = originalEnd;
           res.removeHeader('transfer-encoding');
-          res.setHeader('content-length', String(body.length));
+          res.setHeader('content-length', String(body.byteLength));
           originalEnd(body, callback as () => void);
           return res;
-        }) as ServerResponse['end'];
+        }) as typeof res.end;
 
         next();
       });
