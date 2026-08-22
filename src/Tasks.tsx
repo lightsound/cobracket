@@ -38,7 +38,8 @@ export default function Tasks() {
     const convex = getConvexClient();
     const value = text().trim();
     if (!convex || value.length === 0) return;
-    void convex.mutation(api.tasks.add, { text: value }).then(() => setText(''));
+    setText('');
+    void convex.mutation(api.tasks.add, { text: value });
   }
 
   function toggleTask(id: Id<'tasks'>) {
