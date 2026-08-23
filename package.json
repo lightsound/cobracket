@@ -14,7 +14,7 @@
     "serve": "vite preview",
     "convex:dev": "convex dev",
     "convex:codegen": "convex codegen",
-    "lint:solid": "bun scripts/check-solid2.mjs",
+    "lint:solid": "solid2-agent-kit check",
     "fallow": "fallow",
     "fallow:audit": "fallow audit",
     "fallow:dead-code": "fallow dead-code"
@@ -23,6 +23,7 @@
   "devDependencies": {
     "@solidjs/vite-plugin": "^3.0.0-next.29",
     "fallow": "^3.17.0",
+    "solid2-agent-kit": "github:lightsound/solid2-agent-kit",
     "typescript": "^7.1.0-dev.20260819.1",
     "vite": "^8.1.5"
   },
