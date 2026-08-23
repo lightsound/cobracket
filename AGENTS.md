@@ -14,6 +14,12 @@ This file gives coding agents project-specific context. Keep it short and update
 - Generated or vendored code: `convex/_generated/` (from `bun run convex:dev` / `bun run convex:codegen`). Do not edit by hand
 - Sensitive areas: `vite.config.ts` must keep `host: '0.0.0.0'` for Cursor's preview. Keep `solid({ start: { devtools: false } })` unless `@solidjs/start-devtools` is installed
 
+## Solid 2.0 (not React, not Solid 1.x)
+
+- All TSX is Solid 2.0. Components run **once**; reactivity flows through signals/stores to JSX. React patterns (props destructuring, `className`, per-keystroke `onChange`, state-synced-by-effect, `.map()` lists) and Solid 1.x APIs (`createResource`, `onMount`, `solid-js/store`, `Suspense`, path setters) are bugs here.
+- Before writing TSX, read `.cursor/skills/solid-2/SKILL.md` (patterns, decision tables, official doc URLs). Hard rules auto-attach from `.cursor/rules/solid-2.mdc`.
+- Solid 2.0 shipped recently and breaks with 1.x — never trust pre-2.0 Solid docs, tutorials, or training knowledge. Verify APIs against https://v2-rebuild--solid-docs-v2.netlify.app/llms.txt (markdown mirror of https://v2.solidjs.com/).
+
 ## Commands
 
 - Install: `bun install`
