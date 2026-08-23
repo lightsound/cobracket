@@ -14,7 +14,7 @@
     "serve": "vite preview",
     "convex:dev": "convex dev",
     "convex:codegen": "convex codegen",
-    "lint:solid": "solid2-kit check",
+    "lint:solid": "solid2-agent-kit check",
     "fallow": "fallow",
     "fallow:audit": "fallow audit",
     "fallow:dead-code": "fallow dead-code"
