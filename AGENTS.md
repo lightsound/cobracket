@@ -2,6 +2,12 @@
 
 This file gives coding agents project-specific context. Keep it short and update it when workflows change.
 
+## Language Policy
+
+- Everything committed to this repo must be in **English**: code, comments, docs, commit messages, PR titles and bodies.
+- Exception: `.cursor/skills/solid-2/references/migration-from-react-ja.md` is a vendored Japanese reference — keep it as is.
+- Chat with the user in **Japanese**. This applies to conversation only, never to repo artifacts.
+
 ## Project Overview
 
 - Primary app: cobracket, a Solid 2.0 `bare` app with a Convex task list
@@ -14,12 +20,20 @@ This file gives coding agents project-specific context. Keep it short and update
 - Generated or vendored code: `convex/_generated/` (from `bun run convex:dev` / `bun run convex:codegen`). Do not edit by hand
 - Sensitive areas: `vite.config.ts` must keep `host: '0.0.0.0'` for Cursor's preview. Keep `solid({ start: { devtools: false } })` unless `@solidjs/start-devtools` is installed
 
+## Solid 2.0 (not React, not Solid 1.x)
+
+- All TSX is Solid 2.0. Components run **once**; reactivity flows through signals/stores to JSX. React patterns (props destructuring, `className`, per-keystroke `onChange`, state-synced-by-effect, `.map()` lists) and Solid 1.x APIs (`createResource`, `onMount`, `solid-js/store`, `Suspense`, path setters) are bugs here.
+- Before writing TSX, read `.cursor/skills/solid-2/SKILL.md` (patterns, decision tables, official doc URLs). Hard rules auto-attach from `.cursor/rules/solid-2.mdc`.
+- After editing TSX, run `bun run lint:solid` — a mechanical gate that fails on React/Solid 1.x tokens and props destructuring. Do not install `eslint-plugin-solid` (built for Solid 1.x; misreads Solid 2 idioms).
+- Solid 2.0 shipped recently and breaks with 1.x — never trust pre-2.0 Solid docs, tutorials, or training knowledge. Verify APIs against https://v2-rebuild--solid-docs-v2.netlify.app/llms.txt (markdown mirror of https://v2.solidjs.com/).
+
 ## Commands
 
 - Install: `bun install`
 - Dev: `bun run convex:dev` and `bun dev` (two processes)
 - Build: `bun run build`
 - Typecheck: `bunx tsc --noEmit`
+- Solid pattern guard: `bun run lint:solid` (blocks React / Solid 1.x patterns in `src/`)
 - Fallow: `bun run fallow` (full), `bun run fallow:audit` (changed files)
 
 ## Fallow
