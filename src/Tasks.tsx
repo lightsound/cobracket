@@ -1,4 +1,4 @@
-import { For, createSignal } from 'solid-js';
+import { For, Show, createSignal } from 'solid-js';
 import { api } from '../convex/_generated/api';
 import type { Doc, Id } from '../convex/_generated/dataModel';
 import { createConvexQuery, getConvexClient, getConvexUrl } from './lib/convex';
@@ -62,22 +62,26 @@ export default function Tasks() {
           Add
         </button>
       </form>
-      {error() ? (
-        <p class="status">{error()!.message}</p>
-      ) : (
-        <ul class="task-list">
-          <For
-            each={data()}
-            fallback={
-              <li class="status">
-                {data() === undefined ? 'Connecting to Convex…' : 'No tasks yet.'}
-              </li>
-            }
-          >
-            {(task) => <TaskRow task={task} onToggle={toggleTask} />}
-          </For>
-        </ul>
-      )}
+      <Show
+        when={error()}
+        fallback={
+          <ul class="task-list">
+            <For
+              each={data()}
+              keyed={(task) => task._id}
+              fallback={
+                <li class="status">
+                  {data() === undefined ? 'Connecting to Convex…' : 'No tasks yet.'}
+                </li>
+              }
+            >
+              {(task) => <TaskRow task={task()} onToggle={toggleTask} />}
+            </For>
+          </ul>
+        }
+      >
+        {(err) => <p class="status">{err().message}</p>}
+      </Show>
     </section>
   );
 }
