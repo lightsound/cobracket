@@ -12,6 +12,7 @@
       "devDependencies": {
         "@solidjs/vite-plugin": "^3.0.0-next.29",
         "fallow": "^3.17.0",
+        "solid2-agent-kit": "github:lightsound/solid2-agent-kit",
         "typescript": "^7.1.0-dev.20260819.1",
         "vite": "^8.1.5",
       },
@@ -347,6 +348,8 @@
     "seroval-plugins": ["seroval-plugins@1.5.6", "", { "peerDependencies": { "seroval": "^1.0" } }, "sha512-HXuLAX2pu/UByPpaeo/TaMfvMIi+1QqIoPJYCcAtU8QkVNwgR6MPlGuCQTErV1JwraaMbYaWVIBX7mppzGLATQ=="],
 
     "solid-js": ["solid-js@2.0.0-rc.1", "", { "dependencies": { "@solidjs/signals": "^2.0.0-rc.1", "csstype": "^3.1.0", "seroval": "~1.5.4", "seroval-plugins": "~1.5.4" } }, "sha512-UD+UfqfiuuOTaDw01YeT+LwsYJC2ilTlMfs6h8EC8FFLmZD0ZjeZIoJXdZEo9uMzIof2tu0Rfh3dnzI7FAmuJQ=="],
+
+    "solid2-agent-kit": ["solid2-agent-kit@github:lightsound/solid2-agent-kit#6ccf9fc", { "bin": { "solid2-agent-kit": "bin/solid2-kit.mjs", "solid2-kit": "bin/solid2-kit.mjs" } }, "lightsound-solid2-agent-kit-6ccf9fc", "sha512-mKktKccpYGx/Nuf2Q30uuHYdnxXENNAubJOuLDb6EnLS4XNlNJ7wpUHnu7sdGriuwlOk0kL+CdXnbx2Ie1Y44g=="],
 
     "source-map-js": ["source-map-js@1.2.1", "", {}, "sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA=="],
 
