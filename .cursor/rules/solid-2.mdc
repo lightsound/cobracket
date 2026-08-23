@@ -10,7 +10,7 @@ This project uses Solid 2.0 (`solid-js@^2.0.0-rc.0`). The JSX looks like React b
 execution model is different: **a component function runs exactly once, at mount**. Updates
 flow from signals/stores directly to the JSX expressions that read them. Components never
 re-render. Solid 2.0 is also **incompatible with Solid 1.x** — treat all Solid 1.x knowledge
-(pre-2024 tutorials, blog posts, Stack Overflow answers) as wrong for this codebase.
+(pre-2.0 tutorials, blog posts, Stack Overflow answers) as wrong for this codebase.
 
 Before writing non-trivial Solid code, read `.cursor/skills/solid-2/SKILL.md` for full
 patterns, decision tables, and official documentation URLs.
@@ -84,7 +84,7 @@ detectable ones on `src/**/*.{ts,tsx}`.
 | `solid/reactivity` | still critical | rules 2–3 (+ Solid 2 dev-mode warnings) |
 | `solid/components-return-once` | still valid | rule 15 |
 | `solid/no-react-specific-props` | still valid | rule 5 + `lint:solid` |
-| `solid/no-react-deps` | still valid (deps arrays never existed) | rule 8 + `lint:solid` react-hook check |
+| `solid/no-react-deps` | still valid — never pass React-style dependency arrays | rule 8 + `lint:solid` react-hook check |
 | `solid/prefer-for` | still valid | rule 7 |
 | `solid/no-innerhtml` | still valid | rule 16 |
 | `solid/style-prop` | still valid | rule 5 + `lint:solid` |

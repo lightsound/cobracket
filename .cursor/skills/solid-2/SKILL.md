@@ -87,8 +87,12 @@ function Greeting(props: { name: string; punctuation?: string }) {
 function Greeting({ name }: { name: string }) { /* ... */ }
 ```
 
-To give a derived prop a local name, name the *function*:
-`const full = () => `${props.first} ${props.last}`;` (or `createMemo` if expensive).
+To give a derived prop a local name, name the *function* (or `createMemo` if expensive):
+
+```tsx
+const full = () => `${props.first} ${props.last}`;
+```
+
 To merge defaults or split props reactively use `merge` / `omit` from `solid-js`
 (replacements for Solid 1.x `mergeProps` / `splitProps`).
 
@@ -104,7 +108,8 @@ setProfile((draft) => {
 });
 ```
 
-Reconcile server data into a store: `setState((draft) => { reconcile(serverTodos, 'id')(draft.todos); })`.
+Reconcile server data into a store (given `const [state, setState] = createStore({ todos: [] })`):
+`setState((draft) => { reconcile(serverTodos, 'id')(draft.todos); })`.
 Plain non-reactive copy for logging/serialization: `snapshot(store)`.
 Subscribe an effect compute to every nested change: `deep(store)`.
 
@@ -129,7 +134,7 @@ intercepted with the bundle form `createEffect(compute, { effect, error })`.
 ### Async data
 
 ```tsx
-import { Errored, Loading, createMemo, createSignal } from 'solid-js';
+import { Errored, For, Loading, createMemo, createSignal } from 'solid-js';
 
 const [query, setQuery] = createSignal('');
 const results = createMemo(async () => {
@@ -212,6 +217,9 @@ missing env vars) are fine, as in `src/Tasks.tsx`.
 
 ```tsx
 import { createContext, createSignal, useContext } from 'solid-js';
+import type { Accessor, ParentProps, Setter } from 'solid-js';
+
+type Theme = 'light' | 'dark';
 
 const ThemeContext = createContext<{ theme: Accessor<Theme>; setTheme: Setter<Theme> }>();
 
@@ -233,6 +241,8 @@ fine-grained updates flow through the signals inside it.
 ### Refs
 
 ```tsx
+import type { Ref } from 'solid-js';
+
 function SearchField(props: { ref?: Ref<HTMLInputElement> }) {
   let input!: HTMLInputElement;
   return (
