@@ -1,0 +1,18 @@
+name: Fallow
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  fallow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: fallow-rs/fallow@v3
+        with:
+          auto-changed-since: false
+          fail-on-issues: true
