@@ -21,6 +21,7 @@ patterns, decision tables, and official documentation URLs.
    prop getter once at setup and kill reactivity. Keep `props.x` and read it inside JSX, a
    memo, or an effect compute function. Defaults go at the read site: `props.x ?? fallback`.
    Rule of thumb: the string `props.` must never appear at component-body top level.
+   Mechanically enforced by `bun run lint:solid` — run it after editing TSX.
 2. **Never read reactive values at component-body top level.** The body runs once, untracked;
    `const v = count()` there is a frozen snapshot (Solid warns in dev). Carry the accessor
    (the function itself) into JSX and call it there.
@@ -28,9 +29,10 @@ patterns, decision tables, and official documentation URLs.
 4. **Derived state is a function, not state + effect.** `const full = () => a() + b()`.
    Never write "a signal plus an effect that syncs it". Use `createMemo` only for expensive
    computations, multiple consumers, or an equality boundary.
-5. `class`, not `className`. `class` accepts strings, conditional objects, and nested arrays:
-   `class={["btn", { active: selected() }]}`. `style` objects use CSS property names
-   (`"background-color"`, not `backgroundColor`) and numbers do NOT auto-append `px`.
+5. `class`, not `className`; `for`, not `htmlFor`. `class` accepts strings, conditional
+   objects, and nested arrays: `class={["btn", { active: selected() }]}`. `style` objects use
+   CSS property names (`"background-color"`, not `backgroundColor`) and numbers do NOT
+   auto-append `px`.
 6. **`onInput` for per-keystroke handling.** Solid's `onChange` is the native change event
    (fires on blur/commit), not React's per-keystroke `onChange`. Handlers receive native DOM
    events and run untracked — reading a signal inside a handler always gives the current
@@ -61,6 +63,37 @@ patterns, decision tables, and official documentation URLs.
     solve don't exist: `useCallback`, `React.memo`, `forwardRef`, `useSyncExternalStore`,
     dependency arrays, `startTransition`/`useTransition` (updates are held and coordinated
     automatically; use `isPending` for indicators).
+15. **Components return once.** Never early-return or conditionally return based on reactive
+    values — the branch is chosen once at setup and frozen forever. Put conditionals inside
+    JSX (`<Show>`, ternary, `<Switch>`/`<Match>`). Early returns on genuinely non-reactive
+    values (build-time config, missing env) are fine.
+16. Prefer `textContent` for text-only content. Use `innerHTML` only for trusted or
+    sanitized markup — never interpolate user input into it.
+
+## Lint heritage: eslint-plugin-solid (Solid 1.x) intents carried into this file
+
+`eslint-plugin-solid` targets Solid 1.x. **Do not install it** — its analyzer predates the
+Solid 2 model and misreads two-phase `createEffect`, writable derivations
+(`createSignal(fn)`), and draft setters as errors. Its still-valid intents are enforced here
+instead, and `bun run lint:solid` (`scripts/check-solid2.mjs`) checks the mechanically
+detectable ones on `src/**/*.{ts,tsx}`.
+
+| 1.x lint rule | Status in Solid 2 | Where |
+|---|---|---|
+| `solid/no-destructure` | still critical | rule 1 + `lint:solid` |
+| `solid/reactivity` | still critical | rules 2–3 (+ Solid 2 dev-mode warnings) |
+| `solid/components-return-once` | still valid | rule 15 |
+| `solid/no-react-specific-props` | still valid | rule 5 + `lint:solid` |
+| `solid/no-react-deps` | still valid (deps arrays never existed) | rule 8 + `lint:solid` react-hook check |
+| `solid/prefer-for` | still valid | rule 7 |
+| `solid/no-innerhtml` | still valid | rule 16 |
+| `solid/style-prop` | still valid | rule 5 + `lint:solid` |
+| `solid/imports` | changed paths | banned-API table + `lint:solid` |
+| `solid/event-handlers` | still valid | rule 6 |
+| `solid/jsx-no-undef`, `jsx-no-duplicate-props` | covered by `tsc` | `bunx tsc --noEmit` |
+| `solid/prefer-classlist` | obsolete — `classList` removed | `lint:solid` bans `classList` |
+| `solid/no-unknown-namespaces` | obsolete — `on:`/`use:`/`attr:` removed in 2.0 | banned-API table |
+| `solid/no-proxy-apis` | obsolete — Solid 2 requires Proxy | not carried |
 
 ## Banned Solid 1.x APIs (Solid 2 replacements)
 
