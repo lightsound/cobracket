@@ -204,6 +204,10 @@ value's identity changes (child then receives the raw value, like React's `key` 
 Prefer the default; use `keyed` only when internal state must reset. Multi-branch:
 `<Switch>` / `<Match>`.
 
+Components must **return once**: never early-return based on a reactive value — the branch
+is picked at setup and frozen. Early returns on non-reactive values (build-time config,
+missing env vars) are fine, as in `src/Tasks.tsx`.
+
 ### Context
 
 ```tsx
@@ -274,9 +278,11 @@ Solid 2.0 is a breaking rewrite; 1.x answers are wrong here. The banned-API tabl
 
 ## References
 
-- [references/migration-from-react-ja.md](references/migration-from-react-ja.md) — 日本語の
-  詳細な React→Solid 2.0 移行ガイド。実行モデル、tracking scope、store と signal の使い分け、
-  props のリアクティビティ、非同期モデルまで、根拠と落とし穴つきで解説。判断に迷ったら読む。
+- [references/migration-from-react-ja.md](references/migration-from-react-ja.md) — in-depth
+  React-to-Solid 2.0 migration guide covering the execution model, tracking scopes,
+  signal-vs-store granularity, props reactivity, and the async model, with rationale and
+  pitfalls for each. Written in Japanese (vendored reference — the repo-wide English-only
+  policy does not apply to it). Read it when a design decision is unclear.
 - [references/official-docs.md](references/official-docs.md) — fetchable official doc URLs.
 
 ## Review checklist (before finishing any TSX change)
@@ -290,4 +296,5 @@ Solid 2.0 is a breaking rewrite; 1.x answers are wrong here. The banned-API tabl
 - [ ] Effects are two-phase and only at imperative boundaries.
 - [ ] Async reads sit under `<Loading>`; errors under `<Errored>`.
 - [ ] No Solid 1.x imports or APIs (`solid-js/store`, `createResource`, `onMount`, `Suspense`, ...).
-- [ ] `bunx tsc --noEmit` and `bun run fallow:audit` pass.
+- [ ] Single return per component; no early returns on reactive conditions.
+- [ ] `bun run lint:solid`, `bunx tsc --noEmit`, and `bun run fallow:audit` pass.
