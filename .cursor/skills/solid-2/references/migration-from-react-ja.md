@@ -1122,7 +1122,7 @@ return (
 
 一言でいうと、**「配列の中身を見ずに、番号だけで行を並べる」** ための component です。
 
-`For` は「どんな要素が入っているか」を起点に描画しますが、`Repeat` は **「何番目から何個」** という数値だけを起点に描画します。<cite index="2-1">Solid 2.0 では、指定した回数だけ JSX ブロックを宣言的に描画する component として `Repeat` が新設されました</cite>。
+`For` は「どんな要素が入っているか」を起点に描画しますが、`Repeat` は **「何番目から何個」** という数値だけを起点に描画します。Solid 2.0 では、指定した回数だけ JSX ブロックを宣言的に描画する component として `Repeat` が新設されました。
 
 ```tsx
 // ※ 子に渡る引数の正確な型は公式 reference で確認してください
@@ -1150,7 +1150,7 @@ return (
 | `For keyed={false}` | **位置**（0番目、1番目…） | その位置が存在し続ける限り | あり |
 | `Repeat` | **絶対 index**（`from`〜`from+count`） | その **index が新旧の範囲で重なる**限り | **なし** |
 
-📌 Solid 1.x を知っている場合の注意: <cite index="2-1">専用の `Index` component は廃止され、その非 keyed なリスト機能は `<For keyed={false}>` に統合されました</cite>。`Repeat` は `Index` の後継ではなく、**別の役割**を持つ新しい部品です。
+📌 Solid 1.x を知っている場合の注意: 専用の `Index` component は廃止され、その非 keyed なリスト機能は `<For keyed={false}>` に統合されました。`Repeat` は `Index` の後継ではなく、**別の役割**を持つ新しい部品です。
 
 #### 「diff なし」が効く場面 = 仮想スクロール
 
