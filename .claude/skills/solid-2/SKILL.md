@@ -43,6 +43,7 @@ Practical consequences:
 | Shared by a subtree, independent per provider instance | signal/store created inside a provider component, passed via context |
 | Truly app-wide singleton (theme, session, locale) | module-level signal/store (beware SSR: module state is shared across requests) |
 | Tentative value during a mutation | `createOptimistic` / `createOptimisticStore` + `action` |
+| Values pushed by an external subscription (websocket, reactive client) | async iterable returned from a memo (or function-form `createStore` for keyed reconciliation) — never `{ data, error }` signal pairs |
 
 ### Should this be an effect?
 
@@ -109,9 +110,17 @@ setProfile((draft) => {
 });
 ```
 
-Reconcile server data into a store (given `const [state, setState] = createStore({ todos: [] })`):
-`setState((draft) => { reconcile(serverTodos, 'id')(draft.todos); })`.
-Plain non-reactive copy for logging/serialization: `snapshot(store)`.
+**External collections enter stores through reconciliation, never wholesale assignment.**
+`draft.todos = serverTodos` renders correctly but replaces every object identity — all
+subscribers under the path re-run and row identity is lost. In order of preference:
+
+1. Function-form `createStore(() => source, fallback)` or `createProjection` — reconcile
+   automatically (keyed by `"id"`), surviving items keep proxy identity.
+2. Manual merge: `setTodos(reconcile(fresh, 'id'))`, or on a nested slot
+   `setState((draft) => { reconcile(fresh, 'id')(draft.todos); })`. Positional data
+   (fixed-shape dashboards): `reconcile(next, null)`.
+
+Plain non-reactive copy for logging/serialization/`structuredClone`: `snapshot(store)`.
 Subscribe an effect compute to every nested change: `deep(store)`.
 
 ### Two-phase effect (imperative boundary only)
@@ -156,10 +165,51 @@ return (
 - The `<Loading>` boundary must be an owner ancestor of the **read** (`results()`), not of
   where the memo was created. Boundary placement is purely a UX decision — it does not
   change when fetches start (no waterfalls: nested components set up and fetch in parallel).
-- `<Errored>` function fallbacks receive an error **accessor**: call `error()`.
+- `<Errored>` function fallbacks receive an error **accessor** and a `reset` callback:
+  `fallback={(error, reset) => ...}`.
 - Refetch: `refresh(results)`. In-flight indicator: `isPending(() => results())`.
   Freshest in-flight value for imperative code: `latest(results)`.
 - Coordinate reveal order of sibling `<Loading>` boundaries with `<Reveal order="sequential" | "together" | "natural">`.
+
+**Never hand-roll these states.** No `[loading, setLoading]` signal, no
+`data() === undefined` branch, no `{ data, error }` signal pair — those are React/Solid 1.x
+reflexes that bypass the async model and `solid2-kit check` flags them. If a value is async,
+make it an async computation and read it under boundaries. Refetching is `refresh(source)`
+(typically as the last step of a mutation `action`, or a reload button) — never a
+counter/version signal read inside the computation to force re-runs; input-driven refetch is
+already automatic.
+
+### Streams and subscriptions (websockets, reactive clients)
+
+Push-based sources integrate by returning an **async iterable** from a computation — reads
+then suspend to `<Loading>` until the first value, later pushes update the settled value,
+and thrown errors reach `<Errored>`. Integration layers should return a plain accessor, not
+`{ data, error }` signals:
+
+```tsx
+import { createMemo, onCleanup } from 'solid-js';
+
+function createSubscriptionQuery<T>(
+  subscribe: (next: (value: T) => void, fail: (error: unknown) => void) => () => void,
+) {
+  const queue: T[] = [];
+  let failure: unknown;
+  let wake = () => {};
+  // Component-owned setup: unsubscribe is tied to the caller's owner.
+  onCleanup(subscribe(
+    (value) => { queue.push(value); wake(); },
+    (error) => { failure = error; wake(); },
+  ));
+
+  return createMemo(() => (async function* () {
+    while (true) {
+      if (failure !== undefined) throw failure;
+      if (queue.length > 0) { yield queue.shift() as T; continue; }
+      await new Promise<void>((resolve) => { wake = resolve; });
+    }
+  })());
+}
+```
 
 ### Mutations: `action` + optimistic state
 
@@ -235,6 +285,23 @@ Prefer the default; use `keyed` only when internal state must reset. Multi-branc
 Components must **return once**: never early-return based on a reactive value — the branch
 is picked at setup and frozen. Early returns on non-reactive values (build-time config, a
 missing environment variable) are fine.
+
+### Input filtering (inputs do not rewind)
+
+React's controlled inputs force the DOM back to the state value on every re-render, so
+"ignore invalid keystrokes" works by simply not updating state. Solid has no re-render:
+`value={v()}` writes the DOM only when `v` changes, so rejected characters **stay visible**
+unless you rewind the DOM yourself:
+
+```tsx
+<input
+  value={v()}
+  onInput={(event) => {
+    if (/^\d*$/.test(event.currentTarget.value)) setV(event.currentTarget.value);
+    else event.currentTarget.value = v(); // reject: explicit write-back
+  }}
+/>
+```
 
 ### Context
 
@@ -319,7 +386,12 @@ always-applied rules installed alongside this skill.
 - [ ] Lists via `<For>` (server/refetched rows keyed by stable id), conditionals via
       ternary/`<Show>`; no `key` props; no `value()!` hand-narrowing.
 - [ ] Effects are two-phase and only at imperative boundaries.
-- [ ] Async reads sit under `<Loading>`; errors under `<Errored>`.
+- [ ] Async reads sit under `<Loading>`; errors under `<Errored>`. No hand-rolled
+      `loading`/`error` signals or `=== undefined` readiness branches; refetch via
+      `refresh`, not counter signals.
+- [ ] External collections reconcile into stores (function-form `createStore` /
+      `reconcile`), never wholesale draft assignment.
+- [ ] Input filters write back to the DOM on reject (inputs do not rewind).
 - [ ] No Solid 1.x imports or APIs (`solid-js/store`, `createResource`, `onMount`, `Suspense`, ...).
 - [ ] Single return per component; no early returns on reactive conditions.
 - [ ] `solid2-kit check` and the project's typecheck pass.
