@@ -349,7 +349,7 @@
 
     "solid-js": ["solid-js@2.0.0-rc.1", "", { "dependencies": { "@solidjs/signals": "^2.0.0-rc.1", "csstype": "^3.1.0", "seroval": "~1.5.4", "seroval-plugins": "~1.5.4" } }, "sha512-UD+UfqfiuuOTaDw01YeT+LwsYJC2ilTlMfs6h8EC8FFLmZD0ZjeZIoJXdZEo9uMzIof2tu0Rfh3dnzI7FAmuJQ=="],
 
-    "solid2-agent-kit": ["solid2-agent-kit@github:lightsound/solid2-agent-kit#83a6ed1", { "bin": { "solid2-agent-kit": "bin/solid2-kit.mjs", "solid2-kit": "bin/solid2-kit.mjs" } }, "lightsound-solid2-agent-kit-83a6ed1", "sha512-dgmJwE1afrrbRaM7sqLl0lMb4QAkOlJLJR2B7IJf6w7DQukgHBTEnXYTGvzzbADmxWnNbMzS9oU3mziF89CAEQ=="],
+    "solid2-agent-kit": ["solid2-agent-kit@github:lightsound/solid2-agent-kit#08dbf95", { "bin": { "solid2-agent-kit": "bin/solid2-kit.mjs", "solid2-kit": "bin/solid2-kit.mjs" } }, "lightsound-solid2-agent-kit-08dbf95", "sha512-+2MbZxZ7MOdTv5T8NZbbdANicH9+Jbb6fRgCDwekKyV4BpAWXpr0MHhesY52nu4MhzOaps8ojRpPZXJjRUXZ9Q=="],
 
     "source-map-js": ["source-map-js@1.2.1", "", {}, "sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA=="],
 

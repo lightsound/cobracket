@@ -63,7 +63,7 @@ This file gives coding agents project-specific context. Keep it short and update
 - Package manager is Bun 1.4 (`bun.lock`). Do not add npm or pnpm lockfiles
 
 <!-- solid2-agent-kit:agents-section:start -->
-<!-- Managed by solid2-agent-kit v0.3.0. Do not edit inside this block; run `solid2-kit sync` to update. -->
+<!-- Managed by solid2-agent-kit v0.3.1. Do not edit inside this block; run `solid2-kit sync` to update. -->
 
 ## Solid 2.0 (not React, not Solid 1.x)
 

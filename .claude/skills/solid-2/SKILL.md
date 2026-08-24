@@ -179,6 +179,15 @@ make it an async computation and read it under boundaries. Refetching is `refres
 counter/version signal read inside the computation to force re-runs; input-driven refetch is
 already automatic.
 
+**Normalize thrown values once.** Thrown values are `unknown` in JavaScript, so define one
+shared `ErrorFallback` component per app — extract the message via `instanceof Error`, wire
+`reset` to a Retry affordance — and pass it to every `<Errored fallback>`, instead of
+repeating `String(error())` at each boundary:
+
+```tsx
+<Errored fallback={(error, reset) => <ErrorFallback error={error} reset={reset} />}>
+```
+
 ### Streams and subscriptions (websockets, reactive clients)
 
 Push-based sources integrate by returning an **async iterable** from a computation — reads
