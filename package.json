@@ -15,7 +15,7 @@
     "convex:dev": "convex dev",
     "convex:codegen": "convex codegen",
     "lint:solid": "solid2-agent-kit check",
-    "lint:imports": "import-lint",
+    "lint:imports": "bunx @import-lint/cli",
     "fallow": "fallow",
     "fallow:audit": "fallow audit",
     "fallow:dead-code": "fallow dead-code"
