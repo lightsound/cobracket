@@ -15,6 +15,7 @@
     "convex:dev": "convex dev",
     "convex:codegen": "convex codegen",
     "lint:solid": "solid2-agent-kit check",
+    "test": "bun test src",
     "fallow": "fallow",
     "fallow:audit": "fallow audit",
     "fallow:dead-code": "fallow dead-code"

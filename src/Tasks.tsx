@@ -52,18 +52,18 @@ export default function Tasks() {
   return (
     <section class="tasks">
       <h2>Convex tasks</h2>
-      <form class="task-form" onSubmit={addTask}>
-        <input
-          value={text()}
-          onInput={(event) => setText(event.currentTarget.value)}
-          placeholder="New task"
-          aria-label="New task"
-        />
-        <button class="increment" type="submit">
-          Add
-        </button>
-      </form>
       <Errored fallback={(error, reset) => <ErrorFallback error={error} reset={reset} />}>
+        <form class="task-form" onSubmit={addTask}>
+          <input
+            value={text()}
+            onInput={(event) => setText(event.currentTarget.value)}
+            placeholder="New task"
+            aria-label="New task"
+          />
+          <button class="increment" type="submit">
+            Add
+          </button>
+        </form>
         <Loading fallback={<p class="status">Connecting to Convex…</p>}>
           <ul class="task-list">
             <For

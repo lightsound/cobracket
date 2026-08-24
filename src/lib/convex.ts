@@ -2,6 +2,7 @@ import { ConvexClient } from 'convex/browser';
 import type { FunctionArgs, FunctionReference, FunctionReturnType } from 'convex/server';
 import { createMemo, onCleanup } from 'solid-js';
 import type { Accessor } from 'solid-js';
+import { subscribeConvexResults } from './subscribeConvexResults';
 
 export function getConvexUrl(): string | undefined {
   const url = import.meta.env.VITE_CONVEX_URL;
@@ -22,7 +23,8 @@ export function getConvexClient(): ConvexClient | undefined {
  * Bridges a Convex subscription into Solid's async model.
  *
  * - Reads suspend to the nearest `<Loading>` until the first result arrives;
- *   subscription errors are thrown into the reactive graph for `<Errored>`.
+ *   subscription errors and websocket loss are thrown into the reactive graph
+ *   for `<Errored>`.
  * - `args` may be an accessor: changing args re-subscribes (the committed
  *   view stays visible and `isPending` reports the in-flight change).
  * - `<Errored>`'s `reset()` and `refresh(query)` re-run the computation: a
@@ -55,20 +57,18 @@ export function createConvexQuery<Query extends FunctionReference<'query'>>(
     let wake = () => {};
 
     if (convex) {
-      const unsubscribe = convex.onUpdate(
-        query,
-        resolvedArgs,
-        (result) => {
+      const unsubscribe = subscribeConvexResults(convex, query, resolvedArgs, {
+        onValue: (result) => {
           current = result;
           version += 1;
           failure = undefined;
           wake();
         },
-        (error) => {
+        onError: (error) => {
           failure = error;
           wake();
         },
-      );
+      });
       onCleanup(() => {
         disposed = true;
         unsubscribe();

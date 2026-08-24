@@ -1,8 +1,9 @@
 {
   "$schema": "./node_modules/fallow/schema.json",
-  // All rules are error. The only off rule is coverage-gaps: there are no tests yet.
+  // All rules are error. The only off rule is coverage-gaps: bun tests live
+  // next to src but are ignored, so they do not form a coverage path into src.
   "entry": ["src/App.tsx", "src/Document.tsx"],
-  "ignorePatterns": ["convex/_generated/**", "src/vite-env.d.ts"],
+  "ignorePatterns": ["convex/_generated/**", "src/vite-env.d.ts", "**/*.test.ts"],
   "rules": {
     "unused-files": "error",
     "unused-exports": "error",
