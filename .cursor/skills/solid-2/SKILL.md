@@ -192,18 +192,40 @@ Ordinary signal/store writes inside an action are held until it settles. Never c
 <For each={cells()} keyed={false}>{(cell, i) => <Cell value={cell()} at={i} />}</For>
 ```
 
+Choosing the keying mode:
+
+| Where the rows come from | Mode |
+|---|---|
+| Server/refetched data — fetch results, subscription payloads (fresh object references on every update) | **key function on a stable id** (`keyed={(item) => item.id}`) — reference keying would recreate every row on each update |
+| Local array whose item identities are stable (e.g. store rows, static lists) | default (item reference) |
+| Fixed positions where only contents change | `keyed={false}` |
+
 `<Repeat from={start()} count={20}>{(index) => ...}</Repeat>` renders by absolute index with
 no array diffing — use for fixed slot counts and virtual scrolling windows.
 
 ### Conditionals
 
-Ternaries work and are reactive. Use `<Show>` for narrowing and identity control:
+Ternaries work and are reactive, but **when the truthy branch reads the tested value, use
+`<Show>`**: its function child receives a narrowed accessor, so no non-null assertion is
+needed. Never write `value()!` to narrow by hand (`solid2-kit check` flags it):
+
+```tsx
+// WRONG — hand narrowing with a non-null assertion
+{error() ? <p>{error()!.message}</p> : <TaskList />}
+
+// CORRECT — Show narrows; fallback holds the other branch
+<Show when={error()} fallback={<TaskList />}>
+  {(err) => <p>{err().message}</p>}
+</Show>
+```
 
 ```tsx
 <Show when={user()} fallback={<SignIn />}>
   {(currentUser) => <Profile user={currentUser()} />} {/* narrowed ACCESSOR */}
 </Show>
 ```
+
+Plain ternaries remain fine when no narrowing is involved (`{open() ? <A /> : <B />}`).
 
 Default `Show` keeps children mounted across truthy changes. Add `keyed` to remount when the
 value's identity changes (child then receives the raw value, like React's `key` reset).
@@ -294,7 +316,8 @@ always-applied rules installed alongside this skill.
       compute, or a boundary — not the component body.
 - [ ] No signal-synced-by-effect; derived values are functions or memos.
 - [ ] `class` / CSS-name `style` / `onInput` — no `className`, `backgroundColor`, per-keystroke `onChange`.
-- [ ] Lists via `<For>` (correct keying mode), conditionals via ternary/`<Show>`; no `key` props.
+- [ ] Lists via `<For>` (server/refetched rows keyed by stable id), conditionals via
+      ternary/`<Show>`; no `key` props; no `value()!` hand-narrowing.
 - [ ] Effects are two-phase and only at imperative boundaries.
 - [ ] Async reads sit under `<Loading>`; errors under `<Errored>`.
 - [ ] No Solid 1.x imports or APIs (`solid-js/store`, `createResource`, `onMount`, `Suspense`, ...).

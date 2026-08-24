@@ -3,7 +3,7 @@
 Project guidance for Claude Code.
 
 <!-- solid2-agent-kit:solid-rules:start -->
-<!-- Managed by solid2-agent-kit v0.1.0. Do not edit inside this block; run `solid2-kit sync` to update. -->
+<!-- Managed by solid2-agent-kit v0.2.0. Do not edit inside this block; run `solid2-kit sync` to update. -->
 
 # Solid 2.0 — not React, not Solid 1.x
 
@@ -41,8 +41,11 @@ Claude Code) for full patterns, decision tables, and official documentation URLs
    value (stale closures cannot happen; `useCallback` equivalents are unnecessary).
 7. **Lists use `<For>`**, never bare `.map()` in reactive JSX and never `key` props.
    Row identity: default = item reference; `keyed={(item) => item.id}` = key function
-   (child receives item as an accessor); `keyed={false}` = positional. Fixed-count /
-   windowed rendering uses `<Repeat>`.
+   (child receives item as an accessor); `keyed={false}` = positional. **Rows from
+   server/refetched data (fresh object references on every update — fetch results,
+   subscription payloads) must use a key function on a stable id**, or every update
+   recreates every row. Reference keying is for local arrays whose item identities are
+   stable (e.g. store rows). Fixed-count / windowed rendering uses `<Repeat>`.
 8. **Effects have two phases**: `createEffect(compute, apply)`. All reactive reads go in
    `compute`; its return value feeds `apply`, which does imperative work and may return a
    cleanup. Single-argument `createEffect(fn)` is an error in Solid 2. Most React
@@ -71,6 +74,12 @@ Claude Code) for full patterns, decision tables, and official documentation URLs
     values (build-time config, missing env) are fine.
 16. Prefer `textContent` for text-only content. Use `innerHTML` only for trusted or
     sanitized markup — never interpolate user input into it.
+17. **Never narrow a reactive read with a non-null assertion** (`error()!.message`,
+    `user()!`). Use `<Show when={value()}>` with a function child — it passes a
+    **narrowed accessor**, so no `!` is needed:
+    `<Show when={error()}>{(err) => <p>{err().message}</p>}</Show>`. For non-reactive
+    zero-arg calls, use an explicit guard variable instead of `!`.
+    Mechanically enforced by `solid2-kit check`.
 
 ## Lint heritage: eslint-plugin-solid (Solid 1.x) intents carried into this file
 
@@ -88,6 +97,7 @@ directory (default `src/`).
 | `solid/no-react-specific-props` | still valid | rule 5 + `solid2-kit check` |
 | `solid/no-react-deps` | still valid — never pass React-style dependency arrays | rule 8 + `solid2-kit check` react-hook check |
 | `solid/prefer-for` | still valid | rule 7 |
+| `solid/prefer-show` | now a recommended default when narrowing | rule 17 + `solid2-kit check` |
 | `solid/no-innerhtml` | still valid | rule 16 |
 | `solid/style-prop` | still valid | rule 5 + `solid2-kit check` |
 | `solid/imports` | changed paths | banned-API table + `solid2-kit check` |
