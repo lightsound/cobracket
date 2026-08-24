@@ -1,4 +1,4 @@
-import { For, Show, createSignal } from 'solid-js';
+import { Errored, For, Loading, createSignal } from 'solid-js';
 import { api } from '../convex/_generated/api';
 import type { Doc, Id } from '../convex/_generated/dataModel';
 import { createConvexQuery, getConvexClient, getConvexUrl } from './lib/convex';
@@ -21,7 +21,7 @@ function TaskRow(props: { task: Doc<'tasks'>; onToggle: (id: Id<'tasks'>) => voi
 }
 
 export default function Tasks() {
-  const { data, error } = createConvexQuery(api.tasks.list, {});
+  const tasks = createConvexQuery(api.tasks.list, {});
   const [text, setText] = createSignal('');
 
   if (!getConvexUrl()) {
@@ -62,26 +62,28 @@ export default function Tasks() {
           Add
         </button>
       </form>
-      <Show
-        when={error()}
-        fallback={
+      <Errored
+        fallback={(error, reset) => (
+          <p class="status">
+            {String(error())}{' '}
+            <button class="increment" type="button" onClick={reset}>
+              Retry
+            </button>
+          </p>
+        )}
+      >
+        <Loading fallback={<p class="status">Connecting to Convex…</p>}>
           <ul class="task-list">
             <For
-              each={data()}
+              each={tasks()}
               keyed={(task) => task._id}
-              fallback={
-                <li class="status">
-                  {data() === undefined ? 'Connecting to Convex…' : 'No tasks yet.'}
-                </li>
-              }
+              fallback={<li class="status">No tasks yet.</li>}
             >
               {(task) => <TaskRow task={task()} onToggle={toggleTask} />}
             </For>
           </ul>
-        }
-      >
-        {(err) => <p class="status">{err().message}</p>}
-      </Show>
+        </Loading>
+      </Errored>
     </section>
   );
 }
