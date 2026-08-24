@@ -15,12 +15,14 @@
     "convex:dev": "convex dev",
     "convex:codegen": "convex codegen",
     "lint:solid": "solid2-agent-kit check",
+    "lint:imports": "bunx @import-lint/cli",
     "fallow": "fallow",
     "fallow:audit": "fallow audit",
     "fallow:dead-code": "fallow dead-code"
   },
   "license": "MIT",
   "devDependencies": {
+    "@import-lint/cli": "^0.1.9",
     "@solidjs/vite-plugin": "^3.0.0-next.29",
     "fallow": "^3.17.0",
     "solid2-agent-kit": "github:lightsound/solid2-agent-kit",
