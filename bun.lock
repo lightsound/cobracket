@@ -10,6 +10,7 @@
         "solid-js": "^2.0.0-rc.0",
       },
       "devDependencies": {
+        "@import-lint/cli": "^0.1.9",
         "@solidjs/vite-plugin": "^3.0.0-next.29",
         "fallow": "^3.17.0",
         "solid2-agent-kit": "github:lightsound/solid2-agent-kit",
@@ -146,6 +147,20 @@
     "@fallow-cli/win32-arm64-msvc": ["@fallow-cli/win32-arm64-msvc@3.17.0", "", { "os": "win32", "cpu": "arm64" }, "sha512-u9n5WzPuKuC1PKegKQknWtngAUJ2szQaRXsbY54s7UMqeFNyC+W04LV5D+sEZywU7L0kzL+Kck9LxFLXBQcgvA=="],
 
     "@fallow-cli/win32-x64-msvc": ["@fallow-cli/win32-x64-msvc@3.17.0", "", { "os": "win32", "cpu": "x64" }, "sha512-/OcyxHuCKabzQ9hKIjM/CFJ9fr30n0Mw5MK6nzi5rn26mbYUgh073UZq4FONOpPJ/FqHtC726rxpgBtR4qS+gg=="],
+
+    "@import-lint/cli": ["@import-lint/cli@0.1.9", "", { "optionalDependencies": { "@import-lint/darwin-arm64": "0.1.9", "@import-lint/darwin-x64": "0.1.9", "@import-lint/linux-arm64-gnu": "0.1.9", "@import-lint/linux-x64-gnu": "0.1.9", "@import-lint/linux-x64-musl": "0.1.9", "@import-lint/win32-x64": "0.1.9" }, "bin": { "import-lint": "bin/import-lint.js" } }, "sha512-P2kVyFe+EFmeeO/6tG30q6c85EkWd0mWTdjJUrqujRzT1qTpcKj12J3QOwsC3onpdLknSvteoPu/DS9PbgPy6w=="],
+
+    "@import-lint/darwin-arm64": ["@import-lint/darwin-arm64@0.1.9", "", { "os": "darwin", "cpu": "arm64" }, "sha512-svSbY4O6kxlDzEYwZlJOUVEa86TWVQp/j36WyBb8mm7I23hfX5MM48UBbPh66tU+D4dYC3jmw31krTjWRtWCXQ=="],
+
+    "@import-lint/darwin-x64": ["@import-lint/darwin-x64@0.1.9", "", { "os": "darwin", "cpu": "x64" }, "sha512-g8ohgQXsET7qat9Z9Ba0rHdsQzXEoc9jIljYujWqNnSDZoa2ZrlHnOPzC2ux+KES6jbU583sY0wSM2C9lynzdw=="],
+
+    "@import-lint/linux-arm64-gnu": ["@import-lint/linux-arm64-gnu@0.1.9", "", { "os": "linux", "cpu": "arm64" }, "sha512-3xXFv7G728GxZy7cXAV/2GM2l5Bk0oBYoT5RfELy79WQQ6dbYYraQzKLI98h78wPjAjCOxql7ZRngeNkFBLBDw=="],
+
+    "@import-lint/linux-x64-gnu": ["@import-lint/linux-x64-gnu@0.1.9", "", { "os": "linux", "cpu": "x64" }, "sha512-LlQ00RjvYVueEvLDUatilce3DLj746KAbhfMjGiS8eZionV+D47JR6+1MARbvq8sg0K+ZzfAlz54jWD/8mhLfQ=="],
+
+    "@import-lint/linux-x64-musl": ["@import-lint/linux-x64-musl@0.1.9", "", { "os": "linux", "cpu": "x64" }, "sha512-DGoDS+g/O2ZmlxG+UuTJuIRfa1XZ1FoImgvQwcEe/dmM0YWT3LGfz0qCeAbeLwe8tSsJTjwtnc7Wo83yoWKplQ=="],
+
+    "@import-lint/win32-x64": ["@import-lint/win32-x64@0.1.9", "", { "os": "win32", "cpu": "x64" }, "sha512-wD5sWRklV4ZVlJ9aB7njQyHGQ/eDxRgVA6sGhmKLsdoudmxJKcmniLTy2GqF+pTnuCCQSJrz7+XgxF9OquyLMg=="],
 
     "@jridgewell/gen-mapping": ["@jridgewell/gen-mapping@0.3.13", "", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.5.0", "@jridgewell/trace-mapping": "^0.3.24" } }, "sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA=="],
 

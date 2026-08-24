@@ -3,6 +3,9 @@ import type { FunctionArgs, FunctionReference, FunctionReturnType } from 'convex
 import { createMemo, onCleanup } from 'solid-js';
 import type { Accessor } from 'solid-js';
 
+/**
+ * @public
+ */
 export function getConvexUrl(): string | undefined {
   const url = import.meta.env.VITE_CONVEX_URL;
   return typeof url === 'string' && url.length > 0 ? url : undefined;
@@ -10,6 +13,9 @@ export function getConvexUrl(): string | undefined {
 
 let client: ConvexClient | undefined;
 
+/**
+ * @public
+ */
 export function getConvexClient(): ConvexClient | undefined {
   if (typeof window === 'undefined') return undefined;
   const url = getConvexUrl();
@@ -34,6 +40,8 @@ export function getConvexClient(): ConvexClient | undefined {
  * change, on retry, and when the owning component unmounts. Without a
  * configured client (missing `VITE_CONVEX_URL`, or SSR) the accessor stays
  * pending forever; callers gate on `getConvexUrl()` before rendering reads.
+ *
+ * @public
  */
 export function createConvexQuery<Query extends FunctionReference<'query'>>(
   query: Query,
