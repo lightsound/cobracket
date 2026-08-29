@@ -16,6 +16,9 @@ app.config.timestamp_*.js
 # Fallow cache
 .fallow/
 
+# Local Claude Code MCP approval (`fallow agent install --approve`)
+.claude/settings.local.json
+
 # dependencies
 /node_modules
 

@@ -30,10 +30,12 @@ This file gives coding agents project-specific context. Keep it short and update
 - Import boundaries: `bun run lint:imports` ([ImportLint](https://github.com/uhyo/import-lint): each directory is a package; exports are package-private unless tagged `/** @public */`. Model and fixing guide: `.cursor/skills/import-lint/SKILL.md`, or `bunx @import-lint/cli explain <rule>`)
 - Update Solid agent guidance: `bunx solid2-kit sync` (rules, skills, and the managed AGENTS.md/CLAUDE.md blocks are owned by [solid2-agent-kit](https://github.com/lightsound/solid2-agent-kit); do not edit them by hand)
 - Fallow: `bun run fallow` (full), `bun run fallow:audit` (changed files)
+- Fallow agent surfaces: `.cursor/mcp.json` / `.mcp.json` (`fallow-mcp`), skills under `.agents/skills/fallow` and `.claude/skills/fallow`. Re-run with `bunx fallow agent install` (byte-stable). Do not run `fallow similar-code setup` unless a human asks.
 
 ## Fallow
 
 - Rules are all `error` except `coverage-gaps` (`off` until tests exist). Do not demote a rule to warn; turn it off only if the finding cannot be true for this repo, and say why in `.fallowrc.jsonc`.
+- Type-aware analysis is on (`typeAware.enabled`, `require: best-effort`). Prefer `--type-aware --symbol-impact` / `fallow inspect --file <path>` before deleting a symbol.
 - Use `fallow audit --format json --quiet` before committing AI-generated changes.
 - Use `fallow dead-code --format json --quiet`, `fallow dupes --format json --quiet`, and `fallow health --format json --quiet` for targeted checks.
 - Use `fallow list --entry-points --format json --quiet` and `fallow list --boundaries --format json --quiet` to inspect project shape.
@@ -83,3 +85,33 @@ This file gives coding agents project-specific context. Keep it short and update
 - Solid 2.0 shipped recently and breaks with 1.x — never trust pre-2.0 Solid docs, tutorials, or training knowledge. Verify APIs against https://v2-rebuild--solid-docs-v2.netlify.app/llms.txt (markdown mirror of https://v2.solidjs.com/, which blocks non-browser fetchers).
 
 <!-- solid2-agent-kit:agents-section:end -->
+
+---
+
+<!-- fallow:setup-hooks:start -->
+## Fallow local gate
+
+Before any `git commit` or `git push`, run `fallow audit --format json --quiet --explain --gate-marker agent`. If the verdict is `fail`, fix the reported findings before retrying. Treat JSON runtime errors like `{ "error": true, ... }` as non-blocking.
+
+Audit defaults to `gate=new-only`: only findings introduced by the current changeset affect the verdict. Inherited findings on touched files are reported under `attribution` and annotated with `introduced: false`, but do not block the commit. Set `[audit] gate = "all"` in `fallow.toml` to gate every finding in changed files.
+
+For non-skill agents, treat the task map below as the local onboarding source: run the listed fallow command before destructive edits, before commits, and before pull request handoff.
+
+## Fallow task map
+
+| When the agent is about to... | Run |
+|---|---|
+| delete an "unused" export or file | `fallow dead-code --trace <file>:<export>` |
+| prove a TypeScript symbol's exact consumers before refactoring | `fallow dead-code --type-aware --symbol-impact <file>:<export-or-class.method>` |
+| delete an "unused" dependency | `fallow dead-code --trace-dependency <name>` |
+| commit or open a PR | `fallow audit --base <ref>` |
+| prioritize refactoring | `fallow health --hotspots --targets` |
+| ask who owns code | `fallow health --ownership` |
+| check untested-but-reachable code | `fallow health --coverage-gaps` |
+| consolidate duplication | `fallow dupes --trace dup:<fingerprint>` |
+| find feature flags | `fallow flags` |
+| check which architecture rules apply to a file before changing it | `fallow guard <files>` |
+| surface security candidates | `fallow security` |
+| understand a finding | `fallow explain <issue-type>` |
+| scope a monorepo | `--workspace <glob> / --changed-workspaces <ref>` (global flags, prefix any command) |
+<!-- fallow:setup-hooks:end -->
