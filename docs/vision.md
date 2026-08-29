@@ -62,6 +62,17 @@ Chat: **MCP server** wrapping the same operations API as the web UI. The MCP cli
 
 Explicitly not in MVP: Discord bot, in-app AI assistant, participant accounts, co-organizers, round robin / Swiss / group stages, payments, ads.
 
+## Design principles
+
+Settled in the final audit rounds; each is nearly free on day one and expensive to retrofit:
+
+- **Results are the source of truth** (ADR 0005): brackets, standings, seeding, and rankings are derived and recomputable; corrections are first-class; every result records its actor and time.
+- **Match outcomes are general**: win, loss, draw, walkover, disqualification. Draws exist in some disciplines and round robin is in scope, so "winner required" is never baked into the schema; whether draws are allowed is per-tournament configuration.
+- **Disciplines can alias and merge** from day one: freeform entry will produce "SF6" vs "Street Fighter 6"; the schema must let them merge later with results following, or ranking data rots.
+- **Visibility is a field from day one**: public / unlisted / private on tournaments and events. MVP behavior is unlisted only.
+- **Display names are separable from identity**: a Player can be pseudonymized on request without breaking recorded results or brackets.
+- **Participant self-reporting (post-MVP) is symmetric**: either participant of a match can report the result; the opponent confirms or disputes; conflicting reports escalate to the Organizer, whose entry always wins. ADR 0005 (auditable, correctable results) is what makes auto-advancing the bracket on self-reports safe. At major scale (2,000+ entrants) this, plus match-call notifications, is what keeps operations light.
+
 ## Monetization hypothesis
 
 - **Hosting and running a free-entry tournament is free, forever.** That promise is what moves people off existing tools.
@@ -95,3 +106,8 @@ Deferred deliberately — none of these threaten the domain model, but they must
 - Spectator-scale reads: a popular Share Link can have orders of magnitude more viewers than participants
 - Seeding provenance: record which Ranking edition seeded a bracket
 - Day-of operation under poor venue connectivity (the stack is online-first)
+- Match-call notifications for participants at large events
+- Anti-spam and rate limiting for anonymous tournament and event creation
+- Rendering and querying very large brackets: a major can exceed 2,000 entrants — the core design target stays 8–64, but the schema must not hard-cap size
+- Global read latency from a single-region Convex deployment
+- Public read API / data export for communities (roadmap candidate)

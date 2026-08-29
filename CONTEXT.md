@@ -19,7 +19,7 @@ The visual representation of a tournament's match structure produced by its form
 _Avoid_: Tournament table, tree, ladder
 
 **Match**:
-A single contest between two participants inside a tournament; the unit a bracket is made of. Its result is a winner plus an optional score.
+A single contest between two participants inside a tournament; the unit a bracket is made of. Its result is an outcome — win, loss, draw, walkover, or disqualification — plus an optional score.
 _Avoid_: Game, round (a round is a set of matches)
 
 **Walkover**:
