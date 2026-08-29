@@ -16,6 +16,16 @@ Differentiators, in order:
 2. **Zero-friction start** (ADR 0003): no sign-up — create a tournament anonymously in seconds, upgrade to an account later.
 3. **Fast, modern, realtime UI**: spectators watch the bracket update live through the Share Link.
 
+## North star
+
+The long-term shape of cobracket is a full competitive-season loop, for any competitive discipline — games and physical sports alike, worldwide:
+
+> Host an Event → participants register → tournaments run → results are recorded → results feed Seeding within the discipline (winning a large tournament raises your seed) → a period's results aggregate into Rankings → the next season begins.
+
+Today communities assemble this by hand on top of start.gg-style APIs, with someone aggregating results into homemade rankings. cobracket automates the loop, supporting both community-run rankings (their own criteria) and official ones. No existing app covers the whole loop. Event hosting (luma-style, including registration) must be MCP-operable like everything else.
+
+Events, registration, rankings, and seasons are direction, not MVP scope; their exact shape (Event–Tournament relationship, disciplines/categories, season governance) is still being settled.
+
 ## Audience and market
 
 - First audience: **game and esports community tournaments** (Discord-centric culture).
@@ -54,4 +64,4 @@ Run one real community tournament (8–16 participants) end to end on cobracket 
 
 ## Roadmap candidates after MVP
 
-Rough order: Discord bot as the second chat surface → participant self-reporting and co-organizers → remaining format families → account upgrade polish and tournament history → spectator-page ads → paid-entry tournaments with fee collection.
+Rough order: Discord bot as the second chat surface → participant self-reporting and co-organizers → remaining format families → luma-style Event hosting with participant registration (MCP-operable) → account upgrade polish and tournament history → rankings and seasons (community-run and official, feeding seeding) → spectator-page ads → paid-entry tournaments with fee collection.
