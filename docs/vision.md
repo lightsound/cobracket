@@ -24,7 +24,13 @@ The long-term shape of cobracket is a full competitive-season loop, for any comp
 
 Today communities assemble this by hand on top of start.gg-style APIs, with someone aggregating results into homemade rankings. cobracket automates the loop, supporting both community-run rankings (their own criteria) and official ones. No existing app covers the whole loop. Event hosting (luma-style, including registration) must be MCP-operable like everything else.
 
-Events, registration, rankings, and seasons are direction, not MVP scope; their exact shape (Event–Tournament relationship, disciplines/categories, season governance) is still being settled.
+Events, registration, rankings, and seasons are direction, not MVP scope; the MVP stays a standalone tournament. Settled so far:
+
+- The **Event is the container**, deliberately inverting start.gg's vocabulary (where "tournament" contains "events"). A tournament can also exist standalone, outside any Event — the MVP depends on that.
+- An Event can host **multiple registration tracks** — different games in one event, or pro and amateur brackets of the same game.
+- A **plain Event with no tournament is valid**; a track can be turned into a tournament later, and detached again.
+- **Season windows are defined by the ranking's publisher**, not globally: cobracket official might publish semiannually while a community runs monthly windows over the same discipline.
+- cobracket official can publish **multiple rankings per discipline**, one per measurement method.
 
 ## Audience and market
 

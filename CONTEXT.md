@@ -8,6 +8,10 @@ cobracket lets anyone easily host and manage a tournament of any format. It aims
 A competitive event in which participants play matches under a chosen format until a result is decided. Not limited to single elimination.
 _Avoid_: Event, competition
 
+**Event**:
+A scheduled gathering, luma-style, with its own page and participant registration. An Event may run zero or more tournaments; hosting a plain Event with no competition is valid.
+_Avoid_: Meetup, gathering. (Beware: start.gg inverts this vocabulary — its "tournament" is the container and its "event" is the competition. In cobracket the Event is always the container.)
+
 **Format**:
 The rule set that determines how a tournament's matches are generated and how it progresses (e.g. single elimination, double elimination, round robin, Swiss, group stage into playoffs).
 _Avoid_: Mode, type
