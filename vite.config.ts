@@ -9,9 +9,9 @@ export default defineConfig({
   plugins: [
     solid({
       start: {
-        // Optional peer `@solidjs/start-devtools` is not installed. Leaving
-        // the default on makes the client import a stub with no DevToolbar
-        // export, so the app never mounts.
+        // Optional peer `@solidjs/start-devtools` is not installed.
+        // next.32+ treats Vite's optional-peer stub as missing, but keep
+        // this off unless that package is actually a dependency.
         devtools: false,
       },
     }),
