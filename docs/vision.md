@@ -27,10 +27,14 @@ Today communities assemble this by hand on top of start.gg-style APIs, with some
 Events, registration, rankings, and seasons are direction, not MVP scope; the MVP stays a standalone tournament. Settled so far:
 
 - The **Event is the container**, deliberately inverting start.gg's vocabulary (where "tournament" contains "events"). A tournament can also exist standalone, outside any Event — the MVP depends on that.
-- An Event can host **multiple registration tracks** — different games in one event, or pro and amateur brackets of the same game.
-- A **plain Event with no tournament is valid**; a track can be turned into a tournament later, and detached again.
-- **Season windows are defined by the ranking's publisher**, not globally: cobracket official might publish semiannually while a community runs monthly windows over the same discipline.
-- cobracket official can publish **multiple rankings per discipline**, one per measurement method.
+- An Event can host **multiple Tracks** (registration units) — different games in one event, or pro and amateur brackets of the same game. A Track can declare which other Tracks it cannot be combined with (luma has no such mechanism; this is cobracket's own).
+- A **plain Event with no tournament is valid**; a Track can be turned into a tournament later. Detaching (un-tournamentizing) is allowed only while no result is recorded; after that it is simply impossible.
+- **Brackets are published before event day** — players prepare, spectators anticipate matchups. Check-in (QR-based, luma-style) confirms attendance; no-shows become Walkovers, never a regenerated bracket.
+- **Event mechanics follow luma as the reference**: capacity, approval-based registration, waitlists, invitations/unlock codes for invited players, QR check-in with express scanning. Recurring events are served by cloning an Event (participants reset, everything else copied) rather than a recurrence system.
+- **Season windows are defined by the ranking's publisher**, not globally: cobracket official might publish semiannually while a community runs monthly windows over the same discipline. Windows can also be rolling (ATP-style "last 12 months"), not only fixed seasons.
+- cobracket official can publish **multiple rankings per discipline**, one per measurement Method; each Ranking also scopes which tournaments it counts (a community counts its own events; official counts the discipline at large).
+- **Rankings attach to Players, not Participants.** The dependency chain this creates: participant self-entry and Player accounts (with claiming of organizer-entered results) must exist before rankings can.
+- Disciplines are **freeform at first** (organizer-entered with suggestions); official curation arrives only where official rankings do.
 
 ## Audience and market
 
@@ -70,4 +74,8 @@ Run one real community tournament (8–16 participants) end to end on cobracket 
 
 ## Roadmap candidates after MVP
 
-Rough order: Discord bot as the second chat surface → participant self-reporting and co-organizers → remaining format families → luma-style Event hosting with participant registration (MCP-operable) → account upgrade polish and tournament history → rankings and seasons (community-run and official, feeding seeding) → spectator-page ads → paid-entry tournaments with fee collection.
+Rough order: Discord bot as the second chat surface → participant self-reporting and co-organizers (Communities) → remaining format families → luma-style Event hosting with Tracks, registration, and check-in (MCP-operable) → Player accounts with claiming of past results → rankings and seasons (community-run and official, feeding seeding) → spectator-page ads → paid-entry tournaments with fee collection.
+
+## Open questions
+
+- **Team competitions**: some disciplines are inherently team-based. Whether rankings score the team, its members, or both is unresolved.
