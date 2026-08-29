@@ -23,15 +23,15 @@
   "license": "MIT",
   "devDependencies": {
     "@import-lint/cli": "^0.1.9",
-    "@solidjs/vite-plugin": "^3.0.0-next.29",
-    "fallow": "^3.17.0",
+    "@solidjs/vite-plugin": "^3.0.0-next.36",
+    "fallow": "^3.20.0",
     "solid2-agent-kit": "github:lightsound/solid2-agent-kit",
-    "typescript": "^7.1.0-dev.20260819.1",
-    "vite": "^8.1.5"
+    "typescript": "^7.1.0-dev.20260829.1",
+    "vite": "^8.2.2"
   },
   "dependencies": {
-    "@solidjs/web": "^2.0.0-rc.0",
-    "convex": "^1.44.0",
-    "solid-js": "^2.0.0-rc.0"
+    "@solidjs/web": "^2.0.0-rc.4",
+    "convex": "^1.45.0",
+    "solid-js": "^2.0.0-rc.4"
   }
 }
