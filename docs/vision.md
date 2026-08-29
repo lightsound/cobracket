@@ -79,3 +79,19 @@ Rough order: Discord bot as the second chat surface → participant self-reporti
 ## Open questions
 
 - **Team competitions**: some disciplines are inherently team-based. Whether rankings score the team, its members, or both is unresolved.
+- **Official-ranking eligibility**: anyone can host events, so official Rankings cannot count arbitrary tournaments — farmed or fake events must not move official standings. The eligibility criteria (minimum size, community reputation, manual curation, verified events) are unresolved.
+- **Claim verification**: how a Player's claim of an organizer-entered Participant record is verified, and how disputes are handled.
+
+## Spec-stage checklist
+
+Deferred deliberately — none of these threaten the domain model, but they must not be forgotten when the relevant spec is written:
+
+- Double elimination details: grand-final bracket reset, optional third-place match (MVP scope!)
+- Walkover cascades: mid-tournament withdrawal or disqualification propagation rules
+- Best-of-N match detail (per-game results) as an additive extension to the winner-plus-score result
+- Composite format modeling: whether group-stage-into-playoffs is one tournament with phases or chained tournaments
+- MCP token scoping (per account vs per tournament) and revocation
+- Season boundaries and timezones (store UTC; the publisher picks the boundary timezone)
+- Spectator-scale reads: a popular Share Link can have orders of magnitude more viewers than participants
+- Seeding provenance: record which Ranking edition seeded a bracket
+- Day-of operation under poor venue connectivity (the stack is online-first)
