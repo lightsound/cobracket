@@ -16,6 +16,14 @@ _Avoid_: Mode, type
 The visual representation of a tournament's match structure produced by its format. Used in the broad sense: elimination trees, round-robin result tables, and standings are all brackets.
 _Avoid_: Tournament table, tree, ladder
 
+**Match**:
+A single contest between two participants inside a tournament; the unit a bracket is made of. Its result is a winner plus an optional score.
+_Avoid_: Game, round (a round is a set of matches)
+
+**Seeding**:
+The deliberate initial placement of participants in a bracket.
+_Avoid_: Ranking, ordering
+
 **Organizer**:
 The person who creates a tournament and operates it end to end: managing participants, entering results, advancing the tournament.
 _Avoid_: Admin, host, owner
