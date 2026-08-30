@@ -11,9 +11,11 @@
     "jsx": "react-jsx",
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
-    /* bun:test types for the co-located format engine tests (not deployed:
-     * the Convex CLI skips files with more than one dot in the name). */
-    "types": ["bun"],
+    /* No ambient test globals: the co-located format engine tests import
+     * from "vitest" explicitly (not deployed: the Convex CLI skips files
+     * with more than one dot in the name). Empty list keeps @types/*
+     * packages (e.g. node) out of the Convex runtime's type environment. */
+    "types": [],
 
     /* These compiler options are required by Convex */
     "target": "ESNext",
