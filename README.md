@@ -24,14 +24,14 @@ bun dev
 
 `convex:dev` starts a local Convex backend and writes `VITE_CONVEX_URL` into `.env.local`. Run `bun dev` in another terminal and open [http://localhost:3000](http://localhost:3000). Editing `src/App.tsx` hot-reloads.
 
-| Command | What it does |
-| --- | --- |
-| `bun run convex:dev` | Local Convex backend (function watch / type generation) |
-| `bun dev` / `bun start` | Vite dev server |
-| `bun run build` | Build the static site into `dist/client` |
-| `bun run serve` | Preview the production build locally |
-| `bun run fallow` | Static analysis for unused code, duplication, complexity ([Fallow](https://github.com/fallow-rs/fallow)) |
-| `bun run fallow:audit` | Gate only the changed diff |
+| Command                 | What it does                                                                                             |
+| ----------------------- | -------------------------------------------------------------------------------------------------------- |
+| `bun run convex:dev`    | Local Convex backend (function watch / type generation)                                                  |
+| `bun dev` / `bun start` | Vite dev server                                                                                          |
+| `bun run build`         | Build the static site into `dist/client`                                                                 |
+| `bun run serve`         | Preview the production build locally                                                                     |
+| `bun run fallow`        | Static analysis for unused code, duplication, complexity ([Fallow](https://github.com/fallow-rs/fallow)) |
+| `bun run fallow:audit`  | Gate only the changed diff                                                                               |
 
 ## Structure
 

@@ -31,18 +31,18 @@ export default defineConfig({
   // tool-managed files (solid2-agent-kit / Convex ai-files / fallow own them).
   fmt: {
     ignorePatterns: [
-      'convex/_generated/**',
-      'docs/solid2-migration-from-react-ja.md',
-      '.claude/**',
-      '.cursor/**',
-      '.agents/**',
-      '.mcp.json',
-      'CLAUDE.md',
-      'AGENTS.md',
+      "convex/_generated/**",
+      "docs/solid2-migration-from-react-ja.md",
+      ".claude/**",
+      ".cursor/**",
+      ".agents/**",
+      ".mcp.json",
+      "CLAUDE.md",
+      "AGENTS.md",
     ],
   },
   lint: {
-    ignorePatterns: ['convex/_generated/**'],
+    ignorePatterns: ["convex/_generated/**"],
     options: {
       typeAware: true,
       typeCheck: true,

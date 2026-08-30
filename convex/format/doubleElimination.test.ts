@@ -3,11 +3,7 @@ import { describe, expect, test } from "bun:test";
 import { deriveProgression, generateBracket } from "./index";
 import type { Progression, RecordedResult } from "./index";
 
-function winOver(
-  matchKey: string,
-  winner: string,
-  loser: string,
-): RecordedResult {
+function winOver(matchKey: string, winner: string, loser: string): RecordedResult {
   return {
     matchKey,
     sides: [
@@ -42,8 +38,7 @@ function play(
   throw new Error("tournament did not complete");
 }
 
-const lowerNumberWins = (a: string, b: string) =>
-  Number(a.slice(1)) < Number(b.slice(1)) ? a : b;
+const lowerNumberWins = (a: string, b: string) => (Number(a.slice(1)) < Number(b.slice(1)) ? a : b);
 
 describe("double elimination with four participants", () => {
   const structure = () =>
@@ -69,9 +64,7 @@ describe("double elimination with four participants", () => {
     const readyOccupants = afterOpeners.readyMatchKeys.map((key) =>
       afterOpeners.matches
         .find((m) => m.key === key)!
-        .occupants.map((o) =>
-          o.kind === "participant" ? o.participantId : "?",
-        )
+        .occupants.map((o) => (o.kind === "participant" ? o.participantId : "?"))
         .sort(),
     );
     expect(readyOccupants).toContainEqual(["p1", "p2"]);
@@ -96,9 +89,7 @@ describe("double elimination with four participants", () => {
       { participantId: "p4", placement: 4 },
     ]);
     // The reset match is structurally unnecessary: cancelled, not pending.
-    const cancelled = progression.matches.filter(
-      (m) => m.state === "cancelled",
-    );
+    const cancelled = progression.matches.filter((m) => m.state === "cancelled");
     expect(cancelled).toHaveLength(1);
   });
 
@@ -147,15 +138,11 @@ describe("double elimination with four participants", () => {
       lowerNumberWins,
     );
     const withoutGrandFinal = preset.slice(0, -1);
-    const [grandFinalKey] = deriveProgression(generated, withoutGrandFinal)
-      .readyMatchKeys;
+    const [grandFinalKey] = deriveProgression(generated, withoutGrandFinal).readyMatchKeys;
     const upset = [...withoutGrandFinal, winOver(grandFinalKey!, "p2", "p1")];
     const [resetKey] = deriveProgression(generated, upset).readyMatchKeys;
 
-    const done = deriveProgression(generated, [
-      ...upset,
-      winOver(resetKey!, "p1", "p2"),
-    ]);
+    const done = deriveProgression(generated, [...upset, winOver(resetKey!, "p1", "p2")]);
 
     expect(done.completed).toBe(true);
     expect(done.championId).toBe("p1");
@@ -175,8 +162,7 @@ describe("double elimination without the bracket reset", () => {
       lowerNumberWins,
     );
     const withoutGrandFinal = preset.slice(0, -1);
-    const [grandFinalKey] = deriveProgression(generated, withoutGrandFinal)
-      .readyMatchKeys;
+    const [grandFinalKey] = deriveProgression(generated, withoutGrandFinal).readyMatchKeys;
 
     const done = deriveProgression(generated, [
       ...withoutGrandFinal,
@@ -218,17 +204,12 @@ describe("double elimination corrections", () => {
       family: "double_elimination",
       grandFinalReset: true,
     });
-    const { results } = play(
-      (results) => deriveProgression(generated, results),
-      lowerNumberWins,
-    );
+    const { results } = play((results) => deriveProgression(generated, results), lowerNumberWins);
     const done = deriveProgression(generated, results);
     expect(done.completed).toBe(true);
 
     // Flip the winners final (p1 vs p2): p2 actually won it.
-    const winnersFinal = done.matches.find(
-      (m) => m.bracket === "winners" && m.round === 2,
-    )!;
+    const winnersFinal = done.matches.find((m) => m.bracket === "winners" && m.round === 2)!;
     const corrected = [...results, winOver(winnersFinal.key, "p2", "p1")];
     const progression = deriveProgression(generated, corrected);
 
@@ -251,9 +232,7 @@ describe("double elimination walkovers", () => {
       opening.readyMatchKeys.find((key) =>
         opening.matches
           .find((m) => m.key === key)!
-          .occupants.some(
-            (o) => o.kind === "participant" && o.participantId === participantId,
-          ),
+          .occupants.some((o) => o.kind === "participant" && o.participantId === participantId),
       )!;
 
     // p4 no-shows their opener; the published bracket is never regenerated
@@ -270,13 +249,9 @@ describe("double elimination walkovers", () => {
       winOver(openerOf("p3"), "p2", "p3"),
     ];
     const midway = deriveProgression(generated, results);
-    const losersOpener = midway.matches.find(
-      (m) => m.bracket === "losers" && m.state === "ready",
-    )!;
+    const losersOpener = midway.matches.find((m) => m.bracket === "losers" && m.state === "ready")!;
     expect(
-      losersOpener.occupants.map((o) =>
-        o.kind === "participant" ? o.participantId : "?",
-      ),
+      losersOpener.occupants.map((o) => (o.kind === "participant" ? o.participantId : "?")),
     ).toContain("p4");
 
     const done = deriveProgression(generated, [
