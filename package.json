@@ -8,10 +8,10 @@
     "bun": "^1.4.0"
   },
   "scripts": {
-    "start": "vite",
-    "dev": "vite",
-    "build": "vite build",
-    "serve": "vite preview",
+    "start": "vp dev",
+    "dev": "vp dev",
+    "build": "vp build",
+    "serve": "vp preview",
     "convex:dev": "convex dev",
     "convex:codegen": "convex codegen",
     "lint:solid": "solid2-agent-kit check",
@@ -28,11 +28,15 @@
     "fallow": "^3.20.0",
     "solid2-agent-kit": "^0.4.5",
     "typescript": "^7.1.0-dev.20260829.1",
-    "vite": "^8.2.2"
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.3.0",
+    "vite-plus": "0.3.0"
   },
   "dependencies": {
     "@solidjs/web": "^2.0.0-rc.4",
     "convex": "^1.45.0",
     "solid-js": "^2.0.0-rc.4"
+  },
+  "overrides": {
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.3.0"
   }
 }
