@@ -56,7 +56,7 @@ Five families, no custom formats (ADR 0002): single elimination, double eliminat
 
 Formats: **single elimination and double elimination.**
 
-Organizer flow: create tournament → enter participants (typed or pasted as a name list; no self-entry) → seeding (random by default, manual reordering) → generate bracket → enter results (winner plus optional score) → tournament completes. The app surfaces "in progress / up next" matches; table assignment is out.
+Organizer flow: create tournament → enter participants (typed or pasted as a name list; no self-entry) → seeding (random by default, manual reordering) → generate bracket → record results (an outcome plus an optional score) → tournament completes. The app surfaces "in progress / up next" matches; table assignment is out.
 
 Chat: **MCP server** wrapping the same operations API as the web UI. The MCP client authenticates with a token issued from the web UI (an anonymous Organizer can issue one too).
 
@@ -85,7 +85,7 @@ Run one real community tournament (8–16 participants) end to end on cobracket 
 
 ## Roadmap candidates after MVP
 
-Rough order: Discord bot as the second chat surface → participant self-reporting and co-organizers (Communities) → remaining format families → luma-style Event hosting with Tracks, registration, and check-in (MCP-operable) → Player accounts with claiming of past results → rankings and seasons (community-run and official, feeding seeding) → spectator-page ads → paid-entry tournaments with fee collection.
+Rough order: luma-style Event hosting with Tracks, registration, and check-in (MCP-operable — the north-star loop starts here, and registration removes the name-typing pain) → Discord bot as the second chat surface, once the operations API covers Events → participant self-reporting and co-organizers (Communities) → remaining format families → Player accounts with claiming of past results → rankings and seasons (community-run and official, feeding seeding) → spectator-page ads → paid-entry tournaments with fee collection.
 
 ## Open questions
 
@@ -97,11 +97,9 @@ Rough order: Discord bot as the second chat surface → participant self-reporti
 
 Deferred deliberately — none of these threaten the domain model, but they must not be forgotten when the relevant spec is written:
 
-- Double elimination details: grand-final bracket reset, optional third-place match (MVP scope!)
 - Walkover cascades: mid-tournament withdrawal or disqualification propagation rules
-- Best-of-N match detail (per-game results) as an additive extension to the winner-plus-score result
+- Best-of-N match detail (per-game results) as an additive extension to the outcome-plus-score result
 - Composite format modeling: whether group-stage-into-playoffs is one tournament with phases or chained tournaments
-- MCP token scoping (per account vs per tournament) and revocation
 - Season boundaries and timezones (store UTC; the publisher picks the boundary timezone)
 - Spectator-scale reads: a popular Share Link can have orders of magnitude more viewers than participants
 - Seeding provenance: record which Ranking edition seeded a bracket

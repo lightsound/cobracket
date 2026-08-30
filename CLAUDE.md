@@ -2,6 +2,10 @@
 
 Project guidance for Claude Code.
 
+## Project context
+
+cobracket hosts and manages tournaments of any format, from the web or from chat (MCP). Direction: `docs/vision.md`. Domain glossary: `CONTEXT.md` — use its terms in code, docs, and commits. Decisions: `docs/adr/`. Current spec: `docs/specs/mvp.md`.
+
 <!-- solid2-agent-kit:solid-rules:start -->
 <!-- Managed by solid2-agent-kit v0.3.1. Do not edit inside this block; run `solid2-kit sync` to update. -->
 
