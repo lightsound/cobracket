@@ -27,6 +27,7 @@ This file gives coding agents project-specific context. Keep it short and update
 - Dev: `bun run convex:dev` and `bun dev` (two processes)
 - Build: `bun run build`
 - Typecheck: `bunx tsc --noEmit`
+- Test: `bun run test` (Vitest is the single test runner — ADR 0006; do not use `bun test`)
 - Solid pattern guard: `bun run lint:solid` (blocks React / Solid 1.x patterns in `src/`)
 - Import boundaries: `bun run lint:imports` ([ImportLint](https://github.com/uhyo/import-lint): each directory is a package; exports are package-private unless tagged `/** @public */`. Model and fixing guide: `.cursor/skills/import-lint/SKILL.md`, or `bunx @import-lint/cli explain <rule>`)
 - Update Solid agent guidance: `bunx solid2-kit sync` (rules, skills, and the managed AGENTS.md/CLAUDE.md blocks are owned by [solid2-agent-kit](https://github.com/lightsound/solid2-agent-kit); do not edit them by hand)
