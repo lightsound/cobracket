@@ -7,7 +7,7 @@ Project guidance for Claude Code.
 cobracket hosts and manages tournaments of any format, from the web or from chat (MCP). Direction: `docs/vision.md`. Domain glossary: `CONTEXT.md` — use its terms in code, docs, and commits. Decisions: `docs/adr/`. Current spec: `docs/specs/mvp.md`.
 
 <!-- solid2-agent-kit:solid-rules:start -->
-<!-- Managed by solid2-agent-kit v0.8.0. Do not edit inside this block; run `solid2-kit sync` to update. -->
+<!-- Managed by solid2-agent-kit v0.8.1. Do not edit inside this block; run `solid2-kit sync` to update. -->
 
 # Solid 2.0 — not React, not Solid 1.x
 

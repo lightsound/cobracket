@@ -30,7 +30,7 @@ This file gives coding agents project-specific context. Keep it short and update
 - Typecheck: `bun run typecheck` (all three TS projects: root `src/`, `convex/`, `scripts/`)
 - Test: `bun run test` (Vitest is the single test runner — ADR 0006; do not use `bun test`)
 - Format + lint: `bun x vp check` (`--fix` to apply). [Vite+](https://viteplus.dev) owns the dev/build/test/fmt/lint toolchain: the `dev`/`build`/`serve`/`test` scripts delegate to `vp`, `vite` is aliased to `@voidzero-dev/vite-plus-core` via `overrides`, and test files import from `vite-plus/test`. oxfmt/oxlint config (including the ignore list for generated/vendored/tool-managed files) lives in the `fmt`/`lint` blocks of `vite.config.ts`; `vp check` also runs tsgolint type checks, which complement but do not replace `tsc --noEmit`
-- Solid pattern guard: `bun run lint:solid` (blocks React / Solid 1.x patterns in `src/`). The kit's `solid2-kit doctor` wiring gate is NOT part of the script yet: 0.8.0's doctor false-positives `stale-guidance` on freshly synced files (its version regex swallows the marker sentence's trailing period), so it would be permanently red — add `&& solid2-kit doctor` once that is fixed upstream
+- Solid pattern guard: `bun run lint:solid` (runs `solid2-kit check` — blocks React / Solid 1.x patterns in `src/` — plus `solid2-kit doctor` for project wiring drift)
 - Theme guard: `bun run lint:theme` (bans `dark:` variants and arbitrary color values; every color goes through the semantic tokens in `src/theme.css`, which are theme-complete via `light-dark()` — ADR 0007)
 - Import boundaries: `bun run lint:imports` ([ImportLint](https://github.com/uhyo/import-lint): each directory is a package; exports are package-private unless tagged `/** @public */`. Model and fixing guide: `.cursor/skills/import-lint/SKILL.md`, or `bunx @import-lint/cli explain <rule>`)
 - Update Solid agent guidance: `bunx solid2-kit sync` (rules, skills, and the managed AGENTS.md/CLAUDE.md blocks are owned by [solid2-agent-kit](https://github.com/lightsound/solid2-agent-kit); do not edit them by hand)
@@ -85,7 +85,7 @@ This file gives coding agents project-specific context. Keep it short and update
 - `bun` is installed at `~/.bun/bin` and symlinked into `/usr/local/bin`, so it resolves in non-login shells too. `bunx` is not symlinked — use `bun x <tool>` (e.g. `bun x tsc --noEmit`, `bun x convex ...`).
 
 <!-- solid2-agent-kit:agents-section:start -->
-<!-- Managed by solid2-agent-kit v0.8.0. Do not edit inside this block; run `solid2-kit sync` to update. -->
+<!-- Managed by solid2-agent-kit v0.8.1. Do not edit inside this block; run `solid2-kit sync` to update. -->
 
 ## Solid 2.0 (not React, not Solid 1.x)
 
