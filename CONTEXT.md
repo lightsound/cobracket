@@ -26,6 +26,10 @@ _Avoid_: Game, round (a round is a set of matches)
 A match resolved without play because one side is absent or withdrew; the present side advances. How no-shows are recorded — the published bracket is never regenerated for them.
 _Avoid_: Forfeit, default win
 
+**Standings**:
+The placement of participants within a single tournament, derived from its recorded results. Distinct from a Ranking, which aggregates across tournaments.
+_Avoid_: Placements, final results
+
 **Seeding**:
 The deliberate initial placement of participants in a bracket.
 _Avoid_: Ranking, ordering
@@ -82,7 +86,7 @@ _Avoid_: Public link, invite link
 
 **Ranking**:
 A published standing of Players in a Discipline. Identified by its publisher (cobracket official or a Community), its Method, its aggregation window (a Season or a rolling period), and the scope of results it counts. One publisher can publish several Rankings for the same Discipline, one per Method.
-_Avoid_: Leaderboard, standings
+_Avoid_: Leaderboard, standings (that means placements within one tournament)
 
 **Method**:
 The measurement methodology a Ranking uses to turn tournament results into standings (e.g. placement-point tables weighted by tournament size, rating systems).

@@ -4,7 +4,7 @@ Synthesized from the grill-with-docs sessions of 2026-08. Vocabulary per [`CONTE
 
 ## Problem Statement
 
-An Organizer who wants to run a small community tournament (8–64 participants, typically a game or esports meetup) has no tool that is fast, pleasant, and simple. Existing tools are slow, dated, and confusing; setting up a bracket and keeping it updated during the event demands more attention than the event itself. Participants and spectators have no live view of the bracket without accounts and friction.
+An Organizer who wants to run a small community tournament (8–64 participants, typically in a game or esports community) has no tool that is fast, pleasant, and simple. Existing tools are slow, dated, and confusing; setting up a bracket and keeping it updated during the event demands more attention than the event itself. Participants and spectators have no live view of the bracket without accounts and friction.
 
 ## Solution
 
@@ -23,7 +23,7 @@ A tournament in seconds, from the web or from chat: an Organizer opens cobracket
 9. As an Organizer, I want to generate the Bracket and see it before anyone else does, so that I can sanity-check it.
 10. As an Organizer, I want to regenerate the Bracket freely until the first result is recorded, so that late roster changes are painless.
 11. As an Organizer, I want the Bracket published in advance of play, so that players can prepare and spectators can anticipate matchups.
-12. As an Organizer, I want to record a Match result as an outcome (win, draw where the format allows, walkover, disqualification) plus an optional score, so that the bracket advances with the level of detail I want.
+12. As an Organizer, I want to record a Match result as an outcome (win, walkover, disqualification) plus an optional score, so that the bracket advances with the level of detail I want.
 13. As an Organizer, I want a no-show recorded as a Walkover, so that the published bracket never has to be regenerated for absences.
 14. As an Organizer, I want to correct a previously recorded result, so that a mis-entry discovered rounds later doesn't ruin the tournament (ADR 0005).
 15. As an Organizer, I want to see which Matches are in progress and which are up next, so that I can keep the event moving without a paper run sheet.
@@ -31,7 +31,7 @@ A tournament in seconds, from the web or from chat: an Organizer opens cobracket
 17. As an Organizer, I want to copy a Share Link, so that I can drop one URL in the group chat and be done with communication.
 18. As an Organizer, I want to issue an MCP token from the web UI, so that my AI client can operate my tournaments.
 19. As an Organizer, I want to revoke an MCP token, so that a leaked token stops working.
-20. As an Organizer using an AI client, I want to do everything stories 1–16 cover through MCP tools, so that I can run a tournament from chat (ADR 0001).
+20. As an Organizer using an AI client, I want to do everything stories 1–17 cover through MCP tools, so that I can run a tournament from chat (ADR 0001).
 21. As a Participant, I want to open the Share Link and see the live Bracket, my next opponent, and results as they land, so that I know when I play without asking the Organizer.
 22. As a Spectator, I want the Share Link to work with no account and update in real time, so that following the tournament is effortless.
 23. As a Spectator, I want final standings visible on the Share Link after completion, so that the record of the tournament persists.
@@ -56,7 +56,7 @@ A tournament in seconds, from the web or from chat: an Organizer opens cobracket
 
 **Frontend.** Solid 2.0 per the repo's rules: async data as computations under Loading/Errored boundaries, stores reconciled from Convex subscriptions, keyed `<For>` rows. The Share Link page is a realtime read-only view of the same derived bracket state the Organizer sees. UI strings go through an i18n layer from the first screen; English first, Japanese provided.
 
-**Visibility of admin vs public.** The Share Link is the tournament's public URL (unlisted). Organizer capabilities exist only behind the Organizer's identity — there is no secret admin link.
+**Visibility of Organizer vs public surfaces.** The Share Link is the tournament's public URL (unlisted). Organizer capabilities exist only behind the Organizer's identity — there is no secret management link.
 
 ## Testing Decisions
 

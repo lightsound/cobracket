@@ -27,7 +27,7 @@ Today communities assemble this by hand on top of start.gg-style APIs, with some
 Events, registration, rankings, and seasons are direction, not MVP scope; the MVP stays a standalone tournament. Settled so far:
 
 - The **Event is the container**, deliberately inverting start.gg's vocabulary (where "tournament" contains "events"). A tournament can also exist standalone, outside any Event — the MVP depends on that.
-- An Event can host **multiple Tracks** (registration units) — different games in one event, or pro and amateur brackets of the same game. A Track can declare which other Tracks it cannot be combined with (luma has no such mechanism; this is cobracket's own).
+- An Event can host **multiple Tracks** (registration units) — different games in one event, or pro and amateur splits of the same game. A Track can declare which other Tracks it cannot be combined with (luma has no such mechanism; this is cobracket's own).
 - A **plain Event with no tournament is valid**; a Track can be turned into a tournament later. Detaching (un-tournamentizing) is allowed only while no result is recorded; after that it is simply impossible.
 - **Brackets are published before event day** — players prepare, spectators anticipate matchups. Check-in (QR-based, luma-style) confirms attendance; no-shows become Walkovers, never a regenerated bracket.
 - **Event mechanics follow luma as the reference**: capacity, approval-based registration, waitlists, invitations/unlock codes for invited players, QR check-in with express scanning. Recurring events are served by cloning an Event (participants reset, everything else copied) rather than a recurrence system.
@@ -40,7 +40,7 @@ Events, registration, rankings, and seasons are direction, not MVP scope; the MV
 
 - First audience: **game and esports community tournaments** (Discord-centric culture).
 - Core scale: **8–64 participants** per tournament.
-- Market: **global from day one.** UI is English-first with Japanese also provided (i18n structure from the start). Source code, docs, and commits are English only.
+- Market: **global from day one.** UI is English-first with Japanese also provided (i18n structure from the start). Source code, docs, and commits are English only, per the AGENTS.md language policy (which grandfathers one vendored Japanese reference).
 
 ## Formats
 
@@ -66,12 +66,12 @@ Explicitly not in MVP: Discord bot, in-app AI assistant, participant accounts, c
 
 Settled in the final audit rounds; each is nearly free on day one and expensive to retrofit:
 
-- **Results are the source of truth** (ADR 0005): brackets, standings, seeding, and rankings are derived and recomputable; corrections are first-class; every result records its actor and time.
-- **Match outcomes are general**: win, loss, draw, walkover, disqualification. Draws exist in some disciplines and round robin is in scope, so "winner required" is never baked into the schema; whether draws are allowed is per-tournament configuration.
+- **Results are the source of truth** (ADR 0005): brackets, standings, and rankings are derived and recomputable; corrections are first-class; every result records its actor and time. (Seeding is an input fixed at bracket generation, not a derived value — though future auto-seeding will consume Rankings.)
+- **Match outcomes are general**: win, loss, draw, walkover, disqualification. Draws exist in some disciplines and round robin is in scope, so "winner required" is never baked into the schema; whether draws are allowed is per-tournament configuration within what the Format permits (elimination formats require a decisive outcome).
 - **Disciplines can alias and merge** from day one: freeform entry will produce "SF6" vs "Street Fighter 6"; the schema must let them merge later with results following, or ranking data rots.
 - **Visibility is a field from day one**: public / unlisted / private on tournaments and events. MVP behavior is unlisted only.
 - **Display names are separable from identity**: a Player can be pseudonymized on request without breaking recorded results or brackets.
-- **Participant self-reporting (post-MVP) is symmetric**: either participant of a match can report the result; the opponent confirms or disputes; conflicting reports escalate to the Organizer, whose entry always wins. ADR 0005 (auditable, correctable results) is what makes auto-advancing the bracket on self-reports safe. At major scale (2,000+ entrants) this, plus match-call notifications, is what keeps operations light.
+- **Participant self-reporting (post-MVP) is symmetric**: either participant of a match can report the result; the opponent confirms or disputes; conflicting reports escalate to the Organizer, whose entry always wins. ADR 0005 (auditable, correctable results) is what makes auto-advancing the bracket on self-reports safe. At major scale (2,000+ participants) this, plus match-call notifications, is what keeps operations light.
 
 ## Monetization hypothesis
 
@@ -106,6 +106,6 @@ Deferred deliberately — none of these threaten the domain model, but they must
 - Day-of operation under poor venue connectivity (the stack is online-first)
 - Match-call notifications for participants at large events
 - Anti-spam and rate limiting for anonymous tournament and event creation
-- Rendering and querying very large brackets: a major can exceed 2,000 entrants — the core design target stays 8–64, but the schema must not hard-cap size
+- Rendering and querying very large brackets: a major can exceed 2,000 participants — the core design target stays 8–64, but the schema must not hard-cap size
 - Global read latency from a single-region Convex deployment
 - Public read API / data export for communities (roadmap candidate)
