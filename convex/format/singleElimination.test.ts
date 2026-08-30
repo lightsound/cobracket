@@ -1,13 +1,9 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { deriveProgression, generateBracket } from "./index";
 import type { RecordedResult } from "./index";
 
-function winOver(
-  matchKey: string,
-  winner: string,
-  loser: string,
-): RecordedResult {
+function winOver(matchKey: string, winner: string, loser: string): RecordedResult {
   return {
     matchKey,
     sides: [
@@ -18,8 +14,7 @@ function winOver(
 }
 
 describe("single elimination with two participants", () => {
-  const structure = () =>
-    generateBracket(["p1", "p2"], { family: "single_elimination" });
+  const structure = () => generateBracket(["p1", "p2"], { family: "single_elimination" });
 
   test("generates one immediately ready match", () => {
     const progression = deriveProgression(structure(), []);
@@ -33,9 +28,7 @@ describe("single elimination with two participants", () => {
     const generated = structure();
     const [finalKey] = deriveProgression(generated, []).readyMatchKeys;
 
-    const progression = deriveProgression(generated, [
-      winOver(finalKey!, "p1", "p2"),
-    ]);
+    const progression = deriveProgression(generated, [winOver(finalKey!, "p1", "p2")]);
 
     expect(progression.completed).toBe(true);
     expect(progression.championId).toBe("p1");
@@ -58,9 +51,7 @@ describe("single elimination with four participants", () => {
 
     expect(progression.readyMatchKeys).toHaveLength(2);
     expect(progression.matches).toHaveLength(3);
-    expect(
-      progression.matches.filter((match) => match.state === "pending"),
-    ).toHaveLength(1);
+    expect(progression.matches.filter((match) => match.state === "pending")).toHaveLength(1);
   });
 
   test("seeds 1 and 2 are placed to meet only in the final", () => {
@@ -68,9 +59,7 @@ describe("single elimination with four participants", () => {
     const openers = progression.matches.filter((match) => match.round === 1);
     const pairings = openers.map((match) =>
       match.occupants
-        .map((occupant) =>
-          occupant.kind === "participant" ? occupant.participantId : "?",
-        )
+        .map((occupant) => (occupant.kind === "participant" ? occupant.participantId : "?"))
         .sort(),
     );
 
@@ -88,10 +77,7 @@ describe("single elimination with four participants", () => {
     expect(beforeFinal.completed).toBe(false);
 
     const [finalKey] = beforeFinal.readyMatchKeys;
-    const done = deriveProgression(generated, [
-      ...afterSemis,
-      winOver(finalKey!, "p2", "p1"),
-    ]);
+    const done = deriveProgression(generated, [...afterSemis, winOver(finalKey!, "p2", "p1")]);
 
     expect(done.completed).toBe(true);
     expect(done.championId).toBe("p2");
@@ -222,9 +208,7 @@ describe("result side validation", () => {
       sides: [{ participantId: "p1", outcome: "win" }],
     } as unknown as RecordedResult;
 
-    expect(() => deriveProgression(generated, [oneSided])).toThrow(
-      "exactly two sides",
-    );
+    expect(() => deriveProgression(generated, [oneSided])).toThrow("exactly two sides");
   });
 
   test("a three-sided record is rejected instead of silently truncated", () => {
@@ -238,8 +222,6 @@ describe("result side validation", () => {
       ],
     } as unknown as RecordedResult;
 
-    expect(() => deriveProgression(generated, [threeSided])).toThrow(
-      "exactly two sides",
-    );
+    expect(() => deriveProgression(generated, [threeSided])).toThrow("exactly two sides");
   });
 });
