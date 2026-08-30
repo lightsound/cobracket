@@ -1,4 +1,5 @@
 import { createSignal } from "solid-js";
+import OrganizerBadge from "./OrganizerBadge";
 import Tasks from "./Tasks";
 import ThemeToggle from "./ThemeToggle";
 import logo from "./logo.svg";
@@ -12,6 +13,7 @@ export default function App() {
     <header class="header">
       <h1 class="font-display text-4xl font-medium tracking-tight">🐍 cobracket</h1>
       <ThemeToggle />
+      <OrganizerBadge />
       <img src={logo} class="logo" alt="Solid logo" />
       <p>
         Edit <code>src/App.tsx</code> and save to reload.

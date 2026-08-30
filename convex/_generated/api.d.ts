@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as auth from "../auth.js";
 import type * as format_doubleElimination from "../format/doubleElimination.js";
 import type * as format_engine from "../format/engine.js";
 import type * as format_errors from "../format/errors.js";
@@ -25,6 +26,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  auth: typeof auth;
   "format/doubleElimination": typeof format_doubleElimination;
   "format/engine": typeof format_engine;
   "format/errors": typeof format_errors;
@@ -62,4 +64,7 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {};
+export declare const components: {
+  auth: import("@convex-dev/auth/core/_generated/component.js").ComponentApi<"auth">;
+  authAnonymous: import("@convex-dev/auth/providers/anonymous/_generated/component.js").ComponentApi<"authAnonymous">;
+};

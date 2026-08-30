@@ -25,6 +25,7 @@ This file gives coding agents project-specific context. Keep it short and update
 
 - Install: `bun install`
 - Dev: `bun run convex:dev` and `bun dev` (two processes)
+- Auth keys (once per deployment, ADR 0003): `bun run auth:keys` while `convex:dev` is running — generates the RS256 key pair and sets `AUTH_PRIVATE_KEY`/`AUTH_JWKS` on the deployment; deploys fail until they exist. Headless environments prefix with `CONVEX_AGENT_MODE=anonymous`
 - Build: `bun run build`
 - Typecheck: `bunx tsc --noEmit`
 - Test: `bun run test` (Vitest is the single test runner — ADR 0006; do not use `bun test`)
