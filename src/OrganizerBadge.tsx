@@ -1,4 +1,4 @@
-import { Errored, Loading, Show, createEffect, createSignal } from "solid-js";
+import { Errored, Loading, Show, createSignal } from "solid-js";
 import { ErrorNotice, errorFallback, errorMessage } from "./ErrorFallback";
 import { createOrganizer, ensureOrganizer } from "./lib/auth";
 import { getConvexUrl } from "./lib/convex";
@@ -12,20 +12,13 @@ export default function OrganizerBadge() {
   if (!getConvexUrl()) return null;
   const organizer = createOrganizer();
   // Sign-in is a handler-initiated mutation, so its failure never reaches the
-  // <Errored> boundary; surface it here and let another click retry. Rendered
-  // only in the signed-out branch, so a sign-in that later succeeds through
-  // another tab or component clears it from view.
-  const [signInError, setSignInError] = createSignal<string | null>(null);
-
-  // A sign-in that succeeds outside startAsOrganizer (another tab, another
-  // component) clears the message too — otherwise it would resurface stale
-  // if the signed-out branch ever re-renders after a later expiry.
-  createEffect(
-    () => organizer(),
-    (id) => {
-      if (id !== null) setSignInError(null);
-    },
-  );
+  // <Errored> boundary; surface it here and let another click retry. Writable
+  // derivation: any change to the auth answer (a sign-in from this or another
+  // tab, a later expiry) resets the message, so it never resurfaces stale.
+  const [signInError, setSignInError] = createSignal<string | null>(() => {
+    organizer();
+    return null;
+  });
 
   async function startAsOrganizer() {
     setSignInError(null);
