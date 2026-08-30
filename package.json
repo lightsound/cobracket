@@ -26,7 +26,7 @@
     "@solidjs/vite-plugin": "^3.0.0-next.36",
     "@types/bun": "^1.4.0",
     "fallow": "^3.20.0",
-    "solid2-agent-kit": "github:lightsound/solid2-agent-kit#a2a17ec8b0af3abbdcafab1eb619feafdcf69533",
+    "solid2-agent-kit": "^0.4.5",
     "typescript": "^7.1.0-dev.20260829.1",
     "vite": "^8.2.2"
   },

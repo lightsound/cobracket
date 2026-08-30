@@ -98,6 +98,8 @@ read these before writing route JSX.
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/lifecycle-actions/affects.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/lifecycle-actions/on-settled.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/lifecycle-actions/refresh.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/advanced/specialized-reactivity/on-cleanup.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/advanced/store-advanced/snapshot.md
 
 ## Reference: components and JSX (solid-js)
 
@@ -113,6 +115,7 @@ read these before writing route JSX.
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/components-context/children.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/components-context/lazy.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/components-context/create-unique-id.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/advanced/manual-hydration/no-hydration.md
 
 ## Reference: @solidjs/web
 
@@ -135,9 +138,13 @@ read these before writing route JSX.
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/jsx-properties/text-content.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/jsx-properties/inner-html.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/server-functions.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/server-functions/get.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/server-functions/rich-arguments.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/request-response.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/request-response/get-request-event.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/request-response/redirect.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/request-response/reload.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/request-response/respond.md
 
 ## Reference: @solidjs/router, @solidjs/meta, @solidjs/vite-plugin
 
@@ -145,9 +152,12 @@ read these before writing route JSX.
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-router/router-factory.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-router/navigation.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-router/data.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-router/history.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-router/filesystem.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-meta/title.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-meta/meta.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-meta/link.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-meta/script.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-meta/head.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/vite-plugin-solid.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/vite-plugin-solid/options.md
