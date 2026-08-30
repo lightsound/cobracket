@@ -133,7 +133,7 @@ function applyResult(
     // instead of dereferencing a missing winner.
     throw new FormatEngineError(
       "draw_progression_unsupported",
-      `result ${resultIndex} is a draw, and draw progression is not implemented for this structure`,
+      `result ${resultIndex} is a draw, and draw progression is not implemented under this format's rules`,
     );
   }
   const loserSide = result.sides.find((side) => side.outcome !== "win")!;

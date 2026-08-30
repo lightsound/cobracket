@@ -54,10 +54,10 @@ const win = (matchKey: string, winner: string, loser: string): RecordedResult =>
 describe("draw progression under draw-allowing rules", () => {
   test("an effective draw record throws a typed draw_progression_unsupported error", () => {
     const structure = structureOf([match("m1", [participant("p1"), participant("p2")])]);
-    const run = () => evaluate(structure, [draw("m1", "p1", "p2")], drawAllowingRules);
 
-    expect(run).toThrow(FormatEngineError);
-    const error = captureError(run);
+    const error = captureError(() =>
+      evaluate(structure, [draw("m1", "p1", "p2")], drawAllowingRules),
+    );
     expect(error).toBeInstanceOf(FormatEngineError);
     expect((error as FormatEngineError).code).toBe("draw_progression_unsupported");
   });
@@ -83,10 +83,8 @@ describe("cyclic slot references", () => {
     const structure = structureOf([
       match("m1", [{ kind: "winnerOf", matchKey: "m1" }, participant("p1")]),
     ]);
-    const run = () => deriveProgression(structure, []);
 
-    expect(run).toThrow(FormatEngineError);
-    const error = captureError(run);
+    const error = captureError(() => deriveProgression(structure, []));
     expect(error).toBeInstanceOf(FormatEngineError);
     expect((error as FormatEngineError).code).toBe("invalid_structure");
   });
@@ -96,10 +94,8 @@ describe("cyclic slot references", () => {
       match("m1", [{ kind: "winnerOf", matchKey: "m2" }, participant("p1")]),
       match("m2", [{ kind: "loserOf", matchKey: "m1" }, participant("p2")], 2),
     ]);
-    const run = () => deriveProgression(structure, []);
 
-    expect(run).toThrow(FormatEngineError);
-    const error = captureError(run);
+    const error = captureError(() => deriveProgression(structure, []));
     expect(error).toBeInstanceOf(FormatEngineError);
     expect((error as FormatEngineError).code).toBe("invalid_structure");
   });
