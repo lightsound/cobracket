@@ -33,6 +33,7 @@ export default defineConfig({
   fmt: {
     ignorePatterns: [
       "convex/_generated/**",
+      ".github/workflows/**",
       "docs/solid2-migration-from-react-ja.md",
       ".claude/**",
       ".cursor/**",

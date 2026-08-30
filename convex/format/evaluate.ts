@@ -64,6 +64,7 @@ function validateResult(
     // stores sides as an array), so guard the arity at runtime too.
     throw new FormatEngineError(
       "invalid_result",
+      // oxlint-disable-next-line typescript/restrict-template-expressions -- the 2-tuple type makes this branch's `length` `never`, but the runtime guard is the point
       `result ${index} must have exactly two sides, got ${result.sides.length}`,
     );
   }
