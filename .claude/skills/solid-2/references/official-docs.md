@@ -9,6 +9,16 @@ Agent-friendly mirror (same content, plain markdown): `https://v2-rebuild--solid
 
 Only trust these Solid 2.0 sources. Solid 1.x docs (docs.solidjs.com) do not apply.
 
+This list is curated for agent work: core TSX first, then the app-stack pages that
+exist when a project has routing, server functions, or document head tags.
+It is not every Advanced reference page. When an API is missing here, look it up
+in `llms.txt` rather than guessing from Solid 1.x or React.
+
+## Getting started
+
+- https://v2-rebuild--solid-docs-v2.netlify.app/getting-started/quick-start.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/getting-started/project-shapes.md
+
 ## Concepts
 
 - https://v2-rebuild--solid-docs-v2.netlify.app/concepts/reactivity.md
@@ -18,12 +28,49 @@ Only trust these Solid 2.0 sources. Solid 1.x docs (docs.solidjs.com) do not app
 - https://v2-rebuild--solid-docs-v2.netlify.app/concepts/boundaries.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/concepts/rendering-and-ssr.md
 
+## Building apps (start mode / fullstack)
+
+Use these when the project has `@solidjs/vite-plugin` start mode, SSR, or server
+functions. Do not invent Next.js / SolidStart 1.x equivalents.
+
+- https://v2-rebuild--solid-docs-v2.netlify.app/building-apps/app-structure.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/building-apps/styling-and-assets.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/building-apps/head-and-metadata.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/building-apps/server-functions.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/building-apps/server-functions/reads-and-live-data.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/building-apps/server-functions/arguments-and-security.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/building-apps/server-functions/mutations-and-responses.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/building-apps/server-functions/metadata-and-transport.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/building-apps/server-functions/progressive-enhancement.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/building-apps/sessions-and-auth.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/building-apps/environment.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/building-apps/middleware-and-api-routes.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/building-apps/deployment.md
+
+## Routing
+
+Routing is optional. If `@solidjs/router` or TanStack Router is in the project,
+read these before writing route JSX.
+
+- https://v2-rebuild--solid-docs-v2.netlify.app/routing/overview.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/routing/solid-router.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/routing/solid-router/setup.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/routing/solid-router/route-definitions.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/routing/solid-router/nested-routes.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/routing/solid-router/navigation.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/routing/solid-router/data.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/routing/solid-router/server-rendering.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/routing/tanstack.md
+
 ## Guides and migration
 
 - https://v2-rebuild--solid-docs-v2.netlify.app/guides/avoid-unnecessary-effects.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/guides/testing.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/migration/from-react.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/migration/from-solid-1.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/migration/from-solid-start.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/migration/from-solid-router.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/migration/from-solid-meta.md
 
 ## Reference: reactivity (solid-js)
 
@@ -65,13 +112,43 @@ Only trust these Solid 2.0 sources. Solid 1.x docs (docs.solidjs.com) do not app
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/components-context/use-context.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/components-context/children.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/components-context/lazy.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/components-context/create-unique-id.md
 
 ## Reference: @solidjs/web
 
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/rendering-ssr/render.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/rendering-ssr/hydrate.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/rendering-ssr/render-to-string.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/rendering-ssr/render-to-stream.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/rendering-ssr/is-server.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/rendering-ssr/is-dev.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/rendering-ssr/client-only.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/rendering-ssr/http-status.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/rendering-ssr/http-header.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/head/use-head.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/components/portal.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/components/dynamic.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/components/dynamic-component.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/jsx-properties/ref.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/jsx-properties/class.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/jsx-properties/style.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/jsx-properties/text-content.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/jsx-properties/inner-html.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/server-functions.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/request-response.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/request-response/get-request-event.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/request-response/redirect.md
+
+## Reference: @solidjs/router, @solidjs/meta, @solidjs/vite-plugin
+
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-router.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-router/router-factory.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-router/navigation.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-router/data.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-meta/title.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-meta/meta.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-meta/link.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-meta/head.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/vite-plugin-solid.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/vite-plugin-solid/options.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/vite-plugin-solid/start.md

@@ -76,14 +76,14 @@ This file gives coding agents project-specific context. Keep it short and update
 - `bun` is installed at `~/.bun/bin` and symlinked into `/usr/local/bin`, so it resolves in non-login shells too. `bunx` is not symlinked — use `bun x <tool>` (e.g. `bun x tsc --noEmit`, `bun x convex ...`).
 
 <!-- solid2-agent-kit:agents-section:start -->
-<!-- Managed by solid2-agent-kit v0.3.1. Do not edit inside this block; run `solid2-kit sync` to update. -->
+<!-- Managed by solid2-agent-kit v0.4.2. Do not edit inside this block; run `solid2-kit sync` to update. -->
 
 ## Solid 2.0 (not React, not Solid 1.x)
 
 - All TSX in this project is Solid 2.0. Components run **once**; reactivity flows through signals/stores to JSX. React patterns (props destructuring, `className`, per-keystroke `onChange`, state-synced-by-effect, `.map()` lists) and Solid 1.x APIs (`createResource`, `onMount`, `solid-js/store`, `Suspense`, path setters) are bugs here.
 - Before writing TSX, read the `solid-2` skill (`.cursor/skills/solid-2/SKILL.md` for Cursor, `.claude/skills/solid-2/SKILL.md` for Claude Code): patterns, decision tables, official doc URLs. Hard rules auto-attach from `.cursor/rules/solid-2.mdc` in Cursor and live in a managed block in `CLAUDE.md` for Claude Code.
 - After editing TSX, run the `solid2-kit check` mechanical gate — it fails on React/Solid 1.x tokens and props destructuring. Use the project's `lint:solid` script if one exists; otherwise `npx solid2-agent-kit check` (with the kit as a devDependency) or `npx github:lightsound/solid2-agent-kit check`. Do not install `eslint-plugin-solid` (built for Solid 1.x; misreads Solid 2 idioms).
-- Solid 2.0 shipped recently and breaks with 1.x — never trust pre-2.0 Solid docs, tutorials, or training knowledge. Verify APIs against https://v2-rebuild--solid-docs-v2.netlify.app/llms.txt (markdown mirror of https://v2.solidjs.com/, which blocks non-browser fetchers).
+- Solid 2.0 shipped recently and breaks with 1.x — never trust pre-2.0 Solid docs, tutorials, or training knowledge. Verify APIs against https://v2-rebuild--solid-docs-v2.netlify.app/llms.txt (markdown mirror of https://v2.solidjs.com/, which blocks non-browser fetchers). If the project has `@solidjs/router`, server functions, or `@solidjs/meta`, use those official pages (see the skill's official-docs index) — not React Router, Next.js, SolidStart 1.x, or Solid Router 0.x/1.x JSX `<Route>`/`<A>`.
 
 <!-- solid2-agent-kit:agents-section:end -->
 

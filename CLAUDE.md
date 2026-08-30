@@ -7,7 +7,7 @@ Project guidance for Claude Code.
 cobracket hosts and manages tournaments of any format, from the web or from chat (MCP). Direction: `docs/vision.md`. Domain glossary: `CONTEXT.md` — use its terms in code, docs, and commits. Decisions: `docs/adr/`. Current spec: `docs/specs/mvp.md`.
 
 <!-- solid2-agent-kit:solid-rules:start -->
-<!-- Managed by solid2-agent-kit v0.3.1. Do not edit inside this block; run `solid2-kit sync` to update. -->
+<!-- Managed by solid2-agent-kit v0.4.2. Do not edit inside this block; run `solid2-kit sync` to update. -->
 
 # Solid 2.0 — not React, not Solid 1.x
 
@@ -26,7 +26,10 @@ Claude Code) for full patterns, decision tables, and official documentation URLs
 1. **Never destructure props.** `function C({ name })` and `const { name } = props` read the
    prop getter once at setup and kill reactivity. Keep `props.x` and read it inside JSX, a
    memo, or an effect compute function. Defaults go at the read site: `props.x ?? fallback`.
-   Rule of thumb: the string `props.` must never appear at component-body top level.
+   Rest props: `omit(props, "label", "value")`, never `const rest = { ...props }` (a snapshot).
+   JSX `{...rest}` is fine once `rest` is a reactive proxy. Rule of thumb: the string `props.`
+   must never appear at component-body top level *as a read* (`const x = props.x`); nested
+   functions (`() => props.x`, `omit(props, ...)`, `children(() => props.children)`) are fine.
    Mechanically enforced by `solid2-kit check` — run it after editing TSX.
 2. **Never read reactive values at component-body top level.** The body runs once, untracked;
    `const v = count()` there is a frozen snapshot (Solid warns in dev). Carry the accessor
@@ -34,37 +37,71 @@ Claude Code) for full patterns, decision tables, and official documentation URLs
 3. Signals are read by **calling** them: `{count()}` in JSX, not `{count}`.
 4. **Derived state is a function, not state + effect.** `const full = () => a() + b()`.
    Never write "a signal plus an effect that syncs it". Use `createMemo` only for expensive
-   computations, multiple consumers, or an equality boundary.
+   computations, multiple consumers, or an equality boundary. When several writes can land
+   before a flush, use the setter updater (`setCount((c) => c + 1)`); `setCount(count() + 1)`
+   reads the last *committed* value and drops the other staged writes. To store a *function*
+   in a signal, wrap it: `setHandler(() => myHandler)` — `setHandler(myHandler)` treats it
+   as an updater.
 5. `class`, not `className`; `for`, not `htmlFor`. `class` accepts strings, conditional
-   objects, and nested arrays: `class={["btn", { active: selected() }]}`. `style` objects use
-   CSS property names (`"background-color"`, not `backgroundColor`) and numbers do NOT
-   auto-append `px`.
+    objects, and nested arrays: `class={["btn", { active: selected() }]}`. Put *conditional*
+    names in an object — `class={`btn ${on() ? "on" : ""}`}` works but rebuilds the whole
+    string, so Solid cannot add/remove one token. `style` objects use CSS property names
+    (`"background-color"`, not `backgroundColor`) and numbers do NOT auto-append `px`
+    (`width: `${n}px``).
 6. **`onInput` for per-keystroke handling.** Solid's `onChange` is the native change event
-   (fires on blur/commit), not React's per-keystroke `onChange`. Handlers receive native DOM
-   events and run untracked — reading a signal inside a handler always gives the current
-   value (stale closures cannot happen; `useCallback` equivalents are unnecessary).
-7. **Lists use `<For>`**, never bare `.map()` in reactive JSX and never `key` props.
-   Row identity: default = item reference; `keyed={(item) => item.id}` = key function
-   (child receives item as an accessor); `keyed={false}` = positional. **Rows from
-   server/refetched data (fresh object references on every update — fetch results,
-   subscription payloads) must use a key function on a stable id**, or every update
-   recreates every row. Reference keying is for local arrays whose item identities are
-   stable (e.g. store rows). Fixed-count / windowed rendering uses `<Repeat>`.
+    (fires on blur/commit), not React's per-keystroke `onChange`. Handlers receive native DOM
+    events and run untracked — reading a signal inside a handler always gives the current
+    value (stale closures cannot happen; `useCallback` equivalents are unnecessary).
+    Checkboxes/radios use `checked={...}`, not `value`. Read fields with
+    `event.currentTarget` (the element that owns the handler), not `event.target`
+    (a nested child). Never pass a setter as the handler (`onClick={setCount}`) —
+    that writes the event object; wrap it: `onClick={() => setCount((c) => c + 1)}`.
+7. **Lists use `<For>`**, never `{list().map(...)}` in reactive JSX and never `key` props.
+    `{todos().map((t) => <Row todo={t} />)}` *renders*, then recreates every row on each
+    update. Row identity: default = item reference; `keyed={(item) => item.id}` = key function
+    (child receives item as an accessor); `keyed={false}` = positional. **Rows from
+    server/refetched data (fresh object references on every update — fetch results,
+    subscription payloads) must use a key function on a stable id**, or every update
+    recreates every row. Reference keying is for local arrays whose item identities are
+    stable (e.g. store rows). Match the child signature to the mode: default item is the
+    **raw** value (`todo.title`); `keyed={(t) => t.id}` / `keyed={false}` pass an
+    **accessor** (`todo().title`). Mixing those still “runs” (you render a function, or
+    throw). Empty lists: `fallback` on `<For>`, not a `.length` branch around it.
+    Sliding windows: `<Repeat from={from()} count={n}>`, not `list.slice(from, from+n)`
+    fed to `<For>` (that rebuilds the window array every time).
 8. **Effects have two phases**: `createEffect(compute, apply)`. All reactive reads go in
-   `compute`; its return value feeds `apply`, which does imperative work and may return a
-   cleanup. Single-argument `createEffect(fn)` is an error in Solid 2. Most React
-   `useEffect` code should not become an effect at all — see the skill.
+    `compute`; its return value feeds `apply`, which does imperative work and may return a
+    cleanup. Single-argument `createEffect(fn)` is an error in Solid 2. Do not substitute
+    `createTrackedEffect` for that — it is an advanced one-callback form that cannot nest
+    primitives. Most React `useEffect` code should not become an effect at all — see the skill.
 9. **Stores update by mutating a draft**: `setStore(draft => { draft.user.name = "Ada" })`.
-   Never rebuild with spreads — that destroys property-level subscriptions.
+   Never rebuild with spreads — that destroys property-level subscriptions. Returning a new
+   array from the setter (`setTodos((t) => t.filter(...))`) *renders* but is unkeyed — same
+   identity loss as wholesale assignment; mutate the draft or `reconcile`. Stores are
+   **property reads** (`todos.length`, `todo.title`), not accessors — never `todos()`.
 10. **Async data is an async computation**: `createMemo(async () => ...)` read under
-    `<Loading>` / `<Errored>` boundaries. No `useEffect` + `setState` fetching, no
-    `createResource`. "Prop with local edits" = writable derivation:
+    `<Loading>` / `<Errored>` boundaries. Read every reactive input **before the first
+    `await`** — post-`await` reads do not subscribe, and in production the computation can
+    sit pending with no retry. No `useEffect` + `setState` fetching, no `createResource`.
+    `<Loading>` wraps the data slot, not page chrome. After first paint it keeps content
+    during refetch (`isPending` for the indicator). Use `on={id()}` (the *value*, not the
+    accessor) only when that identity change should show the fallback again. Pass an async
+    memo to a child as the **accessor** (`user={user}`), and read `props.user()` under that
+    child's `<Loading>` — `user={user()}` throws not-ready at the parent, so the child's
+    boundary never sees it. "Prop with local edits" = writable derivation:
     `createSignal(() => props.value)` or `createStore(() => props.value, fallback)`.
 11. Context: the context object is the provider — `<MyContext value={{ theme, setTheme }}>`
     (no `.Provider`). Pass accessors/setters/stores through context, never snapshot values.
-    `createContext<T>()` without a default throws when read outside a provider (good).
-12. Refs: `let el!: HTMLDivElement` + `ref={(node) => (el = node)}`, or forward `props.ref`.
-    Compose with arrays: `ref={[props.ref, (node) => (el = node)]}`. No `useRef`/`.current`.
+    `createContext<T>()` without a default throws when read outside a provider (good) — use
+    that for any reactive payload. `createContext("light")` is only for a primitive static
+    fallback; a dummy default on a store/signal context *runs* and then silently no-ops
+    without a provider.
+12. Refs: `let el!: HTMLDivElement` + `ref={el}` or `ref={(node) => (el = node)}`, or forward
+    `props.ref`. Compose with arrays: `ref={[props.ref, (node) => (el = node)]}`. No
+    `useRef`/`.current`. Ref callbacks run untracked and **without an owner**; their
+    return values are ignored. Do not create effects or register cleanup inside a ref
+    callback. For reusable directives, create owned primitives (`onSettled`) in a
+    factory and return only the element callback.
 13. **Writes are staged** and commit on the next microtask. Event handlers need nothing
     special; tests and imperative integration code must call `flush()` before observing
     updated state or DOM. Never call `flush()` inside an `action`.
@@ -77,7 +114,9 @@ Claude Code) for full patterns, decision tables, and official documentation URLs
     JSX (`<Show>`, ternary, `<Switch>`/`<Match>`). Early returns on genuinely non-reactive
     values (build-time config, missing env) are fine.
 16. Prefer `textContent` for text-only content. Use `innerHTML` only for trusted or
-    sanitized markup — never interpolate user input into it.
+    sanitized markup — never interpolate user input into it, never React's
+    `dangerouslySetInnerHTML`, and never combine `innerHTML` with JSX children (they fight
+    over the same contents).
 17. **Never narrow a reactive read with a non-null assertion** (`error()!.message`,
     `user()!`). Use `<Show when={value()}>` with a function child — it passes a
     **narrowed accessor**, so no `!` is needed:
@@ -112,7 +151,23 @@ Claude Code) for full patterns, decision tables, and official documentation URLs
     modals/tooltips/overlays through `<Portal>` from `@solidjs/web`; mutations whose writes
     cross an async gap default to `action` + `createOptimistic`/`createOptimisticStore` —
     except reactive clients (e.g. Convex) whose subscriptions already push authoritative
-    state after mutations.
+    state after mutations. Compiler: `"jsxImportSource": "@solidjs/web"` (not `"solid-js"`);
+    Vite plugin is `@solidjs/vite-plugin` (not `vite-plugin-solid`). Server vs browser:
+    `isServer` / `isDev` from `@solidjs/web`, or `clientOnly(() => import("./Widget"))` for
+    browser-only components — never `typeof window` as the SSR boundary. `JSON.stringify(store)`
+    / `structuredClone(store)` without `snapshot(store)` can throw or leak proxies. Async SSR
+    without `<Loading>` *works* but blocks the HTML shell until every read settles — wrap
+    reads, or stream with `renderToStream`.
+23. **Composition.** Pass `props.children` through when you only render them. Inspect or
+    iterate children with `children(() => props.children)` (then `.toArray()`), never a
+    setup-time snapshot. Code-split with `lazy(() => import("./X"))` under `<Loading>` —
+    not `React.lazy` / `<Suspense>`. Named exports: `lazy(() => import("./pages"), { export: "About" })`
+    — `lazy(() => import("./pages").then((m) => ({ default: m.About })))` hydrates wrong
+    because the named export is not a call-site literal. Select a component from reactive
+    state with `dynamic(() => ...)` from `@solidjs/web`
+    (stable identity). If the project has `@solidjs/router`, routes are `createRouter({ routes })`
+    at module scope — not JSX `<Route>` / `<A>` / `<HashRouter>`. Document head is
+    `<Title>` / `<Meta>` from `@solidjs/meta` with **no** `MetaProvider`.
 
 ## Lint heritage: eslint-plugin-solid (Solid 1.x) intents carried into this file
 
@@ -129,7 +184,7 @@ directory (default `src/`).
 | `solid/components-return-once` | still valid | rule 15 |
 | `solid/no-react-specific-props` | still valid | rule 5 + `solid2-kit check` |
 | `solid/no-react-deps` | still valid — never pass React-style dependency arrays | rule 8 + `solid2-kit check` react-hook check |
-| `solid/prefer-for` | still valid | rule 7 |
+| `solid/prefer-for` | still valid — `{list().map}` still renders | rule 7 + `solid2-kit check` |
 | `solid/prefer-show` | now a recommended default when narrowing | rule 17 + `solid2-kit check` |
 | `solid/no-innerhtml` | still valid | rule 16 |
 | `solid/style-prop` | still valid | rule 5 + `solid2-kit check` |
@@ -137,7 +192,7 @@ directory (default `src/`).
 | `solid/event-handlers` | still valid | rule 6 |
 | `solid/jsx-no-undef`, `jsx-no-duplicate-props` | covered by TypeScript | project typecheck |
 | `solid/prefer-classlist` | obsolete — `classList` removed | `solid2-kit check` bans `classList` |
-| `solid/no-unknown-namespaces` | obsolete — `on:`/`use:`/`attr:` removed in 2.0 | banned-API table |
+| `solid/no-unknown-namespaces` | obsolete — `on:`/`use:`/`attr:` removed in 2.0 | banned-API table + `solid2-kit check` |
 | `solid/no-proxy-apis` | obsolete — Solid 2 requires Proxy | not carried |
 
 ## Banned Solid 1.x APIs (Solid 2 replacements)
@@ -158,12 +213,24 @@ directory (default `src/`).
 | `createMutable`, `modifyMutable` | `createStore` + draft setters |
 | `createComputed`, `createSelector`, `createDeferred` | `createMemo`, `createProjection`, external scheduling |
 | `startTransition`, `useTransition` | automatic held updates + `isPending` |
+| `onError` / `catchError` | `<Errored>` or effect bundle `{ effect, error }` |
+| `from(...)` / `observable(...)` (the solid-js helpers) | inbound: async iterable from a memo; outbound: split effect |
+| `createDynamic(...)` | `dynamic(source)` from `@solidjs/web` |
+| `renderToStringAsync(...)` | `await renderToStream(() => <App />)` (one consumer: `pipe` / `pipeTo` / `readable`) |
+| `clearDelegatedEvents` | delete — delegated listeners are scoped to each render root |
+| `vite-plugin-solid` / `jsxImportSource: "solid-js"` | `@solidjs/vite-plugin` / `"jsxImportSource": "@solidjs/web"` |
+| JSX `<Route>` / `<A>` / `<HashRouter>` / `<Navigate>` | `createRouter({ routes })`, plain `<a href={Router.paths...}>`, `hashHistory()` |
+| `<MetaProvider>` | no provider — render `<Title>` / `<Meta>` / `<Link>` from `@solidjs/meta` anywhere |
 | `use:directive`, `on:`/`oncapture:`, `attr:`/`bool:`, `/*@once*/` | `ref` callbacks, camelCase event props, standard attributes, keep values reactive |
 | `resource.loading` / `resource.error` | `<Loading>` boundary / `<Errored>` boundary |
 
 When unsure about any API, verify against the official Solid 2.0 docs — fetchable URLs are
 listed in `references/official-docs.md` next to the `solid-2` skill. Do not guess from
 Solid 1.x or React memory.
+
+`createTrackedEffect` and `storePath` exist in Solid 2 but are not defaults: use two-phase
+`createEffect` unless a single tracked callback is required, and draft setters instead of
+`storePath` except while converting 1.x path setters.
 
 <!-- solid2-agent-kit:solid-rules:end -->
 
