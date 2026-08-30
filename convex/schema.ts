@@ -130,6 +130,8 @@ export default defineSchema({
     matchId: v.id("matches"),
     // One entry per participant in the match, e.g. win/loss, win/walkover,
     // win/disqualification, draw/draw (where the format allows draws).
+    // Exactly two sides is a hard engine contract for the MVP formats;
+    // the format engine rejects any other arity at derivation time.
     sides: v.array(
       v.object({
         participantId: v.id("participants"),

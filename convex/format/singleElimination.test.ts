@@ -205,3 +205,41 @@ describe("draw rejection in elimination formats", () => {
     ).toThrow("draw");
   });
 });
+
+describe("result side validation", () => {
+  const readyFinal = () => {
+    const generated = generateBracket(["p1", "p2"], {
+      family: "single_elimination",
+    });
+    const [finalKey] = deriveProgression(generated, []).readyMatchKeys;
+    return { generated, finalKey: finalKey! };
+  };
+
+  test("a one-sided record is rejected, not a bare TypeError", () => {
+    const { generated, finalKey } = readyFinal();
+    const oneSided = {
+      matchKey: finalKey,
+      sides: [{ participantId: "p1", outcome: "win" }],
+    } as unknown as RecordedResult;
+
+    expect(() => deriveProgression(generated, [oneSided])).toThrow(
+      "exactly two sides",
+    );
+  });
+
+  test("a three-sided record is rejected instead of silently truncated", () => {
+    const { generated, finalKey } = readyFinal();
+    const threeSided = {
+      matchKey: finalKey,
+      sides: [
+        { participantId: "p1", outcome: "win" },
+        { participantId: "p2", outcome: "loss" },
+        { participantId: "p3", outcome: "loss" },
+      ],
+    } as unknown as RecordedResult;
+
+    expect(() => deriveProgression(generated, [threeSided])).toThrow(
+      "exactly two sides",
+    );
+  });
+});

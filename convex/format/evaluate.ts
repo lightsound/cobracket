@@ -59,6 +59,14 @@ function validateResult(
       `result ${index} references unknown match "${result.matchKey}"`,
     );
   }
+  if (result.sides.length !== 2) {
+    // The 2-tuple type is not enforceable at the DB boundary (the schema
+    // stores sides as an array), so guard the arity at runtime too.
+    throw new FormatEngineError(
+      "invalid_result",
+      `result ${index} must have exactly two sides, got ${result.sides.length}`,
+    );
+  }
   const [a, b] = result.sides;
   if (a.participantId === b.participantId) {
     throw new FormatEngineError(
