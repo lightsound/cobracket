@@ -17,7 +17,8 @@ export default defineConfig({
       {
         test: {
           name: "convex",
-          include: ["convex/*.test.ts"],
+          include: ["convex/**/*.test.ts"],
+          exclude: ["convex/format/**"],
           environment: "edge-runtime",
         },
       },

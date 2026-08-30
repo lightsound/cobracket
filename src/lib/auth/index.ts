@@ -82,8 +82,14 @@ export async function ensureOrganizer(): Promise<void> {
   const active = getAuth();
   if (!active) return;
   await active.ready;
+  if (active.client.getSnapshot().isAuthenticated) return;
   await runWithMutex(`${active.url}:signInAnonymous`, async () => {
     if (active.client.getSnapshot().isAuthenticated) return;
+    // Another tab may have signed in while we waited for the lock, and the
+    // in-memory snapshot can lag its storage write. The forced refresh reads
+    // the shared storage, so it adopts that session — and skips the network
+    // entirely when no session exists anywhere.
+    if ((await active.client.fetchAccessToken({ forceRefreshToken: true })) !== null) return;
     const result = await active.convex.mutation(api.auth.signInAnonymous, {});
     await active.client.setSession(result.tokens);
   });

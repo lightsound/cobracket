@@ -41,4 +41,11 @@ test("currentOrganizer is null when signed out or the subject is not a user", as
   expect(await t.query(api.auth.currentOrganizer, {})).toBeNull();
   const stranger = t.withIdentity({ subject: "not-a-users-id" });
   expect(await stranger.query(api.auth.currentOrganizer, {})).toBeNull();
+  // A well-formed id from another table must not pass either — the
+  // normalizeId guard in getOrganizer is what turns it into null.
+  const foreignId = await t.run((ctx) =>
+    ctx.db.insert("disciplines", { name: "Chess", normalizedName: "chess" }),
+  );
+  const foreign = t.withIdentity({ subject: foreignId });
+  expect(await foreign.query(api.auth.currentOrganizer, {})).toBeNull();
 });
