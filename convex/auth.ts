@@ -34,22 +34,35 @@ export const { signInAnonymous } = setupAnonymous(core, {
   component: components.authAnonymous,
 }).attachUserCallbacks({ createUser: internal.auth.createUserAnonymous });
 
+// What a verified request's identity resolves to. "unauthenticated" (no or
+// unverifiable JWT) and "user_missing" (JWT verified, but its user row is
+// gone) are deliberately distinct: conflating them made the client treat an
+// issuer/JWKS misconfiguration as a deleted user and revoke real sessions.
+type SessionState =
+  | { kind: "unauthenticated" }
+  | { kind: "user_missing" }
+  | { kind: "organizer"; userId: Id<"users"> };
+
+async function resolveSession(ctx: QueryCtx): Promise<SessionState> {
+  // getAuthUserId types the JWT subject but does not validate it: normalizeId
+  // rejects a malformed or foreign-table subject, and the read rejects a
+  // deleted user whose JWT is still live — never a dangling id.
+  const subject = await getAuthUserId(ctx);
+  if (subject === null) return { kind: "unauthenticated" };
+  const userId = ctx.db.normalizeId("users", subject);
+  if (userId === null) return { kind: "user_missing" };
+  if ((await ctx.db.get("users", userId)) === null) return { kind: "user_missing" };
+  return { kind: "organizer", userId };
+}
+
 /**
  * Who the caller is: the signed-in Organizer's user id, or null. The seam
  * every Organizer capability (operations API, MCP tokens later) resolves
  * identity through, so an added auth mechanism stays an edit to this module.
- *
- * getAuthUserId types the JWT subject but does not validate it: normalizeId
- * rejects a malformed or foreign-table subject, and the read rejects a
- * deleted user whose JWT is still live — either becomes null, never a
- * dangling id.
  */
 export async function getOrganizer(ctx: QueryCtx): Promise<Id<"users"> | null> {
-  const subject = await getAuthUserId(ctx);
-  if (subject === null) return null;
-  const userId = ctx.db.normalizeId("users", subject);
-  if (userId === null) return null;
-  return (await ctx.db.get("users", userId)) === null ? null : userId;
+  const session = await resolveSession(ctx);
+  return session.kind === "organizer" ? session.userId : null;
 }
 
 // The same answer for clients, as a subscribable query.
@@ -57,4 +70,17 @@ export const currentOrganizer = query({
   args: {},
   returns: v.union(v.id("users"), v.null()),
   handler: async (ctx) => getOrganizer(ctx),
+});
+
+// The full distinction, for the client's session verification: it must
+// react differently to a missing user row (drop the dead session) and an
+// unverifiable token (keep the session, report the misconfiguration).
+export const sessionState = query({
+  args: {},
+  returns: v.union(
+    v.object({ kind: v.literal("unauthenticated") }),
+    v.object({ kind: v.literal("user_missing") }),
+    v.object({ kind: v.literal("organizer"), userId: v.id("users") }),
+  ),
+  handler: async (ctx) => resolveSession(ctx),
 });

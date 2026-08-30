@@ -91,13 +91,13 @@ export function initAuth(): void {
  * Web Locks-backed mutex instead of minting multiple anonymous users.
  *
  * Whether the session's user row still exists is backend state (a row can
- * vanish with no client-side auth flip), so there is deliberately no
- * client-side "already verified" fast path: every attempt re-establishes the
- * session and asks the server under the lock — two small HTTP round trips,
- * human-action-paced. A cache here would recreate the dead-end the check
- * exists to break; every call inside the lock is HTTP, so an unreachable
- * server rejects promptly (surfacing the error, releasing the lock) instead
- * of queueing forever on a disconnected websocket.
+ * vanish with no client-side auth flip), so there is no client-side
+ * "already verified" cache: every attempt asks the server. The common case —
+ * a cached token the server confirms — is one read-only HTTP query with no
+ * lock taken; only an unconfirmed session enters the cross-tab lock and
+ * refreshes. Every call is HTTP, so an unreachable server rejects promptly
+ * (surfacing the error, releasing the lock) instead of queueing forever on
+ * a disconnected websocket.
  *
  * @public
  */
@@ -105,46 +105,70 @@ export async function ensureOrganizer(): Promise<void> {
   const active = getAuth();
   if (!active) return;
   await active.ready;
-  await runWithMutex(`${active.url}:signInAnonymous`, async () => {
-    // A fresh token proves some session is live: ours, or one another tab
-    // persisted while we waited for the lock — the forced refresh reads the
-    // shared storage. It skips the network only when this browser holds no
-    // refresh token at all; a token a cleared backend no longer recognizes
-    // costs one round trip that returns null.
-    const token = await active.client.fetchAccessToken({ forceRefreshToken: true });
-    if (token !== null) {
-      // Trust the session only if the backend still knows its user. A live
-      // session whose user row is gone (a deleted row) would otherwise
-      // dead-end: signed out in the UI, yet every sign-in attempt a no-op.
-      if (await verifyOrganizer(active.url, token)) return;
-      await active.client.signOut();
-    }
-    const result = await active.httpClient.mutation(api.auth.signInAnonymous, {});
-    await active.client.setSession(result.tokens);
-    // A brand-new session failing the same check does not mean a missing
-    // user row — it means the deployment cannot verify the tokens it just
-    // minted (issuer/JWKS drift). Fail loudly rather than letting the next
-    // attempt revoke this session and mint another orphaned user.
-    if (!(await verifyOrganizer(active.url, result.tokens.accessToken))) {
-      throw new Error(
-        "Signed in, but the deployment rejected its own access token — " +
-          "check auth.config.ts, CONVEX_SITE_URL, and the AUTH_JWKS keys.",
-      );
-    }
-  });
+  const cached = active.client.getAccessToken();
+  if (cached !== null && (await fetchSessionState(active.url, cached)) === "organizer") return;
+  await runWithMutex(`${active.url}:signInAnonymous`, () => establishOrganizerSession(active));
+}
+
+/** The locked slow path: reconcile whatever session exists, else sign in. */
+async function establishOrganizerSession(active: Auth): Promise<void> {
+  // A fresh token proves some session is live: ours, or one another tab
+  // persisted while we waited for the lock — the forced refresh reads the
+  // shared storage. It skips the network only when this browser holds no
+  // refresh token at all; a token a cleared backend no longer recognizes
+  // costs one round trip that returns null.
+  const token = await active.client.fetchAccessToken({ forceRefreshToken: true });
+  if (token !== null && (await reconcileLiveSession(active, token))) return;
+  const result = await active.httpClient.mutation(api.auth.signInAnonymous, {});
+  await active.client.setSession(result.tokens);
+  if ((await fetchSessionState(active.url, result.tokens.accessToken)) !== "organizer") {
+    // Keep even this session: the next attempt then reports the drift in
+    // reconcileLiveSession without minting another orphaned user.
+    throw new Error(
+      "Signed in, but the deployment rejected the new session's token — " +
+        "check auth.config.ts, CONVEX_SITE_URL, and the AUTH_JWKS keys.",
+    );
+  }
 }
 
 /**
- * Ask the backend whether the given access token maps to an existing
- * Organizer. A dedicated HTTP client per call: the websocket client's
- * query() can answer from a stale pre-auth local cache when a component
- * subscribes to the same query, and authenticating the shared HTTP client
- * would leak a stale bearer token into later refresh calls.
+ * Decide what a live session's verification result means: satisfied
+ * (organizer exists), misconfigured (throw, keep the session), or genuinely
+ * dead (sign out, return false so the caller mints a fresh identity).
  */
-async function verifyOrganizer(url: string, token: string): Promise<boolean> {
+async function reconcileLiveSession(active: Auth, token: string): Promise<boolean> {
+  const state = await fetchSessionState(active.url, token);
+  if (state === "organizer") return true;
+  if (state === "unauthenticated") {
+    // The token was minted a moment ago, so this is the deployment failing
+    // to verify its own JWTs (issuer/JWKS drift), not a dead session. Keep
+    // the session — it recovers when the config does — and report instead
+    // of revolving through revoke-and-mint.
+    throw new Error(
+      "The deployment rejected a freshly minted access token — " +
+        "check auth.config.ts, CONVEX_SITE_URL, and the AUTH_JWKS keys.",
+    );
+  }
+  // user_missing: the JWT verifies but its user row is gone (a cleared dev
+  // backend, a deleted row). The session is genuinely dead.
+  await active.client.signOut();
+  return false;
+}
+
+/**
+ * Ask the backend what the given access token resolves to. A dedicated HTTP
+ * client per call: the websocket client's query() can answer from a stale
+ * pre-auth local cache when a component subscribes to the same query, and
+ * authenticating the shared HTTP client would leak a stale bearer token
+ * into later refresh calls.
+ */
+async function fetchSessionState(
+  url: string,
+  token: string,
+): Promise<"unauthenticated" | "user_missing" | "organizer"> {
   const verifier = new ConvexHttpClient(url);
   verifier.setAuth(token);
-  return (await verifier.query(api.auth.currentOrganizer, {})) !== null;
+  return (await verifier.query(api.auth.sessionState, {})).kind;
 }
 
 /**

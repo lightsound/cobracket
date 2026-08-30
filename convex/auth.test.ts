@@ -36,6 +36,21 @@ test("currentOrganizer resolves the verified subject to a users id", async () =>
   expect(await asOrganizer.query(api.auth.currentOrganizer, {})).toBe(userId);
 });
 
+test("sessionState distinguishes missing users from unauthenticated callers", async () => {
+  const t = convexTest(schema, modules);
+  expect(await t.query(api.auth.sessionState, {})).toEqual({ kind: "unauthenticated" });
+  const userId = await signUp(t);
+  const asOrganizer = t.withIdentity({ subject: userId });
+  expect(await asOrganizer.query(api.auth.sessionState, {})).toEqual({
+    kind: "organizer",
+    userId,
+  });
+  // The distinction the client's recovery depends on: a verified JWT whose
+  // user row is gone must NOT read as merely unauthenticated.
+  await t.run((ctx) => ctx.db.delete("users", userId));
+  expect(await asOrganizer.query(api.auth.sessionState, {})).toEqual({ kind: "user_missing" });
+});
+
 test("currentOrganizer is null for a deleted user's still-live session", async () => {
   const t = convexTest(schema, modules);
   const userId = await signUp(t);
