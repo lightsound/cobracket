@@ -10,7 +10,8 @@ This file gives coding agents project-specific context. Keep it short and update
 
 ## Project Overview
 
-- Primary app: cobracket, a Solid 2.0 `bare` app with a Convex task list
+- Product: cobracket — host and manage tournaments of any format, from the web or from chat (MCP). Read `docs/vision.md` for direction, `CONTEXT.md` for the domain glossary (use its terms in code and docs), `docs/adr/` for decisions, `docs/specs/mvp.md` for the current spec
+- Current code is template scaffolding (Solid 2.0 `bare` + a Convex task-list demo), to be replaced per the MVP spec
 - Main entry points: `src/App.tsx`, `src/Document.tsx` (Solid start convention, no `index.html`), `convex/schema.ts`, `convex/tasks.ts`
 - Important directories: `src/` (UI), `convex/` (backend functions)
 
