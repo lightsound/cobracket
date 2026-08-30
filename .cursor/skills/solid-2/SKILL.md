@@ -55,6 +55,7 @@ Most React `useEffect` code should NOT become `createEffect`:
 | Fetch data in an effect, copy into state | `createMemo(async () => ...)` + `<Loading>` |
 | React to a user interaction | do the work in the event handler or an `action` |
 | Sync one state into another | delete the second state; derive it |
+| Reset/clear state when another reactive value changes | writable derivation: `createSignal(() => { source(); return initial; })` — not an effect calling the setter |
 | Push a settled reactive value into a non-Solid system (DOM API, third-party widget, analytics, subscription) | `createEffect(compute, apply)` — this is the only real use |
 | One-time setup after mount (`onMount`) | `onSettled(() => { ...; return cleanup })` |
 | Measure DOM / observe size after paint | ref **directive factory** + `onSettled` (writes a *new* input; not an effect that copies state) |
@@ -221,6 +222,28 @@ Reads inside `apply` do not track. Extract every needed reactive value in `compu
 (e.g. `() => ({ name: user.name, role: user.role })`). Passing a store proxy into `apply`
 and reading `user.name` there *runs once* and never retriggers. Compute-phase errors can be
 intercepted with the bundle form `createEffect(compute, { effect, error })`.
+
+A two-phase effect whose apply only calls a local signal setter is "state + effect" in
+disguise — formally legal Solid 2, still rule 4 (`solid2-kit check` flags it). The reset
+form of a writable derivation replaces it, and moves the source read to the read site
+(under that site's boundaries) instead of an effect compute:
+
+```tsx
+// WRONG — signal synced by an effect; organizer() errors bypass the read site's <Errored>
+const [signInError, setSignInError] = createSignal<string | null>(null);
+createEffect(
+  () => organizer(),
+  (id) => {
+    if (id !== null) setSignInError(null);
+  },
+);
+
+// CORRECT — writable derivation: resets when organizer() changes; the setter still works
+const [signInError, setSignInError] = createSignal<string | null>(() => {
+  organizer();
+  return null;
+});
+```
 
 ### Async data
 
@@ -529,6 +552,24 @@ test('increments on click', () => {
 `jsxImportSource` for tests and app code is `"@solidjs/web"`, not `"solid-js"`.
 Vite plugin is `@solidjs/vite-plugin`, not `vite-plugin-solid`.
 
+To turn those dev diagnostics into a hard gate, patch `console.warn` in the test setup
+file to rethrow unexpected warnings — then any top-level reactive read or unowned write
+an agent sneaks in fails the suite instead of scrolling by.
+
+## Client mode: no server HTML, no hydration reflexes
+
+The `@solidjs/vite-plugin` default (client mode, the `bare` tier) serves an empty-body
+shell and mounts with `render()`. Nothing is server-rendered and nothing hydrates, so
+**React's hydration-mismatch playbook does not transfer**: do not start signals with a
+"server-safe" initial value and adopt `localStorage` / `matchMedia` after mount, do not
+two-pass render, and there is no `suppressHydrationWarning`. Read client sources directly
+when creating state — `createSignal(storedPreference())` is correct in client mode. A
+deferred "safe" initial value is worse than unnecessary: if anything persists the value
+(an effect writing `localStorage`), the placeholder **overwrites the user's stored
+preference** before the real value is adopted. Mismatch only becomes a concept in
+start/SSR mode, where `hydrate()` mounts onto server HTML — and the Solid answer there is
+`isServer` / `clientOnly`, still not React-style deferred adoption.
+
 ## App stack (only if the project has these packages)
 
 This kit's always-applied rules cover `solid-js` + `@solidjs/web` TSX. Official
@@ -543,8 +584,12 @@ Solid Router 0.x/1.x stand-ins.** Patterns below; fetch the matching pages from
 { "compilerOptions": { "jsx": "preserve", "jsxImportSource": "@solidjs/web" } }
 ```
 
-Import DOM `JSX` types from `@solidjs/web`; renderer-neutral `Component` /
-`ParentProps` from `solid-js`. Vite: `import solid from "@solidjs/vite-plugin"`
+`solid-js` does **not** export a `JSX` namespace — `import type { JSX } from "solid-js"`
+is a type error (TS2305), and `JSX.Element` as the children type is a React reflex.
+Children/return types are the renderer-neutral `Element` from `solid-js`
+(`children?: Element`), alongside `Component` / `ParentProps` / `Accessor` / `Setter`.
+DOM-specific `JSX` types (`JSX.IntrinsicElements`, `JSX.CSSProperties`) and
+`ComponentProps` come from `@solidjs/web`. Vite: `import solid from "@solidjs/vite-plugin"`
 with `start: true` / `ssr: true` / `serverFunctions: true` only when the
 project already uses start mode. Tiers are `bare` → `basic` (router) →
 `fullstack` (SSR + server functions); do not jump a tier without cause.
@@ -790,6 +835,8 @@ how to reuse. Prefer the form on the right.
 | `createMemo(() => { void save(); return x(); })` / an effect that calls an action | invoke actions from handlers, not from memos or effects |
 | `createSignal(props.value)` / `createStore(props.items)` | `createSignal(() => props.value)` / `createStore(() => props.items, fallback)` — a bare `props.x` at setup is a snapshot |
 | `createRenderEffect` / `createTrackedEffect` as the default effect | two-phase `createEffect(compute, apply)` |
+| `createEffect(() => source(), () => setError(null))` to reset a signal | `createSignal(() => { source(); return null; })` — the writable derivation resets on change; a sole-setter apply is rule 4 |
+| a "server-safe" initial value adopted after mount (React hydration-mismatch fix) | client mode mounts with `render()` into an empty body — no hydration, no mismatch; read `localStorage` / `matchMedia` directly at signal creation |
 
 ```tsx
 // WRONG — post-await read never subscribes; production can hang pending
@@ -909,7 +956,9 @@ always-applied rules installed alongside this skill.
 - [ ] No props destructuring; no `props.` at component-body top level.
 - [ ] Every reactive read (`signal()`, `props.x`, `store.x`) sits in JSX, a memo, an effect
       compute, or a boundary — not the component body.
-- [ ] No signal-synced-by-effect; derived values are functions or memos.
+- [ ] No signal-synced-by-effect; derived values are functions or memos. Reset-on-change
+      is a writable derivation (`createSignal(() => { source(); return initial; })`), not
+      an effect calling the setter.
 - [ ] Event handlers wrap setters (`onClick={() => setX(...)}`), use `currentTarget`,
       and `onInput` for keystrokes. `innerHTML` is sanitized and not mixed with children.
 - [ ] Async memos are passed as accessors (`user={user}`), not `user={user()}`, so
@@ -929,6 +978,8 @@ always-applied rules installed alongside this skill.
 - [ ] Rest props via `omit`, not `{ ...props }`. Conditional `class` via objects, not string concat.
 - [ ] Input filters write back to the DOM on reject (inputs do not rewind).
 - [ ] No Solid 1.x imports or APIs (`solid-js/store`, `createResource`, `onMount`, `Suspense`, ...).
+      No `JSX` imported from `solid-js` — children/return types are `Element` from
+      `solid-js`; DOM `JSX` types come from `@solidjs/web`.
 - [ ] Inspect children with `children()`; code-split with `lazy` + `<Loading>`; reactive
       component choice with `dynamic()`. No `React.lazy`, no effects inside ref callbacks.
 - [ ] Browser-only code uses `isServer` / `clientOnly`, not `typeof window`.
@@ -944,4 +995,5 @@ always-applied rules installed alongside this skill.
 - [ ] `jsxImportSource` is `@solidjs/web`; Vite plugin is `@solidjs/vite-plugin`.
       No `@solidjs/start`, `vinxi`, `"use client"`, or Next.js imports.
 - [ ] Single return per component; no early returns on reactive conditions.
-- [ ] `solid2-kit check` and the project's typecheck pass.
+- [ ] `solid2-kit check` and the project's typecheck pass; `solid2-kit doctor` too if
+      `package.json`, tsconfig, or root config files changed.
