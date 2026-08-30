@@ -108,8 +108,9 @@ export async function ensureOrganizer(): Promise<void> {
   await runWithMutex(`${active.url}:signInAnonymous`, async () => {
     // A fresh token proves some session is live: ours, or one another tab
     // persisted while we waited for the lock — the forced refresh reads the
-    // shared storage (and skips the network when no session exists at all,
-    // including one a cleared backend no longer recognizes).
+    // shared storage. It skips the network only when this browser holds no
+    // refresh token at all; a token a cleared backend no longer recognizes
+    // costs one round trip that returns null.
     const token = await active.client.fetchAccessToken({ forceRefreshToken: true });
     if (token !== null) {
       // Trust the session only if the backend still knows its user. Verify

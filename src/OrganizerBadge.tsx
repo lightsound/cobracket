@@ -1,4 +1,4 @@
-import { Errored, Loading, Show, createSignal } from "solid-js";
+import { Errored, Loading, Show, createEffect, createSignal } from "solid-js";
 import { ErrorNotice, errorFallback, errorMessage } from "./ErrorFallback";
 import { createOrganizer, ensureOrganizer } from "./lib/auth";
 import { getConvexUrl } from "./lib/convex";
@@ -16,6 +16,16 @@ export default function OrganizerBadge() {
   // only in the signed-out branch, so a sign-in that later succeeds through
   // another tab or component clears it from view.
   const [signInError, setSignInError] = createSignal<string | null>(null);
+
+  // A sign-in that succeeds outside startAsOrganizer (another tab, another
+  // component) clears the message too — otherwise it would resurface stale
+  // if the signed-out branch ever re-renders after a later expiry.
+  createEffect(
+    () => organizer(),
+    (id) => {
+      if (id !== null) setSignInError(null);
+    },
+  );
 
   async function startAsOrganizer() {
     setSignInError(null);

@@ -5,7 +5,7 @@ import { env } from "./_generated/server";
 // is process.env at runtime — fail the deploy loudly rather than shipping
 // providers with an undefined issuer, which rejects every JWT untraceably.
 const siteUrl: string | undefined = env.CONVEX_SITE_URL;
-if (siteUrl === undefined) {
+if (!siteUrl) {
   throw new Error("CONVEX_SITE_URL is not available to auth.config.ts");
 }
 
