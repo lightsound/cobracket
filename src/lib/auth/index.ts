@@ -70,6 +70,11 @@ export function initAuth(): void {
   getAuth();
 }
 
+// Whether the backend confirmed the current session's user row exists. Reset
+// on every auth-state flip; makes the ensureOrganizer fast path free after
+// its first verification.
+let sessionVerified = false;
+
 /**
  * Make sure the caller has an Organizer identity, signing in anonymously if
  * this browser has no live session (story 1: zero sign-up). Once it resolves,
@@ -81,11 +86,6 @@ export function initAuth(): void {
  *
  * @public
  */
-// Whether the backend confirmed the current session's user row exists. Reset
-// on every auth-state flip; makes the ensureOrganizer fast path free after
-// its first verification.
-let sessionVerified = false;
-
 export async function ensureOrganizer(): Promise<void> {
   const active = getAuth();
   if (!active) return;
