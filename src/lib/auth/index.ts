@@ -121,18 +121,14 @@ async function cachedSessionSatisfies(active: Auth): Promise<boolean> {
   if (cached === null) return false;
   try {
     return (await fetchSessionState(active.url, cached)) === "organizer";
-  } catch {
-    return true;
+  } catch (error) {
+    // fetch signals network failure as a TypeError; anything else is the
+    // server actively rejecting the token (an expired or unverifiable JWT
+    // is refused before the query runs) — take the locked path, which
+    // refreshes to a fresh token and re-verifies.
+    return error instanceof TypeError;
   }
 }
-
-const AUTH_DRIFT_REMEDIATION = "check auth.config.ts, CONVEX_SITE_URL, and the AUTH_JWKS keys.";
-
-// Set when a freshly minted session failed verification: at that point
-// signing out and minting again cannot help (the failure is systematic, not
-// a stale session), so recovery paths report instead of revolving. Cleared
-// by the next successful verification; a page reload retries once.
-let lastMintUnverified = false;
 
 /** The locked slow path: reconcile whatever session exists, else sign in. */
 async function establishOrganizerSession(active: Auth): Promise<void> {
@@ -146,41 +142,28 @@ async function establishOrganizerSession(active: Auth): Promise<void> {
   const result = await active.httpClient.mutation(api.auth.signInAnonymous, {});
   await active.client.setSession(result.tokens);
   if ((await fetchSessionState(active.url, result.tokens.accessToken)) !== "organizer") {
-    // Keep even this session: the next attempt then reports the drift in
-    // reconcileLiveSession without minting another orphaned user.
-    lastMintUnverified = true;
-    throw new Error(
-      `Signed in, but the deployment rejected the new session's token — ${AUTH_DRIFT_REMEDIATION}`,
-    );
+    throw new Error("Signed in, but the new session's user could not be resolved.");
   }
-  lastMintUnverified = false;
 }
 
 /**
  * Decide what a live session's verification result means: satisfied
- * (organizer exists), misconfigured (throw, keep the session), or genuinely
- * dead (sign out, return false so the caller mints a fresh identity).
+ * (organizer exists) or genuinely dead (sign out, return false so the
+ * caller mints a fresh identity).
+ *
+ * A deployment that cannot verify its own tokens (issuer/JWKS drift) never
+ * reaches the verdicts here: Convex refuses the unverifiable JWT before the
+ * query runs, so fetchSessionState throws the server's own diagnostic —
+ * which surfaces to the caller with the session kept intact. Verified
+ * empirically against the local backend (InvalidAuthHeader, not a null
+ * identity).
  */
 async function reconcileLiveSession(active: Auth, token: string): Promise<boolean> {
   const state = await fetchSessionState(active.url, token);
-  if (state === "organizer") {
-    lastMintUnverified = false;
-    return true;
-  }
-  if (state === "unauthenticated" || lastMintUnverified) {
-    // The token was minted a moment ago, so a non-organizer verdict here is
-    // the deployment failing to verify or resolve its own sessions
-    // (issuer/JWKS drift; or, when the last mint already failed the same
-    // check, a systematic user_missing). Keep the session — it recovers
-    // when the config does — and report instead of revolving through
-    // revoke-and-mint, which would orphan a users row per attempt.
-    throw new Error(
-      `The deployment rejected a freshly minted access token — ${AUTH_DRIFT_REMEDIATION}`,
-    );
-  }
-  // user_missing on a session whose mints have verified before: the JWT
-  // verifies but its user row is gone (a cleared dev backend, a deleted
-  // row). The session is genuinely dead.
+  if (state === "organizer") return true;
+  // user_missing (or, unreachable with a token sent, unauthenticated): the
+  // JWT verifies but its user row is gone — a cleared dev backend, a
+  // deleted row. The session is genuinely dead.
   await active.client.signOut();
   return false;
 }

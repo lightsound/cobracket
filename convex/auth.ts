@@ -34,10 +34,11 @@ export const { signInAnonymous } = setupAnonymous(core, {
   component: components.authAnonymous,
 }).attachUserCallbacks({ createUser: internal.auth.createUserAnonymous });
 
-// What a verified request's identity resolves to. "unauthenticated" (no or
-// unverifiable JWT) and "user_missing" (JWT verified, but its user row is
-// gone) are deliberately distinct: conflating them made the client treat an
-// issuer/JWKS misconfiguration as a deleted user and revoke real sessions.
+// What a verified request's identity resolves to. "unauthenticated" (no JWT
+// sent — an unverifiable one is refused by Convex before the query runs)
+// and "user_missing" (JWT verified, but its user row is gone) are
+// deliberately distinct: conflating them once made the client treat any
+// verification gap as a deleted user and revoke real sessions.
 type SessionState =
   | { kind: "unauthenticated" }
   | { kind: "user_missing" }
