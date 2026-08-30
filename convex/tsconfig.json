@@ -11,6 +11,9 @@
     "jsx": "react-jsx",
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
+    /* bun:test types for the co-located format engine tests (not deployed:
+     * the Convex CLI skips files with more than one dot in the name). */
+    "types": ["bun"],
 
     /* These compiler options are required by Convex */
     "target": "ESNext",

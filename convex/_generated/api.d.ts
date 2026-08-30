@@ -8,6 +8,14 @@
  * @module
  */
 
+import type * as format_doubleElimination from "../format/doubleElimination.js";
+import type * as format_engine from "../format/engine.js";
+import type * as format_errors from "../format/errors.js";
+import type * as format_evaluate from "../format/evaluate.js";
+import type * as format_index from "../format/index.js";
+import type * as format_seeding from "../format/seeding.js";
+import type * as format_singleElimination from "../format/singleElimination.js";
+import type * as format_types from "../format/types.js";
 import type * as tasks from "../tasks.js";
 
 import type {
@@ -17,6 +25,14 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  "format/doubleElimination": typeof format_doubleElimination;
+  "format/engine": typeof format_engine;
+  "format/errors": typeof format_errors;
+  "format/evaluate": typeof format_evaluate;
+  "format/index": typeof format_index;
+  "format/seeding": typeof format_seeding;
+  "format/singleElimination": typeof format_singleElimination;
+  "format/types": typeof format_types;
   tasks: typeof tasks;
 }>;
 
