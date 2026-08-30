@@ -1,4 +1,4 @@
-import { defineConfig } from "vite-plus";
+import { configDefaults, defineConfig } from "vite-plus";
 
 export default defineConfig({
   test: {
@@ -18,7 +18,9 @@ export default defineConfig({
         test: {
           name: "convex",
           include: ["convex/**/*.test.ts"],
-          exclude: ["convex/format/**"],
+          // Extend the defaults (node_modules, dist, ...) — a bare exclude
+          // would replace them.
+          exclude: [...configDefaults.exclude, "convex/format/**"],
           environment: "edge-runtime",
         },
       },

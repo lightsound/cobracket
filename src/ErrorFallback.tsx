@@ -1,4 +1,4 @@
-import type { Accessor } from "solid-js";
+import type { Accessor, Element } from "solid-js";
 
 // Thrown values are `unknown` in JavaScript, so every error surface needs the
 // same normalization. This module is the one place that does it — boundaries
@@ -7,19 +7,24 @@ export function errorMessage(value: unknown): string {
   return value instanceof Error ? value.message : String(value);
 }
 
-// The adapter every <Errored> boundary passes as its fallback, hoisted so
-// call sites don't each repeat the arrow and drift from these props.
-export function errorFallback(error: Accessor<unknown>, reset: () => void) {
-  return <ErrorFallback error={error} reset={reset} />;
-}
-
-function ErrorFallback(props: { error: Accessor<unknown>; reset: () => void }) {
+// The one presentational error surface: every error message renders through
+// it so the classes, role, and structure cannot drift between call sites.
+export function ErrorNotice(props: { message: string; children?: Element }) {
   return (
     <p class="status error-fallback" role="alert">
-      <span>{errorMessage(props.error())}</span>
-      <button class="increment" type="button" onClick={() => props.reset()}>
+      <span>{props.message}</span>
+      {props.children}
+    </p>
+  );
+}
+
+// The adapter every <Errored> boundary passes as its fallback.
+export function errorFallback(error: Accessor<unknown>, reset: () => void) {
+  return (
+    <ErrorNotice message={errorMessage(error())}>
+      <button class="increment" type="button" onClick={() => reset()}>
         Retry
       </button>
-    </p>
+    </ErrorNotice>
   );
 }

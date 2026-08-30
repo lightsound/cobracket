@@ -70,11 +70,12 @@ export function initAuth(): void {
 
 /**
  * Make sure the caller has an Organizer identity, signing in anonymously if
- * this browser has no live session (story 1: zero sign-up). Resolves once the
- * Convex connection is authenticated as that Organizer. Call it from the
- * handler of any Organizer action. Concurrent callers — double clicks, other
- * components, other tabs — collapse into one sign-in under a Web Locks-backed
- * mutex instead of minting multiple anonymous users.
+ * this browser has no live session (story 1: zero sign-up). Once it resolves,
+ * later Convex calls run as that Organizer: adopting the session pauses the
+ * websocket synchronously, so they queue behind the re-authentication. Call
+ * it from the handler of any Organizer action. Concurrent callers — double
+ * clicks, other components, other tabs — collapse into one sign-in under a
+ * Web Locks-backed mutex instead of minting multiple anonymous users.
  *
  * @public
  */

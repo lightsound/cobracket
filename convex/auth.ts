@@ -39,13 +39,17 @@ export const { signInAnonymous } = setupAnonymous(core, {
  * every Organizer capability (operations API, MCP tokens later) resolves
  * identity through, so an added auth mechanism stays an edit to this module.
  *
- * getAuthUserId types the JWT subject but does not validate it against the
- * table; normalizeId turns a stale or foreign subject into null instead of
- * letting a bad id flow into reads.
+ * getAuthUserId types the JWT subject but does not validate it: normalizeId
+ * rejects a malformed or foreign-table subject, and the read rejects a
+ * deleted user whose JWT is still live — either becomes null, never a
+ * dangling id.
  */
 export async function getOrganizer(ctx: QueryCtx): Promise<Id<"users"> | null> {
-  const userId = await getAuthUserId(ctx);
-  return userId === null ? null : ctx.db.normalizeId("users", userId);
+  const subject = await getAuthUserId(ctx);
+  if (subject === null) return null;
+  const userId = ctx.db.normalizeId("users", subject);
+  if (userId === null) return null;
+  return (await ctx.db.get("users", userId)) === null ? null : userId;
 }
 
 // The same answer for clients, as a subscribable query.

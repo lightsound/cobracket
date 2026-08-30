@@ -36,6 +36,14 @@ test("currentOrganizer resolves the verified subject to a users id", async () =>
   expect(await asOrganizer.query(api.auth.currentOrganizer, {})).toBe(userId);
 });
 
+test("currentOrganizer is null for a deleted user's still-live session", async () => {
+  const t = convexTest(schema, modules);
+  const userId = await signUp(t);
+  await t.run((ctx) => ctx.db.delete("users", userId));
+  const ghost = t.withIdentity({ subject: userId });
+  expect(await ghost.query(api.auth.currentOrganizer, {})).toBeNull();
+});
+
 test("currentOrganizer is null when signed out or the subject is not a user", async () => {
   const t = convexTest(schema, modules);
   expect(await t.query(api.auth.currentOrganizer, {})).toBeNull();
