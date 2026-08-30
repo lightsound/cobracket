@@ -1,6 +1,5 @@
 import { AuthClient, defaultStorage, runWithMutex } from "@convex-dev/auth/browser";
 import { ConvexHttpClient } from "convex/browser";
-import type { ConvexClient } from "convex/browser";
 import type { Accessor } from "solid-js";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
@@ -11,7 +10,12 @@ import { createConvexQuery, getConvexClient, getConvexUrl } from "../convex";
 // exports — bootstrap, "who is the current Organizer", and "make sure I am
 // one". If Auth v2 stalls or changes shape, this file is swapped, not the app.
 
-type Auth = { client: AuthClient; convex: ConvexClient; url: string; ready: Promise<void> };
+type Auth = {
+  client: AuthClient;
+  httpClient: ConvexHttpClient;
+  url: string;
+  ready: Promise<void>;
+};
 
 let auth: Auth | undefined;
 
@@ -32,12 +36,12 @@ function getAuth(): Auth | undefined {
   const url = getConvexUrl();
   if (!convex || !url) return undefined;
 
-  // Refresh and sign-out go over a separate HTTP client, never the websocket
-  // client: a refresh runs while the websocket is paused waiting for the very
+  // Every auth call goes over a separate HTTP client, never the websocket
+  // client. A refresh runs while the websocket is paused waiting for the very
   // token the refresh produces, so routing it through `convex` would deadlock
-  // (e.g. any visit after the stored access token expired). Sign-in mutations
-  // stay on the websocket client — it isn't paused pre-auth, and the response
-  // carries the full token bundle for setSession.
+  // (e.g. any visit after the stored access token expired) — and HTTP calls
+  // reject promptly when the server is unreachable instead of queueing
+  // forever on a disconnected websocket.
   const httpClient = new ConvexHttpClient(url);
   const client = new AuthClient({
     mode: "spa",
@@ -61,7 +65,7 @@ function getAuth(): Auth | undefined {
     }
   });
 
-  auth = { client, convex, url, ready: client.init() };
+  auth = { client, httpClient, url, ready: client.init() };
   return auth;
 }
 
@@ -88,9 +92,12 @@ export function initAuth(): void {
  *
  * Whether the session's user row still exists is backend state (a row can
  * vanish with no client-side auth flip), so there is deliberately no
- * client-side "already verified" fast path: every attempt asks the server
- * under the lock. The query is cheap — Convex serves it from its cache — and
- * a stale cache here would recreate the dead-end this check exists to break.
+ * client-side "already verified" fast path: every attempt re-establishes the
+ * session and asks the server under the lock — two small HTTP round trips,
+ * human-action-paced. A cache here would recreate the dead-end the check
+ * exists to break; every call inside the lock is HTTP, so an unreachable
+ * server rejects promptly (surfacing the error, releasing the lock) instead
+ * of queueing forever on a disconnected websocket.
  *
  * @public
  */
@@ -99,22 +106,24 @@ export async function ensureOrganizer(): Promise<void> {
   if (!active) return;
   await active.ready;
   await runWithMutex(`${active.url}:signInAnonymous`, async () => {
-    // A session may already be live: ours, or one another tab persisted
-    // while we waited for the lock — the in-memory snapshot can lag that
-    // storage write, so fall back to a forced refresh, which reads the
-    // shared storage (and skips the network when no session exists at all).
-    const sessionLive =
-      active.client.getSnapshot().isAuthenticated ||
-      (await active.client.fetchAccessToken({ forceRefreshToken: true })) !== null;
-    if (sessionLive) {
-      // Trust it only if the backend still knows its user. A live session
-      // whose user row is gone (a cleared dev backend, a deleted row) would
-      // otherwise dead-end: signed out in the UI, yet every sign-in attempt
-      // a no-op. Drop it and mint a fresh identity instead.
-      if ((await active.convex.query(api.auth.currentOrganizer, {})) !== null) return;
+    // A fresh token proves some session is live: ours, or one another tab
+    // persisted while we waited for the lock — the forced refresh reads the
+    // shared storage (and skips the network when no session exists at all,
+    // including one a cleared backend no longer recognizes).
+    const token = await active.client.fetchAccessToken({ forceRefreshToken: true });
+    if (token !== null) {
+      // Trust the session only if the backend still knows its user. Verify
+      // with the token we just minted over a dedicated HTTP client — the
+      // websocket client's query() can answer from a stale pre-auth local
+      // cache when a component subscribes to the same query. A live session
+      // whose user row is gone (a deleted row) would otherwise dead-end:
+      // signed out in the UI, yet every sign-in attempt a no-op.
+      const verifier = new ConvexHttpClient(active.url);
+      verifier.setAuth(token);
+      if ((await verifier.query(api.auth.currentOrganizer, {})) !== null) return;
       await active.client.signOut();
     }
-    const result = await active.convex.mutation(api.auth.signInAnonymous, {});
+    const result = await active.httpClient.mutation(api.auth.signInAnonymous, {});
     await active.client.setSession(result.tokens);
   });
 }
