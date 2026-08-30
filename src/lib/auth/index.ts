@@ -105,10 +105,34 @@ export async function ensureOrganizer(): Promise<void> {
   const active = getAuth();
   if (!active) return;
   await active.ready;
-  const cached = active.client.getAccessToken();
-  if (cached !== null && (await fetchSessionState(active.url, cached)) === "organizer") return;
+  if (await cachedSessionSatisfies(active)) return;
   await runWithMutex(`${active.url}:signInAnonymous`, () => establishOrganizerSession(active));
 }
+
+/**
+ * The unlocked fast path: true when the caller can proceed without the
+ * cross-tab lock — the cached token maps to an existing Organizer, or the
+ * server is unreachable, which cannot disprove a locally live session (the
+ * caller's own Convex call then decides: it queues on the websocket and
+ * proceeds when the connection recovers).
+ */
+async function cachedSessionSatisfies(active: Auth): Promise<boolean> {
+  const cached = active.client.getAccessToken();
+  if (cached === null) return false;
+  try {
+    return (await fetchSessionState(active.url, cached)) === "organizer";
+  } catch {
+    return true;
+  }
+}
+
+const AUTH_DRIFT_REMEDIATION = "check auth.config.ts, CONVEX_SITE_URL, and the AUTH_JWKS keys.";
+
+// Set when a freshly minted session failed verification: at that point
+// signing out and minting again cannot help (the failure is systematic, not
+// a stale session), so recovery paths report instead of revolving. Cleared
+// by the next successful verification; a page reload retries once.
+let lastMintUnverified = false;
 
 /** The locked slow path: reconcile whatever session exists, else sign in. */
 async function establishOrganizerSession(active: Auth): Promise<void> {
@@ -124,11 +148,12 @@ async function establishOrganizerSession(active: Auth): Promise<void> {
   if ((await fetchSessionState(active.url, result.tokens.accessToken)) !== "organizer") {
     // Keep even this session: the next attempt then reports the drift in
     // reconcileLiveSession without minting another orphaned user.
+    lastMintUnverified = true;
     throw new Error(
-      "Signed in, but the deployment rejected the new session's token — " +
-        "check auth.config.ts, CONVEX_SITE_URL, and the AUTH_JWKS keys.",
+      `Signed in, but the deployment rejected the new session's token — ${AUTH_DRIFT_REMEDIATION}`,
     );
   }
+  lastMintUnverified = false;
 }
 
 /**
@@ -138,19 +163,24 @@ async function establishOrganizerSession(active: Auth): Promise<void> {
  */
 async function reconcileLiveSession(active: Auth, token: string): Promise<boolean> {
   const state = await fetchSessionState(active.url, token);
-  if (state === "organizer") return true;
-  if (state === "unauthenticated") {
-    // The token was minted a moment ago, so this is the deployment failing
-    // to verify its own JWTs (issuer/JWKS drift), not a dead session. Keep
-    // the session — it recovers when the config does — and report instead
-    // of revolving through revoke-and-mint.
+  if (state === "organizer") {
+    lastMintUnverified = false;
+    return true;
+  }
+  if (state === "unauthenticated" || lastMintUnverified) {
+    // The token was minted a moment ago, so a non-organizer verdict here is
+    // the deployment failing to verify or resolve its own sessions
+    // (issuer/JWKS drift; or, when the last mint already failed the same
+    // check, a systematic user_missing). Keep the session — it recovers
+    // when the config does — and report instead of revolving through
+    // revoke-and-mint, which would orphan a users row per attempt.
     throw new Error(
-      "The deployment rejected a freshly minted access token — " +
-        "check auth.config.ts, CONVEX_SITE_URL, and the AUTH_JWKS keys.",
+      `The deployment rejected a freshly minted access token — ${AUTH_DRIFT_REMEDIATION}`,
     );
   }
-  // user_missing: the JWT verifies but its user row is gone (a cleared dev
-  // backend, a deleted row). The session is genuinely dead.
+  // user_missing on a session whose mints have verified before: the JWT
+  // verifies but its user row is gone (a cleared dev backend, a deleted
+  // row). The session is genuinely dead.
   await active.client.signOut();
   return false;
 }
