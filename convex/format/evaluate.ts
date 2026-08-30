@@ -125,7 +125,17 @@ function applyResult(
     // the match awaits a new result.
     return undefined;
   }
-  const winnerSide = result.sides.find((side) => side.outcome === "win")!;
+  const winnerSide = result.sides.find((side) => side.outcome === "win");
+  if (winnerSide === undefined) {
+    // validateResult only lets a draw through when the rules allow draws, but
+    // how a draw advances through winnerOf/loserOf slots is a design decision
+    // owned by the first draw-capable family. Until one lands, fail typed
+    // instead of dereferencing a missing winner.
+    throw new FormatEngineError(
+      "draw_progression_unsupported",
+      `result ${resultIndex} is a draw, and draw progression is not implemented under this format's rules`,
+    );
+  }
   const loserSide = result.sides.find((side) => side.outcome !== "win")!;
   return {
     state: "completed",
@@ -140,13 +150,17 @@ function applyResult(
 // (latest, pairing-valid) result, a structural bye, or ready/pending.
 function resolveMatches(
   structure: BracketStructure,
+  matchesByKey: Map<string, StructureMatch>,
   results: readonly RecordedResult[],
   latestResultIndex: Map<string, number>,
   rules: FamilyRules,
 ): Map<string, MatchResolution> {
-  const matchesByKey = new Map(structure.matches.map((match) => [match.key, match]));
   const resolutions = new Map<string, MatchResolution>();
   const resolutionOf = (matchKey: string) => resolutions.get(matchKey);
+  // Matches currently being resolved, for cycle detection. Reaching the same
+  // upstream match twice through different paths (normal in double
+  // elimination) is fine because resolved matches leave this set.
+  const resolving = new Set<string>();
 
   function resolveSlot(slot: SlotSource): Occupant {
     switch (slot.kind) {
@@ -170,6 +184,13 @@ function resolveMatches(
     if (!match) {
       throw new FormatEngineError("unknown_match", `slot references unknown match "${matchKey}"`);
     }
+    if (resolving.has(matchKey)) {
+      throw new FormatEngineError(
+        "invalid_structure",
+        `slot references form a cycle through match "${matchKey}"`,
+      );
+    }
+    resolving.add(matchKey);
 
     // Resolve upstream matches first so cancellation rules can inspect them.
     for (const slot of match.slots) {
@@ -182,6 +203,7 @@ function resolveMatches(
       ? { ...PENDING, state: "cancelled" as const }
       : resolvePlayableMatch(match);
     resolutions.set(matchKey, resolution);
+    resolving.delete(matchKey);
     return resolution;
   }
 
@@ -323,7 +345,7 @@ export function evaluate(
     latestResultIndex.set(result.matchKey, index);
   });
 
-  const resolutions = resolveMatches(structure, results, latestResultIndex, rules);
+  const resolutions = resolveMatches(structure, matchesByKey, results, latestResultIndex, rules);
 
   // A latest record that did not end up deciding its match is void: either
   // its pairing became invalid, or its match is structurally resolved (bye)
