@@ -1,3 +1,4 @@
+import { isServer } from '@solidjs/web';
 import { ConvexClient } from 'convex/browser';
 import type { FunctionArgs, FunctionReference, FunctionReturnType } from 'convex/server';
 import { createMemo, onCleanup } from 'solid-js';
@@ -17,7 +18,7 @@ let client: ConvexClient | undefined;
  * @public
  */
 export function getConvexClient(): ConvexClient | undefined {
-  if (typeof window === 'undefined') return undefined;
+  if (isServer) return undefined;
   const url = getConvexUrl();
   if (!url) return undefined;
   client ??= new ConvexClient(url);

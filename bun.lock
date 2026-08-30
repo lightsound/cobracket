@@ -1,5 +1,5 @@
 {
-  "lockfileVersion": 2,
+  "lockfileVersion": 1,
   "configVersion": 1,
   "workspaces": {
     "": {
@@ -14,7 +14,7 @@
         "@solidjs/vite-plugin": "^3.0.0-next.36",
         "@types/bun": "^1.4.0",
         "fallow": "^3.20.0",
-        "solid2-agent-kit": "github:lightsound/solid2-agent-kit",
+        "solid2-agent-kit": "^0.4.5",
         "typescript": "^7.1.0-dev.20260829.1",
         "vite": "^8.2.2",
       },
@@ -283,7 +283,7 @@
 
     "csstype": ["csstype@3.2.3", "", {}, "sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ=="],
 
-    "debug": ["debug@4.4.3", "", { "dependencies": { "ms": "^2.1.3" }, "peerDependencies": { "supports-color": "*" }, "optionalPeers": ["supports-color"] }, "sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA=="],
+    "debug": ["debug@4.4.3", "", { "dependencies": { "ms": "^2.1.3" } }, "sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA=="],
 
     "detect-libc": ["detect-libc@2.1.2", "", {}, "sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ=="],
 
@@ -369,7 +369,7 @@
 
     "solid-js": ["solid-js@2.0.0-rc.4", "", { "dependencies": { "@solidjs/signals": "^2.0.0-rc.4", "csstype": "^3.1.0", "seroval": "~1.5.4", "seroval-plugins": "~1.5.4" } }, "sha512-hSkDmtduesjFtvzjNyqLphrqiSvhSD5+njkPQUR+9YEoR60MMWtuv36SbLL4OucI0Ronof3Jc+AsUp0oWffwMg=="],
 
-    "solid2-agent-kit": ["solid2-agent-kit@github:lightsound/solid2-agent-kit#c17546c", { "bin": { "solid2-agent-kit": "bin/solid2-kit.mjs", "solid2-kit": "bin/solid2-kit.mjs" } }, "lightsound-solid2-agent-kit-c17546c", "sha512-iAGFBhjmx3gaIcQvNtTZKazpQyLt3aYALjMGUivKhLKS4d5HiYUMs2JxOSGN32oLfpLdHbcu7Wcb7TC24JyjOQ=="],
+    "solid2-agent-kit": ["solid2-agent-kit@0.4.5", "", { "bin": { "solid2-agent-kit": "bin/solid2-kit.mjs", "solid2-kit": "bin/solid2-kit.mjs" } }, "sha512-LkCzxpU0c5vhYqxVmusc3j6xEoXsuqQePVCekD2ZbQBcv3b/VD99FT9inzZGOEAsaPAq3ulpFancJENwZdXDwA=="],
 
     "source-map-js": ["source-map-js@1.2.1", "", {}, "sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA=="],
 
