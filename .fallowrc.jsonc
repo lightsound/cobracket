@@ -3,9 +3,9 @@
   // All rules are error. The only off rule is coverage-gaps: there are no tests yet.
   "entry": ["src/App.tsx", "src/Document.tsx", "scripts/lint-theme.ts"],
   "ignorePatterns": ["convex/_generated/**", "src/vite-env.d.ts"],
-  // Vitest resolves the edge-runtime test environment from the per-file
-  // `@vitest-environment edge-runtime` pragma (convex-test files); it is
-  // never imported directly, so static analysis cannot see the use.
+  // Vitest resolves the edge-runtime test environment by name from the
+  // convex project in vitest.config.ts (convex-test files); it is never
+  // imported directly, so static analysis cannot see the use.
   "ignoreDependencies": ["@edge-runtime/vm"],
   // Semantic proof for traces, symbol-impact, and private-type hygiene.
   // best-effort: incomplete checker results stay advisory and do not fail CI.

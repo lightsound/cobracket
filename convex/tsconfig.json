@@ -11,8 +11,8 @@
     "jsx": "react-jsx",
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
-    /* No ambient test globals: the co-located format engine tests import
-     * from "vitest" explicitly (not deployed: the Convex CLI skips files
+    /* No ambient test globals: the co-located tests import from
+     * "vite-plus/test" explicitly (not deployed: the Convex CLI skips files
      * with more than one dot in the name). Empty list keeps @types/*
      * packages (e.g. node) out of the Convex runtime's type environment. */
     "types": [],
