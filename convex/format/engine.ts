@@ -1,3 +1,7 @@
+import {
+  doubleEliminationRules,
+  generateDoubleElimination,
+} from "./doubleElimination";
 import { evaluate } from "./evaluate";
 import type { FamilyRules } from "./evaluate";
 import {
@@ -28,10 +32,12 @@ const engines: Record<FormatFamily, FamilyEngine> = {
     rules: singleEliminationRules,
   },
   double_elimination: {
-    generate: () => {
-      throw new Error("not implemented");
-    },
-    rules: singleEliminationRules,
+    generate: (participantIds, options) =>
+      generateDoubleElimination(
+        participantIds,
+        options.family === "double_elimination" && options.grandFinalReset,
+      ),
+    rules: doubleEliminationRules,
   },
 };
 
