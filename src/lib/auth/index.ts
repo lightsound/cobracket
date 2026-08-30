@@ -1,24 +1,27 @@
-import { AuthClient, defaultStorage } from "@convex-dev/auth/browser";
+import { AuthClient, defaultStorage, runWithMutex } from "@convex-dev/auth/browser";
+import type { ConvexClient } from "convex/browser";
 import type { Accessor } from "solid-js";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { createConvexQuery, getConvexClient, getConvexUrl } from "../convex";
 
 // The auth boundary (ADR 0003): Convex Auth v2 (preview) Anonymous Sign-In,
-// isolated behind this module. The rest of the app knows only the two
-// @public exports — "who is the current Organizer" and "make sure I am one".
-// If Auth v2 stalls or changes shape, this file is swapped, not the app.
+// isolated behind this module. The rest of the app knows only the @public
+// exports — bootstrap, "who is the current Organizer", and "make sure I am
+// one". If Auth v2 stalls or changes shape, this file is swapped, not the app.
 
-type Auth = { client: AuthClient; ready: Promise<void> };
+type Auth = { client: AuthClient; convex: ConvexClient; url: string; ready: Promise<void> };
 
 let auth: Auth | undefined;
 
 /**
  * Lazily create the session manager and wire it to the shared ConvexClient.
  *
- * `setAuth` is re-invoked whenever the authenticated state flips (sign-in,
- * sign-out, session expiry in another tab) so the websocket re-authenticates
- * and live queries re-run with the caller's verified identity.
+ * `setAuth` runs on every authenticated-state flip (session restore from
+ * `init`, sign-in, sign-out, cross-tab expiry) so the websocket
+ * re-authenticates and live queries re-run with the caller's verified
+ * identity. There is deliberately no eager call: before `init` resolves the
+ * client has no token, so it would only stall the socket for a null fetch.
  */
 function getAuth(): Auth | undefined {
   if (auth) return auth;
@@ -48,20 +51,30 @@ function getAuth(): Auth | undefined {
       convex.setAuth(client.fetchAccessToken);
     }
   });
-  convex.setAuth(client.fetchAccessToken);
 
-  auth = { client, ready: client.init() };
+  auth = { client, convex, url, ready: client.init() };
   return auth;
 }
 
-let signingIn: Promise<void> | undefined;
+/**
+ * Bootstrap the auth session for this browser: restore a persisted session
+ * (story 25) and keep the Convex connection authenticated from then on.
+ * Call once from the app root; idempotent, a no-op during SSR and without a
+ * configured Convex client.
+ *
+ * @public
+ */
+export function initAuth(): void {
+  getAuth();
+}
 
 /**
  * Make sure the caller has an Organizer identity, signing in anonymously if
  * this browser has no live session (story 1: zero sign-up). Resolves once the
- * Convex connection is authenticated as that Organizer. Idempotent and
- * single-flight; call it from the handler of any Organizer action. A no-op
- * during SSR and without a configured Convex client.
+ * Convex connection is authenticated as that Organizer. Call it from the
+ * handler of any Organizer action. Concurrent callers — double clicks, other
+ * components, other tabs — collapse into one sign-in under a Web Locks-backed
+ * mutex instead of minting multiple anonymous users.
  *
  * @public
  */
@@ -69,18 +82,11 @@ export async function ensureOrganizer(): Promise<void> {
   const active = getAuth();
   if (!active) return;
   await active.ready;
-  if (active.client.getSnapshot().isAuthenticated) return;
-  signingIn ??= (async () => {
-    try {
-      const convex = getConvexClient();
-      if (!convex) return;
-      const result = await convex.mutation(api.auth.signInAnonymous, {});
-      await active.client.setSession(result.tokens);
-    } finally {
-      signingIn = undefined;
-    }
-  })();
-  await signingIn;
+  await runWithMutex(`${active.url}:signInAnonymous`, async () => {
+    if (active.client.getSnapshot().isAuthenticated) return;
+    const result = await active.convex.mutation(api.auth.signInAnonymous, {});
+    await active.client.setSession(result.tokens);
+  });
 }
 
 /**
@@ -89,13 +95,10 @@ export async function ensureOrganizer(): Promise<void> {
  *
  * A reactive Convex subscription: read it under `<Loading>` / `<Errored>`
  * boundaries inside a component, gated on `getConvexUrl()` like every other
- * Convex read. Flips from null to the id once `ensureOrganizer` completes.
+ * Convex read. Flips from null to the id once the session is live.
  *
  * @public
  */
 export function createOrganizer(): Accessor<Id<"users"> | null> {
-  // Kick off session restore so a returning Organizer (story 25) is
-  // recognized without an explicit ensureOrganizer call.
-  getAuth();
   return createConvexQuery(api.auth.currentOrganizer, {});
 }

@@ -1,4 +1,3 @@
-// @vitest-environment edge-runtime
 /// <reference types="vite/client" />
 import { convexTest } from "convex-test";
 import { expect, test } from "vite-plus/test";
@@ -12,24 +11,27 @@ import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
 
-test("createUserAnonymous mints one bare user row per sign-up", async () => {
-  const t = convexTest(schema, modules);
-  const userId = await t.mutation(internal.auth.createUserAnonymous, {
+type Test = ReturnType<typeof convexTest>;
+
+// What the anonymous provider sends the createUser callback on every sign-up.
+function signUp(t: Test) {
+  return t.mutation(internal.auth.createUserAnonymous, {
     provider: "anonymous",
     providerAccountId: "",
     profile: {},
   });
+}
+
+test("createUserAnonymous mints one bare user row per sign-up", async () => {
+  const t = convexTest(schema, modules);
+  const userId = await signUp(t);
   const user = await t.run((ctx) => ctx.db.get("users", userId));
   expect(user).not.toBeNull();
 });
 
 test("currentOrganizer resolves the verified subject to a users id", async () => {
   const t = convexTest(schema, modules);
-  const userId = await t.mutation(internal.auth.createUserAnonymous, {
-    provider: "anonymous",
-    providerAccountId: "",
-    profile: {},
-  });
+  const userId = await signUp(t);
   const asOrganizer = t.withIdentity({ subject: userId });
   expect(await asOrganizer.query(api.auth.currentOrganizer, {})).toBe(userId);
 });

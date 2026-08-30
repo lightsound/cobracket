@@ -7,7 +7,13 @@ function errorMessage(value: unknown): string {
   return value instanceof Error ? value.message : String(value);
 }
 
-export default function ErrorFallback(props: { error: Accessor<unknown>; reset: () => void }) {
+// The adapter every <Errored> boundary passes as its fallback, hoisted so
+// call sites don't each repeat the arrow and drift from these props.
+export function errorFallback(error: Accessor<unknown>, reset: () => void) {
+  return <ErrorFallback error={error} reset={reset} />;
+}
+
+function ErrorFallback(props: { error: Accessor<unknown>; reset: () => void }) {
   return (
     <p class="status error-fallback" role="alert">
       <span>{errorMessage(props.error())}</span>

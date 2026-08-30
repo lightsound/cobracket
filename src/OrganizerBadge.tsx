@@ -1,5 +1,5 @@
 import { Errored, Loading, Show } from "solid-js";
-import ErrorFallback from "./ErrorFallback";
+import { errorFallback } from "./ErrorFallback";
 import { createOrganizer, ensureOrganizer } from "./lib/auth";
 import { getConvexUrl } from "./lib/convex";
 
@@ -13,7 +13,7 @@ export default function OrganizerBadge() {
   const organizer = createOrganizer();
 
   return (
-    <Errored fallback={(error, reset) => <ErrorFallback error={error} reset={reset} />}>
+    <Errored fallback={errorFallback}>
       <Loading fallback={<p class="status">Checking Organizer session…</p>}>
         <Show
           when={organizer()}

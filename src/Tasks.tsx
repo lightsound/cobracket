@@ -1,5 +1,5 @@
 import { Errored, For, Loading, createSignal } from "solid-js";
-import ErrorFallback from "./ErrorFallback";
+import { errorFallback } from "./ErrorFallback";
 import { api } from "../convex/_generated/api";
 import type { Doc, Id } from "../convex/_generated/dataModel";
 import { createConvexQuery, getConvexClient, getConvexUrl } from "./lib/convex";
@@ -57,7 +57,7 @@ export default function Tasks() {
           Add
         </button>
       </form>
-      <Errored fallback={(error, reset) => <ErrorFallback error={error} reset={reset} />}>
+      <Errored fallback={errorFallback}>
         <Loading fallback={<p class="status">Connecting to Convex…</p>}>
           <ul class="task-list">
             <For

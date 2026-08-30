@@ -25,9 +25,9 @@ This file gives coding agents project-specific context. Keep it short and update
 
 - Install: `bun install`
 - Dev: `bun run convex:dev` and `bun dev` (two processes)
-- Auth keys (once per deployment, ADR 0003): `bun run auth:keys` while `convex:dev` is running — generates the RS256 key pair and sets `AUTH_PRIVATE_KEY`/`AUTH_JWKS` on the deployment; deploys fail until they exist. Headless environments prefix with `CONVEX_AGENT_MODE=anonymous`
+- Auth keys (once per deployment, ADR 0003): `bun run auth:keys` while `convex:dev` is running — the `@convex-dev/auth` CLI generates the RS256 key pair and sets `AUTH_PRIVATE_KEY`/`AUTH_JWKS` on the deployment (idempotent; `--force` rotates); deploys fail until they exist. Headless environments prefix with `CONVEX_AGENT_MODE=anonymous`
 - Build: `bun run build`
-- Typecheck: `bunx tsc --noEmit`
+- Typecheck: `bun run typecheck` (all three TS projects: root `src/`, `convex/`, `scripts/`)
 - Test: `bun run test` (Vitest is the single test runner — ADR 0006; do not use `bun test`)
 - Format + lint: `bun x vp check` (`--fix` to apply). [Vite+](https://viteplus.dev) owns the dev/build/test/fmt/lint toolchain: the `dev`/`build`/`serve`/`test` scripts delegate to `vp`, `vite` is aliased to `@voidzero-dev/vite-plus-core` via `overrides`, and test files import from `vite-plus/test`. oxfmt/oxlint config (including the ignore list for generated/vendored/tool-managed files) lives in the `fmt`/`lint` blocks of `vite.config.ts`; `vp check` also runs tsgolint type checks, which complement but do not replace `tsc --noEmit`
 - Solid pattern guard: `bun run lint:solid` (blocks React / Solid 1.x patterns in `src/`)
