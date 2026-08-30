@@ -113,20 +113,38 @@ export async function ensureOrganizer(): Promise<void> {
     // costs one round trip that returns null.
     const token = await active.client.fetchAccessToken({ forceRefreshToken: true });
     if (token !== null) {
-      // Trust the session only if the backend still knows its user. Verify
-      // with the token we just minted over a dedicated HTTP client — the
-      // websocket client's query() can answer from a stale pre-auth local
-      // cache when a component subscribes to the same query. A live session
-      // whose user row is gone (a deleted row) would otherwise dead-end:
-      // signed out in the UI, yet every sign-in attempt a no-op.
-      const verifier = new ConvexHttpClient(active.url);
-      verifier.setAuth(token);
-      if ((await verifier.query(api.auth.currentOrganizer, {})) !== null) return;
+      // Trust the session only if the backend still knows its user. A live
+      // session whose user row is gone (a deleted row) would otherwise
+      // dead-end: signed out in the UI, yet every sign-in attempt a no-op.
+      if (await verifyOrganizer(active.url, token)) return;
       await active.client.signOut();
     }
     const result = await active.httpClient.mutation(api.auth.signInAnonymous, {});
     await active.client.setSession(result.tokens);
+    // A brand-new session failing the same check does not mean a missing
+    // user row — it means the deployment cannot verify the tokens it just
+    // minted (issuer/JWKS drift). Fail loudly rather than letting the next
+    // attempt revoke this session and mint another orphaned user.
+    if (!(await verifyOrganizer(active.url, result.tokens.accessToken))) {
+      throw new Error(
+        "Signed in, but the deployment rejected its own access token — " +
+          "check auth.config.ts, CONVEX_SITE_URL, and the AUTH_JWKS keys.",
+      );
+    }
   });
+}
+
+/**
+ * Ask the backend whether the given access token maps to an existing
+ * Organizer. A dedicated HTTP client per call: the websocket client's
+ * query() can answer from a stale pre-auth local cache when a component
+ * subscribes to the same query, and authenticating the shared HTTP client
+ * would leak a stale bearer token into later refresh calls.
+ */
+async function verifyOrganizer(url: string, token: string): Promise<boolean> {
+  const verifier = new ConvexHttpClient(url);
+  verifier.setAuth(token);
+  return (await verifier.query(api.auth.currentOrganizer, {})) !== null;
 }
 
 /**
