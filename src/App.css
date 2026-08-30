@@ -1,20 +1,12 @@
-body {
-  margin: 0;
-  font-family:
-    system-ui,
-    -apple-system,
-    sans-serif;
-}
-
+/* Colors reference the semantic tokens from theme.css (ADR 0007). */
 .header {
-  background-color: #282c34;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 0.75rem;
   font-size: calc(10px + 2vmin);
-  color: white;
   text-align: center;
 }
 
@@ -32,20 +24,20 @@ body {
 
 .link {
   margin-top: 1rem;
-  color: #93c5fd;
+  color: var(--color-accent);
   font-weight: 600;
-  text-decoration-color: #38bdf8;
+  text-decoration-color: var(--color-accent);
   text-decoration-thickness: 0.1em;
   text-underline-offset: 0.2em;
   transition: color 150ms ease;
 }
 
 .link:hover {
-  color: #dbeafe;
+  color: var(--color-ink);
 }
 
 .link:focus-visible {
-  outline: 3px solid #38bdf8;
+  outline: 3px solid var(--color-accent);
   outline-offset: 4px;
   border-radius: 0.2rem;
 }
@@ -97,7 +89,7 @@ body {
 
 .status {
   margin: 0;
-  color: #94a3b8;
+  color: var(--color-ink-muted);
 }
 
 .error-fallback {

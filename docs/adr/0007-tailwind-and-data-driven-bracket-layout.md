@@ -15,6 +15,7 @@ The Bracket — the core surface of the product — is not styled into shape; it
 
 ## Consequences
 
+- Components never carry `dark:` variants or raw color values: every color utility references a semantic token, so a single class is theme-complete and a forgotten variant cannot break one theme. `bun run lint:theme` enforces this mechanically (agent-driven development makes "remember the second class" a guaranteed failure mode).
 - Renderers are swappable consumers of layout data; migrating connectors (e.g. to Anchor Positioning once coverage saturates) touches one renderer, not the data model.
 - Card dimensions are fixed: Participant names truncate, and small screens pan/zoom via transform instead of reflowing.
 - The layout module joins the format engine as a Seam 1 pure module: coordinates are asserted in unit tests without a browser.

@@ -17,6 +17,7 @@
     "test": "vitest run",
     "lint:solid": "solid2-agent-kit check",
     "lint:imports": "bunx @import-lint/cli",
+    "lint:theme": "bun scripts/lint-theme.ts",
     "fallow": "fallow",
     "fallow:audit": "fallow audit",
     "fallow:dead-code": "fallow dead-code"
@@ -25,6 +26,7 @@
   "devDependencies": {
     "@import-lint/cli": "^0.1.9",
     "@solidjs/vite-plugin": "^3.0.0-next.36",
+    "@tailwindcss/vite": "^4.3.3",
     "fallow": "^3.20.0",
     "solid2-agent-kit": "^0.4.5",
     "typescript": "^7.1.0-dev.20260829.1",
@@ -32,8 +34,10 @@
     "vitest": "^4.1.11"
   },
   "dependencies": {
+    "@fontsource-variable/space-grotesk": "^5.3.0",
     "@solidjs/web": "^2.0.0-rc.4",
     "convex": "^1.45.0",
-    "solid-js": "^2.0.0-rc.4"
+    "solid-js": "^2.0.0-rc.4",
+    "tailwindcss": "^4.3.3"
   }
 }
