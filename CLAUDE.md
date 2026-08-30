@@ -166,3 +166,7 @@ listed in `references/official-docs.md` next to the `solid-2` skill. Do not gues
 Solid 1.x or React memory.
 
 <!-- solid2-agent-kit:solid-rules:end -->
+
+<!-- fallow:agent-install v1 claude-import:start -->
+@AGENTS.md
+<!-- fallow:agent-install v1 claude-import:end -->

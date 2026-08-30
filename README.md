@@ -47,11 +47,13 @@ There is no `index.html` and no mount entry file. The turnkey mode of `@solidjs/
 
 For streaming SSR, add `ssr: true` in `vite.config.ts`.
 
-The backend is [Convex 1.44](https://docs.convex.dev/). To connect to the cloud, run `bunx convex login` and then choose a deployment via `bun run convex:dev`.
+The backend is [Convex 1.45](https://docs.convex.dev/). To connect to the cloud, run `bunx convex login` and then choose a deployment via `bun run convex:dev`.
 
 ## Code quality
 
-[Fallow](https://github.com/fallow-rs/fallow) 3.17 checks for unused files / exports, circular dependencies, duplication, and complexity. Configuration lives in `.fallowrc.jsonc`. All rules are `error` in principle; the only rule currently off is `coverage-gaps`, because execution paths cannot be verified without tests. Solid 2's start mode has no `src/main.tsx`, so `src/App.tsx` and `src/Document.tsx` are set as entries. `convex/_generated/` is excluded from analysis.
+[Fallow](https://github.com/fallow-rs/fallow) 3.20 checks for unused files / exports, circular dependencies, duplication, and complexity. Configuration lives in `.fallowrc.jsonc`. All rules are `error` in principle; the only rule currently off is `coverage-gaps`, because execution paths cannot be verified without tests. TypeScript semantic analysis (`typeAware`) is on. Solid 2's start mode has no `src/main.tsx`, so `src/App.tsx` and `src/Document.tsx` are set as entries. `convex/_generated/` is excluded from analysis.
+
+For coding agents, `bunx fallow agent install` wires up the skills (`.agents/skills/fallow`, `.claude/skills/fallow`), MCP servers (`.cursor/mcp.json`, `.mcp.json`), and the Claude Code commit/push gate. Re-running it is byte-stable (no diff).
 
 ```bash
 bun run fallow

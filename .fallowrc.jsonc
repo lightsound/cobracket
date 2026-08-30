@@ -3,6 +3,12 @@
   // All rules are error. The only off rule is coverage-gaps: there are no tests yet.
   "entry": ["src/App.tsx", "src/Document.tsx"],
   "ignorePatterns": ["convex/_generated/**", "src/vite-env.d.ts"],
+  // Semantic proof for traces, symbol-impact, and private-type hygiene.
+  // best-effort: incomplete checker results stay advisory and do not fail CI.
+  "typeAware": {
+    "enabled": true,
+    "require": "best-effort",
+  },
   "rules": {
     "unused-files": "error",
     "unused-exports": "error",
