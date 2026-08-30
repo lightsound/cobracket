@@ -1,15 +1,15 @@
-import { isServer } from '@solidjs/web';
-import { ConvexClient } from 'convex/browser';
-import type { FunctionArgs, FunctionReference, FunctionReturnType } from 'convex/server';
-import { createMemo, onCleanup } from 'solid-js';
-import type { Accessor } from 'solid-js';
+import { isServer } from "@solidjs/web";
+import { ConvexClient } from "convex/browser";
+import type { FunctionArgs, FunctionReference, FunctionReturnType } from "convex/server";
+import { createMemo, onCleanup } from "solid-js";
+import type { Accessor } from "solid-js";
 
 /**
  * @public
  */
 export function getConvexUrl(): string | undefined {
   const url = import.meta.env.VITE_CONVEX_URL;
-  return typeof url === 'string' && url.length > 0 ? url : undefined;
+  return typeof url === "string" && url.length > 0 ? url : undefined;
 }
 
 let client: ConvexClient | undefined;
@@ -44,14 +44,14 @@ export function getConvexClient(): ConvexClient | undefined {
  *
  * @public
  */
-export function createConvexQuery<Query extends FunctionReference<'query'>>(
+export function createConvexQuery<Query extends FunctionReference<"query">>(
   query: Query,
   args: FunctionArgs<Query> | Accessor<FunctionArgs<Query>>,
 ): Accessor<FunctionReturnType<Query>> {
   type Result = FunctionReturnType<Query>;
   const convex = getConvexClient();
   const readArgs =
-    typeof args === 'function' ? (args as Accessor<FunctionArgs<Query>>) : () => args;
+    typeof args === "function" ? (args as Accessor<FunctionArgs<Query>>) : () => args;
 
   return createMemo(() => {
     // Reading reactive args here makes them a dependency of the computation.

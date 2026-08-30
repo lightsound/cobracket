@@ -1,13 +1,7 @@
-import {
-  doubleEliminationRules,
-  generateDoubleElimination,
-} from "./doubleElimination";
+import { doubleEliminationRules, generateDoubleElimination } from "./doubleElimination";
 import { evaluate } from "./evaluate";
 import type { FamilyRules } from "./evaluate";
-import {
-  generateSingleElimination,
-  singleEliminationRules,
-} from "./singleElimination";
+import { generateSingleElimination, singleEliminationRules } from "./singleElimination";
 import type {
   BracketStructure,
   FormatFamily,
@@ -17,10 +11,7 @@ import type {
 } from "./types";
 
 interface FamilyEngine {
-  generate(
-    participantIds: readonly string[],
-    options: FormatOptions,
-  ): BracketStructure;
+  generate(participantIds: readonly string[], options: FormatOptions): BracketStructure;
   rules: FamilyRules;
 }
 

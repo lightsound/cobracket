@@ -80,11 +80,7 @@ export default defineSchema({
       v.literal("completed"),
     ),
     // MVP behavior is unlisted-only; the field exists from day one.
-    visibility: v.union(
-      v.literal("public"),
-      v.literal("unlisted"),
-      v.literal("private"),
-    ),
+    visibility: v.union(v.literal("public"), v.literal("unlisted"), v.literal("private")),
   }).index("by_organizer", ["organizerId"]),
 
   // Tournament-local records (CONTEXT.md "Participant"). Kept unlinked to
@@ -105,11 +101,7 @@ export default defineSchema({
     tournamentId: v.id("tournaments"),
     // Engine-assigned structural key, unique within the tournament.
     key: v.string(),
-    bracket: v.union(
-      v.literal("winners"),
-      v.literal("losers"),
-      v.literal("grand_final"),
-    ),
+    bracket: v.union(v.literal("winners"), v.literal("losers"), v.literal("grand_final")),
     // 1-based round within the bracket section.
     round: v.number(),
     // 0-based position within the round.

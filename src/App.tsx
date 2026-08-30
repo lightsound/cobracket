@@ -1,7 +1,7 @@
-import { createSignal } from 'solid-js';
-import Tasks from './Tasks';
-import logo from './logo.svg';
-import './App.css';
+import { createSignal } from "solid-js";
+import Tasks from "./Tasks";
+import logo from "./logo.svg";
+import "./App.css";
 
 export default function App() {
   const [count, setCount] = createSignal(0);
@@ -15,12 +15,7 @@ export default function App() {
       <button class="increment" onClick={() => setCount(count() + 1)}>
         Clicks: {count()}
       </button>
-      <a
-        class="link"
-        href="https://v2.solidjs.com/"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      <a class="link" href="https://v2.solidjs.com/" target="_blank" rel="noopener noreferrer">
         Learn Solid
       </a>
       <Tasks />

@@ -28,6 +28,7 @@ This file gives coding agents project-specific context. Keep it short and update
 - Build: `bun run build`
 - Typecheck: `bunx tsc --noEmit`
 - Test: `bun run test` (Vitest is the single test runner — ADR 0006; do not use `bun test`)
+- Format + lint: `bun x vp check` (`--fix` to apply). [Vite+](https://viteplus.dev) owns the dev/build/test/fmt/lint toolchain: the `dev`/`build`/`serve`/`test` scripts delegate to `vp`, `vite` is aliased to `@voidzero-dev/vite-plus-core` via `overrides`, and test files import from `vite-plus/test`. oxfmt/oxlint config (including the ignore list for generated/vendored/tool-managed files) lives in the `fmt`/`lint` blocks of `vite.config.ts`; `vp check` also runs tsgolint type checks, which complement but do not replace `tsc --noEmit`
 - Solid pattern guard: `bun run lint:solid` (blocks React / Solid 1.x patterns in `src/`)
 - Import boundaries: `bun run lint:imports` ([ImportLint](https://github.com/uhyo/import-lint): each directory is a package; exports are package-private unless tagged `/** @public */`. Model and fixing guide: `.cursor/skills/import-lint/SKILL.md`, or `bunx @import-lint/cli explain <rule>`)
 - Update Solid agent guidance: `bunx solid2-kit sync` (rules, skills, and the managed AGENTS.md/CLAUDE.md blocks are owned by [solid2-agent-kit](https://github.com/lightsound/solid2-agent-kit); do not edit them by hand)

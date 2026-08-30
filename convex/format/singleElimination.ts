@@ -6,9 +6,7 @@ import type { BracketStructure, SlotSource, StructureMatch } from "./types";
 // Builds the winners-bracket skeleton shared by single and double
 // elimination: seeded/bye first round, then winner-fed rounds down to one
 // final. Keys are "w{round}m{number}", e.g. "w2m1".
-export function buildWinnersBracket(
-  participantIds: readonly string[],
-): StructureMatch[] {
+export function buildWinnersBracket(participantIds: readonly string[]): StructureMatch[] {
   if (participantIds.length < 2) {
     throw new FormatEngineError(
       "too_few_participants",
@@ -45,19 +43,12 @@ export function buildWinnersBracket(
   return matches;
 }
 
-function seatSlot(
-  participantIds: readonly string[],
-  seed: number,
-): SlotSource {
+function seatSlot(participantIds: readonly string[], seed: number): SlotSource {
   const participantId = participantIds[seed - 1];
-  return participantId === undefined
-    ? { kind: "bye" }
-    : { kind: "participant", participantId };
+  return participantId === undefined ? { kind: "bye" } : { kind: "participant", participantId };
 }
 
-export function generateSingleElimination(
-  participantIds: readonly string[],
-): BracketStructure {
+export function generateSingleElimination(participantIds: readonly string[]): BracketStructure {
   return {
     format: { family: "single_elimination" },
     matches: buildWinnersBracket(participantIds),

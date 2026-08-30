@@ -8,7 +8,7 @@
       "defaultImportability": "package",
       // Generated Convex code cannot carry JSDoc access tags. Do not check
       // imports of its exports (src/ reads convex/_generated/api freely).
-      "excludeSourcePatterns": ["convex/_generated/**"]
-    }
-  }
+      "excludeSourcePatterns": ["convex/_generated/**"],
+    },
+  },
 }
