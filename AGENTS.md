@@ -25,7 +25,7 @@ This file gives coding agents project-specific context. Keep it short and update
 
 - Install: `bun install`
 - Dev: `bun run convex:dev` and `bun dev` (two processes)
-- Auth keys (once per deployment, ADR 0003): `bun run auth:keys` while `convex:dev` is running — the `@convex-dev/auth` CLI generates the RS256 key pair and sets `AUTH_PRIVATE_KEY`/`AUTH_JWKS` on the deployment (idempotent; `--force` rotates); deploys fail until they exist. Headless environments prefix with `CONVEX_AGENT_MODE=anonymous`
+- Auth keys (once per deployment, ADR 0003): `bun run auth:keys` while `convex:dev` is running — the `@convex-dev/auth` CLI generates the RS256 key pair and sets `AUTH_PRIVATE_KEY`/`AUTH_JWKS` on the deployment (idempotent; `--force` rotates); deploys fail until they exist. Headless environments prefix with `CONVEX_AGENT_MODE=anonymous`. Ignore the "Make sure that it contains" file templates the CLI prints: this repo's `convex/auth.ts` and `auth.config.ts` deliberately diverge from the stock scaffold — never overwrite them with it
 - Build: `bun run build`
 - Typecheck: `bun run typecheck` (all three TS projects: root `src/`, `convex/`, `scripts/`)
 - Test: `bun run test` (Vitest is the single test runner — ADR 0006; do not use `bun test`)

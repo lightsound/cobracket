@@ -48,6 +48,8 @@ function getAuth(): Auth | undefined {
     const { isAuthenticated } = client.getSnapshot();
     if (isAuthenticated !== wasAuthenticated) {
       wasAuthenticated = isAuthenticated;
+      // Any flip invalidates what ensureOrganizer verified about the session.
+      sessionVerified = false;
       convex.setAuth(client.fetchAccessToken);
     }
   });
@@ -79,20 +81,38 @@ export function initAuth(): void {
  *
  * @public
  */
+// Whether the backend confirmed the current session's user row exists. Reset
+// on every auth-state flip; makes the ensureOrganizer fast path free after
+// its first verification.
+let sessionVerified = false;
+
 export async function ensureOrganizer(): Promise<void> {
   const active = getAuth();
   if (!active) return;
   await active.ready;
-  if (active.client.getSnapshot().isAuthenticated) return;
+  if (sessionVerified && active.client.getSnapshot().isAuthenticated) return;
   await runWithMutex(`${active.url}:signInAnonymous`, async () => {
-    if (active.client.getSnapshot().isAuthenticated) return;
-    // Another tab may have signed in while we waited for the lock, and the
-    // in-memory snapshot can lag its storage write. The forced refresh reads
-    // the shared storage, so it adopts that session — and skips the network
-    // entirely when no session exists anywhere.
-    if ((await active.client.fetchAccessToken({ forceRefreshToken: true })) !== null) return;
+    // A session may already be live: ours, or one another tab persisted
+    // while we waited for the lock — the in-memory snapshot can lag that
+    // storage write, so fall back to a forced refresh, which reads the
+    // shared storage (and skips the network when no session exists at all).
+    const sessionLive =
+      active.client.getSnapshot().isAuthenticated ||
+      (await active.client.fetchAccessToken({ forceRefreshToken: true })) !== null;
+    if (sessionLive) {
+      // Trust it only once the backend confirms the user row still exists. A
+      // live session whose user is gone (a cleared dev backend, a deleted
+      // row) would otherwise dead-end: signed out in the UI, yet every
+      // sign-in attempt no-ops. Drop it and mint a fresh identity instead.
+      if ((await active.convex.query(api.auth.currentOrganizer, {})) !== null) {
+        sessionVerified = true;
+        return;
+      }
+      await active.client.signOut();
+    }
     const result = await active.convex.mutation(api.auth.signInAnonymous, {});
     await active.client.setSession(result.tokens);
+    sessionVerified = true;
   });
 }
 
