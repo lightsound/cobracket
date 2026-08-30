@@ -23,7 +23,7 @@ A single contest between two participants inside a tournament; the unit a bracke
 _Avoid_: Game, round (a round is a set of matches)
 
 **Walkover**:
-A match resolved without play because one side is absent or withdrew; the present side advances. How no-shows are recorded — the published bracket is never regenerated for them.
+A match resolved without play because one side is absent or withdrew; the present side advances. No-shows are recorded as Walkovers; the published bracket is never regenerated for them.
 _Avoid_: Forfeit, default win
 
 **Standings**:

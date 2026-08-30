@@ -35,7 +35,7 @@ bun dev
 
 ## Structure
 
-There is no `index.html` and no mount entry file. The turnkey mode of `@solidjs/vite-plugin` (`solid({ start: true })` in `vite.config.ts`) generates the entries from these files:
+There is no `index.html` and no mount entry file. The turnkey mode of `@solidjs/vite-plugin` (the `start` option of `solid()` in `vite.config.ts`) generates the entries from these files:
 
 - `src/App.tsx` — the app itself (Solid demo)
 - `src/Tasks.tsx` — the Convex task list
