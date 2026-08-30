@@ -30,6 +30,7 @@ This file gives coding agents project-specific context. Keep it short and update
 - Test: `bun run test` (Vitest is the single test runner — ADR 0006; do not use `bun test`)
 - Format + lint: `bun x vp check` (`--fix` to apply). [Vite+](https://viteplus.dev) owns the dev/build/test/fmt/lint toolchain: the `dev`/`build`/`serve`/`test` scripts delegate to `vp`, `vite` is aliased to `@voidzero-dev/vite-plus-core` via `overrides`, and test files import from `vite-plus/test`. oxfmt/oxlint config (including the ignore list for generated/vendored/tool-managed files) lives in the `fmt`/`lint` blocks of `vite.config.ts`; `vp check` also runs tsgolint type checks, which complement but do not replace `tsc --noEmit`
 - Solid pattern guard: `bun run lint:solid` (blocks React / Solid 1.x patterns in `src/`)
+- Theme guard: `bun run lint:theme` (bans `dark:` variants and arbitrary color values; every color goes through the semantic tokens in `src/theme.css`, which are theme-complete via `light-dark()` — ADR 0007)
 - Import boundaries: `bun run lint:imports` ([ImportLint](https://github.com/uhyo/import-lint): each directory is a package; exports are package-private unless tagged `/** @public */`. Model and fixing guide: `.cursor/skills/import-lint/SKILL.md`, or `bunx @import-lint/cli explain <rule>`)
 - Update Solid agent guidance: `bunx solid2-kit sync` (rules, skills, and the managed AGENTS.md/CLAUDE.md blocks are owned by [solid2-agent-kit](https://github.com/lightsound/solid2-agent-kit); do not edit them by hand)
 - Update Convex agent guidance: `bun x convex ai-files update` (check staleness with `bun x convex ai-files status`). Owned by [Convex AI files](https://docs.convex.dev/ai): `convex/_generated/ai/guidelines.md`, the managed AGENTS.md/CLAUDE.md blocks, and the `convex-*` skills under `.agents/skills` + `.claude/skills` (`.agents/skills` is also Cursor's read path; targets configured in `convex.json`). Do not edit any of them by hand
@@ -66,6 +67,7 @@ This file gives coding agents project-specific context. Keep it short and update
 ## Agent Rules
 
 - Do not edit `convex/_generated/`
+- Never style with `dark:` variants or raw/arbitrary color values. Use the semantic tokens from `src/theme.css` (`bg-surface`, `text-ink`, `text-accent`, Match-state `live`/`win`/`loss`, ...); they resolve both themes via `light-dark()`. `bun run lint:theme` enforces this
 - Do not change `host: '0.0.0.0'` or re-enable Solid devtools without installing its optional peer
 - Package manager is Bun 1.4 (`bun.lock`). Do not add npm or pnpm lockfiles
 - Project decisions override generic `convex-*` skill advice: auth is Convex Auth v2 Anonymous Sign-In behind an isolated module (ADR 0003) — do not follow `convex-auth`'s passkey/OAuth flow for the main app; billing, custom domains, and similar capabilities are out of MVP scope (`docs/specs/mvp.md`)

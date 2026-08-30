@@ -1,5 +1,6 @@
 import { defineConfig } from "vite-plus";
 import solid from "@solidjs/vite-plugin";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   // Turnkey client mode: no index.html and no mount file — the plugin
@@ -7,6 +8,7 @@ export default defineConfig({
   // (or a built-in shell). `vite build` prerenders the shell into
   // dist/client/index.html and emits a purely static dist/client.
   plugins: [
+    tailwindcss(),
     solid({
       start: {
         // Optional peer `@solidjs/start-devtools` is not installed.

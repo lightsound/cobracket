@@ -1,0 +1,56 @@
+/*
+ * Design tokens (ADR 0007). All colors are semantic tokens whose values pair
+ * light and dark via light-dark(): a single utility class (e.g. bg-surface)
+ * is theme-complete, so `dark:` variants must never appear in this codebase.
+ * The default Tailwind palette is wiped so raw palette utilities
+ * (bg-slate-800, text-red-500, ...) do not exist. Enforced by `bun run
+ * lint:theme`.
+ */
+@import "tailwindcss";
+@import "@fontsource-variable/space-grotesk";
+
+@theme {
+  --color-*: initial;
+
+  /* Chrome */
+  --color-surface: light-dark(oklch(99% 0.004 145), oklch(17% 0.015 155));
+  --color-surface-raised: light-dark(oklch(100% 0 0), oklch(21% 0.015 155));
+  --color-ink: light-dark(oklch(23% 0.012 155), oklch(96% 0.005 145));
+  --color-ink-muted: light-dark(oklch(49% 0.015 150), oklch(66% 0.015 150));
+
+  /* Brand ("venom" lime) */
+  --color-accent: light-dark(oklch(58% 0.16 125), oklch(86% 0.19 125));
+
+  /* Match-state tokens: functional colors, hues chosen not to collide
+   * (accent = yellow-green, win = blue-green). Walkover has no token:
+   * it renders in ink-muted. */
+  /* fallow-ignore-next-line css-dead-surface -- forward declaration per ADR 0007; consumed when the Bracket ships */
+  --color-live: light-dark(oklch(55% 0.13 66), oklch(83% 0.16 84));
+  /* fallow-ignore-next-line css-dead-surface -- forward declaration per ADR 0007; consumed when the Bracket ships */
+  --color-win: light-dark(oklch(51% 0.1 166), oklch(77% 0.15 163));
+  /* fallow-ignore-next-line css-dead-surface -- forward declaration per ADR 0007; consumed when the Bracket ships */
+  --color-loss: light-dark(oklch(51% 0.19 18), oklch(71% 0.12 15));
+
+  /* Space Grotesk covers Latin only; Japanese falls through to system fonts. */
+  /* fallow-ignore-next-line css-dead-surface -- Tailwind preflight consumes this token as the default body font */
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP",
+    "Yu Gothic UI", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
+  --font-display:
+    "Space Grotesk Variable", ui-sans-serif, system-ui, "Hiragino Sans", "Noto Sans JP", sans-serif;
+}
+
+@layer base {
+  :root {
+    /* Both themes exist from the start; ThemeToggle overrides this inline
+     * to force one scheme. light-dark() resolves against this value. */
+    color-scheme: light dark;
+  }
+
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+    /* Scores and seeds align everywhere without per-component opt-in. */
+    font-variant-numeric: tabular-nums;
+  }
+}
