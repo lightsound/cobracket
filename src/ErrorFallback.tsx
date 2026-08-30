@@ -1,4 +1,4 @@
-import type { Accessor } from 'solid-js';
+import type { Accessor } from "solid-js";
 
 // Thrown values are `unknown` in JavaScript, so every <Errored> boundary needs
 // the same normalization. This component is the one place that does it; pass

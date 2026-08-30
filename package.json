@@ -2,11 +2,8 @@
   "name": "cobracket",
   "version": "0.0.0",
   "description": "Minimal Solid 2.0 app",
+  "license": "MIT",
   "type": "module",
-  "packageManager": "bun@1.4.0",
-  "engines": {
-    "bun": "^1.4.0"
-  },
   "scripts": {
     "start": "vp dev",
     "dev": "vp dev",
@@ -21,7 +18,11 @@
     "fallow:audit": "fallow audit",
     "fallow:dead-code": "fallow dead-code"
   },
-  "license": "MIT",
+  "dependencies": {
+    "@solidjs/web": "^2.0.0-rc.4",
+    "convex": "^1.45.0",
+    "solid-js": "^2.0.0-rc.4"
+  },
   "devDependencies": {
     "@import-lint/cli": "^0.1.9",
     "@solidjs/vite-plugin": "^3.0.0-next.36",
@@ -31,12 +32,11 @@
     "vite": "npm:@voidzero-dev/vite-plus-core@0.3.0",
     "vite-plus": "0.3.0"
   },
-  "dependencies": {
-    "@solidjs/web": "^2.0.0-rc.4",
-    "convex": "^1.45.0",
-    "solid-js": "^2.0.0-rc.4"
-  },
   "overrides": {
     "vite": "npm:@voidzero-dev/vite-plus-core@0.3.0"
-  }
+  },
+  "engines": {
+    "bun": "^1.4.0"
+  },
+  "packageManager": "bun@1.4.0"
 }

@@ -85,9 +85,7 @@ function validateResult(
     return;
   }
   const decisive =
-    outcomes === "loss+win" ||
-    outcomes === "walkover+win" ||
-    outcomes === "disqualification+win";
+    outcomes === "loss+win" || outcomes === "walkover+win" || outcomes === "disqualification+win";
   if (!decisive) {
     throw new FormatEngineError(
       "invalid_result",
@@ -120,9 +118,7 @@ function applyResult(
   const occupantIds = new Set(
     occupants.map((o) => (o.kind === "participant" ? o.participantId : "")),
   );
-  const pairingMatches = result.sides.every((side) =>
-    occupantIds.has(side.participantId),
-  );
+  const pairingMatches = result.sides.every((side) => occupantIds.has(side.participantId));
   if (!pairingMatches) {
     // A correction upstream changed the occupants: the record is void and
     // the match awaits a new result.
@@ -147,9 +143,7 @@ function resolveMatches(
   latestResultIndex: Map<string, number>,
   rules: FamilyRules,
 ): Map<string, MatchResolution> {
-  const matchesByKey = new Map(
-    structure.matches.map((match) => [match.key, match]),
-  );
+  const matchesByKey = new Map(structure.matches.map((match) => [match.key, match]));
   const resolutions = new Map<string, MatchResolution>();
   const resolutionOf = (matchKey: string) => resolutions.get(matchKey);
 
@@ -173,10 +167,7 @@ function resolveMatches(
     }
     const match = matchesByKey.get(matchKey);
     if (!match) {
-      throw new FormatEngineError(
-        "unknown_match",
-        `slot references unknown match "${matchKey}"`,
-      );
+      throw new FormatEngineError("unknown_match", `slot references unknown match "${matchKey}"`);
     }
 
     // Resolve upstream matches first so cancellation rules can inspect them.
@@ -259,10 +250,7 @@ function collectEliminationStages(
       resolution.loser.kind === "participant" &&
       !loserConsumed.has(match.key)
     ) {
-      stages.set(
-        resolution.loser.participantId,
-        rules.eliminationStage(match, structure),
-      );
+      stages.set(resolution.loser.participantId, rules.eliminationStage(match, structure));
     }
   }
   return stages;
@@ -284,11 +272,7 @@ function computeStandings(
       participantId,
       placement: 1 + stages.filter((other) => other.stage > stage).length,
     }))
-    .sort(
-      (a, b) =>
-        a.placement - b.placement ||
-        a.participantId.localeCompare(b.participantId),
-    );
+    .sort((a, b) => a.placement - b.placement || a.participantId.localeCompare(b.participantId));
 }
 
 function collectParticipantIds(structure: BracketStructure): Set<string> {
@@ -303,10 +287,7 @@ function collectParticipantIds(structure: BracketStructure): Set<string> {
   return participantIds;
 }
 
-function toDerivedMatch(
-  match: StructureMatch,
-  resolution: MatchResolution,
-): DerivedMatch {
+function toDerivedMatch(match: StructureMatch, resolution: MatchResolution): DerivedMatch {
   return {
     key: match.key,
     bracket: match.bracket,
@@ -331,9 +312,7 @@ export function evaluate(
   results: readonly RecordedResult[],
   rules: FamilyRules,
 ): Progression {
-  const matchesByKey = new Map(
-    structure.matches.map((match) => [match.key, match]),
-  );
+  const matchesByKey = new Map(structure.matches.map((match) => [match.key, match]));
 
   // Latest record per match is the effective candidate; earlier records for
   // the same match are corrections' history and are simply superseded.
@@ -343,12 +322,7 @@ export function evaluate(
     latestResultIndex.set(result.matchKey, index);
   });
 
-  const resolutions = resolveMatches(
-    structure,
-    results,
-    latestResultIndex,
-    rules,
-  );
+  const resolutions = resolveMatches(structure, results, latestResultIndex, rules);
 
   // A latest record that did not end up deciding its match is void: either
   // its pairing became invalid, or its match is structurally resolved (bye)
@@ -358,10 +332,7 @@ export function evaluate(
     .map(([, index]) => index)
     .sort((a, b) => a - b);
 
-  const { winnerConsumed, loserConsumed } = collectConsumedSlots(
-    structure,
-    resolutions,
-  );
+  const { winnerConsumed, loserConsumed } = collectConsumedSlots(structure, resolutions);
   const active = structure.matches.filter(
     (match) => resolutions.get(match.key)!.state !== "cancelled",
   );
@@ -378,9 +349,7 @@ export function evaluate(
   const terminalWinner =
     terminal.length === 1 ? resolutions.get(terminal[0]!.key)!.winner : UNKNOWN;
   const championId =
-    terminalWinner.kind === "participant"
-      ? terminalWinner.participantId
-      : undefined;
+    terminalWinner.kind === "participant" ? terminalWinner.participantId : undefined;
   const completed =
     championId !== undefined &&
     active.every((match) => resolutions.get(match.key)!.state === "completed");
@@ -391,15 +360,10 @@ export function evaluate(
 
   return {
     matches,
-    readyMatchKeys: matches
-      .filter((match) => match.state === "ready")
-      .map((match) => match.key),
+    readyMatchKeys: matches.filter((match) => match.state === "ready").map((match) => match.key),
     completed,
     ...(completed && { championId }),
-    standings: computeStandings(
-      collectParticipantIds(structure),
-      eliminationStages,
-    ),
+    standings: computeStandings(collectParticipantIds(structure), eliminationStages),
     voidedResultIndices,
   };
 }
