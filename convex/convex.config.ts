@@ -5,8 +5,8 @@ import authAnonymous from "@convex-dev/auth/providers/anonymous/convex.config.js
 
 // Convex Auth v2 (preview, ADR 0003): the core component owns the signing
 // key, account<->user mapping, and sessions; the anonymous provider is the
-// only sign-in method in MVP. Keys are deployment env vars set headlessly by
-// `bun run auth:keys` (see scripts/setup-auth-keys.ts).
+// only sign-in method in MVP. Keys are deployment env vars set by
+// `bun run auth:keys` (the @convex-dev/auth CLI; idempotent, headless).
 const app = defineApp({
   env: {
     AUTH_PRIVATE_KEY: v.string(),

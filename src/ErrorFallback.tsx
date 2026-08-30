@@ -1,9 +1,9 @@
 import type { Accessor } from "solid-js";
 
-// Thrown values are `unknown` in JavaScript, so every <Errored> boundary needs
-// the same normalization. This component is the one place that does it; pass
-// it to every boundary instead of repeating String(error()) inline.
-function errorMessage(value: unknown): string {
+// Thrown values are `unknown` in JavaScript, so every error surface needs the
+// same normalization. This module is the one place that does it — boundaries
+// take errorFallback below; handler catch blocks call this directly.
+export function errorMessage(value: unknown): string {
   return value instanceof Error ? value.message : String(value);
 }
 
