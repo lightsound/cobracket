@@ -1,0 +1,15 @@
+{
+  // Repo scripts run under Bun (see package.json "scripts"); this project
+  // config gives them the Bun globals (Bun, process, Buffer) that the root
+  // tsconfig (src-only) and convex/tsconfig.json (Convex runtime) exclude.
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["bun"]
+  },
+  "include": ["./**/*.ts"]
+}

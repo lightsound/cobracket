@@ -17,9 +17,12 @@
     "lint:theme": "bun scripts/lint-theme.ts",
     "fallow": "fallow",
     "fallow:audit": "fallow audit",
-    "fallow:dead-code": "fallow dead-code"
+    "fallow:dead-code": "fallow dead-code",
+    "auth:keys": "bun x @convex-dev/auth",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p convex && tsc --noEmit -p scripts"
   },
   "dependencies": {
+    "@convex-dev/auth": "2.0.0-alpha.1",
     "@fontsource-variable/space-grotesk": "^5.3.0",
     "@solidjs/web": "^2.0.0-rc.4",
     "convex": "^1.45.0",
@@ -27,9 +30,12 @@
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
+    "@edge-runtime/vm": "^5.0.0",
     "@import-lint/cli": "^0.1.9",
     "@solidjs/vite-plugin": "^3.0.0-next.36",
     "@tailwindcss/vite": "^4.3.3",
+    "@types/bun": "^1.4.0",
+    "convex-test": "^0.0.56",
     "fallow": "^3.20.0",
     "solid2-agent-kit": "^0.4.5",
     "typescript": "^7.1.0-dev.20260829.1",

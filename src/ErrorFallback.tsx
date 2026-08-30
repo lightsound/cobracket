@@ -1,19 +1,30 @@
-import type { Accessor } from "solid-js";
+import type { Accessor, Element } from "solid-js";
 
-// Thrown values are `unknown` in JavaScript, so every <Errored> boundary needs
-// the same normalization. This component is the one place that does it; pass
-// it to every boundary instead of repeating String(error()) inline.
-function errorMessage(value: unknown): string {
+// Thrown values are `unknown` in JavaScript, so every error surface needs the
+// same normalization. This module is the one place that does it — boundaries
+// take errorFallback below; handler catch blocks call this directly.
+export function errorMessage(value: unknown): string {
   return value instanceof Error ? value.message : String(value);
 }
 
-export default function ErrorFallback(props: { error: Accessor<unknown>; reset: () => void }) {
+// The one presentational error surface: every error message renders through
+// it so the classes, role, and structure cannot drift between call sites.
+export function ErrorNotice(props: { message: string; children?: Element }) {
   return (
     <p class="status error-fallback" role="alert">
-      <span>{errorMessage(props.error())}</span>
-      <button class="increment" type="button" onClick={() => props.reset()}>
+      <span>{props.message}</span>
+      {props.children}
+    </p>
+  );
+}
+
+// The adapter every <Errored> boundary passes as its fallback.
+export function errorFallback(error: Accessor<unknown>, reset: () => void) {
+  return (
+    <ErrorNotice message={errorMessage(error())}>
+      <button class="increment" type="button" onClick={() => reset()}>
         Retry
       </button>
-    </p>
+    </ErrorNotice>
   );
 }
