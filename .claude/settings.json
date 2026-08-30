@@ -10,6 +10,39 @@
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/fallow-gate.sh"
           }
         ]
+      },
+      {
+        "matcher": "Edit|MultiEdit|Write|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node node_modules/solid2-agent-kit/bin/solid2-kit.mjs hook claude",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|MultiEdit|Write|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node node_modules/solid2-agent-kit/bin/solid2-kit.mjs hook claude",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node node_modules/solid2-agent-kit/bin/solid2-kit.mjs hook claude",
+            "timeout": 60
+          }
+        ]
       }
     ]
   }

@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "hooks": {
+    "postToolUse": [
+      {
+        "command": "node node_modules/solid2-agent-kit/bin/solid2-kit.mjs hook cursor"
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "node node_modules/solid2-agent-kit/bin/solid2-kit.mjs hook cursor"
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "command": "node node_modules/solid2-agent-kit/bin/solid2-kit.mjs hook cursor"
+      }
+    ]
+  }
+}
