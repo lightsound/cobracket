@@ -6,8 +6,8 @@
  * (bg-slate-800, text-red-500, ...) do not exist. Enforced by `bun run
  * lint:theme`.
  */
-@import 'tailwindcss';
-@import '@fontsource-variable/space-grotesk';
+@import "tailwindcss";
+@import "@fontsource-variable/space-grotesk";
 
 @theme {
   --color-*: initial;
@@ -34,12 +34,10 @@
   /* Space Grotesk covers Latin only; Japanese falls through to system fonts. */
   /* fallow-ignore-next-line css-dead-surface -- Tailwind preflight consumes this token as the default body font */
   --font-sans:
-    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
-    'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic UI', sans-serif,
-    'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji';
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP",
+    "Yu Gothic UI", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
   --font-display:
-    'Space Grotesk Variable', ui-sans-serif, system-ui, 'Hiragino Sans',
-    'Noto Sans JP', sans-serif;
+    "Space Grotesk Variable", ui-sans-serif, system-ui, "Hiragino Sans", "Noto Sans JP", sans-serif;
 }
 
 @layer base {

@@ -1,11 +1,7 @@
 import type { FamilyRules, MatchResolution } from "./evaluate";
 import { nextPowerOfTwo } from "./seeding";
 import { buildWinnersBracket } from "./singleElimination";
-import type {
-  BracketStructure,
-  SlotSource,
-  StructureMatch,
-} from "./types";
+import type { BracketStructure, SlotSource, StructureMatch } from "./types";
 
 export const GRAND_FINAL_KEY = "gf";
 export const GRAND_FINAL_RESET_KEY = "gfr";
@@ -94,10 +90,7 @@ export function generateDoubleElimination(
     bracket: "grand_final",
     round: 1,
     indexInRound: 0,
-    slots: [
-      { kind: "winnerOf", matchKey: `w${winnersRounds}m1` },
-      losersFinalist,
-    ],
+    slots: [{ kind: "winnerOf", matchKey: `w${winnersRounds}m1` }, losersFinalist],
   };
 
   const matches = [...winners, ...losers, grandFinal];

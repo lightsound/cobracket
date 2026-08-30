@@ -1,13 +1,9 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { deriveProgression, generateBracket } from "./index";
 import type { RecordedResult } from "./index";
 
-function winOver(
-  matchKey: string,
-  winner: string,
-  loser: string,
-): RecordedResult {
+function winOver(matchKey: string, winner: string, loser: string): RecordedResult {
   return {
     matchKey,
     sides: [
@@ -57,24 +53,16 @@ describe("corrections and downstream voiding", () => {
     expect(progression.voidedResultIndices).toEqual([2]);
     expect(progression.readyMatchKeys).toEqual([finalKey]);
 
-    const finalMatch = progression.matches.find(
-      (match) => match.key === finalKey,
-    );
+    const finalMatch = progression.matches.find((match) => match.key === finalKey);
     const occupantIds = finalMatch?.occupants
-      .map((occupant) =>
-        occupant.kind === "participant" ? occupant.participantId : "?",
-      )
+      .map((occupant) => (occupant.kind === "participant" ? occupant.participantId : "?"))
       .sort();
     expect(occupantIds).toEqual(["p1", "p3"]);
   });
 
   test("re-entering the voided match completes the tournament again", () => {
     const { generated, semi2, finalKey, results } = playedOut();
-    const corrected = [
-      ...results,
-      winOver(semi2, "p3", "p2"),
-      winOver(finalKey, "p3", "p1"),
-    ];
+    const corrected = [...results, winOver(semi2, "p3", "p2"), winOver(finalKey, "p3", "p1")];
 
     const progression = deriveProgression(generated, corrected);
 

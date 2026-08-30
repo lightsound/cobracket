@@ -63,6 +63,6 @@
     "route-collision": "error",
     "dynamic-segment-name-conflict": "error",
     // Impossible until the repo has tests that form a dependency path into src/.
-    "coverage-gaps": "off"
-  }
+    "coverage-gaps": "off",
+  },
 }

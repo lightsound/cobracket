@@ -1,11 +1,7 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vite-plus/test";
 
 import { deriveProgression, generateBracket } from "./index";
-import type {
-  FormatOptions,
-  Progression,
-  RecordedResult,
-} from "./index";
+import type { FormatOptions, Progression, RecordedResult } from "./index";
 
 function ids(count: number): string[] {
   return Array.from({ length: count }, (_, i) => `p${i + 1}`);
@@ -49,8 +45,7 @@ function playToCompletion(
   throw new Error("tournament did not complete within 1000 matches");
 }
 
-const lowerNumberWins = (a: string, b: string) =>
-  Number(a.slice(1)) < Number(b.slice(1)) ? a : b;
+const lowerNumberWins = (a: string, b: string) => (Number(a.slice(1)) < Number(b.slice(1)) ? a : b);
 const higherNumberWins = (a: string, b: string) =>
   Number(a.slice(1)) > Number(b.slice(1)) ? a : b;
 
@@ -67,10 +62,9 @@ describe("single elimination invariants for any roster size", () => {
       expect(progression.completed).toBe(true);
       expect(progression.championId).toBe("p1");
       expect(progression.standings).toHaveLength(count);
-      expect(
-        progression.standings.find((entry) => entry.participantId === "p1")
-          ?.placement,
-      ).toBe(1);
+      expect(progression.standings.find((entry) => entry.participantId === "p1")?.placement).toBe(
+        1,
+      );
       // Placements start at 1 and never skip past the roster size.
       for (const entry of progression.standings) {
         expect(entry.placement).toBeGreaterThanOrEqual(1);
@@ -88,9 +82,7 @@ describe("single elimination invariants for any roster size", () => {
 
     expect(progression.completed).toBe(true);
     expect(progression.standings).toHaveLength(13);
-    expect(
-      progression.standings.filter((entry) => entry.placement === 1),
-    ).toHaveLength(1);
+    expect(progression.standings.filter((entry) => entry.placement === 1)).toHaveLength(1);
   });
 });
 
@@ -113,9 +105,7 @@ describe("double elimination invariants for any roster size", () => {
         placement: 1,
       });
       // Exactly one runner-up (the grand-final loser).
-      expect(
-        progression.standings.filter((entry) => entry.placement === 2),
-      ).toHaveLength(1);
+      expect(progression.standings.filter((entry) => entry.placement === 2)).toHaveLength(1);
     });
   }
 
@@ -138,9 +128,7 @@ describe("double elimination invariants for any roster size", () => {
       expect(progression.championId).toBeDefined();
       expect([2 * count - 2, 2 * count - 1]).toContain(playedMatches);
       expect(progression.standings).toHaveLength(count);
-      expect(
-        progression.standings.filter((entry) => entry.placement === 1),
-      ).toHaveLength(1);
+      expect(progression.standings.filter((entry) => entry.placement === 1)).toHaveLength(1);
     });
   }
 });
