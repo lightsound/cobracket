@@ -1,4 +1,4 @@
-import { createEffect, createSignal } from "solid-js";
+import { createSignal } from "solid-js";
 
 type ThemePreference = "system" | "light" | "dark";
 
@@ -17,21 +17,20 @@ function storedPreference(): ThemePreference {
   return value === "light" || value === "dark" ? value : "system";
 }
 
+function applyPreference(pref: ThemePreference): void {
+  // Forcing a single scheme flips every light-dark() token at once;
+  // 'light dark' hands the choice back to the OS.
+  document.documentElement.style.colorScheme = pref === "system" ? "light dark" : pref;
+  localStorage.setItem(STORAGE_KEY, pref);
+}
+
 export default function ThemeToggle() {
   const [preference, setPreference] = createSignal(storedPreference());
 
-  createEffect(
-    () => preference(),
-    (pref) => {
-      // Forcing a single scheme flips every light-dark() token at once;
-      // 'light dark' hands the choice back to the OS.
-      document.documentElement.style.colorScheme = pref === "system" ? "light dark" : pref;
-      localStorage.setItem(STORAGE_KEY, pref);
-    },
-  );
-
   const cycle = () => {
-    setPreference((current) => ORDER[(ORDER.indexOf(current) + 1) % ORDER.length] ?? "system");
+    const next = ORDER[(ORDER.indexOf(preference()) + 1) % ORDER.length] ?? "system";
+    setPreference(next);
+    applyPreference(next);
   };
 
   return (
