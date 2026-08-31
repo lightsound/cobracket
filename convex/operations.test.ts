@@ -755,16 +755,7 @@ test("writes are bounded: roster size, name length, and scores", async () => {
   const { as } = await newOrganizer(t);
   const { tournamentId, ids } = await seededTournament(as, ["A", "B"]);
 
-  await expect(
-    as.mutation(api.operations.addParticipants, {
-      tournamentId,
-      text: Array.from({ length: 127 }, (_, i) => `P${i}`).join("\n"),
-    }),
-  ).rejects.toThrow(/at most 128 participants/);
-  await expect(
-    as.mutation(api.operations.addParticipant, { tournamentId, name: "x".repeat(121) }),
-  ).rejects.toThrow(/at most 120 characters/);
-
+  // Scores must be finite (v.number() admits NaN/Infinity).
   await as.mutation(api.operations.publishTournament, { tournamentId });
   const view = await as.query(api.operations.getTournament, { tournamentId });
   await expect(
@@ -776,6 +767,25 @@ test("writes are bounded: roster size, name length, and scores", async () => {
       ],
     }),
   ).rejects.toThrow(/finite/);
+
+  await expect(
+    as.mutation(api.operations.addParticipant, { tournamentId, name: "x".repeat(121) }),
+  ).rejects.toThrow(/at most 120 characters/);
+
+  // The roster cap is pinned on both sides of the boundary: filling to
+  // exactly 128 succeeds, the 129th is refused (single and bulk alike).
+  await as.mutation(api.operations.addParticipants, {
+    tournamentId,
+    text: Array.from({ length: 126 }, (_, i) => `P${i}`).join("\n"),
+  });
+  const full = await as.query(api.operations.getTournament, { tournamentId });
+  expect(full.participants).toHaveLength(128);
+  await expect(
+    as.mutation(api.operations.addParticipant, { tournamentId, name: "Overflow" }),
+  ).rejects.toThrow(/at most 128 participants/);
+  await expect(
+    as.mutation(api.operations.addParticipants, { tournamentId, text: "Overflow" }),
+  ).rejects.toThrow(/at most 128 participants/);
 });
 
 // ---------------------------------------------------------------------------

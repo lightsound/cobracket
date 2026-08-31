@@ -128,9 +128,11 @@ const tournamentViewFields = {
   participants: v.array(participantValidator),
 };
 
-// The shared read shape. Deliberately free of Organizer-only data
-// (organizerId, recordedBy, shareSlug, document handles) so
-// getSharedTournament can return it to unauthenticated viewers as-is.
+// The shared read shape. Deliberately free of Organizer-only data —
+// organizerId, recordedBy, shareSlug, and tournament/match document handles —
+// so getSharedTournament can return it to unauthenticated viewers as-is.
+// Participant ids do appear: they are the public row identity, and no public
+// function accepts one.
 const tournamentViewValidator = v.object({
   ...tournamentViewFields,
   // Null until the bracket has been generated (and after a roster change
