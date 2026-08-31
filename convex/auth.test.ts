@@ -9,7 +9,9 @@ import schema from "./schema";
 // callback and the identity query every Organizer capability will build on.
 // Operations-API tests (Seam 2) fake Organizers via withIdentity the same way.
 
-const modules = import.meta.glob("./**/*.ts");
+// Test files are excluded: convex-test only needs the function modules, and
+// globbing sibling tests would create test-to-test import cycles.
+const modules = import.meta.glob(["./**/*.ts", "!./**/*.test.ts"]);
 
 type Test = ReturnType<typeof convexTest>;
 
