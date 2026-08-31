@@ -2,14 +2,10 @@ import { createSignal } from "solid-js";
 
 export type ThemePreference = "system" | "light" | "dark";
 
-// Keep the key and the light/dark mapping in sync with the blocking
-// bootstrap in src/Document.tsx — the prerendered shell cannot import
-// this module.
 const STORAGE_KEY = "cobracket:theme";
 const ORDER: ThemePreference[] = ["system", "light", "dark"];
 
 function readStoredTheme(): string | null {
-  // Guarded because the static shell is prerendered at build time.
   try {
     return localStorage.getItem(STORAGE_KEY);
   } catch {
