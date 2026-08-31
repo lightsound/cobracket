@@ -3,9 +3,10 @@ import { HydrationScript } from "@solidjs/web";
 
 // Blocking bootstrap: apply a stored light/dark preference before first paint
 // so light-dark() tokens do not flash the OS scheme. Intentionally duplicated
-// from ThemeToggle — the prerendered shell cannot import application modules.
+// from src/theme-preference.ts — the prerendered shell cannot import
+// application modules.
 const THEME_BOOTSTRAP = `(() => {
-  // keep in sync with src/ThemeToggle.tsx
+  // keep in sync with src/theme-preference.ts
   try {
     const pref = localStorage.getItem("cobracket:theme");
     if (pref === "light" || pref === "dark") {
