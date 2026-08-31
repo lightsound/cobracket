@@ -8,6 +8,11 @@ This file gives coding agents project-specific context. Keep it short and update
 - Exception: `docs/solid2-migration-from-react-ja.md` is a vendored Japanese reference (in-depth React-to-Solid 2.0 guide; read it when a Solid design decision is unclear). Keep it Japanese; do not translate it to English. Update it when official Solid 2 guidance changes.
 - Chat with the user in **Japanese**. This applies to conversation only, never to repo artifacts.
 
+## Agent guidance files
+
+- `AGENTS.md` is the shared briefing (Cursor, Codex, Cloud Agents, and any harness that reads this filename).
+- `CLAUDE.md` is Claude Code's native file. It holds the Solid 2 hard-rules block (Claude Code does not load `.cursor/rules`) and `@AGENTS.md` so Claude Code also gets this briefing. Do not merge the two files or delete either.
+
 ## Project Overview
 
 - Product: cobracket — host and manage tournaments of any format, from the web or from chat (MCP). Read `docs/vision.md` for direction, `CONTEXT.md` for the domain glossary (use its terms in code and docs), `docs/adr/` for decisions, `docs/specs/mvp.md` for the current spec
@@ -36,7 +41,8 @@ This file gives coding agents project-specific context. Keep it short and update
 - Update Solid agent guidance: `bunx solid2-kit sync` (rules, skills, and the managed AGENTS.md/CLAUDE.md blocks are owned by [solid2-agent-kit](https://github.com/lightsound/solid2-agent-kit); do not edit them by hand)
 - Update Convex agent guidance: `bun x convex ai-files update` (check staleness with `bun x convex ai-files status`). Owned by [Convex AI files](https://docs.convex.dev/ai): `convex/_generated/ai/guidelines.md`, the managed AGENTS.md/CLAUDE.md blocks, and the `convex-*` skills under `.agents/skills` + `.claude/skills` (`.agents/skills` is also Cursor's read path; targets configured in `convex.json`). Do not edit any of them by hand
 - Fallow: `bun run fallow` (full), `bun run fallow:audit` (changed files)
-- Fallow agent surfaces: `.cursor/mcp.json` / `.mcp.json` (`fallow-mcp`), skills under `.agents/skills/fallow` and `.claude/skills/fallow`. Re-run with `bunx fallow agent install` (byte-stable). Do not run `fallow similar-code setup` unless a human asks.
+- Convex MCP: official CLI server in `.cursor/mcp.json` and `.mcp.json` (`npx --no convex mcp start` — the pinned local `convex`, same pattern as `fallow-mcp`; requires `bun install`). Leave production flags off unless a human asks to change prod this session (`convex-deploy-guard`).
+- Fallow agent surfaces: `.cursor/mcp.json` / `.mcp.json` (`fallow-mcp` entry only), skills under `.agents/skills/fallow` and `.claude/skills/fallow`. Re-run with `bunx fallow agent install` (byte-stable; it will not overwrite `convex`). Do not run `fallow similar-code setup` unless a human asks.
 
 ## Fallow
 
@@ -79,6 +85,7 @@ This file gives coding agents project-specific context. Keep it short and update
 
 - Full dev needs two long-running processes (see `## Commands`); run each in its own terminal/tmux session and leave them up.
 - Convex must run **headless/non-interactively** with `CONVEX_AGENT_MODE=anonymous`. Without it, `convex dev` prompts for login/account setup and hangs. Start the backend with `CONVEX_AGENT_MODE=anonymous bun run convex:dev` — it spins up a local backend on `127.0.0.1:3210` (HTTP actions on `3211`) and writes `.env.local` with `CONVEX_DEPLOYMENT` + `VITE_CONVEX_URL`. The same env var is required for one-off CLI calls, e.g. `CONVEX_AGENT_MODE=anonymous bun x convex run tasks:list`.
+- Official Convex MCP starts without a Convex account, but its tools (`status`, `data`, `logs`, …) require `npx convex login` or a deploy key. Under `CONVEX_AGENT_MODE=anonymous` they return `Not Authorized`; use the CLI fallback above. Production MCP flags stay off.
 - Then start the frontend with `bun dev` (Vite on `0.0.0.0:3000`) and open `http://localhost:3000`. Start Convex first so `VITE_CONVEX_URL` exists when Vite boots (otherwise the task list shows a "Set VITE_CONVEX_URL…" message until Vite is restarted).
 - `.env.local`, `.convex/` (deployment state), and the cached backend binary in `~/.convex/binaries/` are gitignored and persist on the VM. The anonymous deployment name is fixed (`anonymous-agent`), so restarts reuse the same data and `VITE_CONVEX_URL`.
 - Gotcha: the Vite dev server returns `Cannot GET /` (404) to plain `curl` because the default `Accept: */*` doesn't match the SSR HTML middleware. It serves normally to browsers (which send `Accept: text/html`). Smoke-test from the shell with `curl -H 'Accept: text/html' http://localhost:3000/`.

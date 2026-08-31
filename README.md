@@ -53,7 +53,7 @@ The backend is [Convex 1.45](https://docs.convex.dev/). To connect to the cloud,
 
 [Fallow](https://github.com/fallow-rs/fallow) 3.20 checks for unused files / exports, circular dependencies, duplication, and complexity. Configuration lives in `.fallowrc.jsonc`. All rules are `error` in principle; the only rule currently off is `coverage-gaps`, because execution paths cannot be verified without tests. TypeScript semantic analysis (`typeAware`) is on. Solid 2's start mode has no `src/main.tsx`, so `src/App.tsx` and `src/Document.tsx` are set as entries. `convex/_generated/` is excluded from analysis.
 
-For coding agents, `bunx fallow agent install` wires up the skills (`.agents/skills/fallow`, `.claude/skills/fallow`), MCP servers (`.cursor/mcp.json`, `.mcp.json`), and the Claude Code commit/push gate. Re-running it is byte-stable (no diff).
+For coding agents, `bunx fallow agent install` wires up the Fallow skills (`.agents/skills/fallow`, `.claude/skills/fallow`), the `fallow` MCP entry (`.cursor/mcp.json`, `.mcp.json`), and the Claude Code commit/push gate. The official Convex MCP is a separate `convex` entry in those same files (`npx --no convex mcp start`, using the pinned local `convex`). Re-running fallow install is byte-stable and does not overwrite `convex`.
 
 ```bash
 bun run fallow
