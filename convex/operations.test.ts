@@ -86,28 +86,25 @@ async function seededTournament(
   return { tournamentId, shareSlug, ids };
 }
 
-function matchAt(
-  bracket: { matches: { bracket: string; round: number; indexInRound: number }[] },
+function matchAt<M extends { bracket: string; round: number; indexInRound: number }>(
+  bracket: { matches: M[] },
   section: "winners" | "losers" | "grand_final",
   round: number,
   indexInRound: number,
-) {
+): M {
   const match = bracket.matches.find(
     (m) => m.bracket === section && m.round === round && m.indexInRound === indexInRound,
   );
   expect(match).toBeDefined();
-  return match! as (typeof bracket.matches)[number] & {
-    matchId: Id<"matches">;
-    key: string;
-    state: string;
-    occupants: { kind: string; participantId?: Id<"participants"> }[];
-    winnerId?: Id<"participants">;
-    sides?: Side[];
-  };
+  return match!;
 }
 
-function occupantIds(match: { occupants: { participantId?: Id<"participants"> }[] }) {
-  return match.occupants.map((o) => o.participantId);
+function occupantIds(match: {
+  occupants: ({ kind: "participant"; participantId: Id<"participants"> } | { kind: string })[];
+}) {
+  return match.occupants.map((o) =>
+    o.kind === "participant" && "participantId" in o ? o.participantId : undefined,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -492,6 +489,26 @@ test("roster changes invalidate a generated bracket; regeneration picks them up"
   expect(seeded).toContain(lateId);
 });
 
+test("roster edits and regeneration stay available while published, until the first result", async () => {
+  const t = convexTest(schema, modules);
+  const { as } = await newOrganizer(t);
+  const { tournamentId, shareSlug } = await seededTournament(as, ["A", "B", "C", "D"]);
+  await as.mutation(api.operations.publishTournament, { tournamentId });
+
+  // A late roster change (story 10) drops the published bracket...
+  await as.mutation(api.operations.addParticipant, { tournamentId, name: "E" });
+  let shared = await t.query(api.operations.getSharedTournament, { shareSlug });
+  expect(shared!.status).toBe("published");
+  expect(shared!.bracket).toBeNull();
+
+  // ...and regeneration restores it, still published, roster of five.
+  await as.mutation(api.operations.generateBracket, { tournamentId });
+  shared = await t.query(api.operations.getSharedTournament, { shareSlug });
+  expect(shared!.status).toBe("published");
+  expect(bracketOf(shared!).matches.length).toBeGreaterThan(0);
+  expect(shared!.participants).toHaveLength(5);
+});
+
 test("bracket generation needs a roster of at least two", async () => {
   const t = convexTest(schema, modules);
   const { as } = await newOrganizer(t);
@@ -610,6 +627,11 @@ test("organizer operations refuse unauthenticated callers", async () => {
       sides: winOver(ids.get("A")!, ids.get("B")!),
     }),
   ).rejects.toThrow(/Not signed in/);
+  // Identity is resolved before any document lookup, so an unauthenticated
+  // probe cannot distinguish existing ids from missing ones.
+  await expect(
+    t.mutation(api.operations.renameParticipant, { participantId: ids.get("A")!, name: "X" }),
+  ).rejects.toThrow(/Not signed in/);
 });
 
 test("another organizer's tournament is untouchable and reads as not found", async () => {
@@ -647,6 +669,20 @@ test("another organizer's tournament is untouchable and reads as not found", asy
   const intact = await owner.query(api.operations.getTournament, { tournamentId });
   expect(intact.participants).toHaveLength(2);
   expect(await intruder.query(api.operations.listMyTournaments, {})).toEqual([]);
+
+  // A foreign document and a missing one read identically, so probing ids
+  // confirms nothing about their existence.
+  const foreignError = intruder.mutation(api.operations.renameParticipant, {
+    participantId: ids.get("A")!,
+    name: "X",
+  });
+  await expect(foreignError).rejects.toThrow(/Participant not found/);
+  await t.run(async (ctx) => await ctx.db.delete("participants", ids.get("B")!));
+  const missingError = intruder.mutation(api.operations.renameParticipant, {
+    participantId: ids.get("B")!,
+    name: "X",
+  });
+  await expect(missingError).rejects.toThrow(/Participant not found/);
 });
 
 // ---------------------------------------------------------------------------

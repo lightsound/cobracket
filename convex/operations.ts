@@ -58,6 +58,8 @@ const resultSideValidator = v.object({
   score: v.optional(v.number()),
 });
 
+type ResultSide = Infer<typeof resultSideValidator>;
+
 // fallow-ignore-next-line code-duplication -- intentionally mirrors the stored slotSource union (schema.ts) but is a distinct read-side shape: "unknown" replaces winnerOf/loserOf
 const occupantValidator = v.union(
   v.object({ kind: v.literal("participant"), participantId: v.id("participants") }),
@@ -181,6 +183,36 @@ async function requireOwnedTournamentIn(
   return tournament;
 }
 
+// Same collapsing rule for child-document handles: identity is resolved
+// first (an unauthenticated probe learns nothing), and a missing document
+// reads the same as someone else's, so neither confirms existence.
+async function requireOwnedParticipant(
+  ctx: QueryCtx,
+  participantId: Id<"participants">,
+): Promise<{ participant: Doc<"participants">; tournament: Doc<"tournaments"> }> {
+  const organizerId = await requireOrganizer(ctx);
+  const participant = await ctx.db.get("participants", participantId);
+  const tournament =
+    participant === null ? null : await ctx.db.get("tournaments", participant.tournamentId);
+  if (participant === null || tournament === null || tournament.organizerId !== organizerId) {
+    throw new ConvexError("Participant not found");
+  }
+  return { participant, tournament };
+}
+
+async function requireOwnedMatch(
+  ctx: QueryCtx,
+  matchId: Id<"matches">,
+): Promise<{ match: Doc<"matches">; tournament: Doc<"tournaments"> }> {
+  const organizerId = await requireOrganizer(ctx);
+  const match = await ctx.db.get("matches", matchId);
+  const tournament = match === null ? null : await ctx.db.get("tournaments", match.tournamentId);
+  if (match === null || tournament === null || tournament.organizerId !== organizerId) {
+    throw new ConvexError("Match not found");
+  }
+  return { match, tournament };
+}
+
 // Roster and seeding stay editable, and the bracket regenerable, until the
 // first result flips the tournament to live (story 10 + Lifecycle).
 const PRE_LIVE: readonly TournamentStatus[] = ["draft", "published"];
@@ -270,6 +302,13 @@ function toRecordedResults(
 // Engine errors carry client-actionable messages (invalid outcome combos,
 // draws under elimination, ...); surface them as ConvexError so callers can
 // display them.
+function rethrowEngineError(error: unknown): never {
+  if (error instanceof FormatEngineError) {
+    throw new ConvexError(error.message);
+  }
+  throw error;
+}
+
 function deriveOrThrow(
   structure: BracketStructure,
   results: readonly RecordedResult[],
@@ -277,10 +316,7 @@ function deriveOrThrow(
   try {
     return deriveProgression(structure, results);
   } catch (error) {
-    if (error instanceof FormatEngineError) {
-      throw new ConvexError(error.message);
-    }
-    throw error;
+    rethrowEngineError(error);
   }
 }
 
@@ -551,18 +587,6 @@ export const addParticipants = mutation({
   },
 });
 
-async function requireOwnedParticipant(
-  ctx: QueryCtx,
-  participantId: Id<"participants">,
-): Promise<{ participant: Doc<"participants">; tournament: Doc<"tournaments"> }> {
-  const participant = await ctx.db.get("participants", participantId);
-  if (participant === null) {
-    throw new ConvexError("Participant not found");
-  }
-  const tournament = await requireOwnedTournament(ctx, participant.tournamentId);
-  return { participant, tournament };
-}
-
 export const renameParticipant = mutation({
   args: { participantId: v.id("participants"), name: v.string() },
   returns: v.null(),
@@ -677,10 +701,7 @@ export const generateBracket = mutation({
         tournament.format,
       );
     } catch (error) {
-      if (error instanceof FormatEngineError) {
-        throw new ConvexError(error.message);
-      }
-      throw error;
+      rethrowEngineError(error);
     }
     await invalidateBracket(ctx, args.tournamentId);
     for (const match of structure.matches) {
@@ -723,9 +744,7 @@ export const publishTournament = mutation({
 // Result recording and correction (stories 12–14, ADR 0005)
 // ---------------------------------------------------------------------------
 
-function requireTwoSides(
-  sides: readonly Infer<typeof resultSideValidator>[],
-): [Infer<typeof resultSideValidator>, Infer<typeof resultSideValidator>] {
+function requireTwoSides(sides: readonly ResultSide[]): [ResultSide, ResultSide] {
   const [sideA, sideB] = sides;
   if (sides.length !== 2 || sideA === undefined || sideB === undefined) {
     throw new ConvexError("A result must have exactly two sides");
@@ -760,11 +779,7 @@ export const reportResult = mutation({
     voided: v.array(v.object({ matchId: v.id("matches"), matchKey: v.string() })),
   }),
   handler: async (ctx, args) => {
-    const match = await ctx.db.get("matches", args.matchId);
-    if (match === null) {
-      throw new ConvexError("Match not found");
-    }
-    const tournament = await requireOwnedTournament(ctx, match.tournamentId);
+    const { match, tournament } = await requireOwnedMatch(ctx, args.matchId);
     // First result in published flips to live; corrections in completed are
     // allowed only when they keep the tournament completed (the lifecycle is
     // one-way, so a correction may never reopen play).
@@ -788,6 +803,8 @@ export const reportResult = mutation({
       tournamentId: tournament._id,
       matchId: args.matchId,
       sides: args.sides,
+      // The actor (ADR 0005). requireOwnedMatch verified the caller IS the
+      // organizer; future self-reporting records the resolved caller instead.
       recordedBy: tournament.organizerId,
     });
     const status = statusAfterResult(tournament.status, progression.completed);
