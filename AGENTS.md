@@ -5,7 +5,7 @@ This file gives coding agents project-specific context. Keep it short and update
 ## Language Policy
 
 - Everything committed to this repo must be in **English**: code, comments, docs, commit messages, PR titles and bodies.
-- Exception: `docs/solid2-migration-from-react-ja.md` is a vendored Japanese reference (in-depth React-to-Solid 2.0 guide; read it when a Solid design decision is unclear) — keep it as is. Its async-prop examples still pass accessors (`user={user}` / `Accessor<User>`); solid2-agent-kit 0.9 and the official colorless form win: pass values (`user={user()}`), keep prop types as `User`, and put `<Loading>` around the read.
+- Exception: `docs/solid2-migration-from-react-ja.md` is a vendored Japanese reference (in-depth React-to-Solid 2.0 guide; read it when a Solid design decision is unclear). Keep it Japanese; do not translate it to English. Update it when official Solid 2 guidance changes.
 - Chat with the user in **Japanese**. This applies to conversation only, never to repo artifacts.
 
 ## Project Overview
