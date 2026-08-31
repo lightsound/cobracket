@@ -2,6 +2,8 @@
 
 出典: Solid 2.0 公式ドキュメント "Migration / From React"
 
+> **追記（Solid 2 colorless async / solid2-agent-kit 0.9）**: §14 の async props は公式どおり **値渡し** が本線です。`user={user()}`、型は `User`、`<Loading>` は読み取りの直上。以前このガイドが推していた `user={user}` / `Accessor<User>` は、子が `refresh(そのソース)` / `affects(そのソース)` を呼ぶときに限る例外です。
+
 ---
 
 ## 0. 全体像 — まずこれだけ
@@ -1545,17 +1547,19 @@ function SearchField(props: SearchFieldProps) {
 
 > ⚠️ これらは関連する UI 責務を担いますが、**runtime の契約は互換ではありません。**
 
-### async memo は accessor のまま
+### async memo は値のまま渡す（colorless）
+
+JSX の component props は **遅延評価**です（§8）。**渡すこと自体は読み取りではない**ので、async memo も同期の値と同じ形で渡します。型は `User` のまま。`Promise<User>` や `Accessor<User>` に変えない。公式の呼び方は **colorless** です。データをリモートにした瞬間に、経路上の型を色づかせない。
 
 ```tsx
-import { type Accessor, Errored, Loading, createMemo } from "solid-js";
+import { Errored, Loading, createMemo } from "solid-js";
 
-function UserProfile(props: { user: Accessor<User> }) {
+function UserProfile(props: { user: User }) {
 	return (
 		<Loading fallback={<p>Loading user...</p>}>
 			<article>
-				<h2>{props.user().name}</h2>
-				<p>{props.user().bio}</p>
+				<h2>{props.user.name}</h2>
+				<p>{props.user.bio}</p>
 			</article>
 		</Loading>
 	);
@@ -1569,8 +1573,17 @@ function Page(props: { id: string }) {
 	});
 
 	return (
-		<Errored fallback={(error) => <p>{String(error())}</p>}>
-			<UserProfile user={user} />
+		<Errored
+			fallback={(error, reset) => (
+				<>
+					<p>{String(error())}</p>
+					<button type="button" onClick={reset}>
+						Retry
+					</button>
+				</>
+			)}
+		>
+			<UserProfile user={user()} />
 		</Errored>
 	);
 }
@@ -1581,7 +1594,7 @@ function Page(props: { id: string }) {
 
 **boundary の配置ルール（重要）**:
 
-- 上例で async memo は `Page` で作られているが、`Loading` は `UserProfile` の中、**`props.user()` を読む場所の直上**にある。
+- 上例で async memo は `Page` で作られているが、`Loading` は `UserProfile` の中、**`props.user.name` を読む場所の直上**にある。
 - **loading boundary は「"not ready" を報告しうる読み取り」の owner ancestor でありさえすればよい。**
 - **computation を作った component や、読み取りを行う component の親の呼び出し元を包む必要はない。**
 - 1つの fallback でより広い領域をカバーしたいなら、boundary を owner tree のさらに上に置いてもよい。
@@ -1598,13 +1611,13 @@ function Page(props: { id: string }) {
 
 ```
 Page
- ├─ createMemo(user)                    ← 「作られた場所」。boundary とは無関係
- └─ <Errored fallback={...}>            ← エラー用の境界
-     └─ <UserProfile user={user}>       ← accessor を「渡している」だけ。読んでいない
-         └─ <Loading fallback={...}>    ← ★ ここが loading の境界
+ ├─ createMemo(user)                         ← 「作られた場所」。boundary とは無関係
+ └─ <Errored fallback={...}>                 ← エラー用の境界
+     └─ <UserProfile user={user()}>          ← 値を渡している。props は遅延なので、ここでは読んでいない
+         └─ <Loading fallback={...}>         ← ★ ここが loading の境界
              └─ <article>
-                 ├─ {props.user().name} ← ☆ not-ready を報告しうる読み取り
-                 └─ {props.user().bio}  ← ☆ 同上
+                 ├─ {props.user.name}        ← ☆ not-ready を報告しうる読み取り
+                 └─ {props.user.bio}         ← ☆ 同上
 ```
 
 ★ が ☆ の **owner ancestor になっている**ので、この配置で成立します。
@@ -1617,11 +1630,19 @@ Page
 const user = createMemo(async () => { /* ... */ });
 // ↑ この時点では何も起きない。user はただの accessor
 
-<UserProfile user={user} />
-// ↑ accessor を prop として「渡している」だけ。呼んでいないので読み取りではない
+<UserProfile user={user()} />
+// ↑ JSX prop は getter（§8）。親の本体で user() を変数に取り出しているのではない。
+//    子が props.user に触るまで読み取りは起きない
 
-{props.user().name}
-// ↑ ここで初めて呼ばれる。まだ settled していなければ、この式が "not ready" を報告する
+{props.user.name}
+// ↑ ここで初めて読む。まだ settled していなければ、この式が "not ready" を報告する
+```
+
+親で本当に読んでしまう書き方は、こうです。子の `<Loading>` には届きません。
+
+```tsx
+const current = user();
+return <UserProfile user={current} />;
 ```
 
 つまり **not-ready は「値を実際に取りに行った場所」で発生します。** そこから owner tree を上にたどり、**最初に見つかった `Loading` がそれを受け止めます。**
@@ -1630,60 +1651,34 @@ const user = createMemo(async () => { /* ... */ });
 
 📌 **設計上の意味**: これにより、**「データを用意する場所」と「ローディング表示を決める場所」を分離できます。** `Page` はデータの取得元を知っていればよく、「どんなスケルトンを出すか」は表示を担当する `UserProfile` が自分で決められます。
 
-#### なぜ `user={user()}` ではなく `user={user}` なのか
+#### なぜ `user={user}` ではなく `user={user()}` なのか
 
-この例では `UserProfile` の props が **`{ user: Accessor<User> }`**、つまり「**accessor そのもの**を受け取る」と型付けされています。そのため呼び出し側は `()` を付けずに関数を渡し、子が `props.user()` と自分で呼びます。
+公式も kit 0.9 も、**値渡しが本線**です。props の型は `User`。データをリモートにしても、途中の component の型を `Promise` や `Accessor` に塗り替えない。
 
 ```tsx
-function UserProfile(props: { user: Accessor<User> }) {
-	//                              ^^^^^^^^^^^^^^^ 値ではなく accessor を受け取る
+function UserProfile(props: { user: User }) {
 	return (
 		<Loading fallback={<p>Loading user...</p>}>
-			<h2>{props.user().name}</h2>
-			{/*         ^^ 子が自分で呼ぶ */}
+			<h2>{props.user.name}</h2>
 		</Loading>
 	);
 }
+
+<UserProfile user={user()} />
 ```
 
-ここで「**遅延の層が2つある**」ことに気づくと整理できます。
+| 書き方 | いつ使うか |
+|---|---|
+| `user={user()}` + 子で `{props.user.name}` | **本線。** 表示用。`<Loading>` は読み取りの直上 |
+| `user={user}` + 子で `props.user()` | **例外。** 子が `refresh(そのソース)` や `affects(そのソース)` を呼ぶときだけ（どちらもソース本体を要求する API） |
 
-| 書き方 | 遅延の仕組み | 読み取りが起きる瞬間 |
-|---|---|---|
-| `user={user()}` + 子で `props.user` | **props の getter**（§8）。コンパイラが自動で付ける | 子が `props.user` にアクセスした時 |
-| `user={user}` + 子で `props.user()` | **accessor を明示的に渡す**。自分で書く | 子が `props.user()` を呼んだ時 |
+`isPending` は式への問いなので、値として受け取ったあとも `isPending(() => props.user)` と聞ける。memo を渡さなくても pending は取れる。
 
-**どちらでも「読み取りは子の中で起きる」ので、実は前者でも動きます。** ではなぜ後者なのか。理由は3つあります。
+以前このガイドは `Accessor<User>` を推していました。読み取り地点の `()` が見える、分割代入しても壊れない、型に「非同期」が現れる、という理由です。いずれも **表示用 props を accessor にする理由にはなりません。**
 
-**① 型に「非同期になりうる」ことが現れる**
-
-`Accessor<User>` という型は「これは**呼ぶと値を取りに行く**もので、まだ準備できていない可能性がある」ことを表明しています。ただの `User` 型だと、それが async memo 由来なのかただの値なのか、子からは区別できません。**この例の主題は boundary の配置なので、読み取りの所在が型に出ているほうが読み手に伝わります。**
-
-**② 読み取り地点がコード上で見える**
-
-`props.user()` という `()` は「ここが読み取りだ」という視覚的な目印になります。`props.user` というプロパティアクセスだと、それが getter 呼び出し（＝読み取り）であることはコンパイラの挙動を知らないと分かりません。**「boundary は読み取りの直上に置く」というルールを守るには、読み取り地点が見えていることが重要です。**
-
-**③ accessor は「持ち運べる」値になる**
-
-これが実務上いちばん効きます。§8 で見たとおり、**getter に backing された props を分割代入すると壊れます**。
-
-```tsx
-// user={user()} で渡した場合
-function UserProfile(props: { user: User }) {
-	const { user } = props;   // 🔴 ここで読み切られて固定される
-	const u = props.user;     // 🔴 同じく固定される
-}
-
-// user={user} で渡した場合
-function UserProfile(props: { user: Accessor<User> }) {
-	const { user } = props;   // ✅ 関数を取り出しただけ。壊れない
-	const u = props.user;     // ✅ 同上。後で u() と呼べる
-}
-```
-
-accessor は**それ自体が独立した値**なので、変数に入れる・さらに孫 component に渡す・effect の中で呼ぶ、といった取り回しが自由にできます。**§12 で「`useContext` の戻り値は分割代入して OK」と書いたのと同じ理屈**です。
-
-> **使い分けの目安**: 単純な表示用の値なら `user={user()}` で十分です（props の getter が面倒を見てくれる）。**その値を子が持ち回る、あるいは「非同期の読み取りである」ことを型で伝えたい場合は、accessor をそのまま渡す**のが適切です。この例は後者に当たります。
+- 読み取り地点は `{props.user.name}` で足りる。遅延は props の getter（§8）が担当する。
+- 分割代入で壊れるのは accessor 渡しでも同じ問題の別面です。**`props` を壊さない**（§8）のが正解であって、型を `Accessor` にして逃げない。
+- 「非同期であること」は型ではなく **`<Loading>` の位置**で表す。経路上の型を色づかせると、リモートにした瞬間に途中のファイルまで触ることになる。
 
 #### boundary をどこに置くか（設計判断）
 
@@ -1935,7 +1930,7 @@ Solid の [`action`](https://v2.solidjs.com/reference/solid-js/lifecycle-actions
 - [ ] effect は、**確定したリアクティブな結果を命令的システムへ送る**用途になっているか。
 - [ ] インタラクション固有の処理が、**それを観測したイベントハンドラ / action の中で開始**されているか。
 - [ ] リアクティブなリストが、**コレクションの変わり方に合った `For` の keying mode または `Repeat` の range** を使っているか。
-- [ ] 非同期の読み取りに、**適切な loading / error boundary** があるか。
+- [ ] 非同期の読み取りに、**適切な loading / error boundary** があるか。値は **`user={user()}` で渡し**、props 型は `User` のままか。accessor 渡しは子が `refresh` するときに限るか。
 - [ ] **renderer 固有の React component が、Solid の component tree に直接持ち込まれていない**か。
 
 > 移行の成功とは、**アプリケーションの挙動を保ちながら、その data flow を Solid の実行モデルで表現し直せている状態**を指します。

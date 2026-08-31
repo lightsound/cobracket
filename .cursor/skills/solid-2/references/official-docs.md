@@ -72,6 +72,16 @@ read these before writing route JSX.
 - https://v2-rebuild--solid-docs-v2.netlify.app/migration/from-solid-router.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/migration/from-solid-meta.md
 
+## Design posts (Solid 2 async model)
+
+Official Solid 2 blog series. Use these for *why* the colorless/async graph works;
+verify API names against the reference pages above.
+
+- https://www.solidjs.com/blog/solid-2-0-rc-the-big-reveal
+- https://www.solidjs.com/blog/async-solid-fetch-high-block-low
+- https://www.solidjs.com/blog/async-solid-write-sync-run-async
+- https://www.solidjs.com/blog/async-solid-one-graph-two-machines
+
 ## Reference: reactivity (solid-js)
 
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/reactivity/create-signal.md

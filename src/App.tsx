@@ -8,9 +8,6 @@ import "./theme.css";
 import "./App.css";
 
 export default function App() {
-  // Session bootstrap belongs to the app root, not to whichever component
-  // happens to render first: restores a returning Organizer's session and
-  // keeps the shared Convex connection authenticated.
   initAuth();
   const [count, setCount] = createSignal(0);
 
@@ -23,7 +20,7 @@ export default function App() {
       <p>
         Edit <code>src/App.tsx</code> and save to reload.
       </p>
-      <button class="increment" onClick={() => setCount(count() + 1)}>
+      <button class="increment" type="button" onClick={() => setCount((c) => c + 1)}>
         Clicks: {count()}
       </button>
       <a class="link" href="https://v2.solidjs.com/" target="_blank" rel="noopener noreferrer">

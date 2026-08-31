@@ -1,5 +1,5 @@
-import { Errored, For, Loading, createSignal } from "solid-js";
-import { errorFallback } from "./ErrorFallback";
+import { Errored, For, Loading, Show, createSignal } from "solid-js";
+import { ErrorNotice, errorFallback, errorMessage } from "./ErrorFallback";
 import { api } from "../convex/_generated/api";
 import type { Doc, Id } from "../convex/_generated/dataModel";
 import { createConvexQuery, getConvexClient, getConvexUrl } from "./lib/convex";
@@ -10,14 +10,30 @@ function TaskRow(props: { task: Doc<"tasks">; onToggle: (id: Id<"tasks">) => voi
       <button class="increment" type="button" onClick={() => props.onToggle(props.task._id)}>
         {props.task.isCompleted ? "Done" : "Todo"}
       </button>
-      <span class={props.task.isCompleted ? "task-text done" : "task-text"}>{props.task.text}</span>
+      <span class={["task-text", { done: props.task.isCompleted }]}>{props.task.text}</span>
     </li>
   );
 }
 
+function TaskList(props: { tasks: Doc<"tasks">[]; onToggle: (id: Id<"tasks">) => void }) {
+  return (
+    <Loading fallback={<p class="status">Connecting to Convex…</p>}>
+      <ul class="task-list">
+        <For
+          each={props.tasks}
+          keyed={(task) => task._id}
+          fallback={<li class="status">No tasks yet.</li>}
+        >
+          {(task) => <TaskRow task={task()} onToggle={props.onToggle} />}
+        </For>
+      </ul>
+    </Loading>
+  );
+}
+
 export default function Tasks() {
-  const tasks = createConvexQuery(api.tasks.list, {});
   const [text, setText] = createSignal("");
+  const [mutationError, setMutationError] = createSignal<string | null>(null);
 
   if (!getConvexUrl()) {
     return (
@@ -28,19 +44,32 @@ export default function Tasks() {
     );
   }
 
-  function addTask(event: Event) {
+  const tasks = createConvexQuery(api.tasks.list, {});
+
+  async function addTask(event: Event) {
     event.preventDefault();
     const convex = getConvexClient();
     const value = text().trim();
     if (!convex || value.length === 0) return;
     setText("");
-    void convex.mutation(api.tasks.add, { text: value });
+    setMutationError(null);
+    try {
+      await convex.mutation(api.tasks.add, { text: value });
+    } catch (error) {
+      setText(value);
+      setMutationError(errorMessage(error));
+    }
   }
 
-  function toggleTask(id: Id<"tasks">) {
+  async function toggleTask(id: Id<"tasks">) {
     const convex = getConvexClient();
     if (!convex) return;
-    void convex.mutation(api.tasks.toggle, { id });
+    setMutationError(null);
+    try {
+      await convex.mutation(api.tasks.toggle, { id });
+    } catch (error) {
+      setMutationError(errorMessage(error));
+    }
   }
 
   return (
@@ -57,18 +86,9 @@ export default function Tasks() {
           Add
         </button>
       </form>
+      <Show when={mutationError()}>{(message) => <ErrorNotice message={message()} />}</Show>
       <Errored fallback={errorFallback}>
-        <Loading fallback={<p class="status">Connecting to Convex…</p>}>
-          <ul class="task-list">
-            <For
-              each={tasks()}
-              keyed={(task) => task._id}
-              fallback={<li class="status">No tasks yet.</li>}
-            >
-              {(task) => <TaskRow task={task()} onToggle={toggleTask} />}
-            </For>
-          </ul>
-        </Loading>
+        <TaskList tasks={tasks()} onToggle={toggleTask} />
       </Errored>
     </section>
   );
