@@ -23,26 +23,23 @@ function storedPreference(): ThemePreference {
 function applyPreference(pref: ThemePreference): void {
   if (isServer) return;
   document.documentElement.style.colorScheme = pref === "system" ? "light dark" : pref;
-}
-
-function persistPreference(pref: ThemePreference): void {
-  if (isServer) return;
   try {
     localStorage.setItem(STORAGE_KEY, pref);
   } catch {
-    // Private mode / disabled storage: the in-memory signal still updates.
+    // private mode / disabled storage — the scheme still applies
   }
 }
 
-const initial = storedPreference();
-const [themePreference, setThemePreference] = createSignal<ThemePreference>(initial);
-applyPreference(initial);
+const [themePreference, setThemePreferenceSignal] = createSignal(storedPreference());
 
 export { themePreference };
+
+function setThemePreference(pref: ThemePreference): void {
+  setThemePreferenceSignal(pref);
+  applyPreference(pref);
+}
 
 export function cycleThemePreference(): void {
   const next = ORDER[(ORDER.indexOf(themePreference()) + 1) % ORDER.length] ?? "system";
   setThemePreference(next);
-  applyPreference(next);
-  persistPreference(next);
 }
