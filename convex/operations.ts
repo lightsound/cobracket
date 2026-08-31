@@ -67,8 +67,9 @@ const occupantValidator = v.union(
   v.object({ kind: v.literal("unknown") }),
 );
 
+// The shared (public-safe) per-match shape identifies matches by their
+// structural key only; document handles stay on the Organizer surface.
 const derivedMatchValidator = v.object({
-  matchId: v.id("matches"),
   key: v.string(),
   bracket: v.union(v.literal("winners"), v.literal("losers"), v.literal("grand_final")),
   round: v.number(),
@@ -88,8 +89,10 @@ const derivedMatchValidator = v.object({
   sides: v.optional(v.array(resultSideValidator)),
 });
 
-const progressionValidator = v.object({
-  matches: v.array(derivedMatchValidator),
+// Organizer matches carry the document id — the handle reportResult takes.
+const organizerMatchValidator = derivedMatchValidator.extend({ matchId: v.id("matches") });
+
+const progressionFields = {
   // Matches with two known participants and no effective result — the
   // Organizer's "in progress / up next" list (story 15).
   readyMatchKeys: v.array(v.string()),
@@ -99,6 +102,16 @@ const progressionValidator = v.object({
   // Matches whose latest recorded result no longer applies because a
   // correction upstream changed their pairing; they await re-entry.
   voidedMatchKeys: v.array(v.string()),
+};
+
+const progressionValidator = v.object({
+  matches: v.array(derivedMatchValidator),
+  ...progressionFields,
+});
+
+const organizerProgressionValidator = v.object({
+  matches: v.array(organizerMatchValidator),
+  ...progressionFields,
 });
 
 const participantValidator = v.object({
@@ -107,27 +120,34 @@ const participantValidator = v.object({
   seed: v.number(),
 });
 
-// The shared read shape. Deliberately free of Organizer-only data
-// (organizerId, recordedBy, shareSlug) so getSharedTournament can return it
-// to unauthenticated Share Link viewers as-is.
-const tournamentViewValidator = v.object({
+const tournamentViewFields = {
   name: v.string(),
   status: statusValidator,
   format: formatValidator,
   discipline: v.string(),
   participants: v.array(participantValidator),
+};
+
+// The shared read shape. Deliberately free of Organizer-only data
+// (organizerId, recordedBy, shareSlug, document handles) so
+// getSharedTournament can return it to unauthenticated viewers as-is.
+const tournamentViewValidator = v.object({
+  ...tournamentViewFields,
   // Null until the bracket has been generated (and after a roster change
   // invalidates a draft/published bracket).
   bracket: v.union(progressionValidator, v.null()),
 });
 
-const organizerTournamentViewValidator = tournamentViewValidator.extend({
+const organizerTournamentViewValidator = v.object({
+  ...tournamentViewFields,
+  bracket: v.union(organizerProgressionValidator, v.null()),
   tournamentId: v.id("tournaments"),
   shareSlug: v.string(),
   seeding: v.union(v.literal("random"), v.literal("manual")),
 });
 
 type ProgressionView = Infer<typeof progressionValidator>;
+type OrganizerProgressionView = Infer<typeof organizerProgressionValidator>;
 type TournamentView = Infer<typeof tournamentViewValidator>;
 
 // ---------------------------------------------------------------------------
@@ -342,7 +362,6 @@ function toProgressionView(
     bracket.byId.get(resultDocs[resultIndex]!.matchId)!.key;
   return {
     matches: progression.matches.map((match) => ({
-      matchId: bracket.byKey.get(match.key)!._id,
       key: match.key,
       bracket: match.bracket,
       round: match.round,
@@ -368,14 +387,36 @@ function toProgressionView(
   };
 }
 
-async function buildTournamentView(
+// The Organizer's variant of the progression: every match also carries its
+// document id, the handle reportResult takes.
+function withMatchIds(view: ProgressionView, bracket: StoredBracket): OrganizerProgressionView {
+  return {
+    ...view,
+    matches: view.matches.map((match) => ({
+      ...match,
+      matchId: bracket.byKey.get(match.key)!._id,
+    })),
+  };
+}
+
+// A dangling disciplineId is a schema invariant violation, never expected
+// input, so every read fails loudly and identically on it.
+async function requireDiscipline(
   ctx: QueryCtx,
-  tournament: Doc<"tournaments">,
-): Promise<TournamentView> {
-  const discipline = await ctx.db.get("disciplines", tournament.disciplineId);
+  disciplineId: Id<"disciplines">,
+): Promise<Doc<"disciplines">> {
+  const discipline = await ctx.db.get("disciplines", disciplineId);
   if (discipline === null) {
     throw new Error("tournament references a missing discipline");
   }
+  return discipline;
+}
+
+async function buildTournamentView(
+  ctx: QueryCtx,
+  tournament: Doc<"tournaments">,
+): Promise<{ view: TournamentView; bracket: StoredBracket }> {
+  const discipline = await requireDiscipline(ctx, tournament.disciplineId);
   const roster = await loadRoster(ctx, tournament._id);
   const bracket = await loadBracket(ctx, tournament);
   let progressionView: ProgressionView | null = null;
@@ -384,7 +425,7 @@ async function buildTournamentView(
     const progression = deriveOrThrow(bracket.structure, toRecordedResults(resultDocs, bracket));
     progressionView = toProgressionView(progression, bracket, resultDocs);
   }
-  return {
+  const view: TournamentView = {
     name: tournament.name,
     status: tournament.status,
     format: tournament.format,
@@ -396,11 +437,35 @@ async function buildTournamentView(
     })),
     bracket: progressionView,
   };
+  return { view, bracket };
 }
 
 // ---------------------------------------------------------------------------
 // Tournament creation and disciplines
 // ---------------------------------------------------------------------------
+
+// Anonymous sign-in is zero-friction (ADR 0003), so every write is bounded:
+// generous for the spec's 8–64 participant target, tight enough that nobody
+// can bloat documents or push generateBracket into transaction limits.
+const MAX_NAME_LENGTH = 120;
+const MAX_ROSTER_SIZE = 128;
+
+function requireName(raw: string, label: string): string {
+  const name = raw.trim();
+  if (name === "") {
+    throw new ConvexError(`${label} must not be empty`);
+  }
+  if (name.length > MAX_NAME_LENGTH) {
+    throw new ConvexError(`${label} must be at most ${MAX_NAME_LENGTH} characters`);
+  }
+  return name;
+}
+
+function requireRosterCapacity(currentSize: number, adding: number): void {
+  if (currentSize + adding > MAX_ROSTER_SIZE) {
+    throw new ConvexError(`A tournament can have at most ${MAX_ROSTER_SIZE} participants`);
+  }
+}
 
 function normalizeDisciplineName(raw: string): { name: string; normalizedName: string } {
   const name = raw.trim().replace(/\s+/g, " ");
@@ -414,9 +479,7 @@ async function getOrCreateDiscipline(
   rawName: string,
 ): Promise<Id<"disciplines">> {
   const { name, normalizedName } = normalizeDisciplineName(rawName);
-  if (name === "") {
-    throw new ConvexError("Discipline must not be empty");
-  }
+  requireName(name, "Discipline");
   const existing = await ctx.db
     .query("disciplines")
     .withIndex("by_normalized_name", (q) => q.eq("normalizedName", normalizedName))
@@ -463,10 +526,7 @@ export const createTournament = mutation({
   returns: v.object({ tournamentId: v.id("tournaments"), shareSlug: v.string() }),
   handler: async (ctx, args) => {
     const organizerId = await requireOrganizer(ctx);
-    const name = args.name.trim();
-    if (name === "") {
-      throw new ConvexError("Tournament name must not be empty");
-    }
+    const name = requireName(args.name, "Tournament name");
     const disciplineId = await getOrCreateDiscipline(ctx, args.discipline);
     // Grand-final bracket reset defaults to on (spec: Format engine).
     const format =
@@ -537,10 +597,7 @@ async function insertParticipant(
   rawName: string,
   seed: number,
 ): Promise<Id<"participants">> {
-  const name = rawName.trim();
-  if (name === "") {
-    throw new ConvexError("Participant name must not be empty");
-  }
+  const name = requireName(rawName, "Participant name");
   return await ctx.db.insert("participants", { tournamentId, name, seed });
 }
 
@@ -550,6 +607,7 @@ export const addParticipant = mutation({
   handler: async (ctx, args) => {
     await requireOwnedTournamentIn(ctx, args.tournamentId, PRE_LIVE, "edit the roster");
     const roster = await loadRoster(ctx, args.tournamentId);
+    requireRosterCapacity(roster.length, 1);
     const participantId = await insertParticipant(
       ctx,
       args.tournamentId,
@@ -576,6 +634,7 @@ export const addParticipants = mutation({
       throw new ConvexError("No participant names given");
     }
     const roster = await loadRoster(ctx, args.tournamentId);
+    requireRosterCapacity(roster.length, names.length);
     const participantIds: Id<"participants">[] = [];
     for (const [index, name] of names.entries()) {
       participantIds.push(
@@ -593,10 +652,7 @@ export const renameParticipant = mutation({
   handler: async (ctx, args) => {
     const { tournament } = await requireOwnedParticipant(ctx, args.participantId);
     requireStatus(tournament, PRE_LIVE, "edit the roster");
-    const name = args.name.trim();
-    if (name === "") {
-      throw new ConvexError("Participant name must not be empty");
-    }
+    const name = requireName(args.name, "Participant name");
     // Names live on the participant row and matches reference ids, so a
     // rename never invalidates the bracket.
     await ctx.db.patch("participants", args.participantId, { name });
@@ -749,6 +805,12 @@ function requireTwoSides(sides: readonly ResultSide[]): [ResultSide, ResultSide]
   if (sides.length !== 2 || sideA === undefined || sideB === undefined) {
     throw new ConvexError("A result must have exactly two sides");
   }
+  for (const side of sides) {
+    // v.number() admits every IEEE-754 double, including NaN and Infinity.
+    if (side.score !== undefined && !Number.isFinite(side.score)) {
+      throw new ConvexError("A score must be a finite number");
+    }
+  }
   return [sideA, sideB];
 }
 
@@ -788,6 +850,12 @@ export const reportResult = mutation({
     const bracket = await loadBracket(ctx, tournament);
     const resultDocs = await loadResults(ctx, tournament._id);
     const recorded = toRecordedResults(resultDocs, bracket);
+    // Results already void before this append (voided by an earlier
+    // correction, still awaiting re-entry) are not news; the return value
+    // reports only what THIS append invalidated.
+    const alreadyVoided = new Set(
+      recorded.length > 0 ? deriveOrThrow(bracket.structure, recorded).voidedResultIndices : [],
+    );
     const candidateIndex = recorded.length;
     recorded.push({ matchKey: match.key, sides });
     const progression = deriveOrThrow(bracket.structure, recorded);
@@ -812,7 +880,7 @@ export const reportResult = mutation({
       await ctx.db.patch("tournaments", tournament._id, { status });
     }
     const voided = progression.voidedResultIndices
-      .filter((index) => index !== candidateIndex)
+      .filter((index) => index !== candidateIndex && !alreadyVoided.has(index))
       .map((index) => {
         const doc = resultDocs[index]!;
         return { matchId: doc.matchId, matchKey: bracket.byId.get(doc.matchId)!.key };
@@ -843,19 +911,18 @@ export const listMyTournaments = query({
       .query("tournaments")
       .withIndex("by_organizer", (q) => q.eq("organizerId", organizerId))
       .order("desc")
+      // Newest 100 only, no cursor — callers must not assume completeness.
+      // Enough headroom for the MVP; pagination is an additive change.
       .take(100);
     return await Promise.all(
-      tournaments.map(async (tournament) => {
-        const discipline = await ctx.db.get("disciplines", tournament.disciplineId);
-        return {
-          tournamentId: tournament._id,
-          name: tournament.name,
-          status: tournament.status,
-          format: tournament.format,
-          discipline: discipline?.name ?? "",
-          shareSlug: tournament.shareSlug,
-        };
-      }),
+      tournaments.map(async (tournament) => ({
+        tournamentId: tournament._id,
+        name: tournament.name,
+        status: tournament.status,
+        format: tournament.format,
+        discipline: (await requireDiscipline(ctx, tournament.disciplineId)).name,
+        shareSlug: tournament.shareSlug,
+      })),
     );
   },
 });
@@ -867,9 +934,10 @@ export const getTournament = query({
   returns: organizerTournamentViewValidator,
   handler: async (ctx, args) => {
     const tournament = await requireOwnedTournament(ctx, args.tournamentId);
-    const view = await buildTournamentView(ctx, tournament);
+    const { view, bracket } = await buildTournamentView(ctx, tournament);
     return {
       ...view,
+      bracket: view.bracket === null ? null : withMatchIds(view.bracket, bracket),
       tournamentId: tournament._id,
       shareSlug: tournament.shareSlug,
       seeding: tournament.seeding ?? "random",
@@ -888,9 +956,15 @@ export const getSharedTournament = query({
       .query("tournaments")
       .withIndex("by_share_slug", (q) => q.eq("shareSlug", args.shareSlug))
       .unique();
-    if (tournament === null || tournament.status === "draft") {
+    // MVP behavior is unlisted-only, but the gate reads the visibility field
+    // from day one so a future mutation exposing it cannot leak by omission.
+    if (
+      tournament === null ||
+      tournament.status === "draft" ||
+      tournament.visibility === "private"
+    ) {
       return null;
     }
-    return await buildTournamentView(ctx, tournament);
+    return (await buildTournamentView(ctx, tournament)).view;
   },
 });

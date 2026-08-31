@@ -293,6 +293,15 @@ test("a correction voids downstream results, which are surfaced and re-enterable
   // The corrected-over round-1 record is superseded, not voided.
   expect(matchAt(bracket, "winners", 1, 0).winnerId).toBe(id("H"));
 
+  // Reporting an unrelated match while the semifinal still awaits re-entry
+  // reports nothing voided: the return value covers only what THIS append
+  // invalidated; the outstanding void stays visible as voidedMatchKeys.
+  const unrelated = await as.mutation(api.operations.reportResult, {
+    matchId: matchAt(bracket, "winners", 1, 2).matchId,
+    sides: winOver(id("B"), id("G")),
+  });
+  expect(unrelated.voided).toEqual([]);
+
   // Re-enter the semifinal; play continues with nothing else lost.
   const reentry = await as.mutation(api.operations.reportResult, {
     matchId: semi.matchId,
@@ -717,13 +726,56 @@ test("the share link works without auth, hides drafts, and leaks nothing organiz
   expect(sharedBracket.standings.length).toBe(4);
 
   // ...but nothing organizer-only: no organizer id, no actor trail, no slug
-  // echo, and no document handle for the tournament itself.
+  // echo, and no document handles (tournament or match) — public matches are
+  // identified by their structural key only.
   const serialized = JSON.stringify(shared);
   expect(serialized).not.toContain(userId);
   expect(serialized).not.toContain("organizerId");
   expect(serialized).not.toContain("recordedBy");
   expect(serialized).not.toContain("shareSlug");
   expect(serialized).not.toContain(tournamentId);
+  expect(serialized).not.toContain("matchId");
+});
+
+test("the share link respects the visibility field", async () => {
+  const t = convexTest(schema, modules);
+  const { as } = await newOrganizer(t);
+  const { tournamentId, shareSlug } = await seededTournament(as, ["A", "B"]);
+  await as.mutation(api.operations.publishTournament, { tournamentId });
+  expect(await t.query(api.operations.getSharedTournament, { shareSlug })).not.toBeNull();
+
+  // No MVP mutation can set "private", but the public gate must already
+  // honor it so exposing the field later cannot leak by omission.
+  await t.run(async (ctx) => ctx.db.patch("tournaments", tournamentId, { visibility: "private" }));
+  expect(await t.query(api.operations.getSharedTournament, { shareSlug })).toBeNull();
+});
+
+test("writes are bounded: roster size, name length, and scores", async () => {
+  const t = convexTest(schema, modules);
+  const { as } = await newOrganizer(t);
+  const { tournamentId, ids } = await seededTournament(as, ["A", "B"]);
+
+  await expect(
+    as.mutation(api.operations.addParticipants, {
+      tournamentId,
+      text: Array.from({ length: 127 }, (_, i) => `P${i}`).join("\n"),
+    }),
+  ).rejects.toThrow(/at most 128 participants/);
+  await expect(
+    as.mutation(api.operations.addParticipant, { tournamentId, name: "x".repeat(121) }),
+  ).rejects.toThrow(/at most 120 characters/);
+
+  await as.mutation(api.operations.publishTournament, { tournamentId });
+  const view = await as.query(api.operations.getTournament, { tournamentId });
+  await expect(
+    as.mutation(api.operations.reportResult, {
+      matchId: matchAt(bracketOf(view), "winners", 1, 0).matchId,
+      sides: [
+        { participantId: ids.get("A")!, outcome: "win", score: Number.NaN },
+        { participantId: ids.get("B")!, outcome: "loss" },
+      ],
+    }),
+  ).rejects.toThrow(/finite/);
 });
 
 // ---------------------------------------------------------------------------
