@@ -37,7 +37,7 @@
     "@types/bun": "^1.4.0",
     "convex-test": "^0.0.56",
     "fallow": "^3.20.0",
-    "solid2-agent-kit": "^0.8.1",
+    "solid2-agent-kit": "^0.9.0",
     "typescript": "^7.1.0-dev.20260829.1",
     "vite": "npm:@voidzero-dev/vite-plus-core@0.3.0",
     "vite-plus": "0.3.0"

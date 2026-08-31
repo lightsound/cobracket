@@ -70,6 +70,8 @@ Most React `useEffect` code should NOT become `createEffect`:
 | Named export from a lazy module | `lazy(() => import("./pages"), { export: "About" })` |
 | Pick a component/tag from reactive state | `dynamic(() => ...)` from `@solidjs/web` (stable identity; prefer over `<Dynamic>`) |
 | Overlay / modal | `<Portal>` — hoist async reads *above* the portal (reads inside start on the client) |
+| Async value used several layers down | Create the memo high; pass `value={memo()}` through intermediates (they do not wait); put `<Loading>` around the leaf read |
+| Nested child with its own fetch | Leave it nested — it runs in parallel. Sequential only when the second call needs the first response (`fetchAuthor(story().authorId)`) |
 | Browser-only widget (charts, maps, `window`) | `clientOnly(() => import("./Chart"))` from `@solidjs/web` (`{ lazy: true }` defers the import until first render) |
 | Server vs browser branch | `isServer` / `isDev` from `@solidjs/web` (build-time constants), not `typeof window` |
 | SSR-stable `id` / `for` / `aria-*` pairing | `createUniqueId()` |
@@ -245,44 +247,106 @@ const [signInError, setSignInError] = createSignal<string | null>(() => {
 });
 ```
 
-### Async data
+### Async data — fetch high, block low
+
+Creating and reading an async value are the same as sync. **Consuming** (the
+await) is a DX choice; **blocking** (the boundary) is a UX choice. Solid
+unwelds them: where you create the memo is performance, where `<Loading>`
+wraps the *read* is design, and neither is an architecture decision. JSX
+component props are lazy (**passing isn't reading**), so intermediates do
+not wait. Nested components mount immediately — they do not suspend — so
+their fetches run in parallel. Making a value remote should touch the memo
+and the boundary, not every file on the path, and should not change prop
+types to `Promise<User>` or `Accessor<User>`.
 
 ```tsx
-import { Errored, For, Loading, createMemo, createSignal } from 'solid-js';
+import { Errored, Loading, createMemo, createSignal, isPending } from 'solid-js';
 
-const [query, setQuery] = createSignal('');
-const results = createMemo(async () => {
-  const value = query().trim();
-  if (!value) return [];
-  return api.search(value);
-});
+function App() {
+  const [selectedId, setSelectedId] = createSignal(1);
+  const story = createMemo(() => fetchStory(selectedId()));
 
-return (
-  <Errored fallback={(error) => <p>{String(error())}</p>}>
-    <Loading fallback={<p>Searching...</p>}>
-      <ul><For each={results()}>{(r) => <li>{r.title}</li>}</For></ul>
-    </Loading>
-  </Errored>
-);
+  return (
+    <Errored fallback={(error, reset) => <ErrorFallback error={error} reset={reset} />}>
+      <StoryList selectedId={selectedId()} onSelect={setSelectedId} />
+      <main class={{ pending: isPending(selectedId) }}>
+        <Loading fallback={<DetailSkeleton />}>
+          <StoryDetail story={story()} storyId={selectedId()} />
+        </Loading>
+      </main>
+    </Errored>
+  );
+}
+
+function StoryDetail(props: { story: Story; storyId: number }) {
+  const byline = createMemo(() => `${props.story.author} · ${props.story.points} points`);
+  return (
+    <article class={{ stale: isPending(() => props.story) }}>
+      <h1>{props.story.title}</h1>
+      <p>{byline()}</p>
+      <Comments storyId={props.storyId} />
+    </article>
+  );
+}
 ```
 
-- The `<Loading>` boundary must be an owner ancestor of the **read** (`results()`), not of
+`story()` is a `Story`, not `Story | undefined` — if the computation is running,
+the value is there. No `?.`, no `!`. `<StoryDetail story={story()} />` is the
+correct colorless form: the prop expression is a getter, so `StoryDetail` (and
+every layout in between) renders immediately. The wait happens when
+`props.story.title` is read, under that `<Loading>`.
+
+```tsx
+// WRONG — extracting at the parent is a real read; child's <Loading> never sees it
+const current = story();
+return <StoryDetail story={current} />;
+
+// WRONG — Promise / Accessor types on the path. Making story remote is not a
+// type change for StoryLayout / StoryDetail.
+function StoryDetail(props: { story: Promise<Story> }) { /* ... */ }
+function StoryDetail(props: { story: Accessor<Story> }) { /* ... */ }
+
+// Fine — pass the memo itself only when the child must refresh() that source.
+// isPending / latest are questions: they work on the value prop too.
+return <StoryDetail story={story} />;
+```
+
+- The `<Loading>` boundary must be an owner ancestor of the **read**, not of
   where the memo was created, and not of page chrome (header/nav) that should stay mounted.
-  Boundary placement is purely a UX decision — it does not change when fetches start
-  (no waterfalls: nested components set up and fetch in parallel). After first paint the
+  Lifting the fetch does **not** mean lifting the boundary — that is consume glued
+  back onto block. After first paint the
   boundary keeps settled content during refetch; `isPending(results)` (pass the accessor,
-  not `isPending(results())`) is the
-  indicator. Use `on={query()}` (the **value**, not the accessor `on={query}`) only when
-  that identity should put the fallback back on screen.
+  not `isPending(results())`) is the indicator. Use `on={query()}` (the **value**, not the
+  accessor `on={query}`) only when that identity should put the fallback back on screen.
   Do not use `isPending` as the first-load spinner.
+- **Nesting is not a waterfall.** `Comments` above fetches in parallel with `story`
+  because it reads `props.storyId` (already known), not `props.story`. Passing
+  `storyId={props.story.id}` *would* wait on the story fetch — that is a real data
+  dependency, same as `createMemo(() => fetchAuthor(story().authorId))`. Components
+  do not suspend; they run once. Only the expressions that read wait, so a parent
+  JSX read does not delay a child that does not need that value.
+- `isPending` is a **per-expression question**, not state and not a global spinner.
+  Ask it anywhere: on the async source (`isPending(results)`), below it
+  (`isPending(() => props.story)`), on a derived memo (`isPending(byline)`), or
+  *above* the fetch but below the write (`isPending(selectedId)`), even when the
+  fetch lives in a child. You do not need to pass the memo accessor just to ask.
+- Default navigation **holds**. `selectedId()` and the old story stay put until
+  the new answer lands, so the highlight never points at the wrong content.
+  `latest(selectedId)` is the opt-in when the design wants the highlight to move
+  on click. Pair `class={{ pending: isPending(selectedId) }}` with a short CSS
+  `transition-delay` so fast swaps do not flash.
 - Read every reactive input **before the first `await`** in an async computation. A read
   after `await` does not subscribe; production can sit pending with no retry.
 - `<Errored>` function fallbacks receive an error **accessor** and a `reset` callback:
-  `fallback={(error, reset) => ...}`.
+  `fallback={(error, reset) => ...}`. The boundary **heals** when the source succeeds
+  again (refresh, live reconnect, input change) — it is graph status, not a terminal
+  React ErrorBoundary. `reset` retries the collected *data sources*, not a UI remount.
 - Refetch: `refresh(results)`. In-flight indicator: `isPending(results)` (or
   `isPending(() => results())`). Freshest in-flight value for a preview:
   `latest(results)`. Do not start `fetch` at component-body top level.
-- Coordinate reveal order of sibling `<Loading>` boundaries with `<Reveal order="sequential" | "together" | "natural">`.
+- Coordinate sibling `<Loading>` reveal with `<Reveal>` (`order="sequential"` default,
+  or `"together"` / `"natural"`). `collapsed` (sequential only) suppresses tail
+  skeletons past the frontier so the page does not stack fallbacks as popcorn.
 
 **Never hand-roll these states.** No `[loading, setLoading]` signal, no
 `data() === undefined` branch, no `{ data, error }` signal pair — those are React/Solid 1.x
@@ -334,20 +398,71 @@ function createSubscriptionQuery<T>(
 }
 ```
 
+Server-function `live()` sources are the same shape (async iterable → memo). Connection
+state is `source.onstatus` (`"connected"` / `"reconnecting"` / `"closed"`), not a field
+in the yielded value — see [Server functions](#server-functions--use-server).
+
 ### Mutations: `action` + optimistic state
+
+The synchronous mutation *is* the prediction. Optimistic UI is not a second copy of
+state — it is an overlay the graph discards when the action settles (pass or fail).
+There is no rollback to write. Put in-flight affordances on the record
+(`pending?: boolean`); they vanish with the overlay.
 
 ```tsx
 import { action, createOptimisticStore, refresh } from 'solid-js';
 
-const [todos, setTodos] = createOptimisticStore(fetchTodos, []);
+type Todo = { id: string; title: string; completed: boolean; pending?: boolean; error?: { completed: boolean } };
 
-const addTodo = action(function* (todo: Todo) {
-  setTodos((draft) => { draft.push(todo); }); // optimistic, auto-reverts on failure
-  yield saveTodo(todo);                        // yield promises to stay in the transaction
-  refresh(todos);
-});
-// invoke from an event handler: onClick={() => void addTodo(newTodo)}
+function createTodos() { // call from a component — not module scope (SSR shares modules)
+  const errors = new Map<string, { completed: boolean }>();
+  const [todos, setTodos] = createOptimisticStore<Todo[]>(async () => {
+    const current = await api.list();
+    return current.map((todo) => {
+      const error = errors.get(todo.id);
+      return error ? { ...todo, error } : todo;
+    });
+  }, []);
+
+  const toggleTodo = action(function* (id: string, completed: boolean) {
+    setTodos((draft) => {
+      const todo = draft.find((row) => row.id === id);
+      if (!todo) return;
+      todo.completed = completed;
+      todo.pending = true;
+    });
+    try {
+      yield api.toggle(id, completed);
+      errors.delete(id);
+    } catch {
+      errors.set(id, { completed });
+    } finally {
+      refresh(todos);
+    }
+  });
+  return [todos, { toggleTodo }] as const;
+}
 ```
+
+Three layers, in this order: durable source → ephemeral UI that must survive
+overlay discard (the `errors` map, folded in the projection) → optimistic overlay
+(`pending`, the predicted `completed`). Consumers read one store. Catch
+*expected* mutation failures in the action so a toggle error does not blank the
+list through `<Errored>`; unhandled projection/render errors still reach the
+boundary.
+
+Going from a client store to the server is **additive**: same `setTodos`
+calls, wrap each mutation in `action`, swap in `createOptimisticStore` and a
+file of server functions. Do not rewrite `App.tsx` with loading/error branches,
+and do not snapshot-the-cache / write-a-prediction / restore-on-error. A cache
+library is not the productionizing step — the sync mutation already was the
+prediction. (Router `query` or `@tanstack/solid-query` remain valid when the
+project already uses them; they are not required to "make it real".)
+Optimistic rows stay interactive — a not-yet-acked todo can still
+be toggled. Do not disable the control until confirmation, and do not mutex
+rapid clicks; `action` is the transaction (no half-mutation, no interleaved
+list). An in-flight action does not freeze unrelated writes. Collecting failed
+actions to replay is a design choice, not something the runtime requires.
 
 Ordinary signal/store writes inside an action are held until it settles. Never call
 `flush()` inside an action. Invoke actions from handlers, not from component/computation bodies.
@@ -356,11 +471,15 @@ handler or the `action`.
 
 `createOptimistic` / `createOptimisticStore` are for a tentative value during an
 active mutation, not a local editing session (use a writable derivation or a plain
-store for that).
+store for that). A whole-form `createOptimistic(false)` saving flag is fine; prefer
+`pending` on the record when the affordance is per item. The overlay is
+discarded when the action settles — the confirmed store is the truth. Wrapping
+the same store in server functions does not change that; do not add
+snapshot/restore.
 
 **`yield`, not a bare `await`, is the transaction boundary.** `await api.save()` then
-`setTodos(...)` *runs*, but the write commits immediately and optimistic rollback is lost.
-Either `yield saveTodo(todo)` or, when you need a typed result, `const saved = await api.save(); yield; setTodos(...)`.
+`setTodos(...)` *runs*, but the write commits immediately — it is not held as an
+overlay. Either `yield saveTodo(todo)` or, when you need a typed result, `const saved = await api.save(); yield; setTodos(...)`.
 
 Navigation-shaped updates do **not** need core `action`. A plain setter is enough:
 reads pull the async, and downstream async computeds hold previous values until the
@@ -593,6 +712,9 @@ DOM-specific `JSX` types (`JSX.IntrinsicElements`, `JSX.CSSProperties`) and
 with `start: true` / `ssr: true` / `serverFunctions: true` only when the
 project already uses start mode. Tiers are `bare` → `basic` (router) →
 `fullstack` (SSR + server functions); do not jump a tier without cause.
+Under `start: true` the plugin owns entries, the document shell, and the build —
+write `src/App.tsx`, not SolidStart-style `entry-client.tsx` / `entry-server.tsx`
+or a hand-written `index.html`.
 
 ### Solid Router 2 — `createRouter`, not JSX `<Route>`
 
@@ -702,11 +824,21 @@ export async function findUser(id: string) {
 ```
 
 A function-level server function cannot close over component locals — pass
-values as arguments. Treat every argument as untrusted. Read trusted identity
+values as arguments. Treat every argument as untrusted — TypeScript does not
+cross the HTTP boundary, so do not invent tRPC / RPC type-gen;
+validate inside the function (a parse in the function body is that
+validation, not an RPC schema across the wire). These functions *are* the RPC — do not add an
+API-route file (or a Next `route.ts`) just to wrap `db.todos.insert`. API
+routes are for real HTTP endpoints (webhooks, third-party POST), not for the
+app's own RPC. Read trusted identity
 from `getRequestEvent()`, never from a caller-supplied user id. During SSR the same
-reference runs in-process; in the browser it is HTTP. Mutations that should
+reference runs in-process (no HTTP); in the browser it is HTTP. Anything
+referenced only inside the `"use server"` body (db client, secrets) never
+reaches the client — the directive is the privacy boundary. Mutations that should
 revalidate: `redirect` / `reload` from `@solidjs/web` (see the server-function
-guides). For 404 during SSR: `httpStatus(404)` from `@solidjs/web`.
+guides). After a router/server mutation do **not** follow with a client `fetch`
+to "refresh the page" — `reload` / `revalidate` (and the router's single-flight
+response) close that loop. For 404 during SSR: `httpStatus(404)` from `@solidjs/web`.
 `throw new Error("…")` is stripped to `"Internal Server Error"` in production —
 use `markSafeError` or `respond(..., { status })` for intentional client-facing
 failures. Do not `return Response.json(...)` from `"use server"` — that is
@@ -715,9 +847,65 @@ caller unwraps. JSON-encodable arguments only unless `enableRichArguments()`
 was called once in the client entry (`Date` / `Map` / `Set` throw without it).
 `GET()` is only for idempotent reads (URLs leak into logs/history);
 import it from `@solidjs/web/server-functions`, never `@solidjs/start`.
+Cache GET reads with HTTP, not a hand-rolled Solid cache: the caller still
+receives the value; headers ride the transport.
+
+```ts
+import { respond } from '@solidjs/web';
+import { GET } from '@solidjs/web/server-functions';
+
+export const fetchStory = GET(async (id: number) => {
+  'use server';
+  const story = await db.stories.find(id);
+  return respond(story, {
+    headers: { 'cache-control': 'public, max-age=60, s-maxage=300' },
+  });
+});
+```
+
 `live()` yields **current state** (each yield replaces the last); do not treat
-it as an append-only event log, and hoist the memo so consumers share one
-connection.
+it as an append-only event log. Until the first yield it is unsettled
+(`<Loading>`), same as a Promise; later yields are updates — the fallback does
+not return.
+Wire status is a side channel on the **iterable the `live()` call returns**,
+not a field in the value and not a property of the memo:
+
+```ts
+const source = stockPrice("ACME");
+source.onstatus = (next) => setStatus(next);
+const price = createMemo(() => source);
+```
+
+Do not yield `{ price, connected: true }`. After the first successful connection,
+transient failures retry with exponential backoff; a 4xx is a definite rejection.
+There is no subscription API and no store wiring to configure. For a reactive
+argument, call `live()` inside the memo so the input is tracked:
+`createMemo(() => stockPrice(props.symbol))`. Every reader of that memo shares
+one connection — hoist it instead of calling `live()` at each site. Do not
+subscribe/unsubscribe in the component around `live()`. The `live()` generator
+may still subscribe to an upstream source.
+
+**The graph continues across the wire.** An in-flight Promise serializes as a
+Promise and resolves in the client graph as it settles — including before the
+bundle has loaded. A `live()` source sends its first value in the HTML then
+picks up the stream. Do not refetch in `onSettled` / `hydrate` to "load for the
+client", and do not delay `renderToStream` to preserve visual order — `<Reveal>`
+controls when content *appears*, while HTML still ships as soon as it is ready.
+With the router's single-flight integration, a mutation response can seed the
+destination route's preloads; that is the refresh, not a follow-up `fetch`.
+When the app has a server bundle (`ssr` or server functions), production is
+`handleRequest(request)` from the built `dist/server/server.js` (or that
+module's Fetchable default `fetch`) — not an import from `solid-js`. Cloudflare /
+Netlify / Nitro Vite plugins adopt that handler — do not write a Solid adapter,
+a custom Worker, or a Netlify Function. For Node, use the official template
+`server.js` (web `Request` in, stream the response); do not invent an
+Express/Solid bridge. Client-only `start: true` is still static `dist/client`
+— there is no handler to wrap. Request middleware is the Vite option
+`start: { middleware: "./src/middleware.ts" }` (web `Request` + `next`), not
+Express `app.use`. Server functions that return components
+(`serverFunctions: { components: true }`) are experimental preview — do not use
+them unless the project already has that flag on.
+
 Unscripted forms: `<form method="post" action={createTodo.url}>` (the reference
 `.url`), not a client `preventDefault` + `fetch`, and not a hand-built
 `/_server/` URL. GET forms (`method="get" action={search.url}`) are only for
@@ -763,7 +951,7 @@ how to reuse. Prefer the form on the right.
 | `setCount(count() + 1)` when writes can batch | `setCount((c) => c + 1)` |
 | `setHandler(fn)` to store a function | `setHandler(() => fn)` (otherwise `fn` is an updater) |
 | `{user() ? <P user={user()!} /> : <SignIn />}` | `<Show when={user()}>{(u) => <P user={u()} />}</Show>` |
-| `<Child user={user()} />` for an async memo | `<Child user={user} />` and read `props.user()` under the child's `<Loading>` |
+| `const u = user(); return <Child user={u} />` / `user: Promise<User>` / `user: Accessor<User>` as the default | `<Child user={user()} />` and `{props.user.name}` under `<Loading>` — types stay `User`. Pass the memo itself only when the child must `refresh()` that source. `isPending(() => props.user)` works on the value |
 | `lazy(() => import("./p").then((m) => ({ default: m.About })))` | `lazy(() => import("./p"), { export: "About" })` |
 | `dangerouslySetInnerHTML={{ __html }}` | `innerHTML={html()}` (sanitized); never with JSX children |
 | `onClick={setCount}` | `onClick={() => setCount((c) => c + 1)}` |
@@ -812,6 +1000,17 @@ how to reuse. Prefer the form on the right.
 | `httpStatus(404)` in a click handler | call it bare in the component / error-fallback body (a scope declaration, not a mutation) |
 | `try { user() } catch (e) { /* NotReadyError */ }` | `<Loading>` — app code should not catch `NotReadyError` |
 | `{latest(() => results())}` as the visible list | settled read + `isPending()` for the indicator; `latest` is for previews |
+| `selectedId={latest(selectedId)}` as the default highlight | `selectedId={selectedId()}` so highlight and content stay consistent; `latest` only when the highlight should move first |
+| `isPending` on a root/global pending signal, or wrapping the whole shell | ask the question at the design site (dimmed list, disabled button, pane). It works on the source, a derived prop, or the write |
+| `<Loading>` glued to the `createMemo` (consume + block in one place) | fetch high, block low — the boundary wraps the read, not the creation |
+| `class={{ pending: isPending(id) }}` flashing on every navigation | same class + a short CSS `transition-delay` so only slow swaps show |
+| `<Comments />` nested under `{story().title}` assumed to waterfall | both mount immediately and fetch in parallel if the child reads an already-known id; a real waterfall is `createMemo(() => fetchAuthor(story().authorId))` or `storyId={props.story.id}` |
+| `<Errored>` as a terminal ErrorBoundary; `reset={() => location.reload()}` | the boundary heals when the source succeeds again; `reset` retries collected *sources*, not a UI remount |
+| `<Errored>` around a list catching a toggle/save failure | catch expected mutation failures in the `action`; keep row errors in a map the projection folds in (survives overlay discard) |
+| `yield { ...tick, connected: true }` from `live()` | yield the value; wire status is `source.onstatus` (`"connected"` / `"reconnecting"` / `"closed"`) |
+| sibling `<Loading>` fallbacks stacking as popcorn | `<Reveal collapsed>` (sequential default) suppresses tail skeletons past the frontier |
+| in-memory cache around a GET server function | `return respond(value, { headers: { "cache-control": "..." } })` — metadata rides HTTP, the value rides the graph |
+| `story()?.title` / treating `story()` as `Story \| undefined` | `{story().title}` under `<Loading>` — if the computation is running, the value is there |
 | `typeof window !== "undefined"` | `isServer` / `isDev` from `@solidjs/web` |
 | `Object.assign({}, props)` / expecting `merge` to skip `undefined` like 1.x `mergeProps` | `omit` / `merge` — explicit `undefined` **overrides** (Object.assign) |
 | `isPending(user())` / `latest(user())` | `isPending(user)` / `latest(user)` — pass the accessor (or `() => user()`). Calling it first evaluates the read before the helper runs |
@@ -837,6 +1036,16 @@ how to reuse. Prefer the form on the right.
 | `createRenderEffect` / `createTrackedEffect` as the default effect | two-phase `createEffect(compute, apply)` |
 | `createEffect(() => source(), () => setError(null))` to reset a signal | `createSignal(() => { source(); return null; })` — the writable derivation resets on change; a sole-setter apply is rule 4 |
 | a "server-safe" initial value adopted after mount (React hydration-mismatch fix) | client mode mounts with `render()` into an empty body — no hydration, no mismatch; read `localStorage` / `matchMedia` directly at signal creation |
+| rewrite `App.tsx` with loading/error branches, or snapshot/restore, when the list moves to the server | same `setTodos`; wrap mutations in `action`; swap `createOptimisticStore` + a server-functions file. The overlay is discarded; the confirmed store is the truth |
+| disable an optimistic row until ack, or mutex rapid clicks / freeze unrelated writes | keep the control enabled; `action` is the transaction. An in-flight action does not freeze other writes. Failed-action replay is optional |
+| tRPC / RPC type-gen around `"use server"` | TypeScript does not cross HTTP — validate inside the function. Locals only the body reads (db, secrets) stay off the client |
+| `src/routes/api/todos.ts` (or a Next `route.ts`) wrapping `db.todos.insert` | `"use server"` *is* the RPC. API routes are for real HTTP endpoints (webhooks), not the app's own mutations |
+| router/server mutation, then `fetch` / `onSettled` / `hydrate` to refresh the page | `reload` / `revalidate` / single-flight (the mutation response can seed destination preloads). In-flight Promises serialize as Promises; `live()` continues from HTML |
+| delay `renderToStream` so HTML arrives in visual order | stream as soon as ready; `<Reveal collapsed>` controls when content *appears* |
+| subscribe/unsubscribe in the component around `live()` | `createMemo(() => stockPrice(props.symbol))` — hoist that memo to share one connection. `onstatus` is on the iterable the `live()` call returns, not on the memo. Until the first yield, `<Loading>`; later yields are updates |
+| a Solid adapter / custom Worker / Express bridge, or `entry-client.tsx` under `start: true` | With a server bundle: `handleRequest` from `dist/server/server.js` / Fetchable `fetch`; platform plugins adopt it. Node: template `server.js`. Client-only start: static `dist/client`. Middleware is `start: { middleware: "..." }`, not Express `app.use` |
+| `createMemo(async () => (await props.story).author)` | `createMemo(() => props.story.author)` — a derivation over an async value becomes async; no await, no Promise type |
+| return a component from `"use server"` / flip `serverFunctions.components` | experimental preview — do not enable unless the project already has that flag |
 
 ```tsx
 // WRONG — post-await read never subscribes; production can hang pending
@@ -869,23 +1078,24 @@ function Field(props: { label: string; class?: string }) {
 ```
 
 ```tsx
-// WRONG — user() throws not-ready at Page; child's <Loading> never sees it
+// WRONG — extracting at the parent is a real read; child's <Loading> never sees it
 function Page() {
   const user = createMemo(async () => (await fetch('/api/me')).json());
-  return <Profile user={user()} />;
+  const current = user();
+  return <Profile user={current} />;
 }
 
-// CORRECT — pass the accessor; read it under the boundary that owns the fallback
-function Profile(props: { user: Accessor<User> }) {
+// CORRECT — JSX props are lazy (passing isn't reading); types stay User
+function Profile(props: { user: User }) {
   return (
     <Loading fallback={<p>Loading…</p>}>
-      <h1>{props.user().name}</h1>
+      <h1>{props.user.name}</h1>
     </Loading>
   );
 }
 function Page() {
   const user = createMemo(async () => (await fetch('/api/me')).json());
-  return <Profile user={user} />;
+  return <Profile user={user()} />;
 }
 ```
 
@@ -961,17 +1171,32 @@ always-applied rules installed alongside this skill.
       an effect calling the setter.
 - [ ] Event handlers wrap setters (`onClick={() => setX(...)}`), use `currentTarget`,
       and `onInput` for keystrokes. `innerHTML` is sanitized and not mixed with children.
-- [ ] Async memos are passed as accessors (`user={user}`), not `user={user()}`, so
-      `<Loading>` around the *read* can catch not-ready.
+- [ ] Async memos are passed as values (`user={user()}`); JSX props are lazy.
+      Types stay `User` — not `Promise<User>` / `Accessor<User>`. `<Loading>` wraps
+      the *read*, not the memo, not chrome. Extracting `const u = user()` at the
+      parent is the read that throws. Nested child fetches run in parallel
+      (components do not suspend); a real waterfall is `fetchB(a().id)`.
+      `isPending` is per-expression (`isPending(() => props.story)` works);
+      `latest(selectedId)` is opt-in, not the default highlight.
 - [ ] Lists via `<For>` (server/refetched rows keyed by stable id), conditionals via
       ternary/`<Show>`; no `{list().map(...)}` in JSX; no `key` props; no `value()!`.
 - [ ] Effects are two-phase and only at imperative boundaries; apply does not read stores.
 - [ ] Async reads sit under `<Loading>` (the data slot, not chrome); errors under `<Errored>`.
       Reactive inputs of an async memo are read before the first `await`. No hand-rolled
       `loading`/`error` signals or `=== undefined` readiness branches. First load is
-      `<Loading>`; refetch indicator is `isPending(user)` (the accessor, not `user()`).
-      Core `refresh(source)`, router `revalidate(key)`, and `return reload(...)` are
-      different APIs — do not mix them.
+      `<Loading>`; refetch indicator is `isPending(user)` (the accessor, not `user()`)
+      or `isPending(selectedId)` when the write is the question. `<Errored>` heals
+      when the source succeeds; `reset` retries sources, not a UI remount. Per-row
+      mutation failures stay in the action/projection, not in `<Errored>` around
+      the list. Core `refresh(source)`, router `revalidate(key)`, and `return reload(...)` are
+      different APIs — do not mix them. Client → server is additive (same
+      setters + `action` + server functions): do not rewrite App with
+      loading/error branches, disable optimistic rows until ack, or refetch in
+      `hydrate` / `onSettled`. HTTP does not enforce TypeScript — validate
+      inside `"use server"`; do not invent tRPC. `live()` owns the client connection.
+      A server bundle uses `handleRequest` from `dist/server/server.js`; client-only start
+      is static `dist/client`. Do not delay `renderToStream` for visual order
+      (`<Reveal>` does).
 - [ ] External collections reconcile into stores (function-form `createStore` /
       `reconcile`), never wholesale draft assignment or `setTodos((t) => t.filter(...))`
       as the identity-preserving update.

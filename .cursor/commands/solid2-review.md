@@ -17,8 +17,20 @@ Steps:
    - async computations reading reactive inputs **after** the first `await`;
    - effects that copy state instead of deriving it, or reading stores in the apply phase;
    - `<For>` over server/refetched rows without a stable-id key function;
-   - `<Loading>`/`<Errored>` wrapping page chrome instead of the data slot, or async memos
-     passed as values (`user={user()}`) instead of accessors;
+   - `<Loading>`/`<Errored>` wrapping page chrome instead of the data slot, or
+     `const u = user()` extracted then passed (a real parent-side read). Passing
+     `user={user()}` is the colorless form — do not "fix" it into accessors or
+     `Promise<User>` props;
+   - `latest(selectedId)` as the default highlight (hold is the default);
+     `isPending` treated as a global spinner instead of a per-expression question;
+   - treating `<Errored>` as a terminal ErrorBoundary, or routing per-row mutation
+     failures through it (those belong in the action / a projection-folded map);
+   - nested fetches assumed to waterfall, or `<Loading>` lifted along with a lifted fetch;
+   - rewriting App with loading/error branches, or snapshot/restore, when wrapping
+     a client store in server functions; disabling optimistic rows until ack;
+   - tRPC / type-gen around `"use server"`, a client `fetch` after a mutation,
+     refetch in `hydrate`/`onSettled`, a custom Worker/Express adapter, or
+     delaying `renderToStream` for visual order (`<Reveal>` owns display);
    - store updates that rebuild objects/arrays instead of mutating the draft or reconciling;
    - context values passed as snapshots instead of accessors/setters/stores;
    - components with conditional/early returns on reactive values.
