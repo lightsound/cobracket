@@ -42,8 +42,9 @@
 
 @layer base {
   :root {
-    /* Both themes exist from the start; ThemeToggle overrides this inline
-     * to force one scheme. light-dark() resolves against this value. */
+    /* Both themes exist from the start; a stored light/dark preference
+     * overrides this inline to force one scheme. light-dark() resolves
+     * against this value. */
     color-scheme: light dark;
   }
 
