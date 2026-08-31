@@ -2,7 +2,7 @@
 
 出典: Solid 2.0 公式ドキュメント "Migration / From React"
 
-> **追記（Solid 2 colorless async / solid2-agent-kit 0.9）**: §14 の async props は公式どおり **値渡し** が本線です。`user={user()}`、型は `User`、`<Loading>` は読み取りの直上。以前このガイドが推していた `user={user}` / `Accessor<User>` は、子が `refresh(そのソース)` するときに限る例外です。
+> **追記（Solid 2 colorless async / solid2-agent-kit 0.9）**: §14 の async props は公式どおり **値渡し** が本線です。`user={user()}`、型は `User`、`<Loading>` は読み取りの直上。以前このガイドが推していた `user={user}` / `Accessor<User>` は、子が `refresh(そのソース)` / `affects(そのソース)` を呼ぶときに限る例外です。
 
 ---
 
@@ -1670,7 +1670,7 @@ function UserProfile(props: { user: User }) {
 | 書き方 | いつ使うか |
 |---|---|
 | `user={user()}` + 子で `{props.user.name}` | **本線。** 表示用。`<Loading>` は読み取りの直上 |
-| `user={user}` + 子で `props.user()` | **例外。** 子が `refresh(そのソース)` しなければならないときだけ |
+| `user={user}` + 子で `props.user()` | **例外。** 子が `refresh(そのソース)` や `affects(そのソース)` を呼ぶときだけ（どちらもソース本体を要求する API） |
 
 `isPending` は式への問いなので、値として受け取ったあとも `isPending(() => props.user)` と聞ける。memo を渡さなくても pending は取れる。
 
