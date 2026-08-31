@@ -12,8 +12,8 @@
       "type": "stdio",
       "command": "npx",
       "args": [
-        "-y",
-        "convex@latest",
+        "--no",
+        "convex",
         "mcp",
         "start"
       ]

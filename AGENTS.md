@@ -41,7 +41,7 @@ This file gives coding agents project-specific context. Keep it short and update
 - Update Solid agent guidance: `bunx solid2-kit sync` (rules, skills, and the managed AGENTS.md/CLAUDE.md blocks are owned by [solid2-agent-kit](https://github.com/lightsound/solid2-agent-kit); do not edit them by hand)
 - Update Convex agent guidance: `bun x convex ai-files update` (check staleness with `bun x convex ai-files status`). Owned by [Convex AI files](https://docs.convex.dev/ai): `convex/_generated/ai/guidelines.md`, the managed AGENTS.md/CLAUDE.md blocks, and the `convex-*` skills under `.agents/skills` + `.claude/skills` (`.agents/skills` is also Cursor's read path; targets configured in `convex.json`). Do not edit any of them by hand
 - Fallow: `bun run fallow` (full), `bun run fallow:audit` (changed files)
-- Convex MCP: official CLI server in `.cursor/mcp.json` and `.mcp.json` (`npx -y convex@latest mcp start`). Leave production flags off unless a human asks to change prod this session (`convex-deploy-guard`).
+- Convex MCP: official CLI server in `.cursor/mcp.json` and `.mcp.json` (`npx --no convex mcp start` — the pinned local `convex`, same pattern as `fallow-mcp`; requires `bun install`). Leave production flags off unless a human asks to change prod this session (`convex-deploy-guard`).
 - Fallow agent surfaces: `.cursor/mcp.json` / `.mcp.json` (`fallow-mcp` entry only), skills under `.agents/skills/fallow` and `.claude/skills/fallow`. Re-run with `bunx fallow agent install` (byte-stable; it will not overwrite `convex`). Do not run `fallow similar-code setup` unless a human asks.
 
 ## Fallow
