@@ -23,7 +23,7 @@ export default function App() {
       <p>
         Edit <code>src/App.tsx</code> and save to reload.
       </p>
-      <button class="increment" onClick={() => setCount(count() + 1)}>
+      <button class="increment" type="button" onClick={() => setCount((c) => c + 1)}>
         Clicks: {count()}
       </button>
       <a class="link" href="https://v2.solidjs.com/" target="_blank" rel="noopener noreferrer">
