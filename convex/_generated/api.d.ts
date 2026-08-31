@@ -17,6 +17,7 @@ import type * as format_index from "../format/index.js";
 import type * as format_seeding from "../format/seeding.js";
 import type * as format_singleElimination from "../format/singleElimination.js";
 import type * as format_types from "../format/types.js";
+import type * as operations from "../operations.js";
 import type * as tasks from "../tasks.js";
 
 import type {
@@ -35,6 +36,7 @@ declare const fullApi: ApiFromModules<{
   "format/seeding": typeof format_seeding;
   "format/singleElimination": typeof format_singleElimination;
   "format/types": typeof format_types;
+  operations: typeof operations;
   tasks: typeof tasks;
 }>;
 

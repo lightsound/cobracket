@@ -81,7 +81,17 @@ export default defineSchema({
     ),
     // MVP behavior is unlisted-only; the field exists from day one.
     visibility: v.union(v.literal("public"), v.literal("unlisted"), v.literal("private")),
-  }).index("by_organizer", ["organizerId"]),
+    // How generateBracket assigns seeds. "random" (the default) reshuffles on
+    // every generation; manual reordering pins the stored order. Optional so
+    // the field stays additive: absent means "random".
+    seeding: v.optional(v.union(v.literal("random"), v.literal("manual"))),
+    // The Share Link identifier: a crypto-random token minted at creation.
+    // An unlisted tournament's URL is its only guard, so the public surface
+    // gets its own unguessable name instead of reusing the document id.
+    shareSlug: v.string(),
+  })
+    .index("by_organizer", ["organizerId"])
+    .index("by_share_slug", ["shareSlug"]),
 
   // Tournament-local records (CONTEXT.md "Participant"). Kept unlinked to
   // any account on purpose; a future players table is referenced by adding
