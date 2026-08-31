@@ -16,6 +16,15 @@ export default defineConfig({
       },
       {
         test: {
+          // Pure browser-side modules (e.g. the bracket layout, ADR 0007):
+          // no DOM, so node is enough.
+          name: "src",
+          include: ["src/**/*.test.ts"],
+          environment: "node",
+        },
+      },
+      {
+        test: {
           name: "convex",
           include: ["convex/**/*.test.ts"],
           // Extend the defaults (node_modules, dist, ...) — a bare exclude

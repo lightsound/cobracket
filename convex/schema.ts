@@ -147,10 +147,4 @@ export default defineSchema({
   })
     .index("by_tournament", ["tournamentId"])
     .index("by_match", ["matchId"]),
-
-  // Template scaffolding, removed together with the demo UI in a later task.
-  tasks: defineTable({
-    text: v.string(),
-    isCompleted: v.boolean(),
-  }),
 });

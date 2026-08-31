@@ -1,10 +1,11 @@
+import { t } from "./i18n";
 import { cycleThemePreference, themePreference, type ThemePreference } from "./theme-preference";
 
-const LABELS: Record<ThemePreference, string> = {
-  system: "Auto",
-  light: "Light",
-  dark: "Dark",
-};
+const LABEL_KEYS = {
+  system: "theme.system",
+  light: "theme.light",
+  dark: "theme.dark",
+} as const satisfies Record<ThemePreference, string>;
 
 export default function ThemeToggle() {
   return (
@@ -13,7 +14,7 @@ export default function ThemeToggle() {
       class="rounded-md border border-ink-muted/40 bg-surface-raised px-3 py-1 text-sm text-ink transition-colors hover:border-accent"
       onClick={() => cycleThemePreference()}
     >
-      Theme: {LABELS[themePreference()]}
+      {t("theme.label")}: {t(LABEL_KEYS[themePreference()])}
     </button>
   );
 }
