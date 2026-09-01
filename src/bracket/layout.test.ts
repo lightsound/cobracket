@@ -159,7 +159,6 @@ describe("double elimination", () => {
 
     const dropEdges = layout.edges.filter((edge) => edge.kind === "loser");
     expect(dropEdges.map((edge) => `${edge.fromKey}->${edge.toKey}`).sort()).toEqual([
-      "gf->gfr",
       "w1m1->l1m1",
       "w1m2->l1m1",
       "w1m3->l1m2",
@@ -172,7 +171,6 @@ describe("double elimination", () => {
     // Drop edges into the losers band run bottom-center to top-center so
     // they read as drops.
     const drop = edgeOf(layout, "w2m2", "l2m1", "loser");
-    expect(drop.direction).toBe("drop");
     expect(drop.from).toEqual({
       x: cardOf(layout, "w2m2").x + CARD_WIDTH / 2,
       y: cardOf(layout, "w2m2").y + CARD_HEIGHT,
@@ -182,23 +180,27 @@ describe("double elimination", () => {
       y: cardOf(layout, "l2m1").y,
     });
 
-    // The grand final collects both finalists; the reset replays the final,
-    // fed by both the winner and the loser of the first grand final.
+    // The grand final collects both finalists.
     edgeOf(layout, "w3m1", "gf", "winner");
     edgeOf(layout, "l4m1", "gf", "winner");
-    edgeOf(layout, "gf", "gfr", "winner");
 
-    // The reset sits on the same row as the grand final, so its loser edge
-    // does not drop: it runs forward along the target's lower slot row.
-    const resetLoserEdge = edgeOf(layout, "gf", "gfr", "loser");
-    expect(resetLoserEdge.direction).toBe("forward");
-    expect(resetLoserEdge.from).toEqual({
-      x: cardOf(layout, "gf").x + CARD_WIDTH,
-      y: cardOf(layout, "gf").y + (CARD_HEIGHT * 3) / 4,
-    });
-    expect(resetLoserEdge.to).toEqual({
-      x: cardOf(layout, "gfr").x,
-      y: cardOf(layout, "gfr").y + (CARD_HEIGHT * 3) / 4,
+    // The reset is fed by both the winner and the loser of the first grand
+    // final — the whole pair moves forward, so the layout collapses that
+    // into ONE ordinary connector instead of a solid + dashed pair.
+    const resetEdges = layout.edges.filter((edge) => edge.toKey === "gfr");
+    expect(resetEdges).toHaveLength(1);
+    expect(resetEdges[0]).toEqual({
+      fromKey: "gf",
+      toKey: "gfr",
+      kind: "winner",
+      from: {
+        x: cardOf(layout, "gf").x + CARD_WIDTH,
+        y: cardOf(layout, "gf").y + CARD_HEIGHT / 2,
+      },
+      to: {
+        x: cardOf(layout, "gfr").x,
+        y: cardOf(layout, "gfr").y + CARD_HEIGHT / 2,
+      },
     });
   });
 
@@ -210,10 +212,12 @@ describe("double elimination", () => {
     ]);
     expect(cardOf(layout, "gf").x).toBe(COLUMN);
     expect(cardOf(layout, "gfr").x).toBe(2 * COLUMN);
-    edgeOf(layout, "w1m1", "gf", "winner");
-    // The loser's second chance goes sideways into the same-row grand
-    // final, not downward (there is no losers band to drop into).
-    expect(edgeOf(layout, "w1m1", "gf", "loser").direction).toBe("forward");
-    expect(edgeOf(layout, "gf", "gfr", "loser").direction).toBe("forward");
+    // Both grand-final slots are fed by the only winners match (winner and
+    // loser alike), and the reset is fed by both sides of the grand final:
+    // each pair collapses into one ordinary connector.
+    expect(layout.edges).toEqual([
+      expect.objectContaining({ fromKey: "w1m1", toKey: "gf", kind: "winner" }),
+      expect.objectContaining({ fromKey: "gf", toKey: "gfr", kind: "winner" }),
+    ]);
   });
 });

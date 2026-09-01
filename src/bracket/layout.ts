@@ -42,13 +42,14 @@ export interface LayoutPoint {
 
 /**
  * A connector: the winner (or loser, for double-elimination drops) of
- * `fromKey` proceeds to `toKey`. `kind` is the semantic (renderers dash
- * loser edges); `direction` is the geometry: `forward` edges run from the
- * source's right edge to the target's left edge, `drop` edges leave the
- * bottom and enter the top, reading as vertical drops into the losers
- * bracket. A loser edge into a same-row target (the grand-final reset, and
- * the 2-participant grand final) is `forward`, entering along the target's
- * lower slot row.
+ * `fromKey` proceeds to `toKey`. Winner edges run from the source's right
+ * edge to the target's left edge; loser edges leave the bottom and enter
+ * the top, reading as vertical drops into the losers bracket (renderers
+ * dash them). When both slots of a match are fed by the same source match
+ * (the grand-final reset, and the 2-participant grand final) the pair
+ * collapses into one ordinary winner edge — the whole match moves forward,
+ * so one connector reads better than a solid and a dashed line side by
+ * side.
  *
  * @public
  */
@@ -56,7 +57,6 @@ export interface BracketEdge {
   fromKey: string;
   toKey: string;
   kind: "winner" | "loser";
-  direction: "forward" | "drop";
   from: LayoutPoint;
   to: LayoutPoint;
 }
@@ -206,37 +206,33 @@ function cardYOf(match: LayoutMatch, feedCards: BracketCard[], sectionTop: numbe
   return sectionTop + match.indexInRound * PITCH;
 }
 
-// The lower slot row: where a same-row loser edge enters its target (the
-// loser occupies the target's second slot).
-const LOWER_SLOT_Y = (CARD_HEIGHT * 3) / 4;
+// Both slots fed by the same match: collapse the winner + loser pair into
+// one ordinary connector (see the BracketEdge doc).
+function dedupeFeeds(feeds: Feed[]): Feed[] {
+  const [first, second] = feeds;
+  if (first !== undefined && second !== undefined && first.source.key === second.source.key) {
+    return [{ source: first.source, kind: "winner" }];
+  }
+  return feeds;
+}
 
-// Winner edges run right edge to left edge. Loser edges drop bottom-to-top
-// when the target sits below (the losers band); a loser edge to a same-row
-// target runs forward along the lower slot row instead.
+// Winner edges run right edge to left edge; drop edges run bottom to top.
 function edgeBetween(kind: Feed["kind"], source: BracketCard, target: BracketCard): BracketEdge {
-  const identity = { fromKey: source.key, toKey: target.key, kind };
-  if (kind === "winner") {
-    return {
-      ...identity,
-      direction: "forward",
-      from: { x: source.x + CARD_WIDTH, y: source.y + CARD_HEIGHT / 2 },
-      to: { x: target.x, y: target.y + CARD_HEIGHT / 2 },
-    };
-  }
-  if (target.y >= source.y + CARD_HEIGHT) {
-    return {
-      ...identity,
-      direction: "drop",
-      from: { x: source.x + CARD_WIDTH / 2, y: source.y + CARD_HEIGHT },
-      to: { x: target.x + CARD_WIDTH / 2, y: target.y },
-    };
-  }
-  return {
-    ...identity,
-    direction: "forward",
-    from: { x: source.x + CARD_WIDTH, y: source.y + LOWER_SLOT_Y },
-    to: { x: target.x, y: target.y + LOWER_SLOT_Y },
-  };
+  return kind === "winner"
+    ? {
+        fromKey: source.key,
+        toKey: target.key,
+        kind,
+        from: { x: source.x + CARD_WIDTH, y: source.y + CARD_HEIGHT / 2 },
+        to: { x: target.x, y: target.y + CARD_HEIGHT / 2 },
+      }
+    : {
+        fromKey: source.key,
+        toKey: target.key,
+        kind,
+        from: { x: source.x + CARD_WIDTH / 2, y: source.y + CARD_HEIGHT },
+        to: { x: target.x + CARD_WIDTH / 2, y: target.y },
+      };
 }
 
 /**
@@ -264,7 +260,8 @@ export function layoutBracket(matches: readonly LayoutMatch[]): BracketLayout {
     roundSizes.set(sizeKey, (roundSizes.get(sizeKey) ?? 0) + 1);
     maxRound[match.bracket] = Math.max(maxRound[match.bracket], match.round);
   }
-  const feeds = (match: LayoutMatch): Feed[] => feedsOf(match, byPosition, roundSizes, maxRound);
+  const feeds = (match: LayoutMatch): Feed[] =>
+    dedupeFeeds(feedsOf(match, byPosition, roundSizes, maxRound));
 
   // Column per (section, round); the grand final starts after both sections.
   const grandFinalBase = Math.max(maxRound.winners, maxRound.losers);

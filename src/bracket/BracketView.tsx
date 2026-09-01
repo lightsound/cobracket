@@ -154,7 +154,7 @@ export function BracketView(props: BracketViewProps) {
               const path = () => {
                 const from = { x: edge().from.x, y: edge().from.y + labelSpace() };
                 const to = { x: edge().to.x, y: edge().to.y + labelSpace() };
-                if (edge().direction === "forward") {
+                if (edge().kind === "winner") {
                   const midX = (from.x + to.x) / 2;
                   return `M ${from.x} ${from.y} C ${midX} ${from.y}, ${midX} ${to.y}, ${to.x} ${to.y}`;
                 }
