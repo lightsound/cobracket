@@ -1,5 +1,7 @@
 # Chat operations ship as an MCP server first
 
+Timing amended by [ADR 0009](./0009-defer-mcp-surface.md): the MCP surface is deferred out of the MVP slice; the single-operations-API constraint and the surface ordering below stay in force.
+
 cobracket's differentiator is that an Organizer can run a tournament from chat. We design one operations API covering everything an Organizer can do, and expose it first through an MCP server, so users drive tournaments from their own AI client. Every later chat surface must stay a thin wrapper over that same operations API.
 
 ## Considered Options

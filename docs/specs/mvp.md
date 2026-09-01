@@ -50,7 +50,7 @@ A tournament in seconds, from the web or from chat: an Organizer opens cobracket
 
 **Lifecycle.** Draft (roster and seeding editable, bracket regenerable) → published (bracket visible on the Share Link) → live (first result recorded; roster locked, regeneration locked) → completed (final resolved; automatic). Mid-tournament dropouts are handled by the Organizer recording walkovers match by match; automated DQ cascades are deferred.
 
-**Operations API.** One set of Convex functions covers every Organizer capability; the web UI and the MCP server are both thin clients of it (ADR 0001). MCP tokens are issued and revoked from the web UI, work for anonymous Organizers, and authenticate the MCP server as that Organizer.
+**Operations API.** One set of Convex functions covers every Organizer capability; the web UI and the MCP server are both thin clients of it (ADR 0001). MCP tokens are issued and revoked from the web UI, work for anonymous Organizers, and authenticate the MCP server as that Organizer. Stories 18–20 (the tokens and the MCP server itself) are deferred out of the MVP slice (ADR 0009); the single-API constraint they impose is built and stays in force.
 
 **Auth.** Convex Auth v2 (preview) Anonymous Sign-In, isolated behind a single auth module exposing only the current Organizer identity; ImportLint enforces the boundary (ADR 0003). No account upgrade flow in MVP.
 

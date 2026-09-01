@@ -58,7 +58,7 @@ Formats: **single elimination and double elimination.**
 
 Organizer flow: create tournament → enter participants (typed or pasted as a name list; no self-entry) → seeding (random by default, manual reordering) → generate bracket → record results (an outcome plus an optional score) → tournament completes. The app surfaces "in progress / up next" matches; table assignment is out.
 
-Chat: **MCP server** wrapping the same operations API as the web UI. The MCP client authenticates with a token issued from the web UI (an anonymous Organizer can issue one too).
+Chat: **MCP server** wrapping the same operations API as the web UI. The MCP client authenticates with a token issued from the web UI (an anonymous Organizer can issue one too). Deferred out of the MVP slice (ADR 0009); the operations-API constraint it imposes is already built.
 
 Explicitly not in MVP: Discord bot, in-app AI assistant, participant accounts, co-organizers, round robin / Swiss / group stages, payments, ads.
 
@@ -82,6 +82,17 @@ Settled in the final audit rounds; each is nearly free on day one and expensive 
 ## First milestone
 
 Run one real community tournament (8–16 participants) end to end on cobracket alone. Personal connections may supply this tournament but are not counted on; self-hosting one counts.
+
+## Path to the first milestone (current plan)
+
+Decided 2026-09, after the MVP web UI shipped and the MCP surface was deferred (ADR 0009):
+
+1. **Production deployment** — the Share Link must be a real URL strangers can open; until then nothing else on this list can be validated.
+2. **Small operational gaps** that real use surfaces first (e.g. renaming or deleting a tournament).
+3. **Share Link OGP images** (ADR 0007's static SVG renderer) — the one URL dropped in a group chat should unfurl well.
+4. A **deliberate UI/UX overhaul** once the feature set has settled; the **mobile experience** (touch pan/zoom, fit-to-view) lands with or after that overhaul, not piecemeal before it.
+
+MCP (stories 18–20) waits for Event hosting or a concrete demand signal from a real tournament (ADR 0009).
 
 ## Roadmap candidates after MVP
 
