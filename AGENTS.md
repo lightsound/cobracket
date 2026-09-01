@@ -32,6 +32,8 @@ This file gives coding agents project-specific context. Keep it short and update
 - Dev: `bun run convex:dev` and `bun dev` (two processes)
 - Auth keys (once per deployment, ADR 0003): `bun run auth:keys` while `convex:dev` is running — the `@convex-dev/auth` CLI generates the RS256 key pair and sets `AUTH_PRIVATE_KEY`/`AUTH_JWKS` on the deployment (idempotent; `--force` rotates); deploys fail until they exist. Headless environments prefix with `CONVEX_AGENT_MODE=anonymous`. Ignore the "Make sure that it contains" file templates the CLI prints: this repo's `convex/auth.ts` and `auth.config.ts` deliberately diverge from the stock scaffold — never overwrite them with it
 - Build: `bun run build`
+- Deploy (production, see `## Production deployment`): `bun run deploy` = `deploy:backend` (`convex deploy --cmd 'bun run build'`, needs `CONVEX_DEPLOY_KEY`) then `deploy:web` (`wrangler deploy`, needs `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID`). Normally CI runs this; a local run is the fallback
+- Hosting runtime locally: `bun run serve:hosting` (`wrangler dev`, serves the built `dist/client` through workerd with the real `wrangler.jsonc`). The only way to exercise the SPA catch-all rewrite before deploying; `bun dev` does not
 - Typecheck: `bun run typecheck` (all three TS projects: root `src/`, `convex/`, `scripts/`)
 - Test: `bun run test` (Vitest is the single test runner — ADR 0006; do not use `bun test`)
 - Format + lint: `bun x vp check` (`--fix` to apply). [Vite+](https://viteplus.dev) owns the dev/build/test/fmt/lint toolchain: the `dev`/`build`/`serve`/`test` scripts delegate to `vp`, `vite` is aliased to `@voidzero-dev/vite-plus-core` via `overrides`, and test files import from `vite-plus/test`. oxfmt/oxlint config (including the ignore list for generated/vendored/tool-managed files) lives in the `fmt`/`lint` blocks of `vite.config.ts`; `vp check` also runs tsgolint type checks, which complement but do not replace `tsc --noEmit`
@@ -43,6 +45,19 @@ This file gives coding agents project-specific context. Keep it short and update
 - Fallow: `bun run fallow` (full), `bun run fallow:audit` (changed files)
 - Convex MCP: official CLI server in `.cursor/mcp.json` and `.mcp.json` (`npx --no convex mcp start` — the pinned local `convex`, same pattern as `fallow-mcp`; requires `bun install`). Leave production flags off unless a human asks to change prod this session (`convex-deploy-guard`).
 - Fallow agent surfaces: `.cursor/mcp.json` / `.mcp.json` (`fallow-mcp` entry only), skills under `.agents/skills/fallow` and `.claude/skills/fallow`. Re-run with `bunx fallow agent install` (byte-stable; it will not overwrite `convex`). Do not run `fallow similar-code setup` unless a human asks.
+
+## Production deployment
+
+Two production surfaces (ADR 0010): the Convex **production deployment** for `convex/`, and a **Cloudflare Worker serving static assets** (`wrangler.jsonc`) for the client build. Continuous deployment is `.github/workflows/deploy.yml`: a push to `main` runs the gates, then `bun run deploy`. Everything below is also runnable by hand as a fallback.
+
+- URLs (fill in after the first production deploy): web `https://cobracket.<cloudflare-subdomain>.workers.dev`, Convex `https://<deployment-name>.convex.cloud`
+- Secrets. Repository secrets for CI (Settings > Secrets and variables > Actions), and Cloud Agents > Secrets for agents: `CONVEX_DEPLOY_KEY` (Convex dashboard > production deployment > Deployment Settings > General > Generate Production Deploy Key), `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`. Never put any of them in `.env.local` — that file is local development only
+- The deploy key needs `deployment:deploy` **and** `deployment:env:view` + `deployment:env:write`. The env permissions are not optional here: `convex.config.ts` declares `AUTH_PRIVATE_KEY`/`AUTH_JWKS` as required deployment env vars, so the auth keys must be settable with the same key
+- Auth keys, once per deployment, before the first deploy (ADR 0003): `CONVEX_DEPLOY_KEY='<production deploy key>' bun run auth:keys`. Verified against the convex 1.45 CLI: `CONVEX_DEPLOY_KEY` is read **before** `CONVEX_DEPLOYMENT` from `.env.local`, so the key alone selects production — and `--prod` would be ignored with a warning, which is why the `@convex-dev/auth` CLI has no such flag. Until the keys exist every deploy fails with `MissingEnvironmentVariables: AUTH_JWKS, AUTH_PRIVATE_KEY`. As with local dev, ignore the "Make sure that it contains" templates it prints
+- Deploy order inside `bun run deploy` is deliberate: `deploy:backend` builds the client first (so a broken build never reaches production) and only then pushes functions; `deploy:web` uploads `dist/client` afterwards. If the upload fails after the push, production serves the previous bundle against new functions — re-run the workflow, do not hand-patch
+- `bun run deploy:backend` sets `VITE_CONVEX_URL` for the build from the deploy key's deployment. It writes no files, so it never disturbs `.env.local`
+- Never point local development at production: local dev stays on the anonymous deployment (`CONVEX_AGENT_MODE=anonymous`, `## Cursor Cloud specific instructions`). Before any command that can touch production, announce the target deployment (`convex-deploy-guard`), and treat a production change as needing explicit human consent in the current session
+- Anonymous tournament creation is unthrottled by design for now (see the PR for ADR 0010 and the vision's Spec-stage checklist). The operational cap is a **spending limit and usage alert on the production deployment** in the Convex dashboard; set it before sharing the URL widely
 
 ## Fallow
 
