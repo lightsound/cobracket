@@ -13,9 +13,6 @@ import { Router } from "../router";
 
 type SharedView = NonNullable<FunctionReturnType<typeof api.operations.getSharedTournament>>;
 
-// The Share Link page (stories 21-23): unauthenticated, view-only, realtime.
-// The server returns null for unknown slugs, drafts, and private
-// tournaments alike, so this page cannot distinguish them either.
 export default function SharePage() {
   if (!getConvexUrl()) return <SetupNotice />;
   const params = useParams(Router.paths.s);

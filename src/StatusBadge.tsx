@@ -9,8 +9,6 @@ const STATUS_KEYS = {
   completed: "status.completed",
 } as const satisfies Record<TournamentStatus, string>;
 
-// One badge for the lifecycle everywhere a status appears, so the
-// state-to-color mapping cannot drift between pages.
 export function StatusBadge(props: { status: TournamentStatus }) {
   return (
     <span

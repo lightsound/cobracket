@@ -12,10 +12,6 @@ export interface BoardBracket {
   championId?: string;
 }
 
-// The derived bracket state both surfaces render identically: the bracket
-// itself, and — once completed — the champion and standings (stories 16,
-// 23). The Organizer page adds result recording through onSelectMatch; the
-// Share Link page leaves it off.
 export function TournamentBoard(props: {
   bracket: BoardBracket | null;
   participants: { participantId: string; name: string }[];

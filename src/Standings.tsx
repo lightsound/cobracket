@@ -7,9 +7,6 @@ export interface StandingsProps {
   championId?: string;
 }
 
-// Final standings + champion banner (stories 16 and 23), shared by the
-// Organizer page and the Share Link page. The server derives placements;
-// this only joins names on.
 export function Standings(props: StandingsProps) {
   const nameOf = (participantId: string) =>
     props.participants.find((participant) => participant.participantId === participantId)?.name ??

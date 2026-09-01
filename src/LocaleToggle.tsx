@@ -1,8 +1,5 @@
 import { locale, setLocale, t } from "./i18n";
 
-// The two MVP locales toggle back and forth; a menu can replace this when a
-// third language lands. The label shows the language you would switch TO,
-// in that language, the common convention for a two-locale switcher.
 export default function LocaleToggle() {
   const next = () => (locale() === "en" ? "ja" : "en");
   return (

@@ -1,7 +1,5 @@
 import type { MessageKey } from "./en";
 
-// Japanese dictionary (story 24). Keys are defined by the English source
-// dictionary; Record<MessageKey, string> keeps the two in lockstep.
 export const ja: Record<MessageKey, string> = {
   "app.title": "cobracket",
   "app.loading": "読み込み中…",

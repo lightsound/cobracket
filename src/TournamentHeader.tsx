@@ -2,9 +2,6 @@ import type { Element } from "solid-js";
 import { StatusBadge, type TournamentStatus } from "./StatusBadge";
 import { t } from "./i18n";
 
-// The tournament identity block, shared by the Organizer page and the Share
-// Link page (both render the same derived view). Extra rows (e.g. the
-// Organizer's Share Link controls) come in as children.
 export function TournamentHeader(props: {
   name: string;
   status: TournamentStatus;

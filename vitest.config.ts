@@ -16,8 +16,6 @@ export default defineConfig({
       },
       {
         test: {
-          // Pure browser-side modules (e.g. the bracket layout, ADR 0007):
-          // no DOM, so node is enough.
           name: "src",
           include: ["src/**/*.test.ts"],
           environment: "node",

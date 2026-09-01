@@ -10,8 +10,6 @@ import { createConvexQuery, getConvexClient, getConvexUrl } from "../lib/convex"
 // fallow-ignore-next-line circular-dependency -- the official Solid Router 2 shape: the router lazy-imports pages (deferred dynamic import), pages link back through Router.paths; no init-order hazard
 import { Router } from "../router";
 
-// Organizer home: your tournaments (story 25: the anonymous identity
-// persists, so they are still yours) plus creation (stories 1-3).
 export default function Home() {
   if (!getConvexUrl()) return <SetupNotice />;
   const organizer = createOrganizer();
@@ -36,8 +34,6 @@ export default function Home() {
   );
 }
 
-// Mounted only once an Organizer identity exists: listMyTournaments rejects
-// unauthenticated callers, so subscribing earlier would only surface errors.
 function TournamentList() {
   const tournaments = createConvexQuery(api.operations.listMyTournaments, {});
 
@@ -79,7 +75,6 @@ function CreateForm() {
     "single_elimination",
   );
   const [createError, setCreateError] = createSignal<string | null>(null);
-  // Freeform Discipline with suggestions (story 2): re-subscribes per prefix.
   const suggestions = createConvexQuery(api.operations.suggestDisciplines, () => ({
     prefix: discipline(),
   }));
@@ -90,8 +85,6 @@ function CreateForm() {
     if (!convex) return;
     setCreateError(null);
     try {
-      // Story 1: zero sign-up — the first creation mints the anonymous
-      // Organizer identity right here in the handler.
       await ensureOrganizer();
       const created = await convex.mutation(api.operations.createTournament, {
         name: name(),

@@ -3,14 +3,6 @@ import { t } from "../i18n";
 import { CARD_HEIGHT, CARD_WIDTH, layoutBracket } from "./layout";
 import type { BracketSectionName } from "./layout";
 
-// The interactive bracket renderer (ADR 0007): absolutely positioned HTML
-// Match cards from layoutBracket's serializable coordinates, connectors in
-// one SVG overlay behind them, pan/zoom via transform. Shared by the
-// Organizer page and the Share Link page — the Organizer passes
-// onSelectMatch to open the result dialog; the public view leaves it off.
-
-// The derived per-match view shape both operations reads return (the
-// Organizer variant adds matchId, which flows through untouched).
 /**
  * @public
  */
@@ -81,10 +73,6 @@ export function BracketView(props: BracketViewProps) {
   const readyKeys = createMemo(() => new Set(props.readyMatchKeys));
   const voidedKeys = createMemo(() => new Set(props.voidedMatchKeys));
 
-  // Section labels only matter when there is more than one section
-  // (double elimination); they earn the extra label band.
-  // layoutBracket emits cards in (section, round, index) order, so the
-  // first card of a section is its top row.
   const sections = createMemo(() => {
     const firstCards = new Map<BracketSectionName, { x: number; y: number }>();
     for (const card of layout().cards) {
@@ -242,8 +230,6 @@ function ZoomButton(props: { label: string; onClick: () => void; children: strin
   );
 }
 
-// Ready matches take a result; completed matches between two participants
-// take a correction (story 14). Everything else is display-only.
 function isReportable(match: ViewMatch): boolean {
   if (match.state === "ready") return true;
   return (

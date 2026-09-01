@@ -16,10 +16,6 @@ import { Router } from "../router";
 type OrganizerView = FunctionReturnType<typeof api.operations.getTournament>;
 type OrganizerMatch = NonNullable<OrganizerView["bracket"]>["matches"][number];
 
-// The Organizer management surface (stories 4-17): roster, seeding, bracket
-// generation, publishing, result recording, and the Share Link. Everything
-// rendered here is the server's derived view — no progression logic lives
-// on the client (ADR 0005).
 export default function TournamentPage() {
   if (!getConvexUrl()) return <SetupNotice />;
   const params = useParams(Router.paths.t);
@@ -43,16 +39,10 @@ function bracketPlaceholder(view: OrganizerView): string {
 
 function Manager(props: { view: OrganizerView }) {
   const [actionError, setActionError] = createSignal<string | null>(null);
-  // Set from reportResult's return value (story 14): how many downstream
-  // results this correction voided. The affected matches are ALSO badged
-  // through voidedMatchKeys; this is the immediate confirmation.
   const [voidedCount, setVoidedCount] = createSignal(0);
   const [reportKey, setReportKey] = createSignal<string | null>(null);
 
-  // Roster and seeding stay editable, and the bracket regenerable, until the
-  // first result flips the tournament to live.
   const editable = () => props.view.status === "draft" || props.view.status === "published";
-  // Results are recorded from published on (the first one flips to live).
   const reportingOpen = () => props.view.status !== "draft";
   const reportMatch = () => {
     const key = reportKey();
@@ -254,7 +244,6 @@ function RosterSection(props: {
     if (ok) setBulkText("");
   }
 
-  // Manual reorder (story 8): swap two neighbors and pin the whole order.
   function move(participantId: Id<"participants">, delta: -1 | 1) {
     const order = props.view.participants.map((participant) => participant.participantId);
     const index = order.indexOf(participantId);
@@ -435,30 +424,21 @@ function resultSide(
 
 function ReportDialog(props: {
   match: OrganizerMatch;
-  /** The stable key of the match being reported: form state resets on it. */
   reportKey: string;
   participants: { participantId: Id<"participants">; name: string }[];
   onClose: () => void;
   onReported: (voidedCount: number) => void;
 }) {
-  // Form state resets when the dialog targets a different match; realtime
-  // view updates for the SAME match leave the draft alone.
-  const [winnerId, setWinnerId] = createSignal<string | null>(() => {
-    void props.reportKey;
-    return null;
-  });
-  const [decidedBy, setDecidedBy] = createSignal<DecidedBy>((): DecidedBy => {
-    void props.reportKey;
-    return "played";
-  });
-  const [scores, setScores] = createSignal<Record<string, string>>(() => {
-    void props.reportKey;
-    return {};
-  });
-  const [formError, setFormError] = createSignal<string | null>(() => {
-    void props.reportKey;
-    return null;
-  });
+  function draftResetPerMatch<T>(initial: T) {
+    return createSignal<T>((): T => {
+      void props.reportKey;
+      return initial;
+    });
+  }
+  const [winnerId, setWinnerId] = draftResetPerMatch<string | null>(null);
+  const [decidedBy, setDecidedBy] = draftResetPerMatch<DecidedBy>("played");
+  const [scores, setScores] = draftResetPerMatch<Record<string, string>>({});
+  const [formError, setFormError] = draftResetPerMatch<string | null>(null);
 
   const sideIds = () =>
     props.match.occupants.flatMap((occupant) =>
@@ -475,8 +455,6 @@ function ReportDialog(props: {
     return Number.isFinite(value) ? value : undefined;
   }
 
-  // Outcome pairs the engine accepts: the winner records "win"; the other
-  // side records how it lost (loss, walkover, or disqualification).
   async function report(winner: string, loser: string): Promise<number> {
     const decided = decidedBy();
     const result = await runMutation(api.operations.reportResult, {

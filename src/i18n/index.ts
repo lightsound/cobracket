@@ -3,12 +3,6 @@ import { createSignal } from "solid-js";
 import { en, type MessageKey } from "./en";
 import { ja } from "./ja";
 
-// The i18n layer (story 24): every UI string renders through t(), which
-// reads the module-level locale signal, so JSX reads re-render on locale
-// change. English first; Japanese ships alongside. Persistence follows the
-// theme-preference.ts pattern (client mode: read localStorage directly at
-// signal creation).
-
 /**
  * @public
  */

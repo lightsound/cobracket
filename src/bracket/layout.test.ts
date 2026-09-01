@@ -2,8 +2,6 @@ import { describe, expect, test } from "vite-plus/test";
 import { CARD_HEIGHT, CARD_WIDTH, layoutBracket } from "./layout";
 import type { BracketEdge, LayoutMatch } from "./layout";
 
-// Geometry constants mirrored from layout.ts: the tests assert concrete
-// coordinates, so spacing changes are visible here on purpose.
 const GAP_X = 56;
 const SECTION_GAP = 72;
 const PITCH = CARD_HEIGHT + 20;
@@ -25,8 +23,6 @@ function winnersMatches(size: number): LayoutMatch[] {
   return matches;
 }
 
-// The 8-participant double-elimination structure, exactly as the format
-// engine generates it: winners w1..w3, losers l1..l4, grand final + reset.
 function doubleElim8(): LayoutMatch[] {
   const losers: LayoutMatch[] = [];
   for (const [round, count] of [
@@ -80,7 +76,6 @@ describe("single elimination", () => {
     const layout = layoutBracket(winnersMatches(8));
     expect(layout.cards).toHaveLength(7);
 
-    // Columns advance by round.
     for (const [key, column] of [
       ["w1m1", 0],
       ["w2m1", 1],
@@ -89,7 +84,6 @@ describe("single elimination", () => {
       expect(cardOf(layout, key).x).toBe(column * COLUMN);
     }
 
-    // Round 1 stacks by index; each later match centers on its two feeders.
     expect(layout.cards.filter((card) => card.key.startsWith("w1")).map((card) => card.y)).toEqual([
       0,
       PITCH,
@@ -100,7 +94,6 @@ describe("single elimination", () => {
     expect(cardOf(layout, "w2m2").y).toBe(2.5 * PITCH);
     expect(cardOf(layout, "w3m1").y).toBe(1.5 * PITCH);
 
-    // Every match after round 1 receives exactly its two winner edges.
     expect(layout.edges).toHaveLength(6);
     expect(layout.edges.every((edge) => edge.kind === "winner")).toBe(true);
     const finalFeed = edgeOf(layout, "w2m1", "w3m1");
@@ -141,14 +134,11 @@ describe("double elimination", () => {
     );
     expect(losersTop).toBe(winnersBottom + SECTION_GAP);
 
-    // Losers columns restart at 0 under the winners band; the grand final
-    // starts after the deeper of the two sections (losers here: 4 rounds).
     expect(cardOf(layout, "l1m1").x).toBe(0);
     expect(cardOf(layout, "l4m1").x).toBe(3 * COLUMN);
     expect(cardOf(layout, "gf").x).toBe(4 * COLUMN);
     expect(cardOf(layout, "gfr").x).toBe(5 * COLUMN);
 
-    // The grand final sits between its two feeders vertically.
     const expectedGrandFinalY = (cardOf(layout, "w3m1").y + cardOf(layout, "l4m1").y) / 2;
     expect(cardOf(layout, "gf").y).toBe(expectedGrandFinalY);
     expect(cardOf(layout, "gfr").y).toBe(expectedGrandFinalY);
@@ -168,8 +158,6 @@ describe("double elimination", () => {
       "w3m1->l4m1",
     ]);
 
-    // Drop edges into the losers band run bottom-center to top-center so
-    // they read as drops.
     const drop = edgeOf(layout, "w2m2", "l2m1", "loser");
     expect(drop.from).toEqual({
       x: cardOf(layout, "w2m2").x + CARD_WIDTH / 2,
@@ -180,13 +168,9 @@ describe("double elimination", () => {
       y: cardOf(layout, "l2m1").y,
     });
 
-    // The grand final collects both finalists.
     edgeOf(layout, "w3m1", "gf", "winner");
     edgeOf(layout, "l4m1", "gf", "winner");
 
-    // The reset is fed by both the winner and the loser of the first grand
-    // final — the whole pair moves forward, so the layout collapses that
-    // into ONE ordinary connector instead of a solid + dashed pair.
     const resetEdges = layout.edges.filter((edge) => edge.toKey === "gfr");
     expect(resetEdges).toHaveLength(1);
     expect(resetEdges[0]).toEqual({
@@ -212,9 +196,6 @@ describe("double elimination", () => {
     ]);
     expect(cardOf(layout, "gf").x).toBe(COLUMN);
     expect(cardOf(layout, "gfr").x).toBe(2 * COLUMN);
-    // Both grand-final slots are fed by the only winners match (winner and
-    // loser alike), and the reset is fed by both sides of the grand final:
-    // each pair collapses into one ordinary connector.
     expect(layout.edges).toEqual([
       expect.objectContaining({ fromKey: "w1m1", toKey: "gf", kind: "winner" }),
       expect.objectContaining({ fromKey: "gf", toKey: "gfr", kind: "winner" }),

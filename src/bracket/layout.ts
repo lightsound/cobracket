@@ -1,10 +1,3 @@
-// Pure bracket layout (ADR 0007): (derived match coordinates) -> absolutely
-// positioned cards plus connector edges, all serializable numbers. No DOM
-// measurement — elimination geometry is closed-form, so slot arithmetic on
-// (bracket, round, indexInRound) reconstructs who feeds whom for both MVP
-// formats, mirroring the format engine's generators. Renderers (HTML cards +
-// SVG overlay today; static SVG or text later) consume this data unchanged.
-
 /**
  * @public
  */
@@ -104,7 +97,6 @@ function positionKey(bracket: BracketSectionName, round: number, indexInRound: n
   return `${bracket}:${round}:${indexInRound}`;
 }
 
-// Resolves feeder matches by position; a miss is a malformed structure.
 type MatchAt = (bracket: BracketSectionName, round: number, indexInRound: number) => LayoutMatch;
 
 function winnersFeeds(round: number, i: number, at: MatchAt): Feed[] {
@@ -115,10 +107,6 @@ function winnersFeeds(round: number, i: number, at: MatchAt): Feed[] {
   ];
 }
 
-// Losers rounds: round 1 pairs winners-round-1 losers; even round 2j is the
-// drop-in round where losers of winners round j+1 enter (odd j reverses the
-// drop order — see convex/format/doubleElimination); odd rounds >= 3 pair
-// the previous drop-in round's survivors.
 function losersFeeds(round: number, i: number, at: MatchAt, roundSize: number): Feed[] {
   if (round === 1) {
     return [
@@ -140,9 +128,6 @@ function losersFeeds(round: number, i: number, at: MatchAt, roundSize: number): 
   ];
 }
 
-// Grand final: round 1 pairs the winners-side finalist with the losers
-// finalist (or, with no losers bracket, the loser of the only winners
-// match); round 2 is the bracket-reset replay of round 1.
 function grandFinalFeeds(
   round: number,
   at: MatchAt,
@@ -163,11 +148,9 @@ function grandFinalFeeds(
   ];
 }
 
-/**
- * Reconstructs which matches feed this one, from coordinates alone. This is
- * the read-side mirror of the engine's generators (buildWinnersBracket /
- * buildLosersBracket / the grand-final wiring in convex/format).
- */
+// The read-side mirror of the format engine's slot wiring, reconstructed
+// from coordinates alone (the derived view exposes no slots). Kept in
+// lockstep by layout.engine-parity.test.ts.
 function feedsOf(
   match: LayoutMatch,
   byPosition: Map<string, LayoutMatch>,
@@ -191,10 +174,6 @@ function feedsOf(
   return grandFinalFeeds(round, at, maxRound.winners, maxRound.losers);
 }
 
-// Entry rounds (winners round 1, losers round 1) stack by index; every
-// later match centers on its in-section feeders (drop-in rounds track their
-// losers-side feeder so the drop reads as a straight line); the grand final
-// centers between the two finalists it collects.
 function cardYOf(match: LayoutMatch, feedCards: BracketCard[], sectionTop: number): number {
   const inSection = feedCards.filter((card) => card.bracket === match.bracket);
   if (inSection.length > 0) {
@@ -206,8 +185,6 @@ function cardYOf(match: LayoutMatch, feedCards: BracketCard[], sectionTop: numbe
   return sectionTop + match.indexInRound * PITCH;
 }
 
-// Both slots fed by the same match: collapse the winner + loser pair into
-// one ordinary connector (see the BracketEdge doc).
 function dedupeFeeds(feeds: Feed[]): Feed[] {
   const [first, second] = feeds;
   if (first !== undefined && second !== undefined && first.source.key === second.source.key) {
@@ -216,7 +193,6 @@ function dedupeFeeds(feeds: Feed[]): Feed[] {
   return feeds;
 }
 
-// Winner edges run right edge to left edge; drop edges run bottom to top.
 function edgeBetween(kind: Feed["kind"], source: BracketCard, target: BracketCard): BracketEdge {
   return kind === "winner"
     ? {
@@ -263,7 +239,6 @@ export function layoutBracket(matches: readonly LayoutMatch[]): BracketLayout {
   const feeds = (match: LayoutMatch): Feed[] =>
     dedupeFeeds(feedsOf(match, byPosition, roundSizes, maxRound));
 
-  // Column per (section, round); the grand final starts after both sections.
   const grandFinalBase = Math.max(maxRound.winners, maxRound.losers);
   const columnOf = (match: LayoutMatch): number =>
     match.bracket === "grand_final" ? grandFinalBase + match.round - 1 : match.round - 1;
@@ -273,8 +248,6 @@ export function layoutBracket(matches: readonly LayoutMatch[]): BracketLayout {
   let winnersBottom = 0;
 
   for (const match of sorted) {
-    // Processing in (section, round) order guarantees feeders are laid out
-    // before their dependents, for well-formed structures.
     const feedCards = feeds(match).map((feed) => cardByKey.get(feed.source.key)!);
     const sectionTop = match.bracket === "losers" ? winnersBottom + SECTION_GAP : 0;
     const card: BracketCard = {

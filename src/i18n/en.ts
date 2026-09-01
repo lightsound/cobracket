@@ -1,5 +1,3 @@
-// English is the source dictionary: its keys define MessageKey, and every
-// other locale must cover exactly these keys (story 24).
 export const en = {
   "app.title": "cobracket",
   "app.loading": "Loading…",
