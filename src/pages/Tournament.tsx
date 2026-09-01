@@ -6,6 +6,7 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { ErrorNotice, errorFallback, errorMessage } from "../ErrorFallback";
 import { SetupNotice } from "../SetupNotice";
+import { createOrganizer } from "../lib/auth";
 import { TournamentBoard } from "../TournamentBoard";
 import { TournamentHeader } from "../TournamentHeader";
 import { t } from "../i18n";
@@ -19,16 +20,42 @@ type OrganizerMatch = NonNullable<OrganizerView["bracket"]>["matches"][number];
 export default function TournamentPage() {
   if (!getConvexUrl()) return <SetupNotice />;
   const params = useParams(Router.paths.t);
-  const view = createConvexQuery(api.operations.getTournament, () => ({
-    tournamentId: params.tournamentId as Id<"tournaments">,
-  }));
+  // getTournament rejects unauthenticated callers, so the subscription must
+  // wait for the restored session — otherwise a direct open or reload of
+  // this URL lands on the error fallback even for the owner.
+  const organizer = createOrganizer();
 
   return (
     <Errored fallback={errorFallback}>
-      <Loading fallback={<p class="text-sm text-ink-muted">{t("app.loading")}</p>}>
-        <Manager view={view()} />
+      <Loading fallback={<p class="text-sm text-ink-muted">{t("home.checkingSession")}</p>}>
+        <Show when={organizer()} fallback={<SignedOutNotice />}>
+          <OwnedTournament tournamentId={params.tournamentId} />
+        </Show>
       </Loading>
     </Errored>
+  );
+}
+
+function SignedOutNotice() {
+  return (
+    <div class="flex flex-col items-start gap-3">
+      <p class="text-sm text-ink-muted">{t("tournament.signedOut")}</p>
+      <a href={Router.paths()} class="text-sm text-accent underline">
+        {t("app.backHome")}
+      </a>
+    </div>
+  );
+}
+
+function OwnedTournament(props: { tournamentId: string }) {
+  const view = createConvexQuery(api.operations.getTournament, () => ({
+    tournamentId: props.tournamentId as Id<"tournaments">,
+  }));
+
+  return (
+    <Loading fallback={<p class="text-sm text-ink-muted">{t("app.loading")}</p>}>
+      <Manager view={view()} />
+    </Loading>
   );
 }
 
@@ -118,11 +145,12 @@ function Manager(props: { view: OrganizerView }) {
 function BracketControls(props: {
   view: OrganizerView;
   editable: boolean;
-  onError: (message: string) => void;
+  onError: (message: string | null) => void;
 }) {
   const canPublish = () => props.view.status === "draft" && props.view.bracket !== null;
 
   async function run(mutate: () => Promise<unknown>): Promise<void> {
+    props.onError(null);
     try {
       await mutate();
     } catch (error) {
@@ -175,13 +203,26 @@ function BracketControls(props: {
 }
 
 function ShareLinkRow(props: { shareSlug: string }) {
-  const [copied, setCopied] = createSignal(false);
+  const [copyState, setCopyState] = createSignal<"idle" | "copied" | "failed">("idle");
   const shareUrl = () => `${window.location.origin}${Router.paths.s(props.shareSlug)()}`;
 
+  let resetTimer: ReturnType<typeof setTimeout> | undefined;
+  function flash(state: "copied" | "failed") {
+    setCopyState(state);
+    clearTimeout(resetTimer);
+    resetTimer = setTimeout(() => setCopyState("idle"), 2500);
+  }
+
+  // The clipboard API rejects on insecure contexts (e.g. plain-HTTP LAN
+  // access during a venue tournament) and denied permission; the visible
+  // URL is the manual fallback.
   async function copy() {
-    await navigator.clipboard.writeText(shareUrl());
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(shareUrl());
+      flash("copied");
+    } catch {
+      flash("failed");
+    }
   }
 
   return (
@@ -195,8 +236,11 @@ function ShareLinkRow(props: { shareSlug: string }) {
           class="rounded-md border border-ink-muted/40 bg-surface-raised px-3 py-1 text-sm hover:border-accent"
           onClick={() => void copy()}
         >
-          {copied() ? t("tournament.share.copied") : t("tournament.share.copy")}
+          {copyState() === "copied" ? t("tournament.share.copied") : t("tournament.share.copy")}
         </button>
+        <Show when={copyState() === "failed"}>
+          <span class="text-xs text-loss">{t("tournament.share.copyFailed")}</span>
+        </Show>
       </div>
       <p class="text-xs text-ink-muted">{t("tournament.share.hint")}</p>
     </div>
@@ -206,7 +250,7 @@ function ShareLinkRow(props: { shareSlug: string }) {
 function RosterSection(props: {
   view: OrganizerView;
   editable: boolean;
-  onError: (message: string) => void;
+  onError: (message: string | null) => void;
 }) {
   const [singleName, setSingleName] = createSignal("");
   const [bulkText, setBulkText] = createSignal("");
@@ -214,6 +258,7 @@ function RosterSection(props: {
   const [draftName, setDraftName] = createSignal("");
 
   async function run(mutate: () => Promise<unknown>): Promise<boolean> {
+    props.onError(null);
     try {
       await mutate();
       return true;

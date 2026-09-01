@@ -16,9 +16,9 @@ This file gives coding agents project-specific context. Keep it short and update
 ## Project Overview
 
 - Product: cobracket — host and manage tournaments of any format, from the web or from chat (MCP). Read `docs/vision.md` for direction, `CONTEXT.md` for the domain glossary (use its terms in code and docs), `docs/adr/` for decisions, `docs/specs/mvp.md` for the current spec
-- Current code is template scaffolding (Solid 2.0 `bare` + a Convex task-list demo), to be replaced per the MVP spec
-- Main entry points: `src/App.tsx`, `src/Document.tsx` (Solid start convention, no `index.html`), `convex/schema.ts`, `convex/tasks.ts`
-- Important directories: `src/` (UI), `convex/` (backend functions)
+- Current code: the format engine (`convex/format/`), the operations API (`convex/operations.ts`, Seam 2), and the MVP web UI (Organizer home `/`, management `/t/:tournamentId`, Share Link `/s/:shareSlug`). MCP (stories 18–20) is not built yet
+- Main entry points: `src/App.tsx`, `src/Document.tsx` (Solid start convention, no `index.html`), `src/router.ts`, `convex/schema.ts`, `convex/operations.ts`
+- Important directories: `src/` (UI), `src/bracket/` (pure bracket layout + renderer), `convex/` (backend functions)
 
 ## Architecture Notes
 
@@ -84,9 +84,9 @@ This file gives coding agents project-specific context. Keep it short and update
 ## Cursor Cloud specific instructions
 
 - Full dev needs two long-running processes (see `## Commands`); run each in its own terminal/tmux session and leave them up.
-- Convex must run **headless/non-interactively** with `CONVEX_AGENT_MODE=anonymous`. Without it, `convex dev` prompts for login/account setup and hangs. Start the backend with `CONVEX_AGENT_MODE=anonymous bun run convex:dev` — it spins up a local backend on `127.0.0.1:3210` (HTTP actions on `3211`) and writes `.env.local` with `CONVEX_DEPLOYMENT` + `VITE_CONVEX_URL`. The same env var is required for one-off CLI calls, e.g. `CONVEX_AGENT_MODE=anonymous bun x convex run tasks:list`.
+- Convex must run **headless/non-interactively** with `CONVEX_AGENT_MODE=anonymous`. Without it, `convex dev` prompts for login/account setup and hangs. Start the backend with `CONVEX_AGENT_MODE=anonymous bun run convex:dev` — it spins up a local backend on `127.0.0.1:3210` (HTTP actions on `3211`) and writes `.env.local` with `CONVEX_DEPLOYMENT` + `VITE_CONVEX_URL`. The same env var is required for one-off CLI calls, e.g. `CONVEX_AGENT_MODE=anonymous bun x convex run operations:suggestDisciplines '{"prefix": "s"}'`.
 - Official Convex MCP starts without a Convex account, but its tools (`status`, `data`, `logs`, …) require `npx convex login` or a deploy key. Under `CONVEX_AGENT_MODE=anonymous` they return `Not Authorized`; use the CLI fallback above. Production MCP flags stay off.
-- Then start the frontend with `bun dev` (Vite on `0.0.0.0:3000`) and open `http://localhost:3000`. Start Convex first so `VITE_CONVEX_URL` exists when Vite boots (otherwise the task list shows a "Set VITE_CONVEX_URL…" message until Vite is restarted).
+- Then start the frontend with `bun dev` (Vite on `0.0.0.0:3000`) and open `http://localhost:3000`. Start Convex first so `VITE_CONVEX_URL` exists when Vite boots (otherwise every page shows a "Set VITE_CONVEX_URL…" notice until Vite is restarted).
 - `.env.local`, `.convex/` (deployment state), and the cached backend binary in `~/.convex/binaries/` are gitignored and persist on the VM. The anonymous deployment name is fixed (`anonymous-agent`), so restarts reuse the same data and `VITE_CONVEX_URL`.
 - Gotcha: the Vite dev server returns `Cannot GET /` (404) to plain `curl` because the default `Accept: */*` doesn't match the SSR HTML middleware. It serves normally to browsers (which send `Accept: text/html`). Smoke-test from the shell with `curl -H 'Accept: text/html' http://localhost:3000/`.
 - `bun` is installed at `~/.bun/bin` and symlinked into `/usr/local/bin`, so it resolves in non-login shells too. `bunx` is not symlinked — use `bun x <tool>` (e.g. `bun x tsc --noEmit`, `bun x convex ...`).

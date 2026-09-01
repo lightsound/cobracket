@@ -38,8 +38,11 @@ export const ja: Record<MessageKey, string> = {
 
   "tournament.share.copy": "Share Link をコピー",
   "tournament.share.copied": "コピーしました",
+  "tournament.share.copyFailed": "コピーできませんでした。URL を手動でコピーしてください。",
   "tournament.share.hint":
     "このリンクを知っている人は誰でも、アカウントなしでブラケットをライブ観戦できます。",
+  "tournament.signedOut":
+    "このページはこの Tournament の Organizer 専用です。このブラウザには対応する Organizer セッションがありません。",
 
   "roster.heading": "Participant",
   "roster.count": "{count} 名",

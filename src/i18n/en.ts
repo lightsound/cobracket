@@ -35,7 +35,10 @@ export const en = {
 
   "tournament.share.copy": "Copy Share Link",
   "tournament.share.copied": "Copied!",
+  "tournament.share.copyFailed": "Copy failed — copy the URL manually.",
   "tournament.share.hint": "Anyone with this link can watch the bracket live — no account needed.",
+  "tournament.signedOut":
+    "This page is for the tournament's Organizer, and this browser has no Organizer session for it.",
 
   "roster.heading": "Participants",
   "roster.count": "{count} participants",

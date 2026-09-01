@@ -103,6 +103,8 @@ export function BracketView(props: BracketViewProps) {
       style={{ height: `${viewportHeight()}px`, "touch-action": "none" }}
       onPointerDown={(event) => {
         if (event.button !== 0) return;
+        // Capture so pointerup outside the viewport still ends the drag.
+        event.currentTarget.setPointerCapture(event.pointerId);
         drag = {
           pointerId: event.pointerId,
           startX: event.clientX,
