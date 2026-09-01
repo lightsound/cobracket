@@ -26,6 +26,23 @@ export function getConvexClient(): ConvexClient | undefined {
 }
 
 /**
+ * Run a Convex mutation on the shared client. Callers sit behind the
+ * `getConvexUrl()` render gate, so a missing client here is a programming
+ * error, not a state to branch on — it throws into the caller's error
+ * handling like any other mutation failure.
+ *
+ * @public
+ */
+export async function runMutation<Mutation extends FunctionReference<"mutation">>(
+  mutation: Mutation,
+  args: FunctionArgs<Mutation>,
+): Promise<FunctionReturnType<Mutation>> {
+  const convex = getConvexClient();
+  if (!convex) throw new Error("Convex client is not configured");
+  return await convex.mutation(mutation, args);
+}
+
+/**
  * Bridges a Convex subscription into Solid's async model.
  *
  * - Reads suspend to the nearest `<Loading>` until the first result arrives;

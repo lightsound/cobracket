@@ -16,6 +16,13 @@ export default defineConfig({
       },
       {
         test: {
+          name: "src",
+          include: ["src/**/*.test.ts"],
+          environment: "node",
+        },
+      },
+      {
+        test: {
           name: "convex",
           include: ["convex/**/*.test.ts"],
           // Extend the defaults (node_modules, dist, ...) — a bare exclude

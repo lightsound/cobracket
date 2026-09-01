@@ -1,11 +1,11 @@
 # Convex functions
 
-Query と mutation はここに置きます。スキーマは `schema.ts`、サンプルは `tasks.ts`（一覧・追加・完了トグル）です。
+Queries and mutations live here. The schema is `schema.ts`; the operations API (every Organizer capability plus the Share Link read, ADR 0001) is `operations.ts`; the pure format engine is `format/`; auth is `auth.ts` (ADR 0003).
 
-クライアントは React ではなく `convex/browser` の `ConvexClient` です。Solid 2 からの購読は `src/lib/convex.ts` を参照してください。
+The browser client is `ConvexClient` from `convex/browser`, not React. See `src/lib/convex.ts` for how Solid 2 subscribes.
 
 ```bash
 bun run convex:dev
 ```
 
-詳細は [Convex のドキュメント](https://docs.convex.dev/functions) を参照してください。
+See the [Convex docs](https://docs.convex.dev/functions) for details.
