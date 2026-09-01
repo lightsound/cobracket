@@ -42,9 +42,13 @@ export interface LayoutPoint {
 
 /**
  * A connector: the winner (or loser, for double-elimination drops) of
- * `fromKey` proceeds to `toKey`. Winner edges leave the source card's right
- * edge and enter the target's left edge; drop edges leave the bottom and
- * enter the top, so they read as vertical drops into the losers bracket.
+ * `fromKey` proceeds to `toKey`. `kind` is the semantic (renderers dash
+ * loser edges); `direction` is the geometry: `forward` edges run from the
+ * source's right edge to the target's left edge, `drop` edges leave the
+ * bottom and enter the top, reading as vertical drops into the losers
+ * bracket. A loser edge into a same-row target (the grand-final reset, and
+ * the 2-participant grand final) is `forward`, entering along the target's
+ * lower slot row.
  *
  * @public
  */
@@ -52,6 +56,7 @@ export interface BracketEdge {
   fromKey: string;
   toKey: string;
   kind: "winner" | "loser";
+  direction: "forward" | "drop";
   from: LayoutPoint;
   to: LayoutPoint;
 }
@@ -201,23 +206,37 @@ function cardYOf(match: LayoutMatch, feedCards: BracketCard[], sectionTop: numbe
   return sectionTop + match.indexInRound * PITCH;
 }
 
-// Winner edges run right edge to left edge; drop edges run bottom to top.
+// The lower slot row: where a same-row loser edge enters its target (the
+// loser occupies the target's second slot).
+const LOWER_SLOT_Y = (CARD_HEIGHT * 3) / 4;
+
+// Winner edges run right edge to left edge. Loser edges drop bottom-to-top
+// when the target sits below (the losers band); a loser edge to a same-row
+// target runs forward along the lower slot row instead.
 function edgeBetween(kind: Feed["kind"], source: BracketCard, target: BracketCard): BracketEdge {
-  return kind === "winner"
-    ? {
-        fromKey: source.key,
-        toKey: target.key,
-        kind,
-        from: { x: source.x + CARD_WIDTH, y: source.y + CARD_HEIGHT / 2 },
-        to: { x: target.x, y: target.y + CARD_HEIGHT / 2 },
-      }
-    : {
-        fromKey: source.key,
-        toKey: target.key,
-        kind,
-        from: { x: source.x + CARD_WIDTH / 2, y: source.y + CARD_HEIGHT },
-        to: { x: target.x + CARD_WIDTH / 2, y: target.y },
-      };
+  const identity = { fromKey: source.key, toKey: target.key, kind };
+  if (kind === "winner") {
+    return {
+      ...identity,
+      direction: "forward",
+      from: { x: source.x + CARD_WIDTH, y: source.y + CARD_HEIGHT / 2 },
+      to: { x: target.x, y: target.y + CARD_HEIGHT / 2 },
+    };
+  }
+  if (target.y >= source.y + CARD_HEIGHT) {
+    return {
+      ...identity,
+      direction: "drop",
+      from: { x: source.x + CARD_WIDTH / 2, y: source.y + CARD_HEIGHT },
+      to: { x: target.x + CARD_WIDTH / 2, y: target.y },
+    };
+  }
+  return {
+    ...identity,
+    direction: "forward",
+    from: { x: source.x + CARD_WIDTH, y: source.y + LOWER_SLOT_Y },
+    to: { x: target.x, y: target.y + LOWER_SLOT_Y },
+  };
 }
 
 /**

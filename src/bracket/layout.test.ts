@@ -169,8 +169,10 @@ describe("double elimination", () => {
       "w3m1->l4m1",
     ]);
 
-    // Drop edges run bottom-center to top-center so they read as drops.
+    // Drop edges into the losers band run bottom-center to top-center so
+    // they read as drops.
     const drop = edgeOf(layout, "w2m2", "l2m1", "loser");
+    expect(drop.direction).toBe("drop");
     expect(drop.from).toEqual({
       x: cardOf(layout, "w2m2").x + CARD_WIDTH / 2,
       y: cardOf(layout, "w2m2").y + CARD_HEIGHT,
@@ -185,7 +187,19 @@ describe("double elimination", () => {
     edgeOf(layout, "w3m1", "gf", "winner");
     edgeOf(layout, "l4m1", "gf", "winner");
     edgeOf(layout, "gf", "gfr", "winner");
-    edgeOf(layout, "gf", "gfr", "loser");
+
+    // The reset sits on the same row as the grand final, so its loser edge
+    // does not drop: it runs forward along the target's lower slot row.
+    const resetLoserEdge = edgeOf(layout, "gf", "gfr", "loser");
+    expect(resetLoserEdge.direction).toBe("forward");
+    expect(resetLoserEdge.from).toEqual({
+      x: cardOf(layout, "gf").x + CARD_WIDTH,
+      y: cardOf(layout, "gf").y + (CARD_HEIGHT * 3) / 4,
+    });
+    expect(resetLoserEdge.to).toEqual({
+      x: cardOf(layout, "gfr").x,
+      y: cardOf(layout, "gfr").y + (CARD_HEIGHT * 3) / 4,
+    });
   });
 
   test("2 participants: no losers bracket, the grand final takes the loser of the only match", () => {
@@ -197,6 +211,9 @@ describe("double elimination", () => {
     expect(cardOf(layout, "gf").x).toBe(COLUMN);
     expect(cardOf(layout, "gfr").x).toBe(2 * COLUMN);
     edgeOf(layout, "w1m1", "gf", "winner");
-    edgeOf(layout, "w1m1", "gf", "loser");
+    // The loser's second chance goes sideways into the same-row grand
+    // final, not downward (there is no losers band to drop into).
+    expect(edgeOf(layout, "w1m1", "gf", "loser").direction).toBe("forward");
+    expect(edgeOf(layout, "gf", "gfr", "loser").direction).toBe("forward");
   });
 });
