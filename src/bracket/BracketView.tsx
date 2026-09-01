@@ -197,7 +197,12 @@ export function BracketView(props: BracketViewProps) {
           )}
         </For>
       </div>
-      <div class="absolute top-2 right-2 flex gap-1">
+      {/* Keep pointerdown out of the pan handler: capture would swallow
+          the buttons' click events. */}
+      <div
+        class="absolute top-2 right-2 flex gap-1"
+        onPointerDown={(event) => event.stopPropagation()}
+      >
         <ZoomButton label={t("bracket.zoomOut")} onClick={() => zoomBy(1 / 1.25)}>
           −
         </ZoomButton>
