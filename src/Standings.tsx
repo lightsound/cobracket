@@ -1,7 +1,7 @@
 import { For, Show } from "solid-js";
 import { t } from "./i18n";
 
-interface StandingsProps {
+export interface StandingsProps {
   standings: { participantId: string; placement: number }[];
   participants: { participantId: string; name: string }[];
   championId?: string;

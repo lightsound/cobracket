@@ -4,7 +4,7 @@ import { Standings } from "./Standings";
 import { BracketView } from "./bracket/BracketView";
 import type { ViewMatch } from "./bracket/BracketView";
 
-interface BoardBracket {
+export interface BoardBracket {
   matches: ViewMatch[];
   readyMatchKeys: string[];
   voidedMatchKeys: string[];

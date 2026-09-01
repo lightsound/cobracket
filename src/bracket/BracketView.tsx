@@ -43,7 +43,10 @@ export interface ViewMatch {
   sides?: ViewResultSide[];
 }
 
-interface BracketViewProps {
+/**
+ * @public
+ */
+export interface BracketViewProps {
   matches: ViewMatch[];
   participants: { participantId: string; name: string }[];
   readyMatchKeys: string[];
