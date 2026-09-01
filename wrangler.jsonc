@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "cobracket",
+  "compatibility_date": "2026-08-31",
+  // Static hosting for the client-only build (ADR 0010). There is no `main`:
+  // the Worker serves assets and nothing else, so every request is a free
+  // static-asset request and no Worker code runs.
+  "assets": {
+    // `bun run build` emits a purely static dist/client. dist/server is also
+    // emitted by the Solid start plugin but is not part of the deployment.
+    "directory": "./dist/client",
+    // The app is a Solid Router SPA: /t/:tournamentId and /s/:shareSlug exist
+    // only client-side. Unmatched paths serve /index.html with 200 OK, which
+    // is what makes a Share Link survive a direct visit and a reload.
+    "not_found_handling": "single-page-application",
+  },
+  "observability": {
+    "enabled": true,
+  },
+}
