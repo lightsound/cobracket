@@ -16,7 +16,7 @@ This file gives coding agents project-specific context. Keep it short and update
 ## Project Overview
 
 - Product: cobracket — host and manage tournaments of any format, from the web or from chat (MCP). Read `docs/vision.md` for direction, `CONTEXT.md` for the domain glossary (use its terms in code and docs), `docs/adr/` for decisions, `docs/specs/mvp.md` for the current spec
-- Current code: the format engine (`convex/format/`), the operations API (`convex/operations.ts`, Seam 2), and the MVP web UI (Organizer home `/`, management `/t/:tournamentId`, Share Link `/s/:shareSlug`). MCP (stories 18–20) is not built yet
+- Current code: the format engine (`convex/format/`), the operations API (`convex/operations.ts`, Seam 2), and the MVP web UI (Organizer home `/`, management `/t/:tournamentId`, Share Link `/s/:shareSlug`). MCP (stories 18–20) is deferred until Events or real demand (ADR 0009)
 - Main entry points: `src/App.tsx`, `src/Document.tsx` (Solid start convention, no `index.html`), `src/router.ts`, `convex/schema.ts`, `convex/operations.ts`
 - Important directories: `src/` (UI), `src/bracket/` (pure bracket layout + renderer), `convex/` (backend functions)
 
