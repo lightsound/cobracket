@@ -1,10 +1,12 @@
-import { useParams } from "@solidjs/router";
+import { useNavigate, useParams } from "@solidjs/router";
 import { Portal } from "@solidjs/web";
 import { Errored, For, Loading, Show, createSignal } from "solid-js";
-import type { FunctionReturnType } from "convex/server";
+import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
+import { DisciplineInput } from "../DisciplineInput";
 import { ErrorNotice, errorFallback, errorMessage } from "../ErrorFallback";
+import { FormatFieldset, type FormatFamily } from "../FormatFieldset";
 import { SetupNotice } from "../SetupNotice";
 import { createOrganizer } from "../lib/auth";
 import { TournamentBoard } from "../TournamentBoard";
@@ -14,7 +16,7 @@ import { createConvexQuery, getConvexUrl, runMutation } from "../lib/convex";
 // fallow-ignore-next-line circular-dependency -- the official Solid Router 2 shape: the router lazy-imports pages (deferred dynamic import), pages link back through Router.paths; no init-order hazard
 import { Router } from "../router";
 
-type OrganizerView = FunctionReturnType<typeof api.operations.getTournament>;
+type OrganizerView = NonNullable<FunctionReturnType<typeof api.operations.getTournament>>;
 type OrganizerMatch = NonNullable<OrganizerView["bracket"]>["matches"][number];
 
 export default function TournamentPage() {
@@ -28,7 +30,7 @@ export default function TournamentPage() {
   return (
     <Errored fallback={errorFallback}>
       <Loading fallback={<p class="text-sm text-ink-muted">{t("home.checkingSession")}</p>}>
-        <Show when={organizer()} fallback={<SignedOutNotice />}>
+        <Show when={organizer()} fallback={<BackHomeNotice message={t("tournament.signedOut")} />}>
           <OwnedTournament tournamentId={params.tournamentId} />
         </Show>
       </Loading>
@@ -36,10 +38,12 @@ export default function TournamentPage() {
   );
 }
 
-function SignedOutNotice() {
+// A terminal state of this URL for this browser (no session, or the id
+// names nothing of ours): explain and offer the way out, no Retry.
+function BackHomeNotice(props: { message: string }) {
   return (
     <div class="flex flex-col items-start gap-3">
-      <p class="text-sm text-ink-muted">{t("tournament.signedOut")}</p>
+      <p class="text-sm text-ink-muted">{props.message}</p>
       <a href={Router.paths()} class="text-sm text-accent underline">
         {t("app.backHome")}
       </a>
@@ -48,13 +52,17 @@ function SignedOutNotice() {
 }
 
 function OwnedTournament(props: { tournamentId: string }) {
+  // The raw URL segment goes to the server as-is: getTournament answers null
+  // for malformed, missing, deleted, and foreign ids alike.
   const view = createConvexQuery(api.operations.getTournament, () => ({
-    tournamentId: props.tournamentId as Id<"tournaments">,
+    tournamentId: props.tournamentId,
   }));
 
   return (
     <Loading fallback={<p class="text-sm text-ink-muted">{t("app.loading")}</p>}>
-      <Manager view={view()} />
+      <Show when={view()} fallback={<BackHomeNotice message={t("tournament.notFound")} />}>
+        {(owned) => <Manager view={owned()} />}
+      </Show>
     </Loading>
   );
 }
@@ -121,6 +129,8 @@ function Manager(props: { view: OrganizerView }) {
           onSelectMatch={reportingOpen() ? (key) => setReportKey(key) : undefined}
         />
       </section>
+
+      <SettingsSection view={props.view} formatEditable={editable()} />
 
       <Portal>
         <Show when={reportMatch()}>
@@ -449,6 +459,156 @@ function RosterSection(props: {
           </button>
         </div>
       </Show>
+    </section>
+  );
+}
+
+type SettingsDraft = { name: string; discipline: string; family: FormatFamily };
+type SettingsChanges = Omit<FunctionArgs<typeof api.operations.updateTournament>, "tournamentId">;
+
+// Only what changed is sent. The format in particular is a structural
+// change, so an unchanged family must not be re-submitted (its options would
+// fall back to their defaults).
+function settingsChanges(view: OrganizerView, draft: SettingsDraft): SettingsChanges {
+  return {
+    ...(draft.name.trim() !== view.name && { name: draft.name }),
+    ...(draft.discipline.trim() !== view.discipline && { discipline: draft.discipline }),
+    ...(draft.family !== view.format.family && { format: { family: draft.family } }),
+  };
+}
+
+// Stories 26–27: the tournament's own record, and the way to remove it. The
+// drafts are writable derivations of the server view, so a save — or an edit
+// landing from another tab — resets them to the committed values.
+function SettingsSection(props: { view: OrganizerView; formatEditable: boolean }) {
+  const navigate = useNavigate();
+  const [name, setName] = createSignal(() => props.view.name);
+  const [discipline, setDiscipline] = createSignal(() => props.view.discipline);
+  const [family, setFamily] = createSignal(() => props.view.format.family);
+  const [saveError, setSaveError] = createSignal<string | null>(null);
+  const [saved, setSaved] = createSignal(false);
+  const [confirmingDelete, setConfirmingDelete] = createSignal(false);
+  const [deleteError, setDeleteError] = createSignal<string | null>(null);
+
+  const changes = () =>
+    settingsChanges(props.view, { name: name(), discipline: discipline(), family: family() });
+  const dirty = () => Object.keys(changes()).length > 0;
+
+  let savedTimer: ReturnType<typeof setTimeout> | undefined;
+
+  async function save(event: SubmitEvent) {
+    event.preventDefault();
+    setSaveError(null);
+    try {
+      await runMutation(api.operations.updateTournament, {
+        tournamentId: props.view.tournamentId,
+        ...changes(),
+      });
+      setSaved(true);
+      clearTimeout(savedTimer);
+      savedTimer = setTimeout(() => setSaved(false), 2500);
+    } catch (error) {
+      setSaveError(errorMessage(error));
+    }
+  }
+
+  async function remove() {
+    setDeleteError(null);
+    try {
+      await runMutation(api.operations.deleteTournament, {
+        tournamentId: props.view.tournamentId,
+      });
+      navigate(Router.paths());
+    } catch (error) {
+      setDeleteError(errorMessage(error));
+    }
+  }
+
+  const fieldClass = "rounded-md border border-ink-muted/40 bg-surface-raised px-3 py-2 text-base";
+  const secondaryButton =
+    "rounded-md border border-ink-muted/40 bg-surface px-3 py-1.5 text-sm hover:border-accent disabled:opacity-50";
+
+  return (
+    <section class="flex max-w-xl flex-col gap-4">
+      <h2 class="font-display text-xl font-medium">{t("settings.heading")}</h2>
+      <form class="flex flex-col gap-3" onSubmit={(event) => void save(event)}>
+        <label class="flex flex-col gap-1 text-sm">
+          <span class="text-ink-muted">{t("home.create.name")}</span>
+          <input
+            class={fieldClass}
+            required
+            value={name()}
+            onInput={(event) => setName(event.currentTarget.value)}
+          />
+        </label>
+        <label class="flex flex-col gap-1 text-sm">
+          <span class="text-ink-muted">{t("home.create.discipline")}</span>
+          <DisciplineInput
+            class={fieldClass}
+            value={discipline()}
+            onInput={(value) => setDiscipline(value)}
+          />
+        </label>
+        <FormatFieldset
+          value={family()}
+          onChange={(next) => setFamily(next)}
+          disabled={!props.formatEditable}
+        />
+        <p class="text-xs text-ink-muted">
+          {props.formatEditable ? t("settings.formatHint") : t("settings.formatLocked")}
+        </p>
+        <Show when={saveError()}>{(message) => <ErrorNotice message={message()} />}</Show>
+        <div class="flex items-center gap-3">
+          <button
+            type="submit"
+            class="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-surface hover:opacity-90 disabled:opacity-50"
+            disabled={!dirty()}
+          >
+            {t("settings.save")}
+          </button>
+          <Show when={saved()}>
+            <span class="text-sm text-win">{t("settings.saved")}</span>
+          </Show>
+        </div>
+      </form>
+
+      <div class="flex flex-col gap-2 rounded-md border border-loss/40 p-3">
+        <h3 class="text-sm font-medium text-loss">{t("settings.danger")}</h3>
+        <p class="text-sm text-ink-muted">{t("settings.deleteHint")}</p>
+        <Show
+          when={confirmingDelete()}
+          fallback={
+            <button
+              type="button"
+              class={`${secondaryButton} self-start`}
+              onClick={() => setConfirmingDelete(true)}
+            >
+              {t("settings.delete")}
+            </button>
+          }
+        >
+          <p class="text-sm">
+            {t("settings.deleteConfirm", { count: props.view.participants.length })}
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <button
+              type="button"
+              class="rounded-md bg-loss px-3 py-1.5 text-sm font-medium text-surface hover:opacity-90"
+              onClick={() => void remove()}
+            >
+              {t("settings.deleteConfirmAction")}
+            </button>
+            <button
+              type="button"
+              class={secondaryButton}
+              onClick={() => setConfirmingDelete(false)}
+            >
+              {t("settings.deleteCancel")}
+            </button>
+          </div>
+        </Show>
+        <Show when={deleteError()}>{(message) => <ErrorNotice message={message()} />}</Show>
+      </div>
     </section>
   );
 }

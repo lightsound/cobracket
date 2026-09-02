@@ -39,6 +39,22 @@ export const en = {
   "tournament.share.hint": "Anyone with this link can watch the bracket live — no account needed.",
   "tournament.signedOut":
     "This page is for the tournament's Organizer, and this browser has no Organizer session for it.",
+  "tournament.notFound":
+    "This tournament does not exist, was deleted, or belongs to a different Organizer session.",
+
+  "settings.heading": "Settings",
+  "settings.formatHint":
+    "Changing the format discards the generated bracket — regenerate it after.",
+  "settings.formatLocked": "The format is locked: results have been recorded.",
+  "settings.save": "Save changes",
+  "settings.saved": "Saved.",
+  "settings.danger": "Delete this tournament",
+  "settings.deleteHint":
+    "Removes the tournament with its participants, bracket, and results. The Share Link stops working. This cannot be undone.",
+  "settings.delete": "Delete tournament…",
+  "settings.deleteConfirm": "Delete this tournament and its {count} participant(s) permanently?",
+  "settings.deleteConfirmAction": "Delete permanently",
+  "settings.deleteCancel": "Keep it",
 
   "roster.heading": "Participants",
   "roster.count": "{count} participants",

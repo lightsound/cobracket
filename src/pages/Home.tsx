@@ -1,7 +1,9 @@
 import { useNavigate } from "@solidjs/router";
-import { Errored, For, Loading, Show, createSignal, createUniqueId } from "solid-js";
+import { Errored, For, Loading, Show, createSignal } from "solid-js";
 import { api } from "../../convex/_generated/api";
+import { DisciplineInput } from "../DisciplineInput";
 import { ErrorNotice, errorFallback, errorMessage } from "../ErrorFallback";
+import { FormatFieldset, type FormatFamily } from "../FormatFieldset";
 import { SetupNotice } from "../SetupNotice";
 import { StatusBadge } from "../StatusBadge";
 import { t } from "../i18n";
@@ -68,16 +70,10 @@ function TournamentList() {
 
 function CreateForm() {
   const navigate = useNavigate();
-  const disciplineListId = createUniqueId();
   const [name, setName] = createSignal("");
   const [discipline, setDiscipline] = createSignal("");
-  const [family, setFamily] = createSignal<"single_elimination" | "double_elimination">(
-    "single_elimination",
-  );
+  const [family, setFamily] = createSignal<FormatFamily>("single_elimination");
   const [createError, setCreateError] = createSignal<string | null>(null);
-  const suggestions = createConvexQuery(api.operations.suggestDisciplines, () => ({
-    prefix: discipline(),
-  }));
 
   async function submit(event: SubmitEvent) {
     event.preventDefault();
@@ -113,45 +109,13 @@ function CreateForm() {
         </label>
         <label class="flex flex-col gap-1 text-sm">
           <span class="text-ink-muted">{t("home.create.discipline")}</span>
-          <input
+          <DisciplineInput
             class="rounded-md border border-ink-muted/40 bg-surface-raised px-3 py-2 text-base"
-            required
             value={discipline()}
-            placeholder={t("home.create.disciplinePlaceholder")}
-            list={disciplineListId}
-            onInput={(event) => setDiscipline(event.currentTarget.value)}
+            onInput={(value) => setDiscipline(value)}
           />
-          <datalist id={disciplineListId}>
-            <Loading>
-              <For each={suggestions()} keyed={(suggestion) => suggestion}>
-                {(suggestion) => <option value={suggestion()} />}
-              </For>
-            </Loading>
-          </datalist>
         </label>
-        <fieldset class="flex flex-col gap-1 text-sm">
-          <legend class="text-ink-muted">{t("home.create.format")}</legend>
-          <div class="flex gap-4 pt-1">
-            <label class="flex items-center gap-2">
-              <input
-                type="radio"
-                name="format"
-                checked={family() === "single_elimination"}
-                onInput={() => setFamily("single_elimination")}
-              />
-              {t("format.single_elimination")}
-            </label>
-            <label class="flex items-center gap-2">
-              <input
-                type="radio"
-                name="format"
-                checked={family() === "double_elimination"}
-                onInput={() => setFamily("double_elimination")}
-              />
-              {t("format.double_elimination")}
-            </label>
-          </div>
-        </fieldset>
+        <FormatFieldset value={family()} onChange={(next) => setFamily(next)} />
         <Show when={createError()}>{(message) => <ErrorNotice message={message()} />}</Show>
         <button
           type="submit"

@@ -29,7 +29,7 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
@@ -41,11 +41,41 @@ jobs:
       - run: bun run lint:solid
       - run: bun run lint:theme
 
+  # Production needs three repository secrets (ADR 0010). Until a human sets
+  # them, `deploy` is skipped rather than failed: main's status then reflects
+  # the gates, the run carries a warning annotation naming what is missing,
+  # and continuous deployment resumes on the next push once the secrets
+  # exist, with no workflow edit. (The secrets context is not available in a
+  # job-level `if`, hence the step that reads them into an output.)
+  preflight:
+    runs-on: ubuntu-latest
+    outputs:
+      configured: ${{ steps.check.outputs.configured }}
+    steps:
+      - id: check
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          missing=()
+          for name in CONVEX_DEPLOY_KEY CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID; do
+            [ -n "${!name}" ] || missing+=("$name")
+          done
+          if [ "${#missing[@]}" -eq 0 ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Deploy skipped::Production secrets not set: ${missing[*]}. Set them under Settings > Secrets and variables > Actions (AGENTS.md, '## Production deployment')."
+            echo "**Deploy skipped** — missing repository secrets: \`${missing[*]}\`." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
   deploy:
-    needs: verify
+    needs: [verify, preflight]
+    if: needs.preflight.outputs.configured == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
