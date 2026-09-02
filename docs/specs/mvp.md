@@ -37,6 +37,8 @@ A tournament in seconds, from the web or from chat: an Organizer opens cobracket
 23. As a Spectator, I want final standings visible on the Share Link after completion, so that the record of the tournament persists.
 24. As an Organizer, I want the UI in English or Japanese, so that my community can use it in its own language.
 25. As a returning Organizer, I want my anonymous identity to persist in my browser, so that my tournaments are still mine when I come back.
+26. As an Organizer, I want to rename the Tournament, fix its Discipline, or change its Format before play starts, so that a typo or a wrong choice at creation does not stick to the Share Link I already sent.
+27. As an Organizer, I want to delete a Tournament, so that test runs and mistakes do not clutter my list, and a tournament called off before play stops showing a bracket on its Share Link.
 
 ## Implementation Decisions
 
@@ -58,6 +60,8 @@ A tournament in seconds, from the web or from chat: an Organizer opens cobracket
 
 **Visibility of Organizer vs public surfaces.** The Share Link is the tournament's public URL (unlisted). Organizer capabilities exist only behind the Organizer's identity — there is no secret management link.
 
+**Settings and deletion (stories 26–27, ADR 0011).** Name and Discipline are labels: editable in every status, including completed. The Format is structure: editable pre-live only, and a change drops the generated bracket exactly like a roster change. Deletion is physical and whole — the tournament with its roster, bracket, and results — allowed in every status; the Share Link reads as not found afterwards. Results are never deleted on their own (ADR 0005: corrections are the only way to change them). There is no `cancelled` status: a tournament called off before play is deleted, and one abandoned mid-play keeps its recorded results and simply stays live. The Organizer's read of a tournament by URL answers "not found" as a value (null), never as an error to retry, for malformed, missing, deleted, and foreign ids alike.
+
 ## Testing Decisions
 
 - Good tests assert external behavior: results in → progression, standings, and current/next matches out. No tests against internal bracket bookkeeping.
@@ -69,6 +73,8 @@ A tournament in seconds, from the web or from chat: an Organizer opens cobracket
 ## Out of Scope
 
 Events, Tracks, Entries, check-in, participant self-entry and self-reporting, Player accounts and claiming, Communities and co-organizing, rankings/seasons/methods, round robin / Swiss / group stages, third-place matches, automated DQ cascades, late roster additions after the first result, table/station assignment, match-call notifications, Discord bot, in-app AI assistant, payments, ads, account upgrade from anonymous, public/private visibility behavior (field only), custom formats (ADR 0002 — permanently out).
+
+Deferred after the first operational pass (revisit when real use asks for them): a `cancelled` lifecycle status (deletion covers a tournament called off before play; an abandoned live tournament keeps its results — ADR 0011); unpublishing (published → draft; roster and bracket stay editable while published, so nothing is blocked); pagination of the Organizer's tournament list (`listMyTournaments` returns the newest 100, which no MVP Organizer approaches); recovery of tournaments whose anonymous session was lost (that is the account-upgrade problem).
 
 ## Further Notes
 
