@@ -1,0 +1,71 @@
+name: Deploy
+
+# Continuous deployment to production (ADR 0010): every push to main runs the
+# repository's gates and then, only if they pass, deploys the Convex functions
+# and the static web UI.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One production deploy at a time, and never cancel one midway: `convex deploy`
+# pushes functions and `wrangler deploy` uploads assets, so an interrupted run
+# can leave the two halves on different revisions.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  # Keep the pre-release toolchain identical to local development (ADR 0004).
+  # Keep in sync with `packageManager` in package.json.
+  BUN_VERSION: 1.4.0
+
+jobs:
+  # The same gates AGENTS.md asks a human to run before committing. They run
+  # before anything touches the production deployment.
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run test
+      - run: bun x vp check
+      - run: bun run lint:imports
+      - run: bun run lint:solid
+      - run: bun run lint:theme
+
+  deploy:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - run: bun install --frozen-lockfile
+
+      # Deploys convex/ to the deployment CONVEX_DEPLOY_KEY belongs to, and
+      # runs the client build with VITE_CONVEX_URL set to that deployment's
+      # URL. The build runs first, so a broken build aborts before any
+      # function reaches production.
+      - name: Deploy Convex functions and build the web UI
+        run: bun run deploy:backend
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+
+      # Uploads dist/client to the Worker declared in wrangler.jsonc. The
+      # checkout has no .env.local, so wrangler cannot pick up a local
+      # deployment URL as a Worker variable.
+      - name: Deploy the web UI
+        run: bun run deploy:web
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          WRANGLER_SEND_METRICS: "false"
