@@ -43,6 +43,22 @@ export const ja: Record<MessageKey, string> = {
     "このリンクを知っている人は誰でも、アカウントなしでブラケットをライブ観戦できます。",
   "tournament.signedOut":
     "このページはこの Tournament の Organizer 専用です。このブラウザには対応する Organizer セッションがありません。",
+  "tournament.notFound":
+    "この Tournament は存在しないか、削除されたか、別の Organizer セッションのものです。",
+
+  "settings.heading": "設定",
+  "settings.formatHint":
+    "Format を変更すると生成済みの Bracket は破棄されます。変更後に再生成してください。",
+  "settings.formatLocked": "結果が記録されているため Format はロックされています。",
+  "settings.save": "変更を保存",
+  "settings.saved": "保存しました。",
+  "settings.danger": "この Tournament を削除",
+  "settings.deleteHint":
+    "Participant・Bracket・結果を含めて Tournament を削除します。Share Link は無効になります。元に戻せません。",
+  "settings.delete": "Tournament を削除…",
+  "settings.deleteConfirm": "この Tournament と {count} 名の Participant を完全に削除しますか?",
+  "settings.deleteConfirmAction": "完全に削除",
+  "settings.deleteCancel": "残す",
 
   "roster.heading": "Participant",
   "roster.count": "{count} 名",

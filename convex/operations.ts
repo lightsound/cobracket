@@ -168,15 +168,32 @@ async function requireOrganizer(ctx: QueryCtx): Promise<Id<"users">> {
   return organizerId;
 }
 
-// "Missing" and "not yours" are deliberately the same error so the API never
-// confirms a foreign tournament's existence.
+// "Missing" and "not yours" deliberately read the same so the API never
+// confirms a foreign tournament's existence. The lookup accepts the raw
+// string a URL carries: a malformed id is just another way of naming
+// nothing, not an argument error.
+async function findOwnedTournament(
+  ctx: QueryCtx,
+  tournamentId: string,
+): Promise<Doc<"tournaments"> | null> {
+  const organizerId = await requireOrganizer(ctx);
+  const normalizedId = ctx.db.normalizeId("tournaments", tournamentId);
+  const tournament = normalizedId === null ? null : await ctx.db.get("tournaments", normalizedId);
+  if (tournament === null || tournament.organizerId !== organizerId) {
+    return null;
+  }
+  return tournament;
+}
+
+// Mutations take a typed handle and refuse with one error; the Organizer's
+// read (getTournament) returns null instead, since a URL that names nothing
+// is a state to render, not a failure to retry.
 async function requireOwnedTournament(
   ctx: QueryCtx,
   tournamentId: Id<"tournaments">,
 ): Promise<Doc<"tournaments">> {
-  const organizerId = await requireOrganizer(ctx);
-  const tournament = await ctx.db.get("tournaments", tournamentId);
-  if (tournament === null || tournament.organizerId !== organizerId) {
+  const tournament = await findOwnedTournament(ctx, tournamentId);
+  if (tournament === null) {
     throw new ConvexError("Tournament not found");
   }
   return tournament;
@@ -519,6 +536,22 @@ async function mintShareSlug(ctx: MutationCtx): Promise<string> {
   throw new Error("could not allocate a share slug");
 }
 
+type Format = Doc<"tournaments">["format"];
+
+// Grand-final bracket reset defaults to on (spec: Format engine).
+function toStoredFormat(format: Infer<typeof formatArgsValidator>): Format {
+  return format.family === "double_elimination"
+    ? { family: "double_elimination", grandFinalReset: format.grandFinalReset ?? true }
+    : { family: "single_elimination" };
+}
+
+function sameFormat(a: Format, b: Format): boolean {
+  if (a.family === "single_elimination" || b.family === "single_elimination") {
+    return a.family === b.family;
+  }
+  return a.grandFinalReset === b.grandFinalReset;
+}
+
 export const createTournament = mutation({
   args: {
     name: v.string(),
@@ -530,14 +563,7 @@ export const createTournament = mutation({
     const organizerId = await requireOrganizer(ctx);
     const name = requireName(args.name, "Tournament name");
     const disciplineId = await getOrCreateDiscipline(ctx, args.discipline);
-    // Grand-final bracket reset defaults to on (spec: Format engine).
-    const format =
-      args.format.family === "double_elimination"
-        ? {
-            family: "double_elimination" as const,
-            grandFinalReset: args.format.grandFinalReset ?? true,
-          }
-        : { family: "single_elimination" as const };
+    const format = toStoredFormat(args.format);
     const shareSlug = await mintShareSlug(ctx);
     const tournamentId = await ctx.db.insert("tournaments", {
       name,
@@ -573,6 +599,74 @@ export const suggestDisciplines = query({
       )
       .take(10);
     return rows.map((row) => row.name);
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Tournament settings and deletion (stories 26–27)
+// ---------------------------------------------------------------------------
+
+// Partial update: every field is optional and independently validated. Name
+// and Discipline are labels, so they stay editable in every status (a typo on
+// the Share Link is worth fixing after completion too). The Format decides
+// the bracket structure, so changing it is a pre-live operation that drops
+// the generated bracket, exactly like a roster change.
+export const updateTournament = mutation({
+  args: {
+    tournamentId: v.id("tournaments"),
+    name: v.optional(v.string()),
+    discipline: v.optional(v.string()),
+    format: v.optional(formatArgsValidator),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const tournament = await requireOwnedTournament(ctx, args.tournamentId);
+    const patch: Partial<Pick<Doc<"tournaments">, "name" | "disciplineId" | "format">> = {};
+    if (args.name !== undefined) {
+      patch.name = requireName(args.name, "Tournament name");
+    }
+    if (args.discipline !== undefined) {
+      patch.disciplineId = await getOrCreateDiscipline(ctx, args.discipline);
+    }
+    if (args.format !== undefined) {
+      const format = toStoredFormat(args.format);
+      // Re-submitting the current format is a no-op in every status, so a
+      // settings form can always send the whole record.
+      if (!sameFormat(format, tournament.format)) {
+        requireStatus(tournament, PRE_LIVE, "change the format");
+        patch.format = format;
+        await invalidateBracket(ctx, tournament._id);
+      }
+    }
+    if (Object.keys(patch).length > 0) {
+      await ctx.db.patch("tournaments", tournament._id, patch);
+    }
+    return null;
+  },
+});
+
+// Deletion is physical and whole (ADR 0011): the tournament and everything
+// that hangs off it — roster, bracket, results — go together, in every
+// status. Results are never deleted on their own (ADR 0005: corrections are
+// the only way to change them); removing the tournament they belong to is a
+// different act. The Share Link reads as not found from then on. Bounded by
+// one tournament's size, like every other per-tournament write.
+export const deleteTournament = mutation({
+  args: { tournamentId: v.id("tournaments") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const tournament = await requireOwnedTournament(ctx, args.tournamentId);
+    for (const table of ["results", "matches", "participants"] as const) {
+      const docs = await ctx.db
+        .query(table)
+        .withIndex("by_tournament", (q) => q.eq("tournamentId", tournament._id))
+        .collect();
+      for (const doc of docs) {
+        await ctx.db.delete(table, doc._id);
+      }
+    }
+    await ctx.db.delete("tournaments", tournament._id);
+    return null;
   },
 });
 
@@ -892,7 +986,7 @@ export const reportResult = mutation({
 });
 
 // ---------------------------------------------------------------------------
-// Reads (stories 9, 15–17, 21–23)
+// Reads (stories 9, 15–17, 21–23, 25)
 // ---------------------------------------------------------------------------
 
 export const listMyTournaments = query({
@@ -930,12 +1024,18 @@ export const listMyTournaments = query({
 });
 
 // The Organizer's full view, drafts included (story 9: see the bracket
-// before anyone else does).
+// before anyone else does). Keyed by the raw URL segment and null for
+// anything that is not the caller's tournament — malformed, missing (e.g.
+// just deleted in another tab), or someone else's — so the page renders a
+// not-found state instead of an error to retry.
 export const getTournament = query({
-  args: { tournamentId: v.id("tournaments") },
-  returns: organizerTournamentViewValidator,
+  args: { tournamentId: v.string() },
+  returns: v.union(organizerTournamentViewValidator, v.null()),
   handler: async (ctx, args) => {
-    const tournament = await requireOwnedTournament(ctx, args.tournamentId);
+    const tournament = await findOwnedTournament(ctx, args.tournamentId);
+    if (tournament === null) {
+      return null;
+    }
     const { view, bracket } = await buildTournamentView(ctx, tournament);
     return {
       ...view,
