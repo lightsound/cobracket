@@ -16,6 +16,7 @@ This file gives coding agents project-specific context. Keep it short and update
 ## Project Overview
 
 - Product: cobracket — host and manage tournaments of any format, from the web or from chat (MCP). Read `docs/vision.md` for direction, `CONTEXT.md` for the domain glossary (use its terms in code and docs), `docs/adr/` for decisions, `docs/specs/mvp.md` for the current spec
+- Posture: a learning project (Solid 2.0, Convex) developed like a real product — features land continuously with specs, ADRs, and gates. Production is configured but **intentionally not live**; going live is the owner's decision, made as they build (`docs/vision.md` "Project posture"). Do not treat the missing production secrets as a problem to fix or prompt for them
 - Current code: the format engine (`convex/format/`), the operations API (`convex/operations.ts`, Seam 2), and the MVP web UI (Organizer home `/`, management `/t/:tournamentId`, Share Link `/s/:shareSlug`). MCP (stories 18–20) is deferred until Events or real demand (ADR 0009)
 - Main entry points: `src/App.tsx`, `src/Document.tsx` (Solid start convention, no `index.html`), `src/router.ts`, `convex/schema.ts`, `convex/operations.ts`
 - Important directories: `src/` (UI), `src/bracket/` (pure bracket layout + renderer), `convex/` (backend functions)
@@ -49,6 +50,8 @@ This file gives coding agents project-specific context. Keep it short and update
 ## Production deployment
 
 Two production surfaces (ADR 0010): the Convex **production deployment** for `convex/`, and a **Cloudflare Worker serving static assets** (`wrangler.jsonc`) for the client build. Continuous deployment is `.github/workflows/deploy.yml`: a push to `main` runs the gates, then `bun run deploy`. Everything below is also runnable by hand as a fallback.
+
+**Status: not live, by decision** (`docs/vision.md` "Project posture"). The pipeline is complete and verified; the three secrets are deliberately unset, so `deploy` is skipped on every push. Leave it that way until the owner says otherwise in the current conversation — do not ask for the secrets, do not fill in the URLs below, and do not propose go-live as a next step. When the owner does decide, the runbook below is the whole procedure.
 
 - URLs (fill in after the first production deploy): web `https://cobracket.<cloudflare-subdomain>.workers.dev`, Convex `https://<deployment-name>.convex.cloud`
 - Secrets. Repository secrets for CI (Settings > Secrets and variables > Actions), and Cloud Agents > Secrets for agents: `CONVEX_DEPLOY_KEY` (Convex dashboard > production deployment > Deployment Settings > General > Generate Production Deploy Key), `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`. Never put any of them in `.env.local` — that file is local development only

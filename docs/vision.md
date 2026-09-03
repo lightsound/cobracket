@@ -79,17 +79,25 @@ Settled in the final audit rounds; each is nearly free on day one and expensive 
 - Revenue: (1) a cut of entry fees on paid-entry tournaments — post-MVP, built on a platform payment provider (Stripe Connect-style; in Japan this touches funds-settlement regulation, so it is a deliberate later investment); (2) ads on Spectator pages (Share Link views) only — never on Organizer screens, which would undercut the "pleasant to operate" positioning.
 - An "entry fee" field may appear early to measure demand before payments exist.
 
+## Project posture (current)
+
+cobracket is a learning project first — a way to learn Solid 2.0 and Convex by building something real — and it is developed the way a real product would be: features land continuously, with the domain model, specs, ADRs, and gates of a product that intends to ship. That is the point of the exercise, not a contradiction. The consequences for planning:
+
+- **Production is configured but deliberately not live.** The deployment pipeline (ADR 0010) is complete and tested; the production secrets are intentionally unset, and CI skips the deploy step while they are. Nothing in the repository should treat this as an incident or prompt for the secrets.
+- **Going live is the owner's call, on the owner's timing** — when the feature set and the UI feel ready to be handed to real people, which they judge as they build. It is not gated on a checklist in this document, and nobody else decides it.
+- Until then, the freedom of having no production data is used deliberately: schema changes need no migration, and pre-release dependency churn (ADR 0004) is absorbed as routine work.
+
 ## First milestone
 
-Run one real community tournament (8–16 participants) end to end on cobracket alone. Personal connections may supply this tournament but are not counted on; self-hosting one counts.
+Run one real community tournament (8–16 participants) end to end on cobracket alone. Personal connections may supply this tournament but are not counted on; self-hosting one counts. Reaching it presupposes the go-live decision above.
 
 ## Path to the first milestone (current plan)
 
-Decided 2026-09, after the MVP web UI shipped and the MCP surface was deferred (ADR 0009):
+Decided 2026-09, after the MVP web UI shipped and the MCP surface was deferred (ADR 0009). Steps 1–2 are done as engineering; the order of the rest is a preference, not a gate, and feature work continues alongside.
 
-1. **Production deployment** — the Share Link must be a real URL strangers can open; until then nothing else on this list can be validated.
-2. **Small operational gaps** that real use surfaces first (e.g. renaming or deleting a tournament).
-3. **Share Link OGP images** (ADR 0007's static SVG renderer) — the one URL dropped in a group chat should unfurl well.
+1. **Production deployment** — the Share Link must be a real URL strangers can open; until then nothing else on this list can be validated. _Configured (ADR 0010); goes live when the owner decides (see Project posture)._
+2. **Small operational gaps** that real use surfaces first (e.g. renaming or deleting a tournament). _Done for the gaps foreseeable without real use (stories 26–27, ADR 0011); the rest waits for the first real tournament._
+3. **Share Link OGP images** (ADR 0007's static SVG renderer) — the one URL dropped in a group chat should unfurl well. _Only meaningful once a public URL exists; sequenced with go-live._
 4. A **deliberate UI/UX overhaul** once the feature set has settled; the **mobile experience** (touch pan/zoom, fit-to-view) lands with or after that overhaul, not piecemeal before it.
 
 MCP (stories 18–20) waits for Event hosting or a concrete demand signal from a real tournament (ADR 0009).
