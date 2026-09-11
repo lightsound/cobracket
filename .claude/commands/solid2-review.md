@@ -17,6 +17,9 @@ Steps:
    - async computations reading reactive inputs **after** the first `await`;
    - effects that copy state instead of deriving it, or reading stores in the apply phase;
    - `<For>` over server/refetched rows without a stable-id key function;
+   - core `action` bodies that are not generators (plain `async` functions) or that write
+     after a bare `await` without re-entering on `yield` (router `action` from
+     `@solidjs/router` is the one that takes `async (form) => ...`);
    - `<Loading>`/`<Errored>` wrapping page chrome instead of the data slot, or
      `const u = user()` extracted then passed (a real parent-side read). Passing
      `user={user()}` is the colorless form — do not "fix" it into accessors or
@@ -31,7 +34,22 @@ Steps:
    - tRPC / type-gen around `"use server"`, a client `fetch` after a mutation,
      refetch in `hydrate`/`onSettled`, a custom Worker/Express adapter, or
      delaying `renderToStream` for visual order (`<Reveal>` owns display);
-   - store updates that rebuild objects/arrays instead of mutating the draft or reconciling;
+   - store updates that rebuild objects/arrays instead of mutating the draft or reconciling
+     (`filter` for removal is fine — survivors keep identity; only fresh-tree wholesale
+     replacement needs `reconcile` / the derived form);
+   - hand-rolled link-active comparisons (`location.pathname === ...`) instead of the
+     automatic `aria-current` / `data-active` / `data-pending` attributes (+ CSS) or
+     `useLinkState` / `useIsRouting`; hand-rolled query parsing instead of
+     `useSearchParams`;
+   - search inputs bound to a held value without `latest`, effect-based debounce, fully
+     controlled forms without `name`s, `{ success: false }` result objects instead of
+     thrown failures, or router forms without server-side validation (`throw respond(...)`)
+     and `useSubmissions` inline errors;
+   - browser-only *values* handled with a `clientOnly` component split or an `isServer`
+     branch instead of `ssrSource: "client"` / `"hybrid"` on the memo/signal/derived store;
+   - held writes with no feedback (`isPending` / `latest` / optimistic value / `affects()`)
+     — the `[SILENT_HOLD]` shape — and dev-console diagnostics (`[STRICT_READ_UNTRACKED]`,
+     attribution-only store/list/effect costs) left unaddressed;
    - context values passed as snapshots instead of accessors/setters/stores;
    - components with conditional/early returns on reactive values.
 5. Verify any API you are not certain about against the official docs mirror

@@ -73,6 +73,7 @@ Most React `useEffect` code should NOT become `createEffect`:
 | Async value used several layers down | Create the memo high; pass `value={memo()}` through intermediates (they do not wait); put `<Loading>` around the leaf read |
 | Nested child with its own fetch | Leave it nested — it runs in parallel. Sequential only when the second call needs the first response (`fetchAuthor(story().authorId)`) |
 | Browser-only widget (charts, maps, `window`) | `clientOnly(() => import("./Chart"))` from `@solidjs/web` (`{ lazy: true }` defers the import until first render) |
+| Browser-only *value* (`localStorage`, viewport size) | `createMemo(..., { ssrSource: "client" })` — per-value policy at the data source, no component split (`"hybrid"` when server data mixes with client signals) |
 | Server vs browser branch | `isServer` / `isDev` from `@solidjs/web` (build-time constants), not `typeof window` |
 | SSR-stable `id` / `for` / `aria-*` pairing | `createUniqueId()` |
 
@@ -223,7 +224,9 @@ createEffect(
 Reads inside `apply` do not track. Extract every needed reactive value in `compute`
 (e.g. `() => ({ name: user.name, role: user.role })`). Passing a store proxy into `apply`
 and reading `user.name` there *runs once* and never retriggers. Compute-phase errors can be
-intercepted with the bundle form `createEffect(compute, { effect, error })`.
+intercepted with the bundle form `createEffect(compute, { effect, error })`. Skip the
+initial run with `{ defer: true }` — the `on(deps, fn, { defer: true })` replacement;
+the effect first runs on the next change.
 
 A two-phase effect whose apply only calls a local signal setter is "state + effect" in
 disguise — formally legal Solid 2, still rule 4 (`solid2-kit check` flags it). The reset
@@ -246,6 +249,10 @@ const [signInError, setSignInError] = createSignal<string | null>(() => {
   return null;
 });
 ```
+
+The writable form spells exactly this: derive from the source, allow a local
+override, reset when the source changes. (React needs `useState(props.x)` plus a
+`previousX` comparison reset during render for the same behavior.)
 
 ### Async data — fetch high, block low
 
@@ -330,11 +337,18 @@ return <StoryDetail story={story} />;
   (`isPending(() => props.story)`), on a derived memo (`isPending(byline)`), or
   *above* the fetch but below the write (`isPending(selectedId)`), even when the
   fetch lives in a child. You do not need to pass the memo accessor just to ask.
+  Granularity is the expression: `isPending(() => item.quantity)` (paired with
+  `affects(item, "quantity")`) or `isPending(() => todos.length)` dims only what
+  that read depends on. A hold with no feedback at all is `[SILENT_HOLD]` under
+  attribution — always pair a held write with one of these questions, an
+  optimistic value, or `affects()`.
 - Default navigation **holds**. `selectedId()` and the old story stay put until
   the new answer lands, so the highlight never points at the wrong content.
   `latest(selectedId)` is the opt-in when the design wants the highlight to move
   on click. Pair `class={{ pending: isPending(selectedId) }}` with a short CSS
-  `transition-delay` so fast swaps do not flash.
+  `transition-delay` so fast swaps do not flash. Inputs that feed a request follow
+  the same rule: bind `value={latest(query)}` so a controlled search box reflects
+  keystrokes while its write is held (an uncontrolled input needs nothing).
 - Read every reactive input **before the first `await`** in an async computation. A read
   after `await` does not subscribe; production can sit pending with no retry.
 - `<Errored>` function fallbacks receive an error **accessor** and a `reset` callback:
@@ -354,7 +368,12 @@ reflexes that bypass the async model and `solid2-kit check` flags them. If a val
 make it an async computation and read it under boundaries. Refetching is `refresh(source)`
 (typically as the last step of a mutation `action`, or a reload button) — never a
 counter/version signal read inside the computation to force re-runs; input-driven refetch is
-already automatic.
+already automatic. No request counters or `AbortController`s for dedup/cancellation
+either — superseded answers are dropped automatically and settled content holds;
+debounce at the event handler (`onInput={debounce(...)}`), never as an effect copying
+one signal into another. And throw unusable responses instead of returning
+`{ success: false }` objects checked at every read — failures travel to `<Errored>`
+like values.
 
 **Normalize thrown values once.** Thrown values are `unknown` in JavaScript, so define one
 shared `ErrorFallback` component per app — extract the message via `instanceof Error`, wire
@@ -408,6 +427,35 @@ The synchronous mutation *is* the prediction. Optimistic UI is not a second copy
 state — it is an overlay the graph discards when the action settles (pass or fail).
 There is no rollback to write. Put in-flight affordances on the record
 (`pending?: boolean`); they vanish with the overlay.
+
+Minimal shape — the durable value derives from `fn`, optimistic writes overlay it,
+and `refresh` re-runs the derivation so the store reconciles against the server
+(no separate `getMessages()` call):
+
+```tsx
+import { action, createOptimisticStore, refresh } from 'solid-js';
+
+function createMessages() { // call from a component — not module scope (SSR shares modules)
+  const [messages, setMessages] = createOptimisticStore(() => getMessages(), []);
+
+  const addMessage = action(function* (message: Message) {
+    setMessages((m) => { m.push(message); });
+    yield saveMessage(message);
+    refresh(messages);
+  });
+  return [messages, { addMessage }] as const;
+}
+```
+
+Mutate the draft (`m.push(message)`), never spread-rebuild (`[...m, message]`) —
+stores track writes finely, so only the changed part updates. When the action
+settles, the overlay is discarded and the refreshed server data is authoritative;
+if it agrees with the prediction, reconciliation finds no differences and nothing
+re-renders. Derived reconciliation keys by `"id"` by default — pass `{ key: ... }`
+only when the identity field differs.
+
+Layered form, when per-row UI must survive overlay discard (a recoverable error
+with Retry on that row only):
 
 ```tsx
 import { action, createOptimisticStore, refresh } from 'solid-js';
@@ -480,6 +528,28 @@ snapshot/restore.
 **`yield`, not a bare `await`, is the transaction boundary.** `await api.save()` then
 `setTodos(...)` *runs*, but the write commits immediately — it is not held as an
 overlay. Either `yield saveTodo(todo)` or, when you need a typed result, `const saved = await api.save(); yield; setTodos(...)`.
+Write the body as a generator — `function*` or `async function*`, never a plain
+`async (...) =>` — because only `yield` re-enters the transaction: the runtime has no
+hook into a plain `await` continuation, so even inside `async function*` an `await`
+leaves the transaction until the next `yield` (`solid2-kit check` flags the
+non-generator form).
+
+When confirmation arrives outside the response — a fire-and-forget transport echoed
+back on a live source — hold the action open with `yield until(predicate, { timeout })`:
+
+```tsx
+const send = action(function* (text: string) {
+  const clientId = crypto.randomUUID();
+  setMessages((m) => { m.push({ clientId, text, pending: true }); });
+  yield socket.send({ clientId, text });
+  yield until(() => messages.some((m) => m.clientId === clientId), { timeout: 10_000 });
+});
+```
+
+The predicate reads authoritative state, so the optimistic row cannot satisfy it;
+only the echo can. Timeout rejects with `TimeoutError` (strongly recommended on
+droppable transports; abort via `signal`). Outside actions, `await until(() => user())`
+waits for a value before continuing.
 
 Navigation-shaped updates do **not** need core `action`. A plain setter is enough:
 reads pull the async, and downstream async computeds hold previous values until the
@@ -632,6 +702,46 @@ do not `return () => cleanup`. Put owned setup in a **directive factory** (like
 `ResizeObserver`, third-party widgets, and native listener options (`capture` /
 `passive`) — Solid event props do not take those options.
 
+### Per-value SSR policy: `ssrSource`
+
+`clientOnly` splits a *component*; `ssrSource` keeps one *value* off the server,
+decided at the data source. `createMemo`, function-form `createSignal`, and derived
+stores (`createStore(fn, seed)`, `createProjection`, `createOptimisticStore(fn, seed)`)
+all accept `ssrSource: "server" | "hybrid" | "client"`:
+
+```tsx
+import { Loading, createMemo } from 'solid-js';
+
+function DraftPreview(props: { documentId: string }) {
+  const draft = createMemo(
+    () => localStorage.getItem(`draft:${props.documentId}`),
+    { ssrSource: 'client' },
+  );
+
+  return (
+    <section>
+      <h2>Saved draft</h2>
+      <Loading fallback={<p>Checking for a saved draft...</p>}>
+        <p>{draft() ?? 'No saved draft.'}</p>
+      </Loading>
+    </section>
+  );
+}
+```
+
+| Policy | Meaning | Use when |
+|---|---|---|
+| `"server"` (default) | Client adopts the serialized server value; compute does not re-run | Compute is deterministic from server-available inputs |
+| `"hybrid"` | Client adopts the serialized value, then re-runs the compute to take over | Server data mixes with client signals (window size, user locale) |
+| `"client"` | Server value skipped; compute runs after hydration as if first-mounted | Serialization is meaningless (`localStorage`, viewport) |
+
+With `"client"`, the bare form suspends on the server and the nearest `<Loading>`
+fallback renders into the HTML; a declared first value (`loadingValue` on
+signal-family sources, `seedLoadingValue: true` on store-family sources) renders
+provisional data with no boundary involvement instead. Filling the value in from
+an `onSettled` callback remains a valid alternative; `NoHydration` / `Hydration`
+split hydration *ownership* instead and do not express this policy.
+
 ## Scheduling and tests
 
 Signal/store writes outside a synchronous flush scope are **staged**; the reactive queue
@@ -648,6 +758,8 @@ Wait for an async expression to settle in tests: `await resolve(() => value())`.
 on a pending resource. `onSettled` is also a **single** fire (untracked): it is not
 `onMount` that re-runs, and it is not an effect. Run tests in dev mode first — Solid 2 emits diagnostics for top-level reactive reads,
 writes from owned scopes, and async reads outside `<Loading>`. Fix them; don't suppress.
+A read at component-body top level reports `[STRICT_READ_UNTRACKED]` naming the
+component — move the read into JSX, a memo, or an effect compute.
 
 Component tests use `@solidjs/testing-library`. Pass a **function** to `render` so
 the tree has an owner, and `flush()` after interactions that stage writes:
@@ -675,6 +787,60 @@ To turn those dev diagnostics into a hard gate, patch `console.warn` in the test
 file to rethrow unexpected warnings — then any top-level reactive read or unowned write
 an agent sneaks in fails the suite instead of scrolling by.
 
+### Dev diagnostics and attribution
+
+Diagnostics come in two tiers, both dev-build only (production strips them and `DEV`
+is `undefined` there). Always-on findings include misplaced reads
+(`[STRICT_READ_UNTRACKED]`, `[PENDING_ASYNC_UNTRACKED_READ]`), misplaced writes
+(`[REACTIVE_WRITE_IN_OWNED_SCOPE]`, `[FLUSH_IN_ACTION]`, `[SERVER_WRITE]`), and
+`[ASYNC_OUTSIDE_LOADING_BOUNDARY]` when a tracked read has no boundary above it.
+Each entry carries a stable `[CODE]`, what the runtime observed, and an owner chain
+(`in <App> › <Cart> › <LineItem>`); never silence a code before understanding it.
+
+Cost and responsiveness findings need the opt-in attribution engine, which records
+every scope that re-ran, what changed to cause it, and how long it took:
+
+```ts
+import { DEV } from 'solid-js';
+
+DEV?.attribution.enable();
+// reproduce the interaction, then ask why a scope ran:
+for (const event of DEV!.attribution.why(total)) {
+  console.log(DEV!.attribution.format(event));
+}
+```
+
+While attribution is enabled, Solid also warns on its own about over-subscription,
+chained async waterfalls (`[ASYNC_WATERFALL]`), memos whose fresh-but-equal output
+never settles (`[UNSTABLE_MEMO_OUTPUT]`), effects that relay state
+(`[EFFECT_RELAY_TEAR]`) or feed their own inputs (`[EFFECT_WRITES_OWN_SOURCE]`),
+immutable updates inside stores (`[IMMUTABLE_UPDATE_IN_STORE]` — mutate the draft),
+row-rebuilding lists (`[UNSTABLE_LIST_IDENTITY]` — key by id or reconcile into a
+store), and silent holds (`[SILENT_HOLD]` — a write held on async work with no
+`isPending()` / `latest()` reader, optimistic value, `affects()` mark, or effect that
+ran while held; reported from 300ms as info, from 500ms as a warning). `DEV.attribution.costs()`,
+`holds()`, and `feedback()` rank the session worst-first. Name the scopes you intend
+to interrogate (`createMemo(..., { name: "total" })`); `DEV.attribution.subscriptions(scope)`
+lists a scope's current dependencies to compare against what it uses.
+
+For regression tests, `@solidjs/diagnostics` turns the same channels into assertions:
+
+```ts
+import { captureArtifact } from '@solidjs/diagnostics';
+
+const { artifact } = await captureArtifact(() => {
+  fireEvent.click(getByRole('button', { name: 'Add' }));
+  flush();
+}, { scenario: 'add-item' });
+
+expect(artifact).toHaveNoDiagnostics();
+expect(artifact).toHaveNoSilentHolds();
+```
+
+`toHaveNoDiagnostics` fails on any coded warning (`info` findings excluded);
+`toStayWithinRerunBudget` / `toHaveNoWaste` catch recompute regressions. See the
+debugging-reactivity guide in [references/official-docs.md](references/official-docs.md).
+
 ## Client mode: no server HTML, no hydration reflexes
 
 The `@solidjs/vite-plugin` default (client mode, the `bare` tier) serves an empty-body
@@ -687,7 +853,7 @@ deferred "safe" initial value is worse than unnecessary: if anything persists th
 (an effect writing `localStorage`), the placeholder **overwrites the user's stored
 preference** before the real value is adopted. Mismatch only becomes a concept in
 start/SSR mode, where `hydrate()` mounts onto server HTML — and the Solid answer there is
-`isServer` / `clientOnly`, still not React-style deferred adoption.
+`isServer` / `clientOnly` / per-value `ssrSource`, still not React-style deferred adoption.
 
 ## App stack (only if the project has these packages)
 
@@ -736,7 +902,7 @@ export default function App() {
     <Router>
       {(props) => (
         <>
-          <a href={Router.paths()}>Home</a>
+          <a href={Router.paths}>Home</a>
           <main>{props.children}</main>
         </>
       )}
@@ -758,6 +924,27 @@ component (and the factory `preload` result is the root render prop's `props.dat
 Link warming: `preload="false"` skips that link's *data* preload; `preloadLinks: false`
 disables automatic link preloading. Intent values are `"initial"` / `"navigate"` /
 `"native"` / `"preload"`. One router per app.
+
+Link state needs no component code: the router sets `aria-current="page"` (exact
+match), `data-active` (exact or descendant — the `/` link is active only on exact
+match), and `data-pending` (in-flight navigation target) on the anchors it handles;
+style them in CSS. For non-anchors, or state needed in JSX, `useLinkState(() => href,
+{ end })` returns the same three as accessors (`active` / `current` / `pending`);
+`useIsRouting()` is the page-level pending flag for progress bars. Hand-rolled
+`location.pathname === ...` comparisons are the wrong tool.
+
+Build URLs from `paths`: static segments are properties (`Router.paths.about`, never
+`Router.paths.about()`), parameterized segments are calls (`paths.products(id)`),
+followed by an optional search object and hash (`paths.search({ q, page }, "results")`).
+Nodes stringify in `href` / `navigate()` / `redirect()`, so call with no arguments
+only when an API insists on a plain string.
+
+Search params are the home for shareable state (filter, sort, page): `const [search,
+setSearch] = useSearchParams()` — the setter merges and navigates without scrolling;
+`""` / `undefined` / `null` removes a key. For typed values, put a synchronous
+Standard Schema on the route's `search` field and pass the path node:
+`useSearchParams(Router.paths.search)` (async schemas throw; a failing schema leaves
+the raw strings rather than throwing).
 
 **Two different `action`s.** Core `action` from `solid-js` is a generator transaction
 (optimistic writes that span an async gap). Router `action` from `@solidjs/router` is
@@ -782,6 +969,59 @@ const save = action(async (form: FormData) => {
 Only POST forms are accepted. Bind extra args with `.with(id)` (they go in the
 action URL). `onSubmit={(e) => { e.preventDefault(); fetch(...) }}` *runs* and
 drops the no-JS form fallback. `useAction` is JS-only for the same reason.
+
+Validated forms come in three passes sharing one HTML shape. Pass 1 (above) posts
+uncontrolled inputs with browser `required` / `pattern` — it works with no JavaScript.
+Pass 2 validates on the server, where the user cannot bypass it:
+
+```ts
+import { redirect, respond } from '@solidjs/web';
+import * as v from 'valibot';
+
+const Address = v.object({
+  postalCode: v.pipe(v.string(), v.regex(/^[0-9]{5}$/, 'Enter a five-digit postal code')),
+});
+export type AddressIssues = Partial<Record<'postalCode', string>>;
+
+export async function saveAddress(form: FormData) {
+  'use server';
+  const parsed = v.safeParse(Address, Object.fromEntries(form));
+  if (!parsed.success) {
+    const issues: AddressIssues = {};
+    for (const issue of parsed.issues) {
+      const field = issue.path?.[0]?.key as keyof AddressIssues | undefined;
+      if (field && !issues[field]) issues[field] = issue.message;
+    }
+    throw respond({ issues }, { status: 400 });
+  }
+  await database.addresses.save(parsed.output);
+  return redirect('/checkout/shipping');
+}
+```
+
+Keep server functions in `src/data/`, not under `src/routes` (with method discovery
+on, a `.ts` file there is an API route). `throw respond(...)` is intentional control
+flow — the status and value survive production sanitization, unlike a plain thrown
+`Error`. Pass 3 renders the messages inline from the recorded submission:
+
+```tsx
+import { action, useSubmissions } from '@solidjs/router';
+
+const submitAddress = action(saveAddress);
+const submissions = useSubmissions(submitAddress);
+const issues = () => (submissions.at(-1)?.error as { issues?: AddressIssues } | undefined)?.issues ?? {};
+
+<Show when={issues().postalCode}>{(message) => <p role="alert">{message()}</p>}</Show>
+```
+
+`issues()` is a plain derived function; `aria-invalid` on the input, `role="alert"`
+on the message. Redirect outcomes do not stay in the list; the no-JS outcome arrives
+via flash cookie as the same submission shape. Pending state is CSS on the automatic
+attribute — `form[aria-busy] button[type="submit"] { opacity: .6 }` — no component
+code. `submission.clear()` on dismiss/resubmit only, never from an effect (errors
+would flash and vanish). Live per-keystroke validation is a controlled input plus a
+memo message (`aria-live="polite"`), keeping `name` so `FormData` still works; leave
+the rest uncontrolled.
 
 **`query` is the read cache** (optional, only with the router). Wrap a read,
 give it a stable name, and consume it through a Solid async primitive:
@@ -811,7 +1051,8 @@ router mutation, `revalidate(...)` — not core `refresh()`, and not
 refresh cached data: `return reload({ revalidate: "todos" })`). `live()` sources
 update through the open stream; do not `revalidate` them. Replace SolidStart /
 Router 0.x leftovers: no `createAsync`, `useSubmission` (singular), `cache()`,
-router `json()`, or `<FileRoutes />` (`fileRoutes(pageRoutes)` instead).
+router `json()`, or `<FileRoutes />` (`fileRoutes(pageRoutes)` from `@solidjs/router/fs`
+over `pageRoutes` from `virtual:file-routes` instead).
 
 ### Server functions — `"use server"`
 
@@ -836,7 +1077,9 @@ reference runs in-process (no HTTP); in the browser it is HTTP. Anything
 referenced only inside the `"use server"` body (db client, secrets) never
 reaches the client — the directive is the privacy boundary. Mutations that should
 revalidate: `redirect` / `reload` from `@solidjs/web` (see the server-function
-guides). After a router/server mutation do **not** follow with a client `fetch`
+guides). Return or throw a redirect — guards read `if (!session?.userId) throw
+redirect("/sign-in")`. `redirect()` and `respond()` accept the same `revalidate`
+option as `reload()` when the mutation also changes location or returns a value. After a router/server mutation do **not** follow with a client `fetch`
 to "refresh the page" — `reload` / `revalidate` (and the router's single-flight
 response) close that loop. For 404 during SSR: `httpStatus(404)` from `@solidjs/web`.
 `throw new Error("…")` is stripped to `"Internal Server Error"` in production —
@@ -847,7 +1090,13 @@ caller unwraps. JSON-encodable arguments only unless `enableRichArguments()`
 was called once in the client entry (`Date` / `Map` / `Set` throw without it).
 `GET()` is only for idempotent reads (URLs leak into logs/history);
 import it from `@solidjs/web/server-functions`, never `@solidjs/start`.
-Cache GET reads with HTTP, not a hand-rolled Solid cache: the caller still
+Reads are function calls too: `GET(async (id) => { "use server"; ... })` is invoked
+as `await getUser(id)` — Solid owns the endpoint, serialization, and decoding, the
+database access stays on the server, and argument/return types flow to the caller.
+The HTTP method mirrors the operation (reads GET, mutations POST); when encoded
+arguments would exceed the URL limit the client falls back to a read-only POST.
+Cache GET reads with HTTP, not a hand-rolled Solid cache: responses default to
+`Cache-Control: no-store`, so supply the policy via `respond()` — the caller still
 receives the value; headers ride the transport.
 
 ```ts
@@ -943,8 +1192,9 @@ how to reuse. Prefer the form on the right.
 | `const rest = { ...props }` | `const rest = omit(props, "label")` |
 | `const user = createMemo(async () => { await fetch(...); return id(); })` | read `id()` **before** `await` |
 | `action(async function* () { await save(); setX(v); })` | `yield save()` or `await save(); yield; setX(v)` |
+| `action(async (item) => { ... })` with core `action` from `solid-js` | `action(function* (item) { ...; yield ...; ... })` — only a generator re-enters the transaction (`solid2-kit check` flags this). Router `action` from `@solidjs/router` is the one that takes `async (form) => ...` |
 | `todos()` on a store | `todos.length` / `todo.title` (property reads) |
-| `setTodos((t) => t.filter((x) => x.ok))` | mutate the draft, or `reconcile` |
+| `draft.todos = fresh` (wholesale fresh-tree assignment) | `reconcile(fresh, "id")`, or function-form `createStore` / `createProjection` (auto-keyed by `"id"`). Removal via `setTodos((t) => t.filter(...))` is fine — survivors keep identity |
 | `createEffect(() => user, (u) => log(u.name))` | `createEffect(() => user.name, (name) => log(name))` |
 | `<Loading fallback={<PageSkeleton />}>{/* header + data */}</Loading>` | wrap only the data slot; chrome stays outside |
 | `<Loading on={id} fallback={...}>` (the accessor) | `on={id()}` — a value, so identity changes can show fallback |
@@ -962,6 +1212,7 @@ how to reuse. Prefer the form on the right.
 | `<For each={rows.slice(from, from + n)}>` | `<Repeat from={from()} count={n}>` |
 | `{count() && <Badge />}` | `<Show when={count()}>` — `0` must not render as text |
 | `throw new Error("expired")` from a server function (prod) | `throw markSafeError(...)` or `throw respond(body, { status })` |
+| `const r = await api.x(); if (!r.ok) ...` result-object checks at every read | throw unusable responses; contain each region with `<Errored>` |
 | `GET(async (id) => { "use server"; await db.delete(id) })` | mutations stay on POST; `GET()` is for idempotent reads |
 | `live()` yields as an event log to append | each yield **replaces** the current answer; yield current state first |
 | `<article innerHTML={html()}>…children…</article>` | `innerHTML` **or** children, not both |
@@ -975,6 +1226,7 @@ how to reuse. Prefer the form on the right.
 | `renderToString(() => <App />)` for an async or lazy-route tree | `await renderToStream(() => <App />)` (one consumer: `pipe` / `pipeTo` / `readable`). String render emits `<Loading>` fallbacks |
 | `clientOnly(() => import("./Map"))` for a rarely shown widget | same + `{ lazy: true }` so the import waits until first render (default starts at declaration) |
 | `<NoHydration><Chart /></NoHydration>` to skip SSR of a widget | `clientOnly(() => import("./Chart"))` — `NoHydration`/`Hydration` split ownership, they do not choose visible content |
+| `clientOnly` split (or `isServer` branch) for one browser-only *value* | `createMemo(() => localStorage.getItem(k), { ssrSource: "client" })` — `"hybrid"` when server data mixes with client signals |
 | `await flush()` / `flush()` to wait on a pending memo | `await resolve(() => value())` (or Testing Library async queries); `flush()` only drains staged *sync* writes |
 | `action(function* () { setX(v); })` around a navigation-shaped setter | plain setter; async computeds hold previous values. Core `action` only when writes happen *after* async work |
 | `createContext` + a root provider for a true app singleton | module-level signal/store (SSR: shared across requests). Context is subtree scoping |
@@ -990,6 +1242,8 @@ how to reuse. Prefer the form on the right.
 | `const View = tab() ? A : B; return <View />` | `const View = dynamic(() => (tab() ? A : B))` — the ternary at setup freezes the choice |
 | `<For each={resolved()}>` after `children()` | `{resolved.toArray()}` — resolved children are not a reactive data list |
 | `<input onChange={...}>` for keystrokes | `onInput` — native `onChange` is blur/commit |
+| debounce as an effect copying one signal into another | debounce at the handler: `onInput={debounce((e) => setQuery(e.currentTarget.value), 150)}` |
+| `value={query()}` on a search box whose writes feed a request | `value={latest(query)}` so keystrokes show while the write is held (uncontrolled needs nothing) |
 | `createOptimistic` for a local edit draft | writable derivation / plain store. Optimistic is for an in-flight mutation |
 | `createMemo(async fn, { loadingValue })` / `{ seedLoadingValue: true }` as the default first-flight UI | `<Loading>` for first flight; those options are escape hatches (store projections use `seedLoadingValue`) |
 | `setSubmitted(true)` + an effect that watches it | do the work in the handler or an `action` |
@@ -997,6 +1251,9 @@ how to reuse. Prefer the form on the right.
 | `action={"/_server/" + id}` in app JSX | `action={createTodo.url}` or a router `action` |
 | `<form method="get" action={update.url}>` for a mutation | GET forms only for idempotent search; mutations are POST |
 | `window.location.href = ...` / `history.pushState` | `useNavigate()` or `<a href={Router.paths...}>` |
+| `class={{ active: location.pathname === "/about" }}` hand-rolled link state | CSS on automatic `aria-current` / `data-active` / `data-pending`; `useLinkState` in JSX, `useIsRouting()` for progress bars |
+| `new URLSearchParams(location.search)` hand-rolled query parsing | `useSearchParams()` (setter merges, no scroll); typed via a route `search` schema + `useSearchParams(Router.paths.search)` |
+| `Router.paths.about()` / string-concatenated URLs | static nodes are properties (`Router.paths.about`); calls bind params, then search object and hash |
 | `httpStatus(404)` in a click handler | call it bare in the component / error-fallback body (a scope declaration, not a mutation) |
 | `try { user() } catch (e) { /* NotReadyError */ }` | `<Loading>` — app code should not catch `NotReadyError` |
 | `{latest(() => results())}` as the visible list | settled read + `isPending()` for the indicator; `latest` is for previews |
@@ -1015,7 +1272,10 @@ how to reuse. Prefer the form on the right.
 | `Object.assign({}, props)` / expecting `merge` to skip `undefined` like 1.x `mergeProps` | `omit` / `merge` — explicit `undefined` **overrides** (Object.assign) |
 | `isPending(user())` / `latest(user())` | `isPending(user)` / `latest(user)` — pass the accessor (or `() => user()`). Calling it first evaluates the read before the helper runs |
 | `isPending(...)` as the first-load spinner | `<Loading>` owns first flight; `isPending` is the *refetch* indicator after a settled answer exists |
+| a held write with no feedback anywhere | pair it with `isPending()` / `latest()` / an optimistic value / `affects()` — otherwise dev + attribution reports `[SILENT_HOLD]` |
 | `refresh(getUser.key)` / `revalidate(user)` / `return refresh()` from `"use server"` | three APIs: core `refresh(source)` reruns a reactive source; router `revalidate(getUser.key)` invalidates the query cache; `return reload({ revalidate: "todos" })` asks the integration to refresh cached data |
+| `return redirect(...)` as the only redirect shape | guards `throw redirect("/sign-in")`; `redirect()` / `respond()` take `revalidate` too when the mutation also moves or returns a value |
+| `submission.clear()` from an effect | on dismiss/resubmit only — from an effect, errors flash and vanish |
 | `revalidate(liveSource)` | `live()` updates through the open stream; do not revalidate it |
 | `refresh(user)` without `affects` when the reload should look pending | pair `affects(user)` with `refresh(user)` — a bare `refresh` re-asks quietly |
 | `<Dynamic component={tab() ? A : B} />` | `const View = dynamic(() => (tab() ? A : B))` — `<Dynamic>` is a JSX convenience; app code should use `dynamic()` for stable identity |
@@ -1170,14 +1430,17 @@ always-applied rules installed alongside this skill.
       is a writable derivation (`createSignal(() => { source(); return initial; })`), not
       an effect calling the setter.
 - [ ] Event handlers wrap setters (`onClick={() => setX(...)}`), use `currentTarget`,
-      and `onInput` for keystrokes. `innerHTML` is sanitized and not mixed with children.
+      and `onInput` for keystrokes. Debounce at the handler, never as an effect copying
+      signals. `innerHTML` is sanitized and not mixed with children.
 - [ ] Async memos are passed as values (`user={user()}`); JSX props are lazy.
       Types stay `User` — not `Promise<User>` / `Accessor<User>`. `<Loading>` wraps
       the *read*, not the memo, not chrome. Extracting `const u = user()` at the
       parent is the read that throws. Nested child fetches run in parallel
       (components do not suspend); a real waterfall is `fetchB(a().id)`.
       `isPending` is per-expression (`isPending(() => props.story)` works);
-      `latest(selectedId)` is opt-in, not the default highlight.
+      `latest(selectedId)` is opt-in, not the default highlight. Inputs feeding a request
+      bind `latest(query)`; failures throw to `<Errored>`, never `{ success: false }`
+      result objects checked at every read.
 - [ ] Lists via `<For>` (server/refetched rows keyed by stable id), conditionals via
       ternary/`<Show>`; no `{list().map(...)}` in JSX; no `key` props; no `value()!`.
 - [ ] Effects are two-phase and only at imperative boundaries; apply does not read stores.
@@ -1198,8 +1461,8 @@ always-applied rules installed alongside this skill.
       is static `dist/client`. Do not delay `renderToStream` for visual order
       (`<Reveal>` does).
 - [ ] External collections reconcile into stores (function-form `createStore` /
-      `reconcile`), never wholesale draft assignment or `setTodos((t) => t.filter(...))`
-      as the identity-preserving update.
+      `reconcile`), never wholesale draft assignment of a fresh tree
+      (`setTodos((t) => t.filter(...))` for removal is fine — survivors keep identity).
 - [ ] Rest props via `omit`, not `{ ...props }`. Conditional `class` via objects, not string concat.
 - [ ] Input filters write back to the DOM on reject (inputs do not rewind).
 - [ ] No Solid 1.x imports or APIs (`solid-js/store`, `createResource`, `onMount`, `Suspense`, ...).
@@ -1207,12 +1470,25 @@ always-applied rules installed alongside this skill.
       `solid-js`; DOM `JSX` types come from `@solidjs/web`.
 - [ ] Inspect children with `children()`; code-split with `lazy` + `<Loading>`; reactive
       component choice with `dynamic()`. No `React.lazy`, no effects inside ref callbacks.
-- [ ] Browser-only code uses `isServer` / `clientOnly`, not `typeof window`.
+- [ ] Browser-only code uses `isServer` / `clientOnly` (components) / `ssrSource`
+      (values), not `typeof window`.
       Component teardown is `onSettled` (return cleanup), not `onCleanup`.
+- [ ] Dev console shows no diagnostics: reads in tracking scopes (no
+      `[STRICT_READ_UNTRACKED]`), held writes paired with `isPending` / `latest` /
+      optimistic values / `affects()` (no `[SILENT_HOLD]`). Attribution-only costs
+      (`[IMMUTABLE_UPDATE_IN_STORE]`, `[UNSTABLE_LIST_IDENTITY]`, `[EFFECT_*]`)
+      checked via `DEV.attribution` when touching stores, lists, or effects. Name
+      interrogated scopes (`{ name: "total" }`).
 - [ ] If the project has a router: `createRouter({ routes })`, not JSX `<Route>` / `<A>`.
       One instance, no nested `<Router>`. Navigate with `useNavigate` / `<a href>`, not
       `window.location`. Router `action`/`query` come from `@solidjs/router` (POST forms + cache), not
-      core `action`/`refresh`. Forms: `<form action={save} method="post">`.
+      core `action`/`refresh`. Forms: `<form action={save} method="post">`. Core `action`
+      bodies are generators (`function*` / `async function*`) suspending on `yield`,
+      never plain `async` functions. Link state is automatic attributes + CSS
+      (`aria-current` / `data-active` / `data-pending`; `useLinkState` / `useIsRouting`
+      in JSX). Search params via `useSearchParams`. Forms validate on the server
+      (`throw respond({ issues }, { status: 400 })`) with inline errors from
+      `useSubmissions`.
 - [ ] `render(() => <App />, root)` — a function, not `render(<App />)`. `hydrate` when
       HTML already exists. Stream async/lazy trees (`await renderToStream(...)`) with
       exactly one consumer (`pipe` / `pipeTo` / `readable`). Snapshot stores with
