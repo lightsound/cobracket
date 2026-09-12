@@ -47,7 +47,7 @@ test("cycles system → light → dark and back, applying and persisting each", 
   document.documentElement.style.colorScheme = "";
   expect(themePreference()).toBe("system");
   // Nothing is applied at load: the document's inline bootstrap owns the
-  // first paint (see Document.test.tsx), this module owns the choice.
+  // first paint (see Document.ssr.test.tsx), this module owns the choice.
   expect(scheme()).toBe("");
 
   cycleThemePreference();

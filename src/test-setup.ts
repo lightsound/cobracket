@@ -207,19 +207,26 @@ beforeEach((context) => {
     {
       scenario: context.task.name,
       // Every engine threshold is left at its default except the wall-clock
-      // one, which does not survive the move to happy-dom. `hotTime`'s 8ms
-      // default is "half a frame spent in one scope" — a real browser's frame.
-      // Here the DOM is emulated in JS, so constructing a page costs an order
-      // of magnitude more: measured on this container, the Tournament page's
-      // first render spends 11-13ms in the memo that instantiates it, and a
-      // 31-card bracket 12ms in the list's insert effect, with every other
-      // scope in the suite under 8ms. Judged against the default those two are
-      // findings about happy-dom, not about the app — and in `bun dev` the
-      // same renders stay under it. 40ms keeps the code enforced against a
-      // gross regression (5x a full page render) with headroom for a loaded
-      // runner. Real time budgets belong to a real browser: measure them with
-      // the dev-server artifact loop in AGENTS.md, not here.
-      attribution: { hotTime: { budgetMs: 40, windowMs: 1000 } },
+      // one, which is off: `[HOT_SCOPE_TIME]` cannot mean anything here.
+      //
+      // Its 8ms default is "half a frame spent in one scope" — a real
+      // browser's frame. Here the DOM is emulated in JS, so constructing a
+      // page costs an order of magnitude more: the Tournament page's first
+      // render spends 11-13ms in the memo that instantiates it, idle. That
+      // alone only argued for a larger number, and this did run at 40ms for a
+      // while. What settles it is that the measurement is wall-clock while
+      // five vitest projects transform and run concurrently: on a cold 4-core
+      // runner the same page render was measured at 91.9ms and a list test at
+      // 48.3ms, green on the six runs after. A budget that reports the runner
+      // is a gate that cries wolf, and the failure names an innocent page.
+      //
+      // So time budgets are measured where they mean something — the
+      // dev-server artifact loop in AGENTS.md, against a real browser — and
+      // every assertion this gate makes is now count-based or structural.
+      // The other duration-gated codes stay on: an unacknowledged hold and a
+      // sequential-flight waterfall are shapes the app either has or does
+      // not, and a slow runner does not invent one.
+      attribution: { hotTime: false },
     },
   );
 });

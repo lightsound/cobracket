@@ -38,14 +38,14 @@ export function initDevDiagnostics(): void {
   // already enabled the engine around the test body and is the one asking it
   // questions. `enable()` is not additive: it replaces the options with
   // defaults plus its own and clears every aggregate table. So a test that
-  // renders `App` — which calls this — would silently reset the gate's
-  // `hotTime` override to the 8ms default and wipe the hold records the
-  // second assertion reads, for that test only. Measured both ways in
-  // `dev-diagnostics.test.ts`: without this line a 20ms scope reports against
-  // a budget of 8ms there, with it the gate's 40ms stands.
+  // renders `App` — which calls this — would wipe the hold records the gate's
+  // second assertion reads, and reset its options, for that test only.
+  // `dev-diagnostics.test.tsx` proves it: a silent hold recorded before this
+  // call survives it, and stops surviving the moment the guard goes.
   //
   // `isDev` is true under vitest (the test build is the dev build — that is
   // what makes the gate possible at all), so it cannot stand in for this.
+  // vitest sets the string "true", hence a truthiness check.
   if (import.meta.env.VITEST) return;
 
   // `log: false` because the default prints a why-chain for *every* re-run,
