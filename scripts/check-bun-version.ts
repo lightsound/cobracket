@@ -19,12 +19,21 @@
  * runner installs BUN_VERSION, so an inexact match means the workflow and
  * `packageManager` have drifted apart — the one mismatch a range check cannot
  * see, since both versions sit inside the range.
+ *
+ * Version comparison goes through `Bun.semver`, never string equality: the
+ * `packageManager` field may legally carry corepack's integrity hash
+ * (`bun@1.4.2+sha512.…`), which is build metadata that semver ignores but a
+ * string compare does not. `scripts/check-bun-version.test.ts` drives this
+ * file as a subprocess and covers each branch.
  */
 
 type PackageJson = {
   engines?: { bun?: string };
   packageManager?: string;
 };
+
+/** Exact version, per corepack: MAJOR.MINOR.PATCH with optional -prerelease and +build. */
+const EXACT_VERSION = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
 
 const pkg: PackageJson = await Bun.file(new URL("../package.json", import.meta.url)).json();
 
@@ -35,17 +44,36 @@ const strict = Bun.argv.includes("--strict");
 
 const problems: string[] = [];
 
+// The guard has to be able to report on the versions it rejects, so it cannot
+// assume its own tools exist on them.
+if (typeof Bun.semver?.satisfies !== "function" || typeof Bun.semver?.order !== "function") {
+  console.error(
+    `check:bun failed:\n  - this Bun (${running}) has no \`Bun.semver\`, so the version cannot be checked. ` +
+      `It predates every version this project supports; install the pinned one.`,
+  );
+  process.exit(1);
+}
+
 if (!range) {
   problems.push("package.json has no `engines.bun`; the supported Bun range is undeclared");
 }
+
+let pinnedVersion: string | undefined;
 
 if (!pinned) {
   problems.push("package.json has no `packageManager`; the exact Bun version is unpinned");
 } else if (!pinned.startsWith("bun@")) {
   problems.push(`packageManager is \`${pinned}\`, which does not name Bun — this repo is Bun-only`);
+} else {
+  const version = pinned.slice("bun@".length);
+  if (EXACT_VERSION.test(version)) {
+    pinnedVersion = version;
+  } else {
+    problems.push(
+      `packageManager is \`${pinned}\`; the version must be exact (1.4.2), not a range or tag`,
+    );
+  }
 }
-
-const pinnedVersion = pinned?.startsWith("bun@") ? pinned.slice("bun@".length) : undefined;
 
 // A pin outside its own supported range is a config bug, whatever is running.
 if (range && pinnedVersion && !Bun.semver.satisfies(pinnedVersion, range)) {
@@ -64,7 +92,7 @@ if (range && !Bun.semver.satisfies(running, range)) {
 // Supported, just not the pinned build. Locally that is a caveat on any
 // version-sensitive result; under --strict (CI) it means the workflow's
 // BUN_VERSION and `packageManager` disagree, which is a config bug.
-const offPin = pinnedVersion !== undefined && running !== pinnedVersion;
+const offPin = pinnedVersion !== undefined && Bun.semver.order(running, pinnedVersion) !== 0;
 
 if (offPin && strict) {
   problems.push(
