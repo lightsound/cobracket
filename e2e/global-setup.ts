@@ -59,7 +59,20 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const ENV_LOCAL = join(ROOT, ".env.local");
 /** The deployment `CONVEX_AGENT_MODE=anonymous` runs: fixed by the CLI, named here once. */
 const DEPLOYMENT = "anonymous:anonymous-agent";
-const ANONYMOUS = { ...process.env, CONVEX_AGENT_MODE: "anonymous" };
+/**
+ * The environment the gate's Convex children run in. The two deploy-key
+ * variables are dropped, not merely left unset: the CLI consults them
+ * *before* `CONVEX_DEPLOYMENT`, so a `CONVEX_DEPLOY_KEY` exported in the
+ * caller's shell — the production runbook in AGENTS.md has a human type
+ * one — would otherwise outrank every pin below and point `auth:keys` at
+ * that deployment. Node drops `undefined` entries from a spawn env.
+ */
+const ANONYMOUS = {
+  ...process.env,
+  CONVEX_AGENT_MODE: "anonymous",
+  CONVEX_DEPLOY_KEY: undefined,
+  CONVEX_DEPLOYMENT_TOKEN: undefined,
+};
 
 interface Child {
   label: string;
