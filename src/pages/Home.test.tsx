@@ -143,10 +143,6 @@ test("creates a tournament and navigates to it", async () => {
 
   type(field(host, "Tournament name"), "Friday Night Bracket");
   type(field(host, "Discipline"), "Chess");
-  // Typing re-subscribes the suggestions query, which holds the write to
-  // `discipline` until the new answer lands. Wait for it, as a user filling a
-  // form does — submitting inside that window is its own case, below.
-  await settled();
   host
     .querySelector("form")
     ?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
@@ -193,16 +189,40 @@ test("shows each keystroke while the suggestions query is still held", async () 
   await settled();
 
   const discipline = field(host, "Discipline");
-  // Each keystroke re-subscribes the suggestions query, so the write is held
-  // until the answer lands. `latest()` is what puts the letter on screen
-  // meanwhile — take it away and the gate reports the hold as silent.
+  // Each keystroke re-subscribes the suggestions query. The field must not
+  // wait for that answer: `<Loading on>` on the datalist makes the boundary
+  // own the wait, so the write commits at once. Remove the `on` and the gate
+  // reports the resulting hold as silent.
   type(discipline, "Che");
   expect(discipline.value).toBe("Che");
   await settled();
   expect(discipline.value).toBe("Che");
 });
 
-test("submitting inside the Discipline hold sends the committed value, not the typed one", async () => {
+test("submits what was typed even with the suggestions still in flight", async () => {
+  const host = await ready();
+  answerMutation(api.operations.createTournament, () => ({
+    tournamentId: fakeId<"tournaments">("t9"),
+    shareSlug: "t9-share",
+  }));
+
+  // Type the last character and submit in the same turn — the suggestions for
+  // that prefix have not landed. Before `<Loading on>` this sent the value
+  // from before the keystroke: "" on a first entry, and the *previous*
+  // discipline when editing one, which the server accepts.
+  type(field(host, "Tournament name"), "Friday Night Bracket");
+  type(field(host, "Discipline"), "Chess");
+  host
+    .querySelector("form")
+    ?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+  await settled();
+
+  expect(field(host, "Discipline").value).toBe("Chess");
+  const sent = mutationCalls()[0]?.args as { discipline: string } | undefined;
+  expect(sent?.discipline).toBe("Chess");
+});
+
+test("submits an edited discipline, not the one it replaced", async () => {
   const host = await ready();
   answerMutation(api.operations.createTournament, () => ({
     tournamentId: fakeId<"tournaments">("t9"),
@@ -211,17 +231,17 @@ test("submitting inside the Discipline hold sends the committed value, not the t
 
   type(field(host, "Tournament name"), "Friday Night Bracket");
   type(field(host, "Discipline"), "Chess");
-  // No wait: the suggestions query is still in flight, so the write to
-  // `discipline` is still held. `latest()` puts "Chess" on screen, but the
-  // handler reads the committed signal, which is still "".
+  await settled();
+  // The worse half of the same bug: a committed previous value passes the
+  // server's non-empty check, so this shipped silently wrong data.
+  type(field(host, "Discipline"), "Chess960");
   host
     .querySelector("form")
     ?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
   await settled();
 
-  expect(field(host, "Discipline").value).toBe("Chess");
   const sent = mutationCalls()[0]?.args as { discipline: string } | undefined;
-  expect(sent?.discipline).toBe("");
+  expect(sent?.discipline).toBe("Chess960");
 });
 
 test("a suggestion published while the keystroke is in flight is the one that shows", async () => {

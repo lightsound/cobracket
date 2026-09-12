@@ -279,3 +279,30 @@ test("reports a result from the dialog the bracket opens", async () => {
   // Reporting closes the dialog.
   expect(document.body.querySelector("form.max-w-sm")).toBeNull();
 });
+
+test("saves an edited discipline even with the suggestions still in flight", async () => {
+  const host = await open();
+  answerMutation(api.operations.updateTournament, () => null);
+
+  // The settings form's half of the same bug: `settingsChanges` omits a key
+  // it thinks is unchanged, so a held write did not ship a stale discipline —
+  // it dropped the field from the patch entirely, and still said "Saved."
+  type(field(host, "Tournament name"), "Saturday Night Bracket");
+  type(field(host, "Discipline"), "Chess960");
+  button(host, "Save changes")
+    .closest("form")
+    ?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+  await settled();
+
+  expect(mutationCalls()).toEqual([
+    {
+      name: "operations:updateTournament",
+      args: {
+        tournamentId: TOURNAMENT,
+        name: "Saturday Night Bracket",
+        discipline: "Chess960",
+      },
+    },
+  ]);
+  expect(host.textContent).toContain("Saved.");
+});
