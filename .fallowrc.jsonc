@@ -14,6 +14,23 @@
   // serves /__solid/diagnostics on the dev server. Removing it (the auto-fix
   // fallow offers here) would break `bun dev`, not clean anything up.
   "ignoreDependencies": ["@edge-runtime/vm", "solid2-agent-kit", "@solidjs/diagnostics"],
+  // Architecture zones. Deliberately narrow: ImportLint already enforces
+  // imports at export granularity (every directory is a package; exports are
+  // package-private unless tagged @public), which is what keeps risky
+  // dependencies behind a narrow module (ADR 0004) and already blocks
+  // src/ -> convex/ internals. Zones cover only what that model cannot see:
+  // an export tagged @public is visible to the whole app, so nothing stops
+  // src/bracket — the pure layout layer of ADR 0007 — from reaching into
+  // src/lib/convex and acquiring a Convex client. This rule is that guard.
+  // Keep the two tools on their own axes; do not restate ImportLint here.
+  "boundaries": {
+    "zones": [
+      { "name": "bracket", "patterns": ["src/bracket/**"] },
+      { "name": "client-data", "patterns": ["src/lib/**"] },
+    ],
+    "rules": [{ "from": "bracket", "allow": [] }],
+  },
+
   // Semantic proof for traces, symbol-impact, and private-type hygiene.
   // best-effort: incomplete checker results stay advisory and do not fail CI.
   "typeAware": {
@@ -67,7 +84,10 @@
     "misconfigured-dependency-overrides": "error",
     "security-client-server-leak": "error",
     "security-sink": "error",
-    "policy-violation": "error",
+    // Off: rule packs are policy-as-code, and none are authored. Left `error`
+    // it reported zero violations because the detector never ran, which reads
+    // like a clean result. Turn it back on in the change that adds `rulePacks`.
+    "policy-violation": "off",
     "invalid-client-export": "error",
     "mixed-client-server-barrel": "error",
     "misplaced-directive": "error",
