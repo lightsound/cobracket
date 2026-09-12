@@ -23,7 +23,8 @@ This file gives coding agents project-specific context. Keep it short and update
 
 ## Architecture Notes
 
-- Module boundaries: browser code stays in `src/`; Convex queries and mutations stay in `convex/`
+- Module boundaries: browser code stays in `src/`; Convex queries and mutations stay in `convex/` (`schema.ts` for the schema, `operations.ts` for the operations API — every Organizer capability plus the Share Link read, ADR 0001 — `format/` for the pure format engine, `auth.ts` for auth, ADR 0003)
+- The browser client is `ConvexClient` from `convex/browser`, not React. `src/lib/convex.ts` is where Solid 2 subscribes to it; the `convex-*` skills assume React hooks and do not apply to the client side here
 - Generated or vendored code: `convex/_generated/` (from `bun run convex:dev` / `bun run convex:codegen`). Do not edit by hand
 - Sensitive areas: `vite.config.ts` must keep `host: '0.0.0.0'` for Cursor's preview. Keep `solid({ start: { devtools: false } })` unless `@solidjs/start-devtools` is installed
 - Verifying reactive code: with `bun dev` running, the dev server serves `POST /__solid/diagnostics` (`@solidjs/diagnostics` + the plugin's `diagnostics: true`). Open the page, then `curl -X POST localhost:3000/__solid/diagnostics -d '{"method":"begin"}'`, perform one interaction, and read `{"method":"costs"}` / `{"method":"end"}` — the artifact carries rule diagnostics plus per-re-run causality, self-time, waste and holds. Prefer this over reading the code or instrumenting it by hand. Loops and budgets: `node_modules/@solidjs/diagnostics/skills/agent-loops/SKILL.md`. One page under test at a time (first responder wins), and pass `{ name }` to memos/effects you intend to interrogate — anonymous `computed` rows are unactionable.
@@ -66,7 +67,8 @@ Two production surfaces (ADR 0010): the Convex **production deployment** for `co
 
 ## Fallow
 
-- Rules are all `error` except `coverage-gaps` (`off` until tests exist). Do not demote a rule to warn; turn it off only if the finding cannot be true for this repo, and say why in `.fallowrc.jsonc`.
+- Every rule is `error`. Do not demote a rule to warn; turn it off only if the finding cannot be true for this repo, and say why in `.fallowrc.jsonc`.
+- `coverage-gaps` gates `fallow health --coverage-gaps` and nothing else: the default run and `fallow audit` do not consult it, so it exits 1 while the UI layer has no tests without turning CI red. Treat its list (currently `src/*.tsx`, `src/pages/`, `scripts/lint-theme.ts`) as the backlog of what a component test would first cover — it is a static test-dependency graph, not line coverage.
 - Type-aware analysis is on (`typeAware.enabled`, `require: best-effort`). Prefer `--type-aware --symbol-impact` / `fallow inspect --file <path>` before deleting a symbol.
 - Use `fallow audit --format json --quiet` before committing AI-generated changes.
 - Use `fallow dead-code --format json --quiet`, `fallow dupes --format json --quiet`, and `fallow health --format json --quiet` for targeted checks.
