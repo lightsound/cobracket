@@ -204,7 +204,23 @@ beforeEach((context) => {
       new Promise<void>((resolve) => {
         endScenario = resolve;
       }),
-    { scenario: context.task.name },
+    {
+      scenario: context.task.name,
+      // Every engine threshold is left at its default except the wall-clock
+      // one, which does not survive the move to happy-dom. `hotTime`'s 8ms
+      // default is "half a frame spent in one scope" — a real browser's frame.
+      // Here the DOM is emulated in JS, so constructing a page costs an order
+      // of magnitude more: measured on this container, the Tournament page's
+      // first render spends 11-13ms in the memo that instantiates it, and a
+      // 31-card bracket 12ms in the list's insert effect, with every other
+      // scope in the suite under 8ms. Judged against the default those two are
+      // findings about happy-dom, not about the app — and in `bun dev` the
+      // same renders stay under it. 40ms keeps the code enforced against a
+      // gross regression (5x a full page render) with headroom for a loaded
+      // runner. Real time budgets belong to a real browser: measure them with
+      // the dev-server artifact loop in AGENTS.md, not here.
+      attribution: { hotTime: { budgetMs: 40, windowMs: 1000 } },
+    },
   );
 });
 

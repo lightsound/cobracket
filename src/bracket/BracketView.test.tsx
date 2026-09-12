@@ -209,3 +209,64 @@ test("zooming and panning move the canvas without disturbing the cards", () => {
   expect(canvas.style.transform).toContain("translate(24px, 24px)");
   expect(cardLabels(host)).toEqual(before);
 });
+
+/**
+ * A 32-player single elimination: 16 + 8 + 4 + 2 + 1 = 31 matches, rebuilt
+ * from scratch on every call like the fixtures above.
+ */
+function bigBracket(): ViewMatch[] {
+  const matches: ViewMatch[] = [];
+  for (let round = 1, count = 16; count >= 1; round++, count /= 2) {
+    for (let index = 0; index < count; index++) {
+      matches.push({
+        key: `w${round}m${index}`,
+        bracket: "winners",
+        round,
+        indexInRound: index,
+        state: round === 1 ? "ready" : "pending",
+        occupants:
+          round === 1
+            ? [
+                { kind: "participant", participantId: `p${index * 2 + 1}` },
+                { kind: "participant", participantId: `p${index * 2 + 2}` },
+              ]
+            : [{ kind: "unknown" }, { kind: "unknown" }],
+      });
+    }
+  }
+  return matches;
+}
+
+const MANY_PARTICIPANTS = Array.from({ length: 32 }, (_, index) => ({
+  participantId: `p${index + 1}`,
+  name: `Player ${index + 1}`,
+}));
+
+/**
+ * The gate has scale-dependent codes, and the 3-match fixtures above cannot
+ * reach them: [WIDE_SCOPE_DEPS] fires at 30 sources on one scope, so a
+ * bracket has to be tournament-sized before a per-row cost shows up at all.
+ * This is the case that caught the real one — a per-row `<Show>` narrowing
+ * each card's match made every row a source of the list's insert effect, and
+ * 15 matches were already enough to report it in the browser while every test
+ * here passed. Keep this fixture above the threshold: it is the only thing
+ * standing between a per-row reactive wrapper and a silent regression.
+ */
+test("a tournament-sized bracket costs the list no per-row subscription", () => {
+  const [matches, setMatches] = createSignal(bigBracket(), { name: "matches" });
+  const host = mountBracket(() => ({
+    matches: matches(),
+    participants: MANY_PARTICIPANTS,
+    readyMatchKeys: ["w1m0"],
+    voidedMatchKeys: [],
+  }));
+  expect(host.querySelectorAll("button[style*='translate']")).toHaveLength(31);
+  const before = host.querySelector("button[style*='translate']");
+
+  // A subscription push with all-new objects, at scale.
+  setMatches(bigBracket());
+  flush();
+
+  expect(host.querySelector("button[style*='translate']")).toBe(before);
+  expect(host.querySelectorAll("button[style*='translate']")).toHaveLength(31);
+});

@@ -19,10 +19,21 @@ export default defineConfig({
       },
       {
         // The JSX transform: vitest.config.ts replaces vite.config.ts rather
-        // than extending it, so the plugin has to be named again here. Bare
-        // options on purpose — the app's `diagnostics` / `start` settings are
-        // dev-server concerns the plugin skips under vitest.
-        plugins: [solid()],
+        // than extending it, so the plugin has to be named again here. The
+        // app's `diagnostics` / `start` settings are dev-server concerns the
+        // plugin skips under vitest, so they are left out.
+        //
+        // `refresh` is the one option a test run needs an opinion about.
+        // solid-refresh wraps every component declaration in a memo so HMR can
+        // re-run it, and that wrapper is a reactive source: a list's insert
+        // effect then subscribes to one node per row (measured at 40 rows: 0
+        // sources for plain element rows, 1 per component row, 2 with a per-row
+        // `<Show>` as well). Attribution counts those wrappers, so a 31-match
+        // bracket reported [WIDE_SCOPE_DEPS] — 31 sources, every one of them
+        // `[solid-refresh]MatchCard`. Nothing of that exists in a production
+        // build, and tests have no HMR to serve, so the transform is off here
+        // and the gate measures the graph the app actually ships.
+        plugins: [solid({ refresh: { disabled: true } })],
         test: {
           name: "src",
           // Both extensions, one environment, one setup: a reactive test
