@@ -306,3 +306,33 @@ test("saves an edited discipline even with the suggestions still in flight", asy
   ]);
   expect(host.textContent).toContain("Saved.");
 });
+
+/**
+ * A roster the size of a real one, rebuilt on every call. Sized above the
+ * gate's scale-dependent thresholds (`[WIDE_SCOPE_DEPS]` at 30 sources) —
+ * two participants cannot reach them, so without a fixture this size the
+ * per-row cost of the roster is only ever asserted by reading the code.
+ * Each row carries a `<Show>` on `editingId()`, which by measurement costs
+ * the list's insert effect nothing where it sits (inside the `<li>`, not as
+ * the row's root); this is what keeps that a measurement.
+ */
+function bigRoster(): OrganizerView["participants"] {
+  return Array.from({ length: 32 }, (_, index) => ({
+    participantId: fakeId<"participants">(`p${index + 1}`),
+    name: `Player ${index + 1}`,
+    seed: index + 1,
+  }));
+}
+
+test("a tournament-sized roster costs the list no per-row subscription", async () => {
+  const host = await open({ participants: bigRoster() });
+  expect(host.querySelectorAll("ol li")).toHaveLength(32);
+  const firstRow = host.querySelector("ol li");
+
+  // A subscription push with all-new objects, at scale.
+  publishQuery(api.operations.getTournament, view({ participants: bigRoster() }));
+  await settled();
+
+  expect(host.querySelector("ol li")).toBe(firstRow);
+  expect(host.textContent).toContain("32 participants");
+});

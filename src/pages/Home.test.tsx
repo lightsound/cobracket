@@ -277,3 +277,37 @@ test("clears the completions while a new prefix is in flight", async () => {
   await settled();
   expect(options()).toEqual(["Chess", "Checkers"]);
 });
+
+/**
+ * The same list at a size the gate's scale-dependent codes can reach — see
+ * the roster fixture in `Tournament.test.tsx` for why a small one cannot.
+ * An Organizer's list is realistically shorter than a roster, but the rows
+ * hold a component (`StatusBadge`), which is the other shape worth measuring
+ * rather than reasoning about.
+ */
+function manyTournaments(): FunctionReturnType<typeof api.operations.listMyTournaments> {
+  return Array.from({ length: 32 }, (_, index) => ({
+    tournamentId: fakeId<"tournaments">(`t${index + 1}`),
+    name: `Tournament ${index + 1}`,
+    discipline: "Chess",
+    format: { family: "single_elimination" as const },
+    status: "draft" as const,
+    shareSlug: `slug-${index + 1}`,
+  }));
+}
+
+test("a long tournament list costs the list no per-row subscription", async () => {
+  const host = mount(() => <Home />);
+  publishQuery(api.auth.currentOrganizer, ORGANIZER);
+  publishQuery(api.operations.listMyTournaments, manyTournaments());
+  publishQuery(api.operations.suggestDisciplines, []);
+  await settled();
+  expect(host.querySelectorAll("ul li")).toHaveLength(32);
+  const firstRow = host.querySelector("ul li");
+
+  // A subscription push with all-new objects, at scale.
+  publishQuery(api.operations.listMyTournaments, manyTournaments());
+  await settled();
+
+  expect(host.querySelector("ul li")).toBe(firstRow);
+});
