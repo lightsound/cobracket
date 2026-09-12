@@ -179,13 +179,25 @@ function generateAuthKeys(): void {
 async function ensureConvex(): Promise<Child | undefined> {
   if ((await runningConvexUrl()) !== undefined) return undefined;
   const convex = start("convex dev", ["bun", "run", "convex:dev"], ANONYMOUS);
+  try {
+    await awaitPushed(convex);
+    return convex;
+  } catch (error) {
+    // The caller only learns of the child on success, so a wait that gives
+    // up has to take the process group down here — otherwise the backend
+    // stays on its port and the next run reuses it half-configured.
+    await stop(convex);
+    throw error;
+  }
+}
+
+/** Wait for the first push to land, generating the auth keys if it needs them. */
+async function awaitPushed(convex: Child): Promise<void> {
   const ready = /Convex functions ready/;
   await convex.waitFor(/Convex functions ready|MissingEnvironmentVariables/, 180_000);
-  if (!convex.tail.some((line) => ready.test(line))) {
-    generateAuthKeys();
-    await convex.waitFor(ready, 90_000);
-  }
-  return convex;
+  if (convex.tail.some((line) => ready.test(line))) return;
+  generateAuthKeys();
+  await convex.waitFor(ready, 90_000);
 }
 
 function freePort(): Promise<number> {
