@@ -33,9 +33,21 @@ if bun run check:bun >/dev/null 2>&1; then
   echo "session-start: Bun $(bun --version) is supported."
 elif [ "${CLAUDE_CODE_REMOTE:-}" = "true" ]; then
   echo "session-start: Bun $(bun --version) is unsupported here; installing the pinned bun@${pinned}."
-  curl -fsSL https://bun.sh/install | bash -s "bun-v${pinned}"
+  # A failed install must not take the session down with it, and must not fall
+  # through to `bun install` either: the wrong Bun rewriting bun.lock is the
+  # damage this hook exists to prevent. Report, leave the tree alone, let the
+  # agent hit check:bun with a clear message on its first command.
+  if ! curl -fsSL https://bun.sh/install | bash -s "bun-v${pinned}"; then
+    echo "session-start: installing bun@${pinned} failed. Bun left as-is and dependencies" >&2
+    echo "  not installed; run check:bun before anything that writes bun.lock." >&2
+    exit 0
+  fi
   hash -r
-  bun run check:bun
+  if ! bun run check:bun; then
+    echo "session-start: bun@${pinned} installed but still does not satisfy engines.bun;" >&2
+    echo "  dependencies not installed." >&2
+    exit 0
+  fi
 else
   echo "session-start: Bun $(bun --version) does not satisfy engines.bun, and this is not a hosted" >&2
   echo "  agent container, so Bun was left alone. Install bun@${pinned} before running anything that" >&2
