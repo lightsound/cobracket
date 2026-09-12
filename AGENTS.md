@@ -67,7 +67,7 @@ Two production surfaces (ADR 0010): the Convex **production deployment** for `co
 
 ## Fallow
 
-- Every rule is `error`. Do not demote a rule to warn; turn it off only if the finding cannot be true for this repo, and say why in `.fallowrc.jsonc`.
+- Every rule is `error` except `policy-violation`, which is `off` because no `rulePacks` are authored. Do not demote a rule to warn; turn it off only if the finding cannot be true for this repo, and say why in `.fallowrc.jsonc`.
 - `coverage-gaps` gates `fallow health --coverage-gaps` and nothing else: the default run and `fallow audit` do not consult it, so it exits 1 while the UI layer has no tests without turning CI red. Treat its list (currently `src/*.tsx`, `src/pages/`, `scripts/lint-theme.ts`) as the backlog of what a component test would first cover — it is a static test-dependency graph, not line coverage.
 - Type-aware analysis is on (`typeAware.enabled`, `require: best-effort`). Prefer `--type-aware --symbol-impact` / `fallow inspect --file <path>` before deleting a symbol.
 - Use `fallow audit --format json --quiet` before committing AI-generated changes.
@@ -76,7 +76,7 @@ Two production surfaces (ADR 0010): the Convex **production deployment** for `co
 - Solid 2 start mode has no `src/main.tsx`. Keep `src/App.tsx` and `src/Document.tsx` in `.fallowrc.jsonc` `entry` or they look unused.
 - `fallow doctor` checks project readiness (config, workspaces, type-aware companion, caches) without analysing or mutating anything. Run it first when a fallow command behaves oddly, before re-running the analysis.
 - Two tools guard imports, on different axes, and neither replaces the other. ImportLint works at **export** granularity (every directory is a package; exports are package-private unless tagged `/** @public */`) — that is what holds a risky dependency behind a narrow module (ADR 0004) and what blocks `src/` from reaching `convex/` internals. fallow `boundaries` works at **zone** granularity (which directories may import which), which ImportLint cannot express once an export is `@public` and therefore visible app-wide. The one zone rule configured is exactly that gap: `src/bracket` (the pure layout layer, ADR 0007) may import no other zone, so it cannot acquire a Convex client through `src/lib/convex`'s `@public` exports. Verified both ways — that import passes ImportLint and fails fallow. Do not restate ImportLint's model as zones.
-- `policy-violation` is `off` because no `rulePacks` are authored; `boundary-violation` stays `error` now that zones exist. When a rule is `error` with nothing configured, fallow says so under `audit`'s `workspace_diagnostics` and the zero count means nothing ran — check there before reading a green audit as enforcement.
+- When a rule is `error` with nothing configured, fallow says so under `audit`'s `workspace_diagnostics` and the zero count means nothing ran — check there before reading a green audit as enforcement. That is why `policy-violation` is off rather than left `error` with no rule packs, and why `boundary-violation` only stayed `error` once zones existed.
 
 <!-- generated:task-matrix:start -->
 | When the agent is about to... | Run |

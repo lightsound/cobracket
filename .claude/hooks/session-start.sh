@@ -13,14 +13,21 @@
 # single declaration in this repository and `scripts/check-bun-version.ts`
 # guards it.
 #
-# Installing Bun is limited to hosted agent containers ($CLAUDE_CODE_REMOTE),
-# which are ephemeral. On a personal machine the installer would replace
-# whatever Bun the developer has globally, so there we report and stop instead
-# — deliberately without running `bun install`, since resolving the lockfile
-# with the wrong Bun is the damage this hook exists to prevent.
+# Installing Bun is limited to remote workspaces, where the toolchain belongs
+# to a disposable image: $CLAUDE_CODE_REMOTE for Claude Code on the web,
+# $CURSOR_CODE_REMOTE for Cursor. Both harnesses register this script, so
+# checking only one of them would leave the other's hosted containers
+# (`## Cursor Cloud specific instructions` in AGENTS.md) with neither the
+# pinned Bun nor node_modules. Be aware that Cursor sets its variable for
+# remote workspaces generally, not hosted agents specifically, so an SSH or
+# dev-container workspace takes the install branch too; that is the closest
+# signal either harness documents. On a personal machine the installer would
+# replace whatever Bun the developer has globally, so there we report and stop
+# instead — deliberately without installing dependencies, since resolving the
+# lockfile with the wrong Bun is the damage this hook exists to prevent.
 set -euo pipefail
 
-cd "${CLAUDE_PROJECT_DIR:-$(dirname "$0")/../..}"
+cd "${CLAUDE_PROJECT_DIR:-${CURSOR_PROJECT_DIR:-$(dirname "$0")/../..}}"
 
 pinned=$(sed -n 's/.*"packageManager"[[:space:]]*:[[:space:]]*"bun@\([^"+]*\).*/\1/p' package.json)
 if [ -z "$pinned" ]; then
@@ -31,7 +38,7 @@ fi
 # check:bun owns the comparison (engines.bun range, pin shape, corepack hash).
 if bun run check:bun >/dev/null 2>&1; then
   echo "session-start: Bun $(bun --version) is supported."
-elif [ "${CLAUDE_CODE_REMOTE:-}" = "true" ]; then
+elif [ "${CLAUDE_CODE_REMOTE:-}" = "true" ] || [ "${CURSOR_CODE_REMOTE:-}" = "true" ]; then
   echo "session-start: Bun $(bun --version) is unsupported here; installing the pinned bun@${pinned}."
   # A failed install must not take the session down with it, and must not fall
   # through to `bun install` either: the wrong Bun rewriting bun.lock is the
@@ -49,11 +56,21 @@ elif [ "${CLAUDE_CODE_REMOTE:-}" = "true" ]; then
     exit 0
   fi
 else
-  echo "session-start: Bun $(bun --version) does not satisfy engines.bun, and this is not a hosted" >&2
-  echo "  agent container, so Bun was left alone. Install bun@${pinned} before running anything that" >&2
+  echo "session-start: Bun $(bun --version) does not satisfy engines.bun, and this is not a remote" >&2
+  echo "  workspace, so Bun was left alone. Install bun@${pinned} before running anything that" >&2
   echo "  writes bun.lock:" >&2
   echo "    curl -fsSL https://bun.sh/install | bash -s \"bun-v${pinned}\"" >&2
   exit 0
 fi
 
-bun install
+# --frozen-lockfile so setting a session up cannot rewrite the artifact the
+# rest of this hook exists to protect. A plain `bun install` would resolve and
+# save the lock whenever package.json has moved ahead of it, which is exactly
+# the silent lockfile rewrite guarded against above — only by the right Bun
+# instead of the wrong one. When they disagree the session still opens; the
+# regeneration is a deliberate act, not session setup.
+if ! bun install --frozen-lockfile; then
+  echo "session-start: bun.lock does not match package.json, so dependencies were not installed." >&2
+  echo "  Run \`bun install\` deliberately and commit the regenerated lockfile." >&2
+  exit 0
+fi

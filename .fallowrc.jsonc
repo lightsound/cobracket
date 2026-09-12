@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/fallow/schema.json",
-  // Every rule is error.
+  // Every rule is error, except `policy-violation` — see its entry for why.
   "entry": ["src/App.tsx", "src/Document.tsx", "scripts/lint-theme.ts"],
   "ignorePatterns": ["convex/_generated/**", "src/vite-env.d.ts"],
   // Vitest resolves the edge-runtime test environment by name from the
