@@ -40,3 +40,36 @@ jobs:
       - run: bun run check:bun -- --strict
       - run: bun install --frozen-lockfile
       - run: bun run verify
+
+  # The real-browser diagnostics gate (e2e/share-link.test.ts): Chromium
+  # driven against the dev server and the anonymous local Convex deployment,
+  # capturing Solid's diagnostics and attribution channels the way the
+  # `src` tests do on happy-dom. Its own job, not a step of `verify`: it
+  # needs a browser (~300MB) and the Convex backend binary (~200MB), both
+  # cached below, plus two servers — a minute or two that would otherwise
+  # be added to every `bun run verify`, locally included. The job is
+  # independent, so a red here names the browser gate and nothing else.
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - run: bun run check:bun -- --strict
+      - run: bun install --frozen-lockfile
+      # playwright-core is pinned exactly in package.json, and the browser
+      # build it drives is derived from that version, so the lockfile is
+      # the right cache key for both stores: Playwright's browsers and the
+      # Convex CLI's backend binary (which the CLI pins to its own version).
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/.cache/convex/binaries
+          key: e2e-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      # Chromium only — playwright-core downloads nothing on install. Add
+      # `--with-deps` here if the runner image ever stops carrying the
+      # shared libraries the browser needs.
+      - run: bun x playwright-core install chromium
+      - run: bun run test:e2e
