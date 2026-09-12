@@ -13,8 +13,16 @@
  * attribution enabled — that is what produces the attribution-tier codes
  * (`SILENT_HOLD`, `UNSTABLE_LIST_IDENTITY`, `IMMUTABLE_UPDATE_IN_STORE`,
  * `ASYNC_WATERFALL`, ...) in the first place; they reach the same diagnostics
- * channel as the core ones, so a single `expectNoDiagnostics` covers all 36
- * codes.
+ * channel as the core ones, so `expectNoDiagnostics` covers all 36 codes at
+ * once. It is not the whole story, though: the engine emits a hold's code only
+ * once the hold outlasts a duration threshold, so a *short* unacknowledged
+ * hold is real, recorded, and coded nowhere. `expectNoSilentHolds` asks that
+ * question of the attribution tables instead, where no threshold applies.
+ *
+ * One boundary is worth knowing: the capture opens in `beforeEach`, so code at
+ * a test file's module scope runs before it and is not gated. That is where a
+ * file's fixtures and one-off setup live (`setLocale("en")`), never a render —
+ * put anything reactive inside a test.
  *
  * Note the environment matters as much as the gate: under `environment: node`
  * the `node` export condition resolves Solid's *server* build, where writes
@@ -27,6 +35,7 @@ import {
   captureArtifact,
   type CaptureResult,
   type DiagnosticCode,
+  DiagnosticsAssertionError,
   type DiagnosticsArtifact,
   expectDiagnostic,
   expectNoDiagnostics,
@@ -39,11 +48,19 @@ import {
  * open on a promise the teardown resolves is how one becomes the other, and
  * keeps this on the package's public API instead of driving the underlying
  * `OBSERVE.diagnostics` channel by hand.
+ *
+ * `owner` is the test the open capture belongs to. Nothing should be able to
+ * consume another test's capture, and a test whose capture is missing has run
+ * ungated — both are failures, not conditions to work around.
  */
 let endScenario: (() => void) | undefined;
 let capture: Promise<CaptureResult<void>> | undefined;
-let expected: DiagnosticCode[] = [];
-let expectedSilentHold = false;
+let owner: string | undefined;
+/** Codes this test must produce, which are therefore not failures. */
+let required: DiagnosticCode[] = [];
+/** Codes this test may produce, without having to. */
+let tolerated: DiagnosticCode[] = [];
+let requiredSilentHold = false;
 
 /**
  * Declare that the current test's subject *is* a diagnostic: each code must be
@@ -58,29 +75,27 @@ let expectedSilentHold = false;
  * @public
  */
 export function expectDiagnostics(...codes: DiagnosticCode[]): void {
-  expected.push(...codes);
+  required.push(...codes);
 }
 
 /**
- * The same declaration for a silent hold, which has no code to name below the
- * engine's console threshold. Requires the current test to produce one, and
- * tolerates it.
+ * The same declaration for a silent hold, which below the engine's `holds`
+ * threshold (100ms) has no code to name. Requires the current test to leave a
+ * hold unacknowledged, and tolerates it.
+ *
+ * `SILENT_HOLD` and `LONG_HOLD` become tolerated rather than required, because
+ * which side of the threshold a fixture's timer lands on is wall-clock luck: a
+ * loaded CI runner would otherwise turn the same unacknowledged hold from a
+ * budget finding into a coded one and fail the declaring test.
  *
  * @public
  */
 export function expectSilentHold(): void {
-  expectedSilentHold = true;
+  requiredSilentHold = true;
+  tolerated.push("SILENT_HOLD", "LONG_HOLD");
 }
 
-/** How many holds the scenario left unacknowledged, at any duration. */
-function silentHolds(artifact: DiagnosticsArtifact): number {
-  return (artifact.attribution?.feedback.sources ?? []).reduce(
-    (total, source) => total + source.silent,
-    0,
-  );
-}
-
-beforeEach(() => {
+beforeEach((context) => {
   // Both channels are process-global singletons, so two captures cannot be
   // told apart: with `test.concurrent` a diagnostic raised by one test lands
   // in whichever artifact happens to be open, failing the wrong test while
@@ -88,48 +103,89 @@ beforeEach(() => {
   // than misattribute it.
   if (capture !== undefined) {
     throw new Error(
-      "The Solid diagnostics gate cannot separate overlapping tests: the " +
-        "diagnostics channel and the attribution engine are process-global. " +
-        "Run tests under src/ sequentially — no `test.concurrent`, no " +
-        "`describe.concurrent`.",
+      `The Solid diagnostics gate cannot separate overlapping tests (${owner ?? "?"} is ` +
+        `still open): the diagnostics channel and the attribution engine are ` +
+        `process-global. Run tests under src/ sequentially — no \`test.concurrent\`, ` +
+        `no \`describe.concurrent\`.`,
     );
   }
-  expected = [];
-  expectedSilentHold = false;
+  owner = context.task.id;
+  required = [];
+  tolerated = [];
+  requiredSilentHold = false;
   capture = captureArtifact<void>(
     () =>
       new Promise<void>((resolve) => {
         endScenario = resolve;
       }),
-    { scenario: "test" },
+    { scenario: context.task.name },
   );
 });
 
-afterEach(async () => {
-  endScenario?.();
+/**
+ * The gate's own overlap report. A teardown that finds a missing or foreign
+ * capture has nothing it may assert on, and saying so is the only safe move:
+ * inheriting another test's findings blames the wrong test, and skipping the
+ * assertions lets this one through ungated.
+ */
+function ungatedError(name: string, pending: unknown, openedBy: string | undefined): Error {
+  const why = pending === undefined ? "missing" : `owned by ${openedBy ?? "?"}`;
+  return new Error(
+    `"${name}" ran outside the Solid diagnostics gate (capture ${why}). ` +
+      `Tests under src/ must run sequentially.`,
+  );
+}
+
+function assertDiagnostics(artifact: DiagnosticsArtifact): void {
+  for (const code of required) expectDiagnostic(artifact, code);
+  expectNoDiagnostics(artifact, { allow: [...required, ...tolerated] });
+}
+
+/**
+ * The package's own computation answers both directions, so the positive case
+ * cannot drift from the negative one by reading the artifact by hand. Narrowed
+ * to its assertion error: anything else is a bug in the harness, not a finding.
+ */
+function silentHoldFinding(artifact: DiagnosticsArtifact): DiagnosticsAssertionError | undefined {
+  try {
+    expectNoSilentHolds(artifact);
+    return undefined;
+  } catch (error) {
+    if (error instanceof DiagnosticsAssertionError) return error;
+    throw error;
+  }
+}
+
+function assertHoldFeedback(artifact: DiagnosticsArtifact): void {
+  const finding = silentHoldFinding(artifact);
+  if (!requiredSilentHold) {
+    if (finding !== undefined) throw finding;
+    return;
+  }
+  if (finding === undefined) {
+    throw new Error(
+      "expectSilentHold() was declared but the scenario acknowledged every hold it caused.",
+    );
+  }
+}
+
+afterEach(async (context) => {
   const pending = capture;
+  const openedBy = owner;
+  endScenario?.();
   endScenario = undefined;
   capture = undefined;
-  if (!pending) return;
+  owner = undefined;
+
+  // Never assert on a capture this test did not open.
+  if (pending === undefined || openedBy !== context.task.id) {
+    throw ungatedError(context.task.name, pending, openedBy);
+  }
+
   // Always await, even on the failure path: the capture's `finally` is what
   // reads the attribution tables and disables the engine again. Leaving it
   // pending would leak the engine into the next test.
   const { artifact } = await pending;
-  for (const code of expected) expectDiagnostic(artifact, code);
-  expectNoDiagnostics(artifact, { allow: expected });
-  if (expectedSilentHold) {
-    if (silentHolds(artifact) === 0) {
-      throw new Error(
-        "expectSilentHold() was declared but the scenario acknowledged every hold it caused.",
-      );
-    }
-    return;
-  }
-  // Not covered by the assertion above: SILENT_HOLD only reaches the
-  // diagnostics channel once a hold outlasts the engine's console threshold
-  // (holds.infoMs, 100ms), so a shorter one is recorded as silent in the
-  // attribution tables and reported nowhere. Measured: a 41ms hold with no
-  // acknowledgement produced `silent: 1` and no diagnostic. This is the
-  // budget's own question, and its answer is zero.
-  expectNoSilentHolds(artifact);
+  assertDiagnostics(artifact);
+  assertHoldFeedback(artifact);
 });

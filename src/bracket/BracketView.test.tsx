@@ -167,23 +167,49 @@ test("reports only the matches an organizer may score", () => {
   expect(selected).toEqual(["w1m1", "w1m2", "w2m1"]);
 });
 
-test("zooming and panning do not disturb the cards", () => {
+function drag(viewport: HTMLElement, from: [number, number], to: [number, number]): void {
+  const init = { pointerId: 1, button: 0, bubbles: true };
+  viewport.dispatchEvent(
+    new PointerEvent("pointerdown", { ...init, clientX: from[0], clientY: from[1] }),
+  );
+  viewport.dispatchEvent(
+    new PointerEvent("pointermove", { ...init, clientX: to[0], clientY: to[1] }),
+  );
+  viewport.dispatchEvent(new PointerEvent("pointerup", init));
+  flush();
+}
+
+test("zooming and panning move the canvas without disturbing the cards", () => {
   const host = mount(() => ({
     matches: semisAndFinal(),
     participants: PARTICIPANTS,
     readyMatchKeys: [],
     voidedMatchKeys: [],
   }));
+  const viewport = host.firstElementChild as HTMLElement;
   // The pan/zoom canvas: the viewport's first child, holding the transform.
-  const canvas = host.firstElementChild?.firstElementChild as HTMLElement | null;
+  const canvas = viewport.firstElementChild as HTMLElement;
   const before = cardLabels(host);
 
   host.querySelector<HTMLButtonElement>("button[aria-label='Zoom in']")?.click();
   flush();
-  expect(canvas?.style.transform).toContain("scale(1.25)");
+  expect(canvas.style.transform).toContain("scale(1.25)");
+
+  // Pan by a known delta. CANVAS_PADDING (24) is the untouched origin, so the
+  // translate is the drag distance plus it.
+  drag(viewport, [100, 100], [140, 70]);
+  expect(canvas.style.transform).toContain("translate(64px, -6px)");
+
+  // Released: further movement is not a drag.
+  viewport.dispatchEvent(
+    new PointerEvent("pointermove", { pointerId: 1, bubbles: true, clientX: 300, clientY: 300 }),
+  );
+  flush();
+  expect(canvas.style.transform).toContain("translate(64px, -6px)");
 
   host.querySelector<HTMLButtonElement>("button[aria-label='Reset view']")?.click();
   flush();
-  expect(canvas?.style.transform).toContain("scale(1)");
+  expect(canvas.style.transform).toContain("scale(1)");
+  expect(canvas.style.transform).toContain("translate(24px, 24px)");
   expect(cardLabels(host)).toEqual(before);
 });

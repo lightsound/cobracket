@@ -79,4 +79,7 @@ test("keeps its rows across a refetch and shows the champion when one arrives", 
 
   expect(host.querySelector("tbody tr")).toBe(firstRow);
   expect(host.querySelector("p")?.textContent).toContain("Ada");
+  // The kept row also updated: identity without reactivity would leave the
+  // champion's cell unmarked, and the gate cannot see that — only this can.
+  expect(firstRow?.querySelectorAll("td")[1]?.className).toContain("text-win");
 });
