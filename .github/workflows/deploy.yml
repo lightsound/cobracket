@@ -21,7 +21,7 @@ permissions:
 env:
   # Keep the pre-release toolchain identical to local development (ADR 0004).
   # Keep in sync with `packageManager` in package.json.
-  BUN_VERSION: 1.4.0
+  BUN_VERSION: 1.4.2
 
 jobs:
   # The same gates AGENTS.md asks a human to run before committing. They run

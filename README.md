@@ -11,7 +11,7 @@ The package manager is **Bun v1.4**.
 - [Bun](https://bun.sh) 1.4.x
 
 ```bash
-curl -fsSL https://bun.sh/install | bash -s "bun-v1.4.0"
+curl -fsSL https://bun.sh/install | bash -s "bun-v1.4.2"
 ```
 
 ## Usage
