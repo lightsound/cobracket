@@ -25,6 +25,7 @@ This file gives coding agents project-specific context. Keep it short and update
 - Module boundaries: browser code stays in `src/`; Convex queries and mutations stay in `convex/`
 - Generated or vendored code: `convex/_generated/` (from `bun run convex:dev` / `bun run convex:codegen`). Do not edit by hand
 - Sensitive areas: `vite.config.ts` must keep `host: '0.0.0.0'` for Cursor's preview. Keep `solid({ start: { devtools: false } })` unless `@solidjs/start-devtools` is installed
+- Reactivity diagnostics: `src/dev-diagnostics.ts` turns on Solid's attribution engine, called from `App` next to `initAuth()`. That is the opt-in tier that reports `[SILENT_HOLD]`, `[UNSTABLE_LIST_IDENTITY]`, `[IMMUTABLE_UPDATE_IN_STORE]`, `[ASYNC_WATERFALL]` and friends — the runtime evidence for Solid 2 hard rules that `solid2-kit check` can only see as tokens. Watch the browser console during `bun dev`; every code maps to a repair in `node_modules/solid-js/skills/reactivity-diagnostics/SKILL.md`. Stripped from production (`isDev`, plus an inert no-op build of `solid-js/attribution`), so it costs nothing there. Note the API moved in `solid-js` 2.0.0-rc.5+: it is `attribution` from `solid-js/attribution`, not the `DEV.attribution` the `solid-2` skill still documents (kit v0.11 predates the move — `solid2-kit sync` when a newer kit ships)
 
 ## Commands
 
