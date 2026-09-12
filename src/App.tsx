@@ -15,7 +15,7 @@ export default function App() {
       {(props) => (
         <div class="mx-auto flex min-h-screen max-w-6xl flex-col gap-6 px-4 py-6">
           <header class="flex flex-wrap items-center justify-between gap-3">
-            <a href={Router.paths()} class="font-display text-2xl font-medium tracking-tight">
+            <a href={Router.paths} class="font-display text-2xl font-medium tracking-tight">
               🐍 cobracket
             </a>
             <div class="flex gap-2">

@@ -26,6 +26,7 @@ in `llms.txt` rather than guessing from Solid 1.x or React.
 - https://v2-rebuild--solid-docs-v2.netlify.app/concepts/components-and-jsx.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/concepts/async-reactivity.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/concepts/boundaries.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/concepts/mutations.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/concepts/rendering-and-ssr.md
 
 ## Building apps (start mode / fullstack)
@@ -65,6 +66,10 @@ read these before writing route JSX.
 ## Guides and migration
 
 - https://v2-rebuild--solid-docs-v2.netlify.app/guides/avoid-unnecessary-effects.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/guides/debugging-reactivity.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/guides/lists.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/guides/data-fetching-patterns.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/guides/forms.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/guides/testing.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/migration/from-react.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/migration/from-solid-1.md
@@ -108,8 +113,13 @@ verify API names against the reference pages above.
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/lifecycle-actions/affects.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/lifecycle-actions/on-settled.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/lifecycle-actions/refresh.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/lifecycle-actions/until.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/advanced/specialized-reactivity/on-cleanup.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/advanced/store-advanced/snapshot.md
+
+## Reference: diagnostics (dev builds only)
+
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/advanced/diagnostics-dev-hooks/dev.md
 
 ## Reference: components and JSX (solid-js)
 
@@ -160,8 +170,10 @@ verify API names against the reference pages above.
 
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-router.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-router/router-factory.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-router/routes-and-paths.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-router/navigation.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-router/data.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-router/types.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-router/history.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-router/filesystem.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-meta/title.md

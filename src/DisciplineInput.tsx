@@ -1,4 +1,4 @@
-import { For, Loading, createUniqueId } from "solid-js";
+import { For, Loading, createUniqueId, latest } from "solid-js";
 import { api } from "../convex/_generated/api";
 import { t } from "./i18n";
 import { createConvexQuery } from "./lib/convex";
@@ -21,7 +21,9 @@ export function DisciplineInput(props: {
       <input
         class={props.class}
         required
-        value={props.value}
+        // Typing re-subscribes the suggestions query, so the write is held
+        // until the new answer lands; `latest` shows the keystroke meanwhile.
+        value={latest(() => props.value)}
         placeholder={t("home.create.disciplinePlaceholder")}
         list={listId}
         onInput={(event) => props.onInput(event.currentTarget.value)}
