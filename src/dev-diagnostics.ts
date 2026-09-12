@@ -34,6 +34,20 @@ import { attribution } from "solid-js/attribution";
 export function initDevDiagnostics(): void {
   if (!isDev || isServer) return;
 
+  // Not under vitest, where the diagnostics gate (`src/test-setup.ts`) has
+  // already enabled the engine around the test body and is the one asking it
+  // questions. `enable()` is not additive: it replaces the options with
+  // defaults plus its own and clears every aggregate table. So a test that
+  // renders `App` — which calls this — would silently reset the gate's
+  // `hotTime` override to the 8ms default and wipe the hold records the
+  // second assertion reads, for that test only. Measured both ways in
+  // `dev-diagnostics.test.ts`: without this line a 20ms scope reports against
+  // a budget of 8ms there, with it the gate's 40ms stands.
+  //
+  // `isDev` is true under vitest (the test build is the dev build — that is
+  // what makes the gate possible at all), so it cannot stand in for this.
+  if (import.meta.env.VITEST) return;
+
   // `log: false` because the default prints a why-chain for *every* re-run,
   // which buries the coded findings we actually want. The findings are a
   // separate channel and still report; the per-run trace is available on

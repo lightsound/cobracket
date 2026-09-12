@@ -8,7 +8,9 @@ export default defineConfig({
     // files (auth, and Seam 2 to come) need edge-runtime; everything under
     // src/ needs happy-dom, because that is what makes Solid resolve its
     // browser build and the diagnostics gate below mean anything. A new test
-    // file lands in the right environment without remembering a pragma.
+    // file lands in the right environment without remembering a pragma — the
+    // one opt-in is `.ssr.test.tsx`, for a component that only exists in the
+    // server build.
     projects: [
       {
         test: {
@@ -40,6 +42,10 @@ export default defineConfig({
           // written without JSX must not be able to opt out of either by
           // being named .test.ts.
           include: ["src/**/*.test.{ts,tsx}"],
+          // `.ssr.test.tsx` belongs to the project below and matches this
+          // pattern too. Extend the defaults (node_modules, dist, ...) — a
+          // bare exclude would replace them.
+          exclude: [...configDefaults.exclude, "src/**/*.ssr.test.tsx"],
           // Not for the DOM alone — the `node` condition resolves Solid's
           // server build, where writes are inert and attribution sees
           // nothing. See src/test-setup.ts.
@@ -47,6 +53,20 @@ export default defineConfig({
           // Fails any test that produced a Solid diagnostic or left a hold
           // unacknowledged.
           setupFiles: ["./src/test-setup.ts"],
+        },
+      },
+      {
+        // The server build, for the handful of components that only exist
+        // there. `src/Document.tsx` is the case: Solid refuses to
+        // client-create `<html>`, `<head>` and `<body>`, so the document
+        // shell can only be rendered by `renderToString` under the `node`
+        // condition. Nothing reactive lives here — writes are inert in the
+        // server build — so the diagnostics gate is deliberately absent.
+        plugins: [solid()],
+        test: {
+          name: "ssr",
+          include: ["src/**/*.ssr.test.tsx"],
+          environment: "node",
         },
       },
       {
