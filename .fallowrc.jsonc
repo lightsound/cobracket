@@ -9,11 +9,10 @@
   // solid2-agent-kit is a CLI-only guardrail kit: invoked as the
   // `solid2-kit` bin from the lint:solid script and from the agent hooks
   // (.cursor/hooks.json, .claude/settings.json); it is never imported.
-  // @solidjs/diagnostics is consumed by @solidjs/vite-plugin's `diagnostics`
-  // option, not by an import: the plugin injects its in-page bridge and
-  // serves /__solid/diagnostics on the dev server. Removing it (the auto-fix
-  // fallow offers here) would break `bun dev`, not clean anything up.
-  "ignoreDependencies": ["@edge-runtime/vm", "solid2-agent-kit", "@solidjs/diagnostics"],
+  // happy-dom is resolved by name the same way and is deliberately absent:
+  // fallow does not report it (it knows the built-in vitest environments),
+  // and an ignore for a rule that never fires is a stale suppression.
+  "ignoreDependencies": ["@edge-runtime/vm", "solid2-agent-kit"],
   // Architecture zones. Deliberately narrow: ImportLint already enforces
   // imports at export granularity (every directory is a package; exports are
   // package-private unless tagged @public), which is what keeps risky
@@ -95,8 +94,13 @@
     "dynamic-segment-name-conflict": "error",
     // On since src/bracket/*.test.ts gave the graph a path into src/. It gates
     // `fallow health --coverage-gaps` only (exit 1 instead of a listing) — the
-    // default run and `fallow audit` do not consult it, so CI stays green while
-    // the UI layer is still untested.
+    // default run and `fallow audit` do not consult it, so CI stays green.
+    // Read the listing, not the percentage: it is a static test-dependency
+    // graph, so src/router.ts lazy-importing every page made it count
+    // Tournament.tsx as covered the moment any page had a test, while nothing
+    // exercised a line of it. The backlog it names today is the app shell and
+    // the two toggles (App, Document, LocaleToggle, ThemeToggle,
+    // theme-preference) plus scripts/lint-theme.ts.
     "coverage-gaps": "error",
   },
 }
