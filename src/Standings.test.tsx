@@ -79,3 +79,40 @@ test("keeps its rows across a refetch and shows the champion when one arrives", 
   // champion's cell unmarked, and the gate cannot see that — only this can.
   expect(firstRow?.querySelectorAll("td")[1]?.className).toContain("text-win");
 });
+
+/**
+ * The last list-shaped subject to get a fixture above the gate's
+ * scale-dependent thresholds (see `src/pages/Tournament.test.tsx` for the
+ * rule). A full field is the realistic size here, and every row reads
+ * `props.championId` and looks its name up through `props.participants`, so
+ * this is where a fan-in code would show first if one were going to.
+ */
+const FULL_FIELD = Array.from({ length: 32 }, (_, index) => ({
+  participantId: `p${index + 1}`,
+  name: `Player ${index + 1}`,
+}));
+
+function fullStandings(): StandingsProps["standings"] {
+  return FULL_FIELD.map((participant, index) => ({
+    participantId: participant.participantId,
+    placement: index + 1,
+  }));
+}
+
+test("a full field of placements costs the table no per-row subscription", () => {
+  const [standings, setStandings] = createSignal(fullStandings(), { name: "standings" });
+  const host = mountStandings(() => ({
+    standings: standings(),
+    participants: FULL_FIELD,
+    championId: "p1",
+  }));
+  expect(host.querySelectorAll("tbody tr")).toHaveLength(32);
+  const firstRow = host.querySelector("tbody tr");
+
+  // A subscription push with all-new objects, at scale.
+  setStandings(fullStandings());
+  flush();
+
+  expect(host.querySelector("tbody tr")).toBe(firstRow);
+  expect(rows(host)[31]).toEqual(["32", "Player 32"]);
+});
