@@ -8,8 +8,8 @@
  * every card, and only this kind of test can see that.
  */
 import { createSignal, flush } from "solid-js";
-import { render } from "@solidjs/web";
 import { expect, test } from "vite-plus/test";
+import { mount } from "../test-setup";
 import { setLocale } from "../i18n";
 import { BracketView, type BracketViewProps, type ViewMatch } from "./BracketView";
 
@@ -77,12 +77,8 @@ function semisAndFinal(final: Partial<ViewMatch> = {}): ViewMatch[] {
   ];
 }
 
-function mount(props: () => BracketViewProps): HTMLElement {
-  const host = document.createElement("div");
-  document.body.append(host);
-  render(() => <BracketView {...props()} />, host);
-  flush();
-  return host;
+function mountBracket(props: () => BracketViewProps): HTMLElement {
+  return mount(() => <BracketView {...props()} />);
 }
 
 function cardLabels(host: HTMLElement): string[] {
@@ -92,7 +88,7 @@ function cardLabels(host: HTMLElement): string[] {
 }
 
 test("renders every match with its participants, scores and ready marker", () => {
-  const host = mount(() => ({
+  const host = mountBracket(() => ({
     matches: semisAndFinal(),
     participants: PARTICIPANTS,
     readyMatchKeys: ["w2m1"],
@@ -112,7 +108,7 @@ test("renders every match with its participants, scores and ready marker", () =>
 test("survives a refetch that replaces every match object", () => {
   const [matches, setMatches] = createSignal(semisAndFinal(), { name: "matches" });
   const [ready, setReady] = createSignal(["w2m1"], { name: "ready" });
-  const host = mount(() => ({
+  const host = mountBracket(() => ({
     matches: matches(),
     participants: PARTICIPANTS,
     readyMatchKeys: ready(),
@@ -150,7 +146,7 @@ test("survives a refetch that replaces every match object", () => {
 
 test("reports only the matches an organizer may score", () => {
   const selected: string[] = [];
-  const host = mount(() => ({
+  const host = mountBracket(() => ({
     matches: semisAndFinal(),
     participants: PARTICIPANTS,
     readyMatchKeys: ["w2m1"],
@@ -180,7 +176,7 @@ function drag(viewport: HTMLElement, from: [number, number], to: [number, number
 }
 
 test("zooming and panning move the canvas without disturbing the cards", () => {
-  const host = mount(() => ({
+  const host = mountBracket(() => ({
     matches: semisAndFinal(),
     participants: PARTICIPANTS,
     readyMatchKeys: [],

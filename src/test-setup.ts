@@ -31,6 +31,8 @@
  * happy-dom for that reason, not because every test touches the DOM.
  */
 import { afterEach, beforeEach } from "vite-plus/test";
+import { type Element, flush } from "solid-js";
+import { render } from "@solidjs/web";
 import {
   captureArtifact,
   type CaptureResult,
@@ -57,6 +59,8 @@ let endScenario: (() => void) | undefined;
 let capture: Promise<CaptureResult<void>> | undefined;
 let owner: string | undefined;
 /** Codes this test must produce, which are therefore not failures. */
+/** Dispose functions for the roots this test mounted, newest last. */
+const roots: (() => void)[] = [];
 let required: DiagnosticCode[] = [];
 /** Codes this test may produce, without having to. */
 let tolerated: DiagnosticCode[] = [];
@@ -93,6 +97,27 @@ export function expectDiagnostics(...codes: DiagnosticCode[]): void {
 export function expectSilentHold(): void {
   requiredSilentHold = true;
   tolerated.push("SILENT_HOLD", "LONG_HOLD");
+}
+
+/**
+ * Render into a fresh host, and hand the root's disposal to the gate.
+ *
+ * `render` returns a dispose function, and a test that drops it leaves a live
+ * reactive root behind for the rest of the file: later writes to anything that
+ * root still subscribes to re-run it, and the finding lands in whichever test
+ * happens to be open. Reproduced — a test that only writes a module-level
+ * signal was failed by an unkeyed list a *previous* test had mounted. That is
+ * the misattribution the overlap guard refuses, arriving by another door, so
+ * it is refused in the same place rather than left to per-file discipline.
+ *
+ * @public
+ */
+export function mount(component: () => Element): HTMLElement {
+  const host = document.createElement("div");
+  document.body.append(host);
+  roots.push(render(component, host));
+  flush();
+  return host;
 }
 
 /**
@@ -170,6 +195,11 @@ beforeEach((context) => {
 });
 
 afterEach(async (context) => {
+  // Before the scenario closes, so teardown work is attributed to the test
+  // that caused it — and so nothing this test mounted can reach the next one.
+  for (const dispose of roots.splice(0).reverse()) dispose();
+  flush();
+
   const pending = capture;
   const openedBy = owner;
   endScenario?.();

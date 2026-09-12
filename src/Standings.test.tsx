@@ -5,8 +5,8 @@
  * the table did not rebuild itself.
  */
 import { createSignal, flush } from "solid-js";
-import { render } from "@solidjs/web";
 import { expect, test } from "vite-plus/test";
+import { mount } from "./test-setup";
 import { setLocale } from "./i18n";
 import { Standings, type StandingsProps } from "./Standings";
 
@@ -26,12 +26,8 @@ function placings(): StandingsProps["standings"] {
   ];
 }
 
-function mount(props: () => StandingsProps): HTMLElement {
-  const host = document.createElement("div");
-  document.body.append(host);
-  render(() => <Standings {...props()} />, host);
-  flush();
-  return host;
+function mountStandings(props: () => StandingsProps): HTMLElement {
+  return mount(() => <Standings {...props()} />);
 }
 
 function rows(host: HTMLElement): string[][] {
@@ -41,7 +37,7 @@ function rows(host: HTMLElement): string[][] {
 }
 
 test("lists placements by participant name", () => {
-  const host = mount(() => ({ standings: placings(), participants: PARTICIPANTS }));
+  const host = mountStandings(() => ({ standings: placings(), participants: PARTICIPANTS }));
 
   expect(rows(host)).toEqual([
     ["1", "Ada"],
@@ -53,7 +49,7 @@ test("lists placements by participant name", () => {
 });
 
 test("falls back to the participant id for a name it does not have", () => {
-  const host = mount(() => ({
+  const host = mountStandings(() => ({
     standings: [{ participantId: "ghost", placement: 1 }],
     participants: PARTICIPANTS,
   }));
@@ -66,7 +62,7 @@ test("keeps its rows across a refetch and shows the champion when one arrives", 
     name: "champion",
   });
   const [standings, setStandings] = createSignal(placings(), { name: "standings" });
-  const host = mount(() => ({
+  const host = mountStandings(() => ({
     standings: standings(),
     participants: PARTICIPANTS,
     championId: championId(),

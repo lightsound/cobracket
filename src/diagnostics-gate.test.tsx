@@ -18,8 +18,8 @@ import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { expect, test } from "vite-plus/test";
 import { createMemo, createSignal, flush, For, resolve } from "solid-js";
-import { Loading, render } from "@solidjs/web";
-import { expectDiagnostics, expectSilentHold } from "./test-setup";
+import { Loading } from "@solidjs/web";
+import { expectDiagnostics, expectSilentHold, mount } from "./test-setup";
 
 const SELFTEST = process.env.COBRACKET_DIAGNOSTICS_SELFTEST === "1";
 
@@ -42,10 +42,7 @@ test("the engine reports a list that threw away row identity", () => {
     { id: 3, label: "c" },
   ];
   const [rows, setRows] = createSignal(load(), { name: "rows" });
-  const host = document.createElement("div");
-  document.body.append(host);
-  render(() => <UnkeyedRows rows={rows()} />, host);
-  flush();
+  const host = mount(() => <UnkeyedRows rows={rows()} />);
 
   // The shape the rule is about: the same records arriving as fresh objects,
   // the way a refetch or a subscription payload delivers them.
@@ -66,16 +63,11 @@ test("the engine records a held write the screen never acknowledged", async () =
     new Promise<string>((settle) => setTimeout(() => settle(`item ${value}`), 20));
   const item = createMemo(() => load(id()), { name: "item" });
 
-  const host = document.createElement("div");
-  document.body.append(host);
-  render(
-    () => (
-      <Loading fallback={<p>loading</p>}>
-        <span>{item()}</span>
-      </Loading>
-    ),
-    host,
-  );
+  const host = mount(() => (
+    <Loading fallback={<p>loading</p>}>
+      <span>{item()}</span>
+    </Loading>
+  ));
   await resolve(() => item());
   flush();
 
@@ -93,9 +85,14 @@ test("the engine records a held write the screen never acknowledged", async () =
 test.skipIf(SELFTEST)(
   "an undeclared finding fails the test that caused it",
   () => {
+    // `vp`, not `vitest`: vitest is not a direct devDependency here, it is a
+    // bin hoisted out of vite-plus. `bun x` falls back to the registry when a
+    // local bin is missing, so a hoist change would quietly run a *different*
+    // vitest against this config instead of failing. `vp test run` is the
+    // entry point AGENTS.md documents and takes the same flags.
     const child = spawnSync(
       "bun",
-      ["x", "vitest", "run", "--project", "src", "src/diagnostics-gate.test.tsx"],
+      ["x", "vp", "test", "run", "--project", "src", "src/diagnostics-gate.test.tsx"],
       {
         cwd: join(import.meta.dirname, ".."),
         env: { ...process.env, COBRACKET_DIAGNOSTICS_SELFTEST: "1" },
