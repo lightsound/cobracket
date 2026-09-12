@@ -34,6 +34,20 @@ import { attribution } from "solid-js/attribution";
 export function initDevDiagnostics(): void {
   if (!isDev || isServer) return;
 
+  // Not under vitest, where the diagnostics gate (`src/test-setup.ts`) has
+  // already enabled the engine around the test body and is the one asking it
+  // questions. `enable()` is not additive: it replaces the options with
+  // defaults plus its own and clears every aggregate table. So a test that
+  // renders `App` — which calls this — would wipe the hold records the gate's
+  // second assertion reads, and reset its options, for that test only.
+  // `dev-diagnostics.test.tsx` proves it: a silent hold recorded before this
+  // call survives it, and stops surviving the moment the guard goes.
+  //
+  // `isDev` is true under vitest (the test build is the dev build — that is
+  // what makes the gate possible at all), so it cannot stand in for this.
+  // vitest sets the string "true", hence a truthiness check.
+  if (import.meta.env.VITEST) return;
+
   // `log: false` because the default prints a why-chain for *every* re-run,
   // which buries the coded findings we actually want. The findings are a
   // separate channel and still report; the per-run trace is available on
