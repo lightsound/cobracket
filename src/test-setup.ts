@@ -122,7 +122,14 @@ export function expectSilentHold(): void {
 export function mount(component: () => Element): HTMLElement {
   const host = document.createElement("div");
   document.body.append(host);
-  roots.push(render(component, host));
+  const dispose = render(component, host);
+  // The host goes with the root. A `<Portal>` renders into `document.body`
+  // rather than into the host, so a test that queries the document would
+  // otherwise be reading the leftovers of the tests before it.
+  roots.push(() => {
+    dispose();
+    host.remove();
+  });
   flush();
   return host;
 }
