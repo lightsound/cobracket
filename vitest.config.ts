@@ -23,6 +23,16 @@ export default defineConfig({
       },
       {
         test: {
+          // Repo scripts. They run under Bun, so their tests drive them as a
+          // subprocess (the `bun` on PATH) and need nothing from the
+          // environment themselves.
+          name: "scripts",
+          include: ["scripts/**/*.test.ts"],
+          environment: "node",
+        },
+      },
+      {
+        test: {
           name: "convex",
           include: ["convex/**/*.test.ts"],
           // Extend the defaults (node_modules, dist, ...) — a bare exclude

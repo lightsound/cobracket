@@ -789,26 +789,42 @@ an agent sneaks in fails the suite instead of scrolling by.
 
 ### Dev diagnostics and attribution
 
-Diagnostics come in two tiers, both dev-build only (production strips them and `DEV`
+Diagnostics come in two layers, both dev-build only (production strips them and `DEV`
 is `undefined` there). Always-on findings include misplaced reads
 (`[STRICT_READ_UNTRACKED]`, `[PENDING_ASYNC_UNTRACKED_READ]`), misplaced writes
 (`[REACTIVE_WRITE_IN_OWNED_SCOPE]`, `[FLUSH_IN_ACTION]`, `[SERVER_WRITE]`), and
 `[ASYNC_OUTSIDE_LOADING_BOUNDARY]` when a tracked read has no boundary above it.
 Each entry carries a stable `[CODE]`, what the runtime observed, and an owner chain
 (`in <App> › <Cart> › <LineItem>`); never silence a code before understanding it.
+For the repair behind any code, read the `reactivity-diagnostics` skill Solid ships
+in the repo (`node_modules/solid-js/skills/reactivity-diagnostics/SKILL.md`) — every
+code maps to what the runtime observed and what to change.
 
 Cost and responsiveness findings need the opt-in attribution engine, which records
-every scope that re-ran, what changed to cause it, and how long it took:
+every scope that re-ran, what changed to cause it, and how long it took. Since
+`solid-js` 2.0.0-rc.8 the engine lives behind its own subpath — `DEV.attribution`
+no longer exists (it is a type error; `DEV` holds only devtools hooks, graph
+traversal, and console reporting), and the low-level hook slot on `OBSERVE` is for
+engines and devtools, not app code:
 
 ```ts
-import { DEV } from 'solid-js';
+import { attribution } from 'solid-js/attribution';
+import { isDev } from '@solidjs/web';
 
-DEV?.attribution.enable();
+if (isDev) attribution.enable({ log: false });
 // reproduce the interaction, then ask why a scope ran:
-for (const event of DEV!.attribution.why(total)) {
-  console.log(DEV!.attribution.format(event));
+for (const event of attribution.why(total)) {
+  console.log(attribution.format(event));
 }
 ```
+
+`enable()` pretty-prints every re-run's why-chain to the console by default
+(`log: true`); pass `{ log: false }` when you only want the coded findings and plan
+to query the tables yourself. Name the scopes you intend to interrogate
+(`createMemo(..., { name: "total" })`) — chains refer to nodes by name, and
+anonymous nodes print as `computed` / `effect` / `signal`. In production the import
+resolves to an inert same-surface twin (~640 bytes) whose `enable()` is a no-op, so
+with the `isDev` guard the cost is zero and the import can stay in the code.
 
 While attribution is enabled, Solid also warns on its own about over-subscription,
 chained async waterfalls (`[ASYNC_WATERFALL]`), memos whose fresh-but-equal output
@@ -818,10 +834,12 @@ immutable updates inside stores (`[IMMUTABLE_UPDATE_IN_STORE]` — mutate the dr
 row-rebuilding lists (`[UNSTABLE_LIST_IDENTITY]` — key by id or reconcile into a
 store), and silent holds (`[SILENT_HOLD]` — a write held on async work with no
 `isPending()` / `latest()` reader, optimistic value, `affects()` mark, or effect that
-ran while held; reported from 300ms as info, from 500ms as a warning). `DEV.attribution.costs()`,
-`holds()`, and `feedback()` rank the session worst-first. Name the scopes you intend
-to interrogate (`createMemo(..., { name: "total" })`); `DEV.attribution.subscriptions(scope)`
-lists a scope's current dependencies to compare against what it uses.
+ran while held; info from 100ms, warning from 200ms, tunable via
+`enable({ holds: { infoMs, warnMs } })`). `attribution.costs()`, `holds()`, and
+`feedback()` rank the session worst-first; `waterfalls()`, `navigations()`, and
+`interactions()` hold the fact tables behind the verdicts.
+`attribution.subscriptions(scope)` lists a scope's current dependencies to compare
+against what it uses.
 
 For regression tests, `@solidjs/diagnostics` turns the same channels into assertions:
 
@@ -838,8 +856,29 @@ expect(artifact).toHaveNoSilentHolds();
 ```
 
 `toHaveNoDiagnostics` fails on any coded warning (`info` findings excluded);
-`toStayWithinRerunBudget` / `toHaveNoWaste` catch recompute regressions. See the
-debugging-reactivity guide in [references/official-docs.md](references/official-docs.md).
+`toStayWithinRerunBudget` / `toHaveNoWaste` catch recompute regressions. The
+`agent-loops` skill the package ships
+(`node_modules/@solidjs/diagnostics/skills/agent-loops/SKILL.md`) documents the agent
+verification loops: capture until the channel is quiet, scenario budgets as the
+definition of done, and hold/latency gates. See the debugging-reactivity guide in
+[references/official-docs.md](references/official-docs.md).
+
+With `@solidjs/diagnostics` in `devDependencies`, the Vite plugin's `diagnostics`
+option (auto-on; dev server only) injects the capture bridge and serves
+`POST /__solid/diagnostics`, so a live page can be interrogated with curl alone —
+no test harness:
+
+```sh
+curl -X POST localhost:3000/__solid/diagnostics -d '{"method":"begin"}'
+# ... interact with the app in the browser ...
+curl -X POST localhost:3000/__solid/diagnostics -d '{"method":"whyDidRun","params":{"name":"TodoRow"}}'
+curl -X POST localhost:3000/__solid/diagnostics -d '{"method":"costs"}'
+curl -X POST localhost:3000/__solid/diagnostics -d '{"method":"feedback"}'
+curl -X POST localhost:3000/__solid/diagnostics -d '{"method":"end"}'
+```
+
+`GET` the endpoint for status. With several open tabs the first responder wins,
+so keep one page under test.
 
 ## Client mode: no server HTML, no hydration reflexes
 
@@ -1477,8 +1516,8 @@ always-applied rules installed alongside this skill.
       `[STRICT_READ_UNTRACKED]`), held writes paired with `isPending` / `latest` /
       optimistic values / `affects()` (no `[SILENT_HOLD]`). Attribution-only costs
       (`[IMMUTABLE_UPDATE_IN_STORE]`, `[UNSTABLE_LIST_IDENTITY]`, `[EFFECT_*]`)
-      checked via `DEV.attribution` when touching stores, lists, or effects. Name
-      interrogated scopes (`{ name: "total" }`).
+      checked via `attribution` from `solid-js/attribution` when touching stores,
+      lists, or effects. Name interrogated scopes (`{ name: "total" }`).
 - [ ] If the project has a router: `createRouter({ routes })`, not JSX `<Route>` / `<A>`.
       One instance, no nested `<Router>`. Navigate with `useNavigate` / `<a href>`, not
       `window.location`. Router `action`/`query` come from `@solidjs/router` (POST forms + cache), not

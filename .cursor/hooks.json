@@ -1,6 +1,11 @@
 {
   "version": 1,
   "hooks": {
+    "sessionStart": [
+      {
+        "command": "./.claude/hooks/session-start.sh"
+      }
+    ],
     "postToolUse": [
       {
         "command": "node node_modules/solid2-agent-kit/bin/solid2-kit.mjs hook cursor"

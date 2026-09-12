@@ -19,40 +19,43 @@
     "lint:solid": "solid2-kit check && solid2-kit doctor",
     "lint:imports": "bunx @import-lint/cli",
     "lint:theme": "bun scripts/lint-theme.ts",
+    "check:bun": "bun scripts/check-bun-version.ts",
     "fallow": "fallow",
     "fallow:audit": "fallow audit",
     "fallow:dead-code": "fallow dead-code",
     "auth:keys": "bun x @convex-dev/auth",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p convex && tsc --noEmit -p scripts"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p convex && tsc --noEmit -p scripts",
+    "verify": "bun run check:bun && bun run typecheck && bun run test && bun x vp check && bun run lint:imports && bun run lint:solid && bun run lint:theme && bun run build"
   },
   "dependencies": {
     "@convex-dev/auth": "2.0.0-alpha.1",
     "@fontsource-variable/space-grotesk": "^5.3.0",
-    "@solidjs/router": "2.0.0-next.20",
-    "@solidjs/web": "^2.0.0-rc.4",
+    "@solidjs/router": "2.0.0-next.24",
+    "@solidjs/web": "^2.0.0-rc.8",
     "convex": "^1.45.0",
-    "solid-js": "^2.0.0-rc.4",
+    "solid-js": "^2.0.0-rc.8",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@edge-runtime/vm": "^5.0.0",
     "@import-lint/cli": "^0.1.9",
-    "@solidjs/vite-plugin": "^3.0.0-next.36",
+    "@solidjs/diagnostics": "^2.0.0-rc.8",
+    "@solidjs/vite-plugin": "^3.0.0-next.43",
     "@tailwindcss/vite": "^4.3.3",
-    "@types/bun": "^1.4.0",
-    "convex-test": "^0.0.56",
-    "fallow": "^3.20.0",
-    "solid2-agent-kit": "^0.11.0",
-    "typescript": "^7.1.0-dev.20260829.1",
-    "vite": "npm:@voidzero-dev/vite-plus-core@0.3.0",
-    "vite-plus": "0.3.0",
-    "wrangler": "^4.127.1"
+    "@types/bun": "^1.4.2",
+    "convex-test": "^0.0.58",
+    "fallow": "^3.25.0",
+    "solid2-agent-kit": "^0.11.1",
+    "typescript": "^7.1.0-dev.20260911.1",
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.3.1",
+    "vite-plus": "0.3.1",
+    "wrangler": "^4.131.1"
   },
   "overrides": {
-    "vite": "npm:@voidzero-dev/vite-plus-core@0.3.0"
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.3.1"
   },
   "engines": {
     "bun": "^1.4.0"
   },
-  "packageManager": "bun@1.4.0"
+  "packageManager": "bun@1.4.2"
 }

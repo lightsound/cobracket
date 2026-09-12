@@ -12,6 +12,7 @@ This file gives coding agents project-specific context. Keep it short and update
 
 - `AGENTS.md` is the shared briefing (Cursor, Codex, Cloud Agents, and any harness that reads this filename).
 - `CLAUDE.md` is Claude Code's native file. It holds the Solid 2 hard-rules block (Claude Code does not load `.cursor/rules`) and `@AGENTS.md` so Claude Code also gets this briefing. Do not merge the two files or delete either.
+- There is no root `README.md`, and no agent should create one. Every change here is made by an agent, so the briefing an agent actually reads is the one that stays true; a README duplicating it only drifts. (The deleted one had, by the end, called the MVP UI "scaffolding to be replaced", listed a file removed three commits earlier, and told the reader to point local development at the Convex cloud — which `## Production deployment` forbids.) Orientation goes in this file; direction in `docs/vision.md`, terms in `CONTEXT.md`, decisions in `docs/adr/`, scope in `docs/specs/mvp.md`.
 
 ## Project Overview
 
@@ -22,9 +23,12 @@ This file gives coding agents project-specific context. Keep it short and update
 
 ## Architecture Notes
 
-- Module boundaries: browser code stays in `src/`; Convex queries and mutations stay in `convex/`
+- Module boundaries: browser code stays in `src/`; Convex queries and mutations stay in `convex/` (`schema.ts` for the schema, `operations.ts` for the operations API — every Organizer capability plus the Share Link read, ADR 0001 — `format/` for the pure format engine, `auth.ts` for auth, ADR 0003)
+- The browser client is `ConvexClient` from `convex/browser`, not React. `src/lib/convex.ts` is where Solid 2 subscribes to it; the `convex-*` skills assume React hooks and do not apply to the client side here
 - Generated or vendored code: `convex/_generated/` (from `bun run convex:dev` / `bun run convex:codegen`). Do not edit by hand
 - Sensitive areas: `vite.config.ts` must keep `host: '0.0.0.0'` for Cursor's preview. Keep `solid({ start: { devtools: false } })` unless `@solidjs/start-devtools` is installed
+- Verifying reactive code: with `bun dev` running, the dev server serves `POST /__solid/diagnostics` (`@solidjs/diagnostics` + the plugin's `diagnostics: true`). Open the page, then `curl -X POST localhost:3000/__solid/diagnostics -d '{"method":"begin"}'`, perform one interaction, and read `{"method":"costs"}` / `{"method":"end"}` — the artifact carries rule diagnostics plus per-re-run causality, self-time, waste and holds. Prefer this over reading the code or instrumenting it by hand. Loops and budgets: `node_modules/@solidjs/diagnostics/skills/agent-loops/SKILL.md`. One page under test at a time (first responder wins), and pass `{ name }` to memos/effects you intend to interrogate — anonymous `computed` rows are unactionable.
+- Reactivity diagnostics: `src/dev-diagnostics.ts` turns on Solid's attribution engine, called from `App` next to `initAuth()`. That is the opt-in tier that reports `[SILENT_HOLD]`, `[UNSTABLE_LIST_IDENTITY]`, `[IMMUTABLE_UPDATE_IN_STORE]`, `[ASYNC_WATERFALL]` and friends — the runtime evidence for Solid 2 hard rules that `solid2-kit check` can only see as tokens. Watch the browser console during `bun dev`; every code maps to a repair in `node_modules/solid-js/skills/reactivity-diagnostics/SKILL.md`. Stripped from production (`isDev`, plus an inert no-op build of `solid-js/attribution`), so it costs nothing there. The `solid-2` skill documents the engine from kit v0.11.1 on
 
 ## Commands
 
@@ -34,10 +38,12 @@ This file gives coding agents project-specific context. Keep it short and update
 - Build: `bun run build`
 - Deploy (production, see `## Production deployment`): `bun run deploy` = `deploy:backend` (`convex deploy --cmd 'bun run build'`, needs `CONVEX_DEPLOY_KEY`) then `deploy:web` (`wrangler deploy`, needs `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID`). Normally CI runs this; a local run is the fallback
 - Hosting runtime locally: `bun run serve:hosting` (`wrangler dev`, serves the built `dist/client` through workerd with the real `wrangler.jsonc`). The only way to exercise the SPA catch-all rewrite before deploying; `bun dev` does not
+- Gates: `bun run verify` runs every check below in one command — toolchain, typecheck, tests, format/lint, import boundaries, Solid patterns, theme, build. Run this before committing rather than the individual scripts; it is the same list CI runs (`ci.yml` on every pull request, `deploy.yml` before it touches production), so there is nothing to remember and nothing to skip. The individual scripts stay for when you want one of them while iterating
 - Typecheck: `bun run typecheck` (all three TS projects: root `src/`, `convex/`, `scripts/`)
 - Test: `bun run test` (Vitest is the single test runner — ADR 0006; do not use `bun test`)
 - Format + lint: `bun x vp check` (`--fix` to apply). [Vite+](https://viteplus.dev) owns the dev/build/test/fmt/lint toolchain: the `dev`/`build`/`serve`/`test` scripts delegate to `vp`, `vite` is aliased to `@voidzero-dev/vite-plus-core` via `overrides`, and test files import from `vite-plus/test`. oxfmt/oxlint config (including the ignore list for generated/vendored/tool-managed files) lives in the `fmt`/`lint` blocks of `vite.config.ts`; `vp check` also runs tsgolint type checks, which complement but do not replace `tsc --noEmit`
 - Solid pattern guard: `bun run lint:solid` (runs `solid2-kit check` — blocks React / Solid 1.x patterns in `src/` — plus `solid2-kit doctor` for project wiring drift)
+- Toolchain guard: `bun run check:bun` — Bun enforces neither `packageManager` nor `engines.bun` (it installs under any version, silently), so this is the substitute: it fails when the running Bun is outside `engines.bun`, or when `packageManager` contradicts that range, and warns when you are in range but off the pin. Run it first if anything about an install or a lockfile looks wrong. CI derives the version from `packageManager` (setup-bun's `bun-version-file`), so it is declared once; `bun run check:bun -- --strict` then runs before `bun install` and fails on an inexact match, which is what catches the action resolving something else — its reader falls back to `engines.bun` and then to `latest` without failing
 - Theme guard: `bun run lint:theme` (bans `dark:` variants and arbitrary color values; every color goes through the semantic tokens in `src/theme.css`, which are theme-complete via `light-dark()` — ADR 0007)
 - Import boundaries: `bun run lint:imports` ([ImportLint](https://github.com/uhyo/import-lint): each directory is a package; exports are package-private unless tagged `/** @public */`. Model and fixing guide: `.cursor/skills/import-lint/SKILL.md`, or `bunx @import-lint/cli explain <rule>`)
 - Update Solid agent guidance: `bunx solid2-kit sync` (rules, skills, and the managed AGENTS.md/CLAUDE.md blocks are owned by [solid2-agent-kit](https://github.com/lightsound/solid2-agent-kit); do not edit them by hand)
@@ -62,12 +68,16 @@ Two production surfaces (ADR 0010): the Convex **production deployment** for `co
 
 ## Fallow
 
-- Rules are all `error` except `coverage-gaps` (`off` until tests exist). Do not demote a rule to warn; turn it off only if the finding cannot be true for this repo, and say why in `.fallowrc.jsonc`.
+- Every rule is `error` except `policy-violation`, which is `off` because no `rulePacks` are authored. Do not demote a rule to warn; turn it off only if the finding cannot be true for this repo, and say why in `.fallowrc.jsonc`.
+- `coverage-gaps` gates `fallow health --coverage-gaps` and nothing else: the default run and `fallow audit` do not consult it, so it exits 1 while the UI layer has no tests without turning CI red. Treat its list (currently `src/*.tsx`, `src/pages/`, `scripts/lint-theme.ts`) as the backlog of what a component test would first cover — it is a static test-dependency graph, not line coverage.
 - Type-aware analysis is on (`typeAware.enabled`, `require: best-effort`). Prefer `--type-aware --symbol-impact` / `fallow inspect --file <path>` before deleting a symbol.
 - Use `fallow audit --format json --quiet` before committing AI-generated changes.
 - Use `fallow dead-code --format json --quiet`, `fallow dupes --format json --quiet`, and `fallow health --format json --quiet` for targeted checks.
 - Use `fallow list --entry-points --format json --quiet` and `fallow list --boundaries --format json --quiet` to inspect project shape.
 - Solid 2 start mode has no `src/main.tsx`. Keep `src/App.tsx` and `src/Document.tsx` in `.fallowrc.jsonc` `entry` or they look unused.
+- `fallow doctor` checks project readiness (config, workspaces, type-aware companion, caches) without analysing or mutating anything. Run it first when a fallow command behaves oddly, before re-running the analysis.
+- Two tools guard imports, on different axes, and neither replaces the other. ImportLint works at **export** granularity (every directory is a package; exports are package-private unless tagged `/** @public */`) — that is what holds a risky dependency behind a narrow module (ADR 0004) and what blocks `src/` from reaching `convex/` internals. fallow `boundaries` works at **zone** granularity (which directories may import which), which ImportLint cannot express once an export is `@public` and therefore visible app-wide. The one zone rule configured is exactly that gap: `src/bracket` (the pure layout layer, ADR 0007) may import no other zone, so it cannot acquire a Convex client through `src/lib/convex`'s `@public` exports. Verified both ways — that import passes ImportLint and fails fallow. Do not restate ImportLint's model as zones.
+- When a rule is `error` with nothing configured, fallow says so under `audit`'s `workspace_diagnostics` and the zero count means nothing ran — check there before reading a green audit as enforcement. That is why `policy-violation` is off rather than left `error` with no rule packs, and why `boundary-violation` only stayed `error` once zones existed.
 
 <!-- generated:task-matrix:start -->
 | When the agent is about to... | Run |
@@ -108,7 +118,7 @@ Two production surfaces (ADR 0010): the Convex **production deployment** for `co
 - `bun` is installed at `~/.bun/bin` and symlinked into `/usr/local/bin`, so it resolves in non-login shells too. `bunx` is not symlinked — use `bun x <tool>` (e.g. `bun x tsc --noEmit`, `bun x convex ...`).
 
 <!-- solid2-agent-kit:agents-section:start -->
-<!-- Managed by solid2-agent-kit v0.11.0. Do not edit inside this block; run `solid2-kit sync` to update. -->
+<!-- Managed by solid2-agent-kit v0.11.1. Do not edit inside this block; run `solid2-kit sync` to update. -->
 
 ## Solid 2.0 (not React, not Solid 1.x)
 
@@ -138,8 +148,10 @@ For non-skill agents, treat the task map below as the local onboarding source: r
 |---|---|
 | delete an "unused" export or file | `fallow dead-code --trace <file>:<export>` |
 | prove a TypeScript symbol's exact consumers before refactoring | `fallow dead-code --type-aware --symbol-impact <file>:<export-or-class.method>` |
+| find how one module reaches another | `fallow trace --path <from> <to>` (Reports `reachable: false` instead of failing when no import path exists; type-only hops are reported, not skipped.) |
 | delete an "unused" dependency | `fallow dead-code --trace-dependency <name>` |
 | commit or open a PR | `fallow audit --base <ref>` |
+| read a diff before approving it | `fallow review --base <ref> --brief` (orientation, never gates: deterministic and always exit 0, unlike the audit row) |
 | prioritize refactoring | `fallow health --hotspots --targets` |
 | ask who owns code | `fallow health --ownership` |
 | check untested-but-reachable code | `fallow health --coverage-gaps` |
