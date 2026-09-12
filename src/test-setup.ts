@@ -24,14 +24,12 @@
  * that is where a file's fixtures and one-off setup live (`setLocale("en")`),
  * never a render. It closes in `afterEach`, so work a test schedules and does
  * not settle — a `setTimeout` callback, an un-awaited promise — lands after
- * the capture is gone and is attributed to no test at all. Confirmed: the
- * unkeyed-list fixture below, wrapped in an un-awaited `setTimeout`, never
- * fails the test that scheduled it, while the same code run synchronously
- * does. There is no
- * failure to read, so settle deferred work before returning (`await
- * resolve(...)`, `flush()`) or know the test is proving nothing. Measured both
- * ways: with a test after it, the finding fails *that* test instead; with
- * none, it is reported nowhere.
+ * its own capture is gone. Measured with the unkeyed-list fixture below on an
+ * un-awaited `setTimeout`: it never fails the test that scheduled it, and
+ * instead fails whichever test is open next, or nothing at all once the file
+ * has ended. Neither is discoverable from the failure — one has none, the
+ * other has the wrong name on it — so settle deferred work before returning
+ * (`await resolve(...)`, `flush()`) or know the test is proving nothing.
  *
  * Note the environment matters as much as the gate: under `environment: node`
  * the `node` export condition resolves Solid's *server* build, where writes
@@ -220,8 +218,9 @@ afterEach(async (context) => {
   // is what reads the attribution tables, stops the channel subscription and
   // calls the engine's `disable()`, and aggregates reset on disable, not on
   // the next `enable()`. Throwing the ownership error first — as this did —
-  // would leave the engine armed and the capture pending forever, which is
-  // the leak the sentence above it promises not to allow.
+  // would leave the engine armed and the capture pending forever, so the next
+  // test's artifact could carry this one's aggregates. Nothing below may run
+  // before this line, on any path.
   const settled = pending === undefined ? undefined : await pending;
 
   // Never assert on a capture this test did not open.
