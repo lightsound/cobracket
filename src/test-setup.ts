@@ -67,9 +67,9 @@ import {
 let endScenario: (() => void) | undefined;
 let capture: Promise<CaptureResult<void>> | undefined;
 let owner: string | undefined;
-/** Codes this test must produce, which are therefore not failures. */
 /** Dispose functions for the roots this test mounted, newest last. */
 const roots: (() => void)[] = [];
+/** Codes this test must produce, which are therefore not failures. */
 let required: DiagnosticCode[] = [];
 /** Codes this test may produce, without having to. */
 let tolerated: DiagnosticCode[] = [];
