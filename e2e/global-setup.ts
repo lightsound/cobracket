@@ -33,7 +33,9 @@
  * `.env.local` for the deployment it ran (measured — `--env-file` changes
  * what it reads, not what it saves), so the file is snapshotted before the
  * CLI starts and put back on teardown; a `.env.local` that did not exist is
- * removed again. A developer's own deployment settings survive the run.
+ * removed again. A developer's own deployment settings survive a run that
+ * reaches teardown; a Ctrl-C or a killed process leaves the file naming the
+ * anonymous deployment, and the recovery is the usual `bun run convex:dev`.
  *
  * Children run in their own process group and the group is what gets killed:
  * `convex dev` spawns the backend binary as a grandchild, and killing the CLI
@@ -55,6 +57,8 @@ declare module "vitest" {
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const ENV_LOCAL = join(ROOT, ".env.local");
+/** The deployment `CONVEX_AGENT_MODE=anonymous` runs: fixed by the CLI, named here once. */
+const DEPLOYMENT = "anonymous:anonymous-agent";
 const ANONYMOUS = { ...process.env, CONVEX_AGENT_MODE: "anonymous" };
 
 interface Child {
@@ -62,9 +66,24 @@ interface Child {
   process: ChildProcess;
   /** The last lines of output, for the failure message. */
   tail: string[];
+  /**
+   * The URL of the `└─ http://127.0.0.1:3210` line of Convex's deployment
+   * banner, kept from the moment it arrives: the banner prints once at
+   * startup, and on the keyless path a push failure, `auth:keys` and a
+   * re-push follow it, so a scan of the tail after the fact could miss it.
+   */
+  announcedUrl: string | undefined;
   /** Resolves when a line matching `pattern` arrives, past or future. */
   waitFor(pattern: RegExp, timeoutMs: number): Promise<void>;
 }
+
+/** Colour codes chalk emits when `FORCE_COLOR` is set even on a pipe. */
+const ANSI_CODE = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g");
+function stripAnsi(line: string): string {
+  return line.replace(ANSI_CODE, "");
+}
+
+const BANNER_URL = /└─\s+(https?:\/\/\S+)/;
 
 function start(label: string, command: string[], env: NodeJS.ProcessEnv): Child {
   const child = spawn(command[0]!, command.slice(1), {
@@ -76,13 +95,19 @@ function start(label: string, command: string[], env: NodeJS.ProcessEnv): Child 
   const lines: string[] = [];
   const waiters: { pattern: RegExp; resolve: () => void }[] = [];
   let exit: string | undefined;
+  let announcedUrl: string | undefined;
 
-  const onLine = (line: string) => {
-    lines.push(line);
+  const notify = (line: string) => {
     for (const waiter of waiters.splice(0)) {
       if (waiter.pattern.test(line)) waiter.resolve();
       else waiters.push(waiter);
     }
+  };
+  const onLine = (raw: string) => {
+    const line = stripAnsi(raw);
+    lines.push(line);
+    if (announcedUrl === undefined) announcedUrl = BANNER_URL.exec(line)?.[1];
+    notify(line);
   };
   for (const stream of [child.stdout, child.stderr]) {
     let rest = "";
@@ -103,6 +128,9 @@ function start(label: string, command: string[], env: NodeJS.ProcessEnv): Child 
     process: child,
     get tail() {
       return lines.slice(-30);
+    },
+    get announcedUrl() {
+      return announcedUrl;
     },
     waitFor(pattern, timeoutMs) {
       return new Promise<void>((resolve, reject) => {
@@ -229,11 +257,20 @@ function isLocal(url: string): boolean {
   return hostname === "127.0.0.1" || hostname === "localhost";
 }
 
-/** ADR 0003: a deployment without its RS256 keys refuses every push. */
+/**
+ * ADR 0003: a deployment without its RS256 keys refuses every push. The
+ * auth CLI reaches the deployment through `convex env get` / `env set`,
+ * which choose their target the ordinary way — so the choice is made for
+ * them: a `CONVEX_DEPLOYMENT` already in the process environment wins over
+ * whatever `.env.local` says (measured: with `.env.local` naming a cloud
+ * deployment, `convex env list` went to the cloud without it and to the
+ * anonymous backend with it). The one command that writes private keys
+ * therefore never takes its target from a file the gate did not write.
+ */
 function generateAuthKeys(): void {
   const keys = spawnSync("bun", ["run", "auth:keys"], {
     cwd: ROOT,
-    env: ANONYMOUS,
+    env: { ...ANONYMOUS, CONVEX_DEPLOYMENT: DEPLOYMENT },
     encoding: "utf8",
   });
   if (keys.status !== 0) {
@@ -260,7 +297,7 @@ async function ensureConvex(): Promise<Convex> {
   const envLocalBefore = await readEnvLocal();
   const dir = await mkdtemp(join(tmpdir(), "cobracket-e2e-"));
   const envFile = join(dir, "convex.env");
-  await writeFile(envFile, "CONVEX_DEPLOYMENT=anonymous:anonymous-agent\n");
+  await writeFile(envFile, `CONVEX_DEPLOYMENT=${DEPLOYMENT}\n`);
   const convex = start(
     "convex dev",
     ["bun", "run", "convex:dev", "--env-file", envFile],
@@ -293,18 +330,13 @@ async function awaitPushed(convex: Child): Promise<string> {
     generateAuthKeys();
     await convex.waitFor(ready, 90_000);
   }
-  return announcedUrl(convex);
-}
-
-/** The `└─ http://127.0.0.1:3210` line of the CLI's deployment banner. */
-function announcedUrl(convex: Child): string {
-  for (const line of convex.tail) {
-    const match = /└─\s+(https?:\/\/\S+)/.exec(line);
-    if (match?.[1] !== undefined) return match[1];
+  const url = convex.announcedUrl;
+  if (url === undefined) {
+    throw new Error(
+      `convex dev did not announce a deployment URL\n--- last output ---\n${convex.tail.join("\n")}`,
+    );
   }
-  throw new Error(
-    `convex dev did not announce a deployment URL\n--- last output ---\n${convex.tail.join("\n")}`,
-  );
+  return url;
 }
 
 function freePort(): Promise<number> {
