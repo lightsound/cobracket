@@ -27,8 +27,10 @@ import {
   captureArtifact,
   type CaptureResult,
   type DiagnosticCode,
+  type DiagnosticsArtifact,
   expectDiagnostic,
   expectNoDiagnostics,
+  expectNoSilentHolds,
 } from "@solidjs/diagnostics";
 
 /**
@@ -41,6 +43,7 @@ import {
 let endScenario: (() => void) | undefined;
 let capture: Promise<CaptureResult<void>> | undefined;
 let expected: DiagnosticCode[] = [];
+let expectedSilentHold = false;
 
 /**
  * Declare that the current test's subject *is* a diagnostic: each code must be
@@ -58,8 +61,41 @@ export function expectDiagnostics(...codes: DiagnosticCode[]): void {
   expected.push(...codes);
 }
 
+/**
+ * The same declaration for a silent hold, which has no code to name below the
+ * engine's console threshold. Requires the current test to produce one, and
+ * tolerates it.
+ *
+ * @public
+ */
+export function expectSilentHold(): void {
+  expectedSilentHold = true;
+}
+
+/** How many holds the scenario left unacknowledged, at any duration. */
+function silentHolds(artifact: DiagnosticsArtifact): number {
+  return (artifact.attribution?.feedback.sources ?? []).reduce(
+    (total, source) => total + source.silent,
+    0,
+  );
+}
+
 beforeEach(() => {
+  // Both channels are process-global singletons, so two captures cannot be
+  // told apart: with `test.concurrent` a diagnostic raised by one test lands
+  // in whichever artifact happens to be open, failing the wrong test while
+  // the culprit passes (measured, not assumed). Refuse the overlap rather
+  // than misattribute it.
+  if (capture !== undefined) {
+    throw new Error(
+      "The Solid diagnostics gate cannot separate overlapping tests: the " +
+        "diagnostics channel and the attribution engine are process-global. " +
+        "Run tests under src/ sequentially — no `test.concurrent`, no " +
+        "`describe.concurrent`.",
+    );
+  }
   expected = [];
+  expectedSilentHold = false;
   capture = captureArtifact<void>(
     () =>
       new Promise<void>((resolve) => {
@@ -81,4 +117,19 @@ afterEach(async () => {
   const { artifact } = await pending;
   for (const code of expected) expectDiagnostic(artifact, code);
   expectNoDiagnostics(artifact, { allow: expected });
+  if (expectedSilentHold) {
+    if (silentHolds(artifact) === 0) {
+      throw new Error(
+        "expectSilentHold() was declared but the scenario acknowledged every hold it caused.",
+      );
+    }
+    return;
+  }
+  // Not covered by the assertion above: SILENT_HOLD only reaches the
+  // diagnostics channel once a hold outlasts the engine's console threshold
+  // (holds.infoMs, 100ms), so a shorter one is recorded as silent in the
+  // attribution tables and reported nowhere. Measured: a 41ms hold with no
+  // acknowledgement produced `silent: 1` and no diagnostic. This is the
+  // budget's own question, and its answer is zero.
+  expectNoSilentHolds(artifact);
 });
