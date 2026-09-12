@@ -96,7 +96,8 @@
     // On since src/bracket/*.test.ts gave the graph a path into src/. It gates
     // `fallow health --coverage-gaps` only (exit 1 instead of a listing) — the
     // default run and `fallow audit` do not consult it, so CI stays green while
-    // the UI layer is still untested.
+    // the UI layer is still only partly tested (BracketView and Standings have
+    // component tests; the rest of src/*.tsx and src/pages/ are the backlog).
     "coverage-gaps": "error",
   },
 }

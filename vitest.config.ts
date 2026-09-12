@@ -1,10 +1,13 @@
 import { configDefaults, defineConfig } from "vite-plus";
+import solid from "@solidjs/vite-plugin";
 
 export default defineConfig({
   test: {
     // The environment split is named once here, not per file: format engine
     // tests are pure TypeScript (Seam 1) and run under node; convex-test
-    // files (auth, and Seam 2 to come) need edge-runtime. A new convex test
+    // files (auth, and Seam 2 to come) need edge-runtime; everything under
+    // src/ needs happy-dom, because that is what makes Solid resolve its
+    // browser build and the diagnostics gate below mean anything. A new test
     // file lands in the right environment without remembering a pragma.
     projects: [
       {
@@ -15,10 +18,23 @@ export default defineConfig({
         },
       },
       {
+        // The JSX transform: vitest.config.ts replaces vite.config.ts rather
+        // than extending it, so the plugin has to be named again here. Bare
+        // options on purpose — the app's `diagnostics` / `start` settings are
+        // dev-server concerns the plugin skips under vitest.
+        plugins: [solid()],
         test: {
           name: "src",
-          include: ["src/**/*.test.ts"],
-          environment: "node",
+          // Both extensions, one environment, one setup: a reactive test
+          // written without JSX must not be able to opt out of either by
+          // being named .test.ts.
+          include: ["src/**/*.test.{ts,tsx}"],
+          // Not for the DOM alone — the `node` condition resolves Solid's
+          // server build, where writes are inert and attribution sees
+          // nothing. See src/test-setup.ts.
+          environment: "happy-dom",
+          // Fails any test that produced a Solid diagnostic.
+          setupFiles: ["./src/test-setup.ts"],
         },
       },
       {
