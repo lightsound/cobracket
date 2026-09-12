@@ -83,7 +83,7 @@ Settled in the final audit rounds; each is nearly free on day one and expensive 
 
 cobracket is a learning project first — a way to learn Solid 2.0 and Convex by building something real — and it is developed the way a real product would be: features land continuously, with the domain model, specs, ADRs, and gates of a product that intends to ship. That is the point of the exercise, not a contradiction. The consequences for planning:
 
-- **Production is configured but deliberately not live.** The deployment pipeline (ADR 0010) is complete and tested; the production secrets are intentionally unset, and CI skips the deploy step while they are. Nothing in the repository should treat this as an incident or prompt for the secrets.
+- **Production is configured but deliberately not live.** The deployment pipeline (ADR 0010) is written end to end but has never run a deploy; the production secrets are intentionally unset, and CI skips the deploy step while they are. Nothing in the repository should treat this as an incident or prompt for the secrets.
 - **Going live is the owner's call, on the owner's timing** — when the feature set and the UI feel ready to be handed to real people, which they judge as they build. It is not gated on a checklist in this document, and nobody else decides it.
 - Until then, the freedom of having no production data is used deliberately: schema changes need no migration, and pre-release dependency churn (ADR 0004) is absorbed as routine work.
 
