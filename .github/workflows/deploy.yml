@@ -37,12 +37,10 @@ jobs:
       # action resolved anything other than the pin.
       - run: bun run check:bun -- --strict
       - run: bun install --frozen-lockfile
-      - run: bun run typecheck
-      - run: bun run test
-      - run: bun x vp check
-      - run: bun run lint:imports
-      - run: bun run lint:solid
-      - run: bun run lint:theme
+      # The same gate set `ci.yml` runs on pull requests, and the same one
+      # AGENTS.md asks an agent to run before committing — one list, in
+      # package.json, so the three cannot drift apart.
+      - run: bun run verify
 
   # Production needs three repository secrets (ADR 0010). Until a human sets
   # them, `deploy` is skipped rather than failed: main's status then reflects

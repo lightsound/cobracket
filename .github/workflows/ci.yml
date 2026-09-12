@@ -1,0 +1,42 @@
+name: CI
+
+# The repository's gates, on every pull request. `deploy.yml` runs the same
+# set before it touches production, but it only triggers on a push to main, so
+# without this nothing checked a change until after it had landed.
+#
+# Deliberately a separate workflow rather than a `pull_request` trigger added
+# to `deploy.yml`: secrets are available to same-repository pull requests, so
+# that workflow's `preflight` job would report configured and `deploy` would
+# run — deploying production from a pull request. Keeping deploy's trigger at
+# `push: main` makes that impossible by construction instead of prevented by a
+# condition. What the two share is `bun run verify`, so the gate list lives in
+# package.json and neither workflow can drift from the other.
+on:
+  pull_request:
+
+# A pull request that gets several pushes only needs its newest one checked.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          # Reads `packageManager` from package.json, so the version is
+          # declared once. Named explicitly rather than left to the action's
+          # implicit fallback, which reaches for `engines.bun` (a range) and
+          # then `latest` without failing.
+          bun-version-file: package.json
+      # Before install: the lockfile is resolved by whichever Bun is running,
+      # so prove it is the declared one first. --strict also fails if the
+      # action resolved anything other than the pin.
+      - run: bun run check:bun -- --strict
+      - run: bun install --frozen-lockfile
+      - run: bun run verify
