@@ -69,6 +69,8 @@ Two production surfaces (ADR 0010): the Convex **production deployment** for `co
 - Use `fallow dead-code --format json --quiet`, `fallow dupes --format json --quiet`, and `fallow health --format json --quiet` for targeted checks.
 - Use `fallow list --entry-points --format json --quiet` and `fallow list --boundaries --format json --quiet` to inspect project shape.
 - Solid 2 start mode has no `src/main.tsx`. Keep `src/App.tsx` and `src/Document.tsx` in `.fallowrc.jsonc` `entry` or they look unused.
+- `fallow doctor` checks project readiness (config, workspaces, type-aware companion, caches) without analysing or mutating anything. Run it first when a fallow command behaves oddly, before re-running the analysis.
+- Two rules are `error` but currently measure nothing, and `audit` says so under `workspace_diagnostics`: `boundary-violation` needs a `boundaries` config and `policy-violation` needs `rulePacks`. Neither is wired, so both counts are zero because nothing ran — not because the repo is clean. Configure them or turn them off with a reason; do not read a passing audit as boundary enforcement (`bun run lint:imports` is what actually guards imports today).
 
 <!-- generated:task-matrix:start -->
 | When the agent is about to... | Run |
@@ -139,8 +141,10 @@ For non-skill agents, treat the task map below as the local onboarding source: r
 |---|---|
 | delete an "unused" export or file | `fallow dead-code --trace <file>:<export>` |
 | prove a TypeScript symbol's exact consumers before refactoring | `fallow dead-code --type-aware --symbol-impact <file>:<export-or-class.method>` |
+| find how one module reaches another | `fallow trace --path <from> <to>` (Reports `reachable: false` instead of failing when no import path exists; type-only hops are reported, not skipped.) |
 | delete an "unused" dependency | `fallow dead-code --trace-dependency <name>` |
 | commit or open a PR | `fallow audit --base <ref>` |
+| read a diff before approving it | `fallow review --base <ref> --brief` (orientation, never gates: deterministic and always exit 0, unlike the audit row) |
 | prioritize refactoring | `fallow health --hotspots --targets` |
 | ask who owns code | `fallow health --ownership` |
 | check untested-but-reachable code | `fallow health --coverage-gaps` |
