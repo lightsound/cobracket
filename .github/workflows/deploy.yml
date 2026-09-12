@@ -21,7 +21,11 @@ permissions:
 jobs:
   # The same gates AGENTS.md asks a human to run before committing. They run
   # before anything touches the production deployment.
-  verify:
+  #
+  # Named `gates`, not `verify`, so it does not collide with the check
+  # `ci.yml` publishes on pull requests: check runs are identified by job
+  # name, and `verify` there is the one a branch ruleset requires.
+  gates:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -72,7 +76,7 @@ jobs:
           fi
 
   deploy:
-    needs: [verify, preflight]
+    needs: [gates, preflight]
     if: needs.preflight.outputs.configured == 'true'
     runs-on: ubuntu-latest
     steps:
