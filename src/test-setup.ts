@@ -13,8 +13,10 @@
  * attribution enabled — that is what produces the attribution-tier codes
  * (`SILENT_HOLD`, `UNSTABLE_LIST_IDENTITY`, `IMMUTABLE_UPDATE_IN_STORE`,
  * `ASYNC_WATERFALL`, ...) in the first place; they reach the same diagnostics
- * channel as the core ones, so `expectNoDiagnostics` covers all 36 codes at
- * once. It is not the whole story, though: the engine emits a hold's code only
+ * channel as the core ones, so one `expectNoDiagnostics` covers every code
+ * this gate can see — 35 of the engine's 36, since `[HOT_SCOPE_TIME]` is
+ * switched off below for reasons that have nothing to do with the app.
+ * It is not the whole story either: the engine emits a hold's code only
  * once the hold outlasts a duration threshold, so a *short* unacknowledged
  * hold is real, recorded, and coded nowhere. `expectNoSilentHolds` asks that
  * question of the attribution tables instead, where no threshold applies.

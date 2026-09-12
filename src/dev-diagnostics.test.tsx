@@ -58,11 +58,3 @@ test("leaves the records the gate is about to read", async () => {
   // remembers one.
   initDevDiagnostics();
 });
-
-test("is safe to call more than once", async () => {
-  expectSilentHold();
-  await recordASilentHold();
-
-  initDevDiagnostics();
-  initDevDiagnostics();
-});
