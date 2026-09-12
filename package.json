@@ -25,7 +25,7 @@
     "fallow:dead-code": "fallow dead-code",
     "auth:keys": "bun x @convex-dev/auth",
     "typecheck": "tsc --noEmit && tsc --noEmit -p convex && tsc --noEmit -p scripts",
-    "verify": "bun run check:bun && bun run typecheck && bun run test && bun x vp check && bun run lint:imports && bun run lint:solid && bun run lint:theme"
+    "verify": "bun run check:bun && bun run typecheck && bun run test && bun x vp check && bun run lint:imports && bun run lint:solid && bun run lint:theme && bun run build"
   },
   "dependencies": {
     "@convex-dev/auth": "2.0.0-alpha.1",
