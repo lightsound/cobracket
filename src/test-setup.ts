@@ -20,6 +20,10 @@
  * once the hold outlasts a duration threshold, so a *short* unacknowledged
  * hold is real, recorded, and coded nowhere. `expectNoSilentHolds` asks that
  * question of the attribution tables instead, where no threshold applies.
+ * Both questions are asked by `assertGate` in `src/diagnostics-verdict.ts`,
+ * shared with the real-browser gate under `e2e/`, which captures the same
+ * artifact format from Chromium; this file is the happy-dom half — the
+ * capture window and the per-test declarations.
  *
  * The window has two ends, and both are worth knowing. It opens in
  * `beforeEach`, so a test file's module scope runs before it and is not gated:
@@ -42,16 +46,8 @@
 import { afterEach, beforeEach } from "vite-plus/test";
 import { type Element, flush } from "solid-js";
 import { render } from "@solidjs/web";
-import {
-  captureArtifact,
-  type CaptureResult,
-  type DiagnosticCode,
-  DiagnosticsAssertionError,
-  type DiagnosticsArtifact,
-  expectDiagnostic,
-  expectNoDiagnostics,
-  expectNoSilentHolds,
-} from "@solidjs/diagnostics";
+import { captureArtifact, type CaptureResult, type DiagnosticCode } from "@solidjs/diagnostics";
+import { assertGate } from "./diagnostics-verdict";
 
 /**
  * `captureArtifact` is scenario-shaped (it runs a function), but a global gate
@@ -150,39 +146,6 @@ function ungatedError(name: string, pending: unknown, openedBy: string | undefin
   );
 }
 
-function assertDiagnostics(artifact: DiagnosticsArtifact): void {
-  for (const code of required) expectDiagnostic(artifact, code);
-  expectNoDiagnostics(artifact, { allow: [...required, ...tolerated] });
-}
-
-/**
- * The package's own computation answers both directions, so the positive case
- * cannot drift from the negative one by reading the artifact by hand. Narrowed
- * to its assertion error: anything else is a bug in the harness, not a finding.
- */
-function silentHoldFinding(artifact: DiagnosticsArtifact): DiagnosticsAssertionError | undefined {
-  try {
-    expectNoSilentHolds(artifact);
-    return undefined;
-  } catch (error) {
-    if (error instanceof DiagnosticsAssertionError) return error;
-    throw error;
-  }
-}
-
-function assertHoldFeedback(artifact: DiagnosticsArtifact): void {
-  const finding = silentHoldFinding(artifact);
-  if (!requiredSilentHold) {
-    if (finding !== undefined) throw finding;
-    return;
-  }
-  if (finding === undefined) {
-    throw new Error(
-      "expectSilentHold() was declared but the scenario acknowledged every hold it caused.",
-    );
-  }
-}
-
 beforeEach((context) => {
   // Both channels are process-global singletons, so two captures cannot be
   // told apart: with `test.concurrent` a diagnostic raised by one test lands
@@ -260,6 +223,5 @@ afterEach(async (context) => {
     throw ungatedError(context.task.name, pending, openedBy);
   }
 
-  assertDiagnostics(settled.artifact);
-  assertHoldFeedback(settled.artifact);
+  assertGate(settled.artifact, { required, tolerated, requiredSilentHold });
 });

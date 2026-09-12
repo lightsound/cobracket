@@ -2,7 +2,9 @@ import { defineConfig } from "vite-plus";
 import solid from "@solidjs/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 
-export default defineConfig({
+// A function so the one mode-dependent setting below can read `mode`; every
+// other setting is the same in every mode.
+export default defineConfig(({ mode }) => ({
   // Turnkey client mode: no index.html and no mount file — the plugin
   // generates the entries around src/App.tsx, wrapped in src/Document.tsx
   // (or a built-in shell). `vite build` prerenders the shell into
@@ -23,6 +25,18 @@ export default defineConfig({
       // the endpoint when the package is absent, despite what the option's
       // docs say.
       diagnostics: true,
+      // `bun run test:e2e` serves the app with `--mode e2e`, and the one
+      // thing that mode changes is the solid-refresh HMR transform. Its
+      // wrapper around every component declaration is a reactive source, so
+      // a list's insert effect subscribes to one node per component row and a
+      // 30+ row list reports [WIDE_SCOPE_DEPS] in `bun dev` with every source
+      // named `[solid-refresh]<Component>` — measured on the 31-match bracket
+      // the browser gate renders: 31 sources, all wrappers, on code the gate
+      // must pass. The vitest `src` project turns the transform off for the
+      // same reason (vitest.config.ts); here it stays on for `bun dev`, where
+      // HMR is the point, and off for the gate, which measures the graph the
+      // app ships. Nothing else about the e2e server differs from `bun dev`.
+      refresh: mode === "e2e" ? { disabled: true } : undefined,
       start: {
         // Optional peer `@solidjs/start-devtools` is not installed.
         // next.32+ treats Vite's optional-peer stub as missing, but keep
@@ -67,4 +81,4 @@ export default defineConfig({
       typeCheck: true,
     },
   },
-});
+}));

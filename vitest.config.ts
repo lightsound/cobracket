@@ -80,6 +80,24 @@ export default defineConfig({
         },
       },
       {
+        // The real-browser diagnostics gate (e2e/share-link.test.ts): Chromium
+        // driven by playwright-core against the dev server in `--mode e2e`,
+        // judged by the same verdict as the `src` project. Its global setup
+        // boots the anonymous Convex deployment and the dev server, so it is
+        // not part of `bun run test` — `bun run test:e2e` selects it.
+        test: {
+          name: "e2e",
+          include: ["e2e/**/*.test.ts"],
+          environment: "node",
+          globalSetup: ["./e2e/global-setup.ts"],
+          // A whole Organizer session in a browser, not a unit: one test is
+          // seconds, and the setup can be minutes on a cold container (the
+          // Convex backend binary downloads on first use).
+          testTimeout: 60_000,
+          hookTimeout: 300_000,
+        },
+      },
+      {
         test: {
           name: "convex",
           include: ["convex/**/*.test.ts"],
