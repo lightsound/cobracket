@@ -39,14 +39,14 @@
     "@import-lint/cli": "^0.1.9",
     "@solidjs/vite-plugin": "^3.0.0-next.36",
     "@tailwindcss/vite": "^4.3.3",
-    "@types/bun": "^1.4.0",
-    "convex-test": "^0.0.56",
-    "fallow": "^3.20.0",
+    "@types/bun": "^1.4.2",
+    "convex-test": "^0.0.58",
+    "fallow": "^3.25.0",
     "solid2-agent-kit": "^0.11.0",
-    "typescript": "^7.1.0-dev.20260829.1",
+    "typescript": "^7.1.0-dev.20260911.1",
     "vite": "npm:@voidzero-dev/vite-plus-core@0.3.0",
     "vite-plus": "0.3.0",
-    "wrangler": "^4.127.1"
+    "wrangler": "^4.131.1"
   },
   "overrides": {
     "vite": "npm:@voidzero-dev/vite-plus-core@0.3.0"
