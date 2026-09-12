@@ -10,6 +10,18 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     solid({
+      // Dev-serve only: injects `@solidjs/diagnostics`' in-page bridge and
+      // serves /__solid/diagnostics, so an agent can drive a capture with
+      // curl (begin / interact / costs / end) instead of instrumenting the
+      // app. Never active on builds, preview, or under vitest.
+      //
+      // The dev dependency alone auto-enables this. It is spelled out anyway
+      // because nothing imports the package: fallow reports it as an unused
+      // devDependency and offers "remove" as an auto-fix, so this line is
+      // where a reader finds out what the dependency is for. Note it is only
+      // a signpost — next.43 still starts and still prints the endpoint when
+      // the package is absent, despite what the option's docs say.
+      diagnostics: true,
       start: {
         // Optional peer `@solidjs/start-devtools` is not installed.
         // next.32+ treats Vite's optional-peer stub as missing, but keep

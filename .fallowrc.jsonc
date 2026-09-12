@@ -9,7 +9,11 @@
   // solid2-agent-kit is a CLI-only guardrail kit: invoked as the
   // `solid2-kit` bin from the lint:solid script and from the agent hooks
   // (.cursor/hooks.json, .claude/settings.json); it is never imported.
-  "ignoreDependencies": ["@edge-runtime/vm", "solid2-agent-kit"],
+  // @solidjs/diagnostics is consumed by @solidjs/vite-plugin's `diagnostics`
+  // option, not by an import: the plugin injects its in-page bridge and
+  // serves /__solid/diagnostics on the dev server. Removing it (the auto-fix
+  // fallow offers here) would break `bun dev`, not clean anything up.
+  "ignoreDependencies": ["@edge-runtime/vm", "solid2-agent-kit", "@solidjs/diagnostics"],
   // Semantic proof for traces, symbol-impact, and private-type hygiene.
   // best-effort: incomplete checker results stay advisory and do not fail CI.
   "typeAware": {

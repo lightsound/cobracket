@@ -16,6 +16,7 @@
       "devDependencies": {
         "@edge-runtime/vm": "^5.0.0",
         "@import-lint/cli": "^0.1.9",
+        "@solidjs/diagnostics": "^2.0.0-rc.8",
         "@solidjs/vite-plugin": "^3.0.0-next.43",
         "@tailwindcss/vite": "^4.3.3",
         "@types/bun": "^1.4.2",
@@ -376,6 +377,8 @@
     "@solidjs/compiler-wasm32-wasi": ["@solidjs/compiler-wasm32-wasi@2.0.0-rc.8", "", { "dependencies": { "@emnapi/core": "1.11.3", "@emnapi/runtime": "1.11.3", "@napi-rs/wasm-runtime": "^1.1.6" } }, "sha512-azFGpzpjhmTUfkKHkUg5M2QAmtC3HB+gP0DrSOYH+QzPT3T2XTixy+NOhNxrLD2UZiNLn9FoB3iARJzd3BSbdA=="],
 
     "@solidjs/compiler-win32-x64-msvc": ["@solidjs/compiler-win32-x64-msvc@2.0.0-rc.8", "", { "os": "win32", "cpu": "x64" }, "sha512-qZbumMy5Qm3ilhgaBY/aozo//EWnd1Kk12j+MqQEMzeZlOrnCrLcFZg06DI0cldval5I9UsiKC33Vv+Sn1njAw=="],
+
+    "@solidjs/diagnostics": ["@solidjs/diagnostics@2.0.0-rc.8", "", { "dependencies": { "@solidjs/signals": "^2.0.0-rc.8" }, "peerDependencies": { "vitest": ">=2.0.0" }, "optionalPeers": ["vitest"] }, "sha512-EjVbL6E1bf6xn52Tw5k1akvF8M/JV1UANH3RVn3am7qhro9VJYHwCSrkQGhLbI8iCyLcvt6MchuPKSuZHo9U5g=="],
 
     "@solidjs/router": ["@solidjs/router@2.0.0-next.24", "", { "peerDependencies": { "@solidjs/web": "^2.0.0-rc.8", "solid-js": "^2.0.0-rc.8" } }, "sha512-E+Ihm/qoJriDcShKzRkcljJC7dkphUZPk9dFMeyhe0RpOw6Stifuznt6+ZLxD5S2lwAGRlLB4/btAjNJh/qkbw=="],
 

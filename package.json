@@ -37,6 +37,7 @@
   "devDependencies": {
     "@edge-runtime/vm": "^5.0.0",
     "@import-lint/cli": "^0.1.9",
+    "@solidjs/diagnostics": "^2.0.0-rc.8",
     "@solidjs/vite-plugin": "^3.0.0-next.43",
     "@tailwindcss/vite": "^4.3.3",
     "@types/bun": "^1.4.2",
