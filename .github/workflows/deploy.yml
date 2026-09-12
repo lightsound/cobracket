@@ -18,28 +18,33 @@ concurrency:
 permissions:
   contents: read
 
-env:
-  # Keep the pre-release toolchain identical to local development (ADR 0004).
-  # Keep in sync with `packageManager` in package.json.
-  BUN_VERSION: 1.4.0
-
 jobs:
   # The same gates AGENTS.md asks a human to run before committing. They run
   # before anything touches the production deployment.
-  verify:
+  #
+  # Named `gates`, not `verify`, so it does not collide with the check
+  # `ci.yml` publishes on pull requests: check runs are identified by job
+  # name, and `verify` there is the one a branch ruleset requires.
+  gates:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: ${{ env.BUN_VERSION }}
+          # Reads `packageManager` from package.json, so the version is
+          # declared once. Named explicitly rather than left to the action's
+          # implicit fallback, which reaches for `engines.bun` (a range) and
+          # then `latest` without failing.
+          bun-version-file: package.json
+      # Before install: the lockfile is resolved by whichever Bun is running,
+      # so prove it is the declared one first. --strict also fails if the
+      # action resolved anything other than the pin.
+      - run: bun run check:bun -- --strict
       - run: bun install --frozen-lockfile
-      - run: bun run typecheck
-      - run: bun run test
-      - run: bun x vp check
-      - run: bun run lint:imports
-      - run: bun run lint:solid
-      - run: bun run lint:theme
+      # The same gate set `ci.yml` runs on pull requests, and the same one
+      # AGENTS.md asks an agent to run before committing — one list, in
+      # package.json, so the three cannot drift apart.
+      - run: bun run verify
 
   # Production needs three repository secrets (ADR 0010). Until a human sets
   # them, `deploy` is skipped rather than failed: main's status then reflects
@@ -71,14 +76,14 @@ jobs:
           fi
 
   deploy:
-    needs: [verify, preflight]
+    needs: [gates, preflight]
     if: needs.preflight.outputs.configured == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: ${{ env.BUN_VERSION }}
+          bun-version-file: package.json
       - run: bun install --frozen-lockfile
 
       # Deploys convex/ to the deployment CONVEX_DEPLOY_KEY belongs to, and

@@ -44,7 +44,7 @@ function BackHomeNotice(props: { message: string }) {
   return (
     <div class="flex flex-col items-start gap-3">
       <p class="text-sm text-ink-muted">{props.message}</p>
-      <a href={Router.paths()} class="text-sm text-accent underline">
+      <a href={Router.paths} class="text-sm text-accent underline">
         {t("app.backHome")}
       </a>
     </div>
@@ -214,6 +214,8 @@ function BracketControls(props: {
 
 function ShareLinkRow(props: { shareSlug: string }) {
   const [copyState, setCopyState] = createSignal<"idle" | "copied" | "failed">("idle");
+  // The share link as text (clipboard, visible label): a zero-arg call is
+  // the path node's plain-string form, which a template literal needs.
   const shareUrl = () => `${window.location.origin}${Router.paths.s(props.shareSlug)()}`;
 
   let resetTimer: ReturnType<typeof setTimeout> | undefined;
@@ -518,7 +520,7 @@ function SettingsSection(props: { view: OrganizerView; formatEditable: boolean }
       await runMutation(api.operations.deleteTournament, {
         tournamentId: props.view.tournamentId,
       });
-      navigate(Router.paths());
+      navigate(Router.paths);
     } catch (error) {
       setDeleteError(errorMessage(error));
     }

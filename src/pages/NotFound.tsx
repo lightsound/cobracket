@@ -6,7 +6,7 @@ export default function NotFound() {
   return (
     <div class="flex flex-col items-start gap-3">
       <p class="text-lg">{t("app.notFound")}</p>
-      <a href={Router.paths()} class="text-sm text-accent underline">
+      <a href={Router.paths} class="text-sm text-accent underline">
         {t("app.backHome")}
       </a>
     </div>

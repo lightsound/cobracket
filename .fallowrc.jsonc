@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/fallow/schema.json",
-  // All rules are error. The only off rule is coverage-gaps: there are no tests yet.
+  // Every rule is error, except `policy-violation` — see its entry for why.
   "entry": ["src/App.tsx", "src/Document.tsx", "scripts/lint-theme.ts"],
   "ignorePatterns": ["convex/_generated/**", "src/vite-env.d.ts"],
   // Vitest resolves the edge-runtime test environment by name from the
@@ -9,7 +9,27 @@
   // solid2-agent-kit is a CLI-only guardrail kit: invoked as the
   // `solid2-kit` bin from the lint:solid script and from the agent hooks
   // (.cursor/hooks.json, .claude/settings.json); it is never imported.
+  // happy-dom is resolved by name the same way and is deliberately absent:
+  // fallow does not report it (it knows the built-in vitest environments),
+  // and an ignore for a rule that never fires is a stale suppression.
   "ignoreDependencies": ["@edge-runtime/vm", "solid2-agent-kit"],
+  // Architecture zones. Deliberately narrow: ImportLint already enforces
+  // imports at export granularity (every directory is a package; exports are
+  // package-private unless tagged @public), which is what keeps risky
+  // dependencies behind a narrow module (ADR 0004) and already blocks
+  // src/ -> convex/ internals. Zones cover only what that model cannot see:
+  // an export tagged @public is visible to the whole app, so nothing stops
+  // src/bracket — the pure layout layer of ADR 0007 — from reaching into
+  // src/lib/convex and acquiring a Convex client. This rule is that guard.
+  // Keep the two tools on their own axes; do not restate ImportLint here.
+  "boundaries": {
+    "zones": [
+      { "name": "bracket", "patterns": ["src/bracket/**"] },
+      { "name": "client-data", "patterns": ["src/lib/**"] },
+    ],
+    "rules": [{ "from": "bracket", "allow": [] }],
+  },
+
   // Semantic proof for traces, symbol-impact, and private-type hygiene.
   // best-effort: incomplete checker results stay advisory and do not fail CI.
   "typeAware": {
@@ -63,13 +83,24 @@
     "misconfigured-dependency-overrides": "error",
     "security-client-server-leak": "error",
     "security-sink": "error",
-    "policy-violation": "error",
+    // Off: rule packs are policy-as-code, and none are authored. Left `error`
+    // it reported zero violations because the detector never ran, which reads
+    // like a clean result. Turn it back on in the change that adds `rulePacks`.
+    "policy-violation": "off",
     "invalid-client-export": "error",
     "mixed-client-server-barrel": "error",
     "misplaced-directive": "error",
     "route-collision": "error",
     "dynamic-segment-name-conflict": "error",
-    // Impossible until the repo has tests that form a dependency path into src/.
-    "coverage-gaps": "off",
+    // On since src/bracket/*.test.ts gave the graph a path into src/. It gates
+    // `fallow health --coverage-gaps` only (exit 1 instead of a listing) — the
+    // default run and `fallow audit` do not consult it, so CI stays green.
+    // Read the listing, not the percentage: it is a static test-dependency
+    // graph, so src/router.ts lazy-importing every page made it count
+    // Tournament.tsx as covered the moment any page had a test, while nothing
+    // exercised a line of it. The backlog it names today is the app shell and
+    // the two toggles (App, Document, LocaleToggle, ThemeToggle,
+    // theme-preference) plus scripts/lint-theme.ts.
+    "coverage-gaps": "error",
   },
 }
