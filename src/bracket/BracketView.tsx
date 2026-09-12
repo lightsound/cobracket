@@ -62,24 +62,30 @@ const SECTION_LABEL_KEYS = {
  * @public
  */
 export function BracketView(props: BracketViewProps) {
-  const layout = createMemo(() => layoutBracket(props.matches));
-  const matchByKey = createMemo(() => new Map(props.matches.map((match) => [match.key, match])));
+  const layout = createMemo(() => layoutBracket(props.matches), { name: "layout" });
+  const matchByKey = createMemo(() => new Map(props.matches.map((match) => [match.key, match])), {
+    name: "matchByKey",
+  });
   const nameOf = createMemo(
     () =>
       new Map(
         props.participants.map((participant) => [participant.participantId, participant.name]),
       ),
+    { name: "participantNames" },
   );
-  const readyKeys = createMemo(() => new Set(props.readyMatchKeys));
-  const voidedKeys = createMemo(() => new Set(props.voidedMatchKeys));
+  const readyKeys = createMemo(() => new Set(props.readyMatchKeys), { name: "readyKeys" });
+  const voidedKeys = createMemo(() => new Set(props.voidedMatchKeys), { name: "voidedKeys" });
 
-  const sections = createMemo(() => {
-    const firstCards = new Map<BracketSectionName, { x: number; y: number }>();
-    for (const card of layout().cards) {
-      if (!firstCards.has(card.bracket)) firstCards.set(card.bracket, { x: card.x, y: card.y });
-    }
-    return [...firstCards].map(([bracket, position]) => ({ bracket, ...position }));
-  });
+  const sections = createMemo(
+    () => {
+      const firstCards = new Map<BracketSectionName, { x: number; y: number }>();
+      for (const card of layout().cards) {
+        if (!firstCards.has(card.bracket)) firstCards.set(card.bracket, { x: card.x, y: card.y });
+      }
+      return [...firstCards].map(([bracket, position]) => ({ bracket, ...position }));
+    },
+    { name: "sections" },
+  );
   const labelSpace = () => (sections().length > 1 ? SECTION_LABEL_SPACE : 0);
 
   const [scale, setScale] = createSignal(1);

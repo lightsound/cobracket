@@ -1,5 +1,6 @@
 import { isServer } from "@solidjs/web";
 import { ConvexClient } from "convex/browser";
+import { getFunctionName } from "convex/server";
 import type { FunctionArgs, FunctionReference, FunctionReturnType } from "convex/server";
 import { createMemo, onCleanup } from "solid-js";
 import type { Accessor } from "solid-js";
@@ -70,51 +71,57 @@ export function createConvexQuery<Query extends FunctionReference<"query">>(
   const readArgs =
     typeof args === "function" ? (args as Accessor<FunctionArgs<Query>>) : () => args;
 
-  return createMemo(() => {
-    // Reading reactive args here makes them a dependency of the computation.
-    const resolvedArgs = readArgs();
+  // Named by the Convex function it subscribes to, so attribution's cost and
+  // hold tables identify which query a row belongs to. Every subscription
+  // would otherwise share the anonymous `computed` label.
+  return createMemo(
+    () => {
+      // Reading reactive args here makes them a dependency of the computation.
+      const resolvedArgs = readArgs();
 
-    let current: Result | undefined;
-    let version = 0;
-    let failure: unknown;
-    let disposed = false;
-    let wake = () => {};
+      let current: Result | undefined;
+      let version = 0;
+      let failure: unknown;
+      let disposed = false;
+      let wake = () => {};
 
-    if (convex) {
-      const unsubscribe = convex.onUpdate(
-        query,
-        resolvedArgs,
-        (result) => {
-          current = result;
-          version += 1;
-          failure = undefined;
+      if (convex) {
+        const unsubscribe = convex.onUpdate(
+          query,
+          resolvedArgs,
+          (result) => {
+            current = result;
+            version += 1;
+            failure = undefined;
+            wake();
+          },
+          (error) => {
+            failure = error;
+            wake();
+          },
+        );
+        onCleanup(() => {
+          disposed = true;
+          unsubscribe();
           wake();
-        },
-        (error) => {
-          failure = error;
-          wake();
-        },
-      );
-      onCleanup(() => {
-        disposed = true;
-        unsubscribe();
-        wake();
-      });
-    }
-
-    return (async function* () {
-      let seen = 0;
-      while (!disposed) {
-        if (failure !== undefined) throw failure;
-        if (version > seen) {
-          seen = version;
-          yield current as Result;
-          continue;
-        }
-        await new Promise<void>((resolve) => {
-          wake = resolve;
         });
       }
-    })();
-  });
+
+      return (async function* () {
+        let seen = 0;
+        while (!disposed) {
+          if (failure !== undefined) throw failure;
+          if (version > seen) {
+            seen = version;
+            yield current as Result;
+            continue;
+          }
+          await new Promise<void>((resolve) => {
+            wake = resolve;
+          });
+        }
+      })();
+    },
+    { name: `query:${getFunctionName(query)}` },
+  );
 }
