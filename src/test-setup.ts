@@ -95,33 +95,6 @@ export function expectSilentHold(): void {
   tolerated.push("SILENT_HOLD", "LONG_HOLD");
 }
 
-beforeEach((context) => {
-  // Both channels are process-global singletons, so two captures cannot be
-  // told apart: with `test.concurrent` a diagnostic raised by one test lands
-  // in whichever artifact happens to be open, failing the wrong test while
-  // the culprit passes (measured, not assumed). Refuse the overlap rather
-  // than misattribute it.
-  if (capture !== undefined) {
-    throw new Error(
-      `The Solid diagnostics gate cannot separate overlapping tests (${owner ?? "?"} is ` +
-        `still open): the diagnostics channel and the attribution engine are ` +
-        `process-global. Run tests under src/ sequentially — no \`test.concurrent\`, ` +
-        `no \`describe.concurrent\`.`,
-    );
-  }
-  owner = context.task.id;
-  required = [];
-  tolerated = [];
-  requiredSilentHold = false;
-  capture = captureArtifact<void>(
-    () =>
-      new Promise<void>((resolve) => {
-        endScenario = resolve;
-      }),
-    { scenario: context.task.name },
-  );
-});
-
 /**
  * The gate's own overlap report. A teardown that finds a missing or foreign
  * capture has nothing it may assert on, and saying so is the only safe move:
@@ -168,6 +141,33 @@ function assertHoldFeedback(artifact: DiagnosticsArtifact): void {
     );
   }
 }
+
+beforeEach((context) => {
+  // Both channels are process-global singletons, so two captures cannot be
+  // told apart: with `test.concurrent` a diagnostic raised by one test lands
+  // in whichever artifact happens to be open, failing the wrong test while
+  // the culprit passes (measured, not assumed). Refuse the overlap rather
+  // than misattribute it.
+  if (capture !== undefined) {
+    throw new Error(
+      `The Solid diagnostics gate cannot separate overlapping tests (${owner ?? "?"} is ` +
+        `still open): the diagnostics channel and the attribution engine are ` +
+        `process-global. Run tests under src/ sequentially — no \`test.concurrent\`, ` +
+        `no \`describe.concurrent\`.`,
+    );
+  }
+  owner = context.task.id;
+  required = [];
+  tolerated = [];
+  requiredSilentHold = false;
+  capture = captureArtifact<void>(
+    () =>
+      new Promise<void>((resolve) => {
+        endScenario = resolve;
+      }),
+    { scenario: context.task.name },
+  );
+});
 
 afterEach(async (context) => {
   const pending = capture;
