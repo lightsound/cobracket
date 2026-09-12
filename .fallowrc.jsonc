@@ -9,6 +9,9 @@
   // solid2-agent-kit is a CLI-only guardrail kit: invoked as the
   // `solid2-kit` bin from the lint:solid script and from the agent hooks
   // (.cursor/hooks.json, .claude/settings.json); it is never imported.
+  // happy-dom is resolved by name the same way and is deliberately absent:
+  // fallow does not report it (it knows the built-in vitest environments),
+  // and an ignore for a rule that never fires is a stale suppression.
   "ignoreDependencies": ["@edge-runtime/vm", "solid2-agent-kit"],
   // Architecture zones. Deliberately narrow: ImportLint already enforces
   // imports at export granularity (every directory is a package; exports are

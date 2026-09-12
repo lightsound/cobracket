@@ -33,7 +33,8 @@ export default defineConfig({
           // server build, where writes are inert and attribution sees
           // nothing. See src/test-setup.ts.
           environment: "happy-dom",
-          // Fails any test that produced a Solid diagnostic.
+          // Fails any test that produced a Solid diagnostic or left a hold
+          // unacknowledged.
           setupFiles: ["./src/test-setup.ts"],
         },
       },
