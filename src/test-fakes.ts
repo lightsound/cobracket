@@ -8,11 +8,13 @@
  * asks for is also the narrow module a test can replace. Everything else in a
  * page runs for real.
  *
- * The fake reproduces the shape that matters to the gate, not just the values:
- * a query's first read is a promise, so `<Loading>` boundaries engage exactly
- * as they do in production, and a later push is a plain value, the way a
- * subscription delivers one. A page tested against synchronous data would
- * never form a hold and the gate would have nothing to judge.
+ * The fake reproduces the shape that matters to the gate, not just the values.
+ * A read whose args it has not seen starts as a promise — including the very
+ * first one — so `<Loading>` boundaries engage as they do in production and a
+ * re-subscribing read forms a real hold; a later push to a live subscription
+ * is a plain value, the way Convex delivers one. Both halves matter: a page
+ * tested against synchronous data never forms a hold, and the gate's
+ * responsiveness question then has nothing to judge.
  *
  * Wire it from a page test with vitest's module mocks:
  *
@@ -45,18 +47,18 @@ export function fakeId<Table extends TableNames>(value: string): Id<Table> {
   return value as Id<Table>;
 }
 
-interface Channel {
+interface Flight {
   read: Accessor<unknown>;
-  push: (value: unknown) => void;
+  deliver: (value: unknown) => void;
 }
 
 /**
- * One query's values over time. The first push settles the promise the signal
- * already holds rather than replacing it, so the boundary sees one transition
- * from pending to value — replacing it would abandon a flight the attribution
- * tables would then report.
+ * One subscription's values over time. The first delivery settles the promise
+ * the signal already holds rather than replacing it, so the boundary sees one
+ * transition from pending to value — replacing it would abandon a flight the
+ * attribution tables would then report.
  */
-function createChannel(): Channel {
+function createFlight(): Flight {
   let settle: ((value: unknown) => void) | undefined;
   const [value, setValue] = createSignal<unknown>(
     new Promise<unknown>((resolve) => {
@@ -66,7 +68,7 @@ function createChannel(): Channel {
   let settled = false;
   return {
     read: value,
-    push(next) {
+    deliver(next) {
       if (!settled) {
         settled = true;
         settle?.(next);
@@ -77,17 +79,41 @@ function createChannel(): Channel {
   };
 }
 
-let channels = new Map<string, Channel>();
+/** The latest value published per Convex function. */
+let published = new Map<string, unknown>();
+/** Live subscriptions, by function and then by the args they subscribed with. */
+let flights = new Map<string, Map<string, Flight>>();
 let mutationHandlers = new Map<string, (args: unknown) => unknown>();
 let calls: { name: string; args: unknown }[] = [];
+let routes: string[] = [];
 
-function channelFor(name: string): Channel {
-  let channel = channels.get(name);
-  if (!channel) {
-    channel = createChannel();
-    channels.set(name, channel);
+/**
+ * Subscriptions are keyed by args, not just by function, because that is what
+ * `convex.onUpdate` does: changing args tears the subscription down and opens
+ * a new one, and the read is pending again until the new answer lands. A fake
+ * keyed by function alone would hand an args change an already-settled value,
+ * and every hold a page forms by re-subscribing — the shape `latest()` and
+ * `isPending()` exist for — would disappear from the test.
+ *
+ * So a flight for args never seen before starts pending even when the answer
+ * is already known, and the value arrives in a later turn.
+ */
+function flightFor(name: string, argsKey: string): Flight {
+  let byArgs = flights.get(name);
+  if (!byArgs) {
+    byArgs = new Map();
+    flights.set(name, byArgs);
   }
-  return channel;
+  const existing = byArgs.get(argsKey);
+  if (existing) return existing;
+
+  const flight = createFlight();
+  byArgs.set(argsKey, flight);
+  if (published.has(name)) {
+    const value = published.get(name);
+    queueMicrotask(() => flight.deliver(value));
+  }
+  return flight;
 }
 
 /**
@@ -101,7 +127,9 @@ export function publishQuery<Query extends FunctionReference<"query">>(
   query: Query,
   value: FunctionReturnType<Query>,
 ): void {
-  channelFor(getFunctionName(query)).push(value);
+  const name = getFunctionName(query);
+  published.set(name, value);
+  for (const flight of flights.get(name)?.values() ?? []) flight.deliver(value);
 }
 
 /**
@@ -131,8 +159,6 @@ export function navigations(): string[] {
   return routes;
 }
 
-let routes: string[] = [];
-
 function fakeCreateConvexQuery<Query extends FunctionReference<"query">>(
   query: Query,
   args: FunctionArgs<Query> | Accessor<FunctionArgs<Query>>,
@@ -141,10 +167,11 @@ function fakeCreateConvexQuery<Query extends FunctionReference<"query">>(
   const readArgs = typeof args === "function" ? (args as Accessor<unknown>) : () => args;
   return createMemo(
     () => {
-      // Read the args so a change re-runs the computation, as the real
-      // subscription does; the fake keys results by function, not by args.
-      readArgs();
-      return channelFor(name).read() as FunctionReturnType<Query>;
+      // The args identify the subscription, so a change opens a new flight —
+      // the same thing a real re-subscription does, and the reason a page can
+      // form a hold here at all.
+      const argsKey = JSON.stringify(readArgs() ?? null);
+      return flightFor(name, argsKey).read() as FunctionReturnType<Query>;
     },
     { name: `fake:${name}` },
   );
@@ -214,7 +241,8 @@ export function routerHooks(params: Record<string, string>): Record<string, unkn
 // test can forget to reset is the same hazard as a gate a test can forget to
 // apply.
 beforeEach(() => {
-  channels = new Map();
+  published = new Map();
+  flights = new Map();
   mutationHandlers = new Map();
   calls = [];
   routes = [];

@@ -33,6 +33,16 @@ setLocale("en");
 /** Let the async memos settle and the DOM catch up. */
 const settled = () => new Promise((resolve) => setTimeout(resolve, 0));
 
+/** A live session with an empty list and suggestions answered. */
+async function ready(): Promise<HTMLElement> {
+  const host = mount(() => <Home />);
+  publishQuery(api.auth.currentOrganizer, ORGANIZER);
+  publishQuery(api.operations.listMyTournaments, []);
+  publishQuery(api.operations.suggestDisciplines, []);
+  await settled();
+  return host;
+}
+
 /** Rebuilt on every call — the way each subscription push delivers it. */
 function tournaments(): FunctionReturnType<typeof api.operations.listMyTournaments> {
   return [
@@ -133,6 +143,10 @@ test("creates a tournament and navigates to it", async () => {
 
   type(field(host, "Tournament name"), "Friday Night Bracket");
   type(field(host, "Discipline"), "Chess");
+  // Typing re-subscribes the suggestions query, which holds the write to
+  // `discipline` until the new answer lands. Wait for it, as a user filling a
+  // form does — submitting inside that window is its own case, below.
+  await settled();
   host
     .querySelector("form")
     ?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
@@ -186,4 +200,26 @@ test("shows each keystroke while the suggestions query is still held", async () 
   expect(discipline.value).toBe("Che");
   await settled();
   expect(discipline.value).toBe("Che");
+});
+
+test("submitting inside the Discipline hold sends the committed value, not the typed one", async () => {
+  const host = await ready();
+  answerMutation(api.operations.createTournament, () => ({
+    tournamentId: fakeId<"tournaments">("t9"),
+    shareSlug: "t9-share",
+  }));
+
+  type(field(host, "Tournament name"), "Friday Night Bracket");
+  type(field(host, "Discipline"), "Chess");
+  // No wait: the suggestions query is still in flight, so the write to
+  // `discipline` is still held. `latest()` puts "Chess" on screen, but the
+  // handler reads the committed signal, which is still "".
+  host
+    .querySelector("form")
+    ?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+  await settled();
+
+  expect(field(host, "Discipline").value).toBe("Chess");
+  const sent = mutationCalls()[0]?.args as { discipline: string } | undefined;
+  expect(sent?.discipline).toBe("");
 });
