@@ -223,3 +223,17 @@ test("submitting inside the Discipline hold sends the committed value, not the t
   const sent = mutationCalls()[0]?.args as { discipline: string } | undefined;
   expect(sent?.discipline).toBe("");
 });
+
+test("a suggestion published while the keystroke is in flight is the one that shows", async () => {
+  const host = await ready();
+
+  // Typing opens a new subscription; the answer for it lands before the fake
+  // would have seeded the flight from the previous result.
+  type(field(host, "Discipline"), "Che");
+  publishQuery(api.operations.suggestDisciplines, ["Chess", "Checkers"]);
+  await settled();
+
+  expect([...host.querySelectorAll("datalist option")].map((o) => o.getAttribute("value"))).toEqual(
+    ["Chess", "Checkers"],
+  );
+});

@@ -50,6 +50,8 @@ export function fakeId<Table extends TableNames>(value: string): Id<Table> {
 interface Flight {
   read: Accessor<unknown>;
   deliver: (value: unknown) => void;
+  /** Settle a still-pending flight; a no-op once a real delivery has landed. */
+  seed: (value: unknown) => void;
 }
 
 /**
@@ -75,6 +77,11 @@ function createFlight(): Flight {
         return;
       }
       setValue(() => next);
+    },
+    seed(next) {
+      if (settled) return;
+      settled = true;
+      settle?.(next);
     },
   };
 }
@@ -109,10 +116,14 @@ function flightFor(name: string, argsKey: string): Flight {
 
   const flight = createFlight();
   byArgs.set(argsKey, flight);
-  if (published.has(name)) {
-    const value = published.get(name);
-    queueMicrotask(() => flight.deliver(value));
-  }
+  // Read `published` when the turn arrives, not when the flight opens, and
+  // seed rather than deliver: the flight is already registered, so a
+  // `publishQuery` in between settles it with the newer answer, and a
+  // captured snapshot delivered afterwards would overwrite that with the
+  // older one.
+  queueMicrotask(() => {
+    if (published.has(name)) flight.seed(published.get(name));
+  });
   return flight;
 }
 
