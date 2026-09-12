@@ -46,12 +46,14 @@ jobs:
       # package.json, so the three cannot drift apart.
       - run: bun run verify
 
-  # Production needs three repository secrets (ADR 0010). Until a human sets
-  # them, `deploy` is skipped rather than failed: main's status then reflects
-  # the gates, the run carries a warning annotation naming what is missing,
-  # and continuous deployment resumes on the next push once the secrets
-  # exist, with no workflow edit. (The secrets context is not available in a
-  # job-level `if`, hence the step that reads them into an output.)
+  # Production needs three repository secrets (ADR 0010). They are unset by
+  # decision — production is deliberately not live (AGENTS.md
+  # "## Production deployment") — so `deploy` is skipped rather than failed:
+  # main's status then reflects the gates, the run carries a notice (not a
+  # warning: there is nothing to fix) naming what is missing, and continuous
+  # deployment resumes on the next push once the secrets exist, with no
+  # workflow edit. (The secrets context is not available in a job-level `if`,
+  # hence the step that reads them into an output.)
   preflight:
     runs-on: ubuntu-latest
     outputs:
@@ -71,8 +73,8 @@ jobs:
             echo "configured=true" >> "$GITHUB_OUTPUT"
           else
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::warning title=Deploy skipped::Production secrets not set: ${missing[*]}. Set them under Settings > Secrets and variables > Actions (AGENTS.md, '## Production deployment')."
-            echo "**Deploy skipped** — missing repository secrets: \`${missing[*]}\`." >> "$GITHUB_STEP_SUMMARY"
+            echo "::notice title=Deploy skipped (production not live by decision)::Secrets not set: ${missing[*]}. Nothing to fix — see AGENTS.md, '## Production deployment'. Setting them under Settings > Secrets and variables > Actions is what starts deploying."
+            echo "**Deploy skipped** — production is not live by decision; repository secrets unset: \`${missing[*]}\`." >> "$GITHUB_STEP_SUMMARY"
           fi
 
   deploy:
