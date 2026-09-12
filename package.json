@@ -19,6 +19,7 @@
     "lint:solid": "solid2-kit check && solid2-kit doctor",
     "lint:imports": "bunx @import-lint/cli",
     "lint:theme": "bun scripts/lint-theme.ts",
+    "check:bun": "bun scripts/check-bun-version.ts",
     "fallow": "fallow",
     "fallow:audit": "fallow audit",
     "fallow:dead-code": "fallow dead-code",

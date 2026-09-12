@@ -33,6 +33,10 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
+      # Before install: the lockfile is resolved by whichever Bun is running,
+      # so prove it is the declared one first. --strict also fails when
+      # BUN_VERSION above and `packageManager` have drifted apart.
+      - run: bun run check:bun -- --strict
       - run: bun install --frozen-lockfile
       - run: bun run typecheck
       - run: bun run test
