@@ -63,9 +63,28 @@ const SECTION_LABEL_KEYS = {
  */
 export function BracketView(props: BracketViewProps) {
   const layout = createMemo(() => layoutBracket(props.matches), { name: "layout" });
-  const matchByKey = createMemo(() => new Map(props.matches.map((match) => [match.key, match])), {
-    name: "matchByKey",
-  });
+  /**
+   * The layout positions and the match data, joined once per update.
+   *
+   * The join is a memo rather than a lookup inside the `<For>` row because a
+   * row that narrows its own match (`<Show when={byKey.get(card.key)}>`) makes
+   * every row a reactive source of the list's insert effect: measured at 40
+   * rows, a plain element row costs the effect 0 sources, a component row 0,
+   * and a component behind a per-row `<Show>` 1 each — which is what put
+   * BracketView over the [WIDE_SCOPE_DEPS] threshold (30) on a 15-match
+   * bracket. Cards come from `layoutBracket(props.matches)`, so the lookup
+   * cannot miss; `flatMap` states that without a non-null assertion.
+   */
+  const cards = createMemo(
+    () => {
+      const byKey = new Map(props.matches.map((match) => [match.key, match]));
+      return layout().cards.flatMap((card) => {
+        const match = byKey.get(card.key);
+        return match === undefined ? [] : [{ card, match }];
+      });
+    },
+    { name: "cards" },
+  );
   const nameOf = createMemo(
     () =>
       new Map(
@@ -185,21 +204,17 @@ export function BracketView(props: BracketViewProps) {
             )}
           </For>
         </Show>
-        <For each={layout().cards} keyed={(card) => card.key}>
-          {(card) => (
-            <Show when={matchByKey().get(card().key)}>
-              {(match) => (
-                <MatchCard
-                  match={match()}
-                  x={card().x}
-                  y={card().y + labelSpace()}
-                  ready={readyKeys().has(card().key)}
-                  voided={voidedKeys().has(card().key)}
-                  names={nameOf()}
-                  onSelect={props.onSelectMatch}
-                />
-              )}
-            </Show>
+        <For each={cards()} keyed={(entry) => entry.card.key}>
+          {(entry) => (
+            <MatchCard
+              match={entry().match}
+              x={entry().card.x}
+              y={entry().card.y + labelSpace()}
+              ready={readyKeys().has(entry().card.key)}
+              voided={voidedKeys().has(entry().card.key)}
+              names={nameOf()}
+              onSelect={props.onSelectMatch}
+            />
           )}
         </For>
       </div>
