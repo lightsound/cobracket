@@ -39,7 +39,7 @@ fi
 if bun run check:bun >/dev/null 2>&1; then
   echo "session-start: Bun $(bun --version) is supported."
 elif [ "${CLAUDE_CODE_REMOTE:-}" = "true" ] || [ "${CURSOR_CODE_REMOTE:-}" = "true" ]; then
-  echo "session-start: Bun $(bun --version) is unsupported here; installing the pinned bun@${pinned}."
+  echo "session-start: Bun $(bun --version 2>/dev/null || echo "not found") is unsupported here; installing the pinned bun@${pinned}."
   # A failed install must not take the session down with it, and must not fall
   # through to `bun install` either: the wrong Bun rewriting bun.lock is the
   # damage this hook exists to prevent. Report, leave the tree alone, let the
@@ -49,14 +49,28 @@ elif [ "${CLAUDE_CODE_REMOTE:-}" = "true" ] || [ "${CURSOR_CODE_REMOTE:-}" = "tr
     echo "  not installed; run check:bun before anything that writes bun.lock." >&2
     exit 0
   fi
+  # The installer writes to $BUN_INSTALL/bin and exports PATH in its own
+  # subshell, which dies with the pipe. Unless that directory already holds
+  # the `bun` the shell resolves — true in this repo's Claude container only
+  # because /usr/local/bin/bun symlinks into it — every later command would
+  # still get the image's Bun, and the check below would fail on the binary
+  # that was just replaced. Put it in front explicitly, and persist it for the
+  # rest of the session where the harness offers somewhere to write it (Claude
+  # Code does; Cursor documents no equivalent, so there a later shell falls
+  # back to whatever the image resolves and check:bun is what catches it).
+  bun_bin="${BUN_INSTALL:-$HOME/.bun}/bin"
+  export PATH="$bun_bin:$PATH"
   hash -r
+  if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
+    printf 'export PATH="%s:$PATH"\n' "$bun_bin" >> "$CLAUDE_ENV_FILE"
+  fi
   if ! bun run check:bun; then
     echo "session-start: bun@${pinned} installed but still does not satisfy engines.bun;" >&2
     echo "  dependencies not installed." >&2
     exit 0
   fi
 else
-  echo "session-start: Bun $(bun --version) does not satisfy engines.bun, and this is not a remote" >&2
+  echo "session-start: Bun $(bun --version 2>/dev/null || echo "not found") does not satisfy engines.bun, and this is not a remote" >&2
   echo "  workspace, so Bun was left alone. Install bun@${pinned} before running anything that" >&2
   echo "  writes bun.lock:" >&2
   echo "    curl -fsSL https://bun.sh/install | bash -s \"bun-v${pinned}\"" >&2
