@@ -257,3 +257,23 @@ test("a suggestion published while the keystroke is in flight is the one that sh
     ["Chess", "Checkers"],
   );
 });
+
+test("clears the completions while a new prefix is in flight", async () => {
+  const host = await ready();
+  publishQuery(api.operations.suggestDisciplines, ["Chess"]);
+  await settled();
+  const options = () =>
+    [...host.querySelectorAll("datalist option")].map((o) => o.getAttribute("value"));
+  expect(options()).toEqual(["Chess"]);
+
+  // The visible half of `<Loading on>`: the boundary shows its fallback —
+  // here, nothing — rather than keeping completions for a prefix nobody
+  // typed. Without `on` the old list would stay on screen and the write
+  // would be held instead.
+  type(field(host, "Discipline"), "Che");
+  expect(options()).toEqual([]);
+
+  publishQuery(api.operations.suggestDisciplines, ["Chess", "Checkers"]);
+  await settled();
+  expect(options()).toEqual(["Chess", "Checkers"]);
+});
