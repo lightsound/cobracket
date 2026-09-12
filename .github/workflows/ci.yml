@@ -68,6 +68,9 @@ jobs:
             ~/.cache/ms-playwright
             ~/.cache/convex/binaries
           key: e2e-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          # An unrelated lockfile change should top up the stores, not
+          # re-download both.
+          restore-keys: e2e-${{ runner.os }}-
       # Chromium only — playwright-core downloads nothing on install. Add
       # `--with-deps` here if the runner image ever stops carrying the
       # shared libraries the browser needs.

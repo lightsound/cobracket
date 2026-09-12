@@ -135,7 +135,7 @@ async function stop(child: Child): Promise<void> {
 }
 
 async function stopAll(children: Child[]): Promise<void> {
-  for (const child of children.reverse()) await stop(child);
+  for (const child of [...children].reverse()) await stop(child);
 }
 
 /** Whether anything at all answers HTTP at `url` (a listener, not a health check). */
@@ -148,16 +148,32 @@ async function listening(url: string): Promise<boolean> {
   }
 }
 
-/** The deployment `.env.local` names, if one is up — the long-running `convex:dev`. */
-async function runningConvexUrl(): Promise<string | undefined> {
+/** `VITE_CONVEX_URL` from `.env.local`, if the file exists and names one. */
+async function configuredConvexUrl(): Promise<string | undefined> {
   let env: string;
   try {
     env = await readFile(new URL(".env.local", `file://${ROOT}`), "utf8");
   } catch {
     return undefined;
   }
-  const url = /^VITE_CONVEX_URL=(.+)$/m.exec(env)?.[1]?.trim();
-  return url !== undefined && (await listening(url)) ? url : undefined;
+  return /^VITE_CONVEX_URL=(.+)$/m.exec(env)?.[1]?.trim();
+}
+
+/** The local deployment `.env.local` names, if one is up — the long-running `convex:dev`. */
+async function runningConvexUrl(): Promise<string | undefined> {
+  const url = await configuredConvexUrl();
+  if (url === undefined || !isLocal(url)) return undefined;
+  return (await listening(url)) ? url : undefined;
+}
+
+/**
+ * Reuse only a local deployment: a logged-in `convex dev` puts a cloud URL
+ * in `.env.local`, and the gate writes real tournaments through whatever it
+ * reaches.
+ */
+function isLocal(url: string): boolean {
+  const { hostname } = new URL(url);
+  return hostname === "127.0.0.1" || hostname === "localhost";
 }
 
 /** ADR 0003: a deployment without its RS256 keys refuses every push. */
