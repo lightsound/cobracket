@@ -22,7 +22,7 @@
         "@types/bun": "^1.4.2",
         "convex-test": "^0.0.58",
         "fallow": "^3.25.0",
-        "solid2-agent-kit": "^0.11.0",
+        "solid2-agent-kit": "^0.11.1",
         "typescript": "^7.1.0-dev.20260911.1",
         "vite": "npm:@voidzero-dev/vite-plus-core@0.3.1",
         "vite-plus": "0.3.1",
@@ -772,7 +772,7 @@
 
     "solid-js": ["solid-js@2.0.0-rc.8", "", { "dependencies": { "@solidjs/signals": "^2.0.0-rc.8", "csstype": "^3.1.0", "seroval": "~1.6.7", "seroval-plugins": "~1.6.7" } }, "sha512-0DwASKxvwXWAxCiea71cN3bmsyBIOUGmmg/pjSfhxPg+2pBVCh/ZKmwLNjKlPjc8SHeu52ZTio6tBBp1TcPB8A=="],
 
-    "solid2-agent-kit": ["solid2-agent-kit@0.11.0", "", { "bin": { "solid2-kit": "bin/solid2-kit.mjs", "solid2-agent-kit": "bin/solid2-kit.mjs" } }, "sha512-AHeL7jRUaJWV+WZv2fUaH/4Jf9OuY5yjhhpeFhspQbnabFqirJLQpWdlQAgu1ReG+ESFt1DnUpqeCrk4Xkfjrg=="],
+    "solid2-agent-kit": ["solid2-agent-kit@0.11.1", "", { "bin": { "solid2-kit": "bin/solid2-kit.mjs", "solid2-agent-kit": "bin/solid2-kit.mjs" } }, "sha512-Dnt59b1cFvXnk7uBYDCgI7WhuH540x72t8/lDQ2Cp+RL3xMhof/MX4v/tpdnzIVggojeSThEzQmDF0sgdozO0g=="],
 
     "source-map-js": ["source-map-js@1.2.1", "", {}, "sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA=="],
 

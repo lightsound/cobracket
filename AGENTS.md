@@ -28,7 +28,7 @@ This file gives coding agents project-specific context. Keep it short and update
 - Generated or vendored code: `convex/_generated/` (from `bun run convex:dev` / `bun run convex:codegen`). Do not edit by hand
 - Sensitive areas: `vite.config.ts` must keep `host: '0.0.0.0'` for Cursor's preview. Keep `solid({ start: { devtools: false } })` unless `@solidjs/start-devtools` is installed
 - Verifying reactive code: with `bun dev` running, the dev server serves `POST /__solid/diagnostics` (`@solidjs/diagnostics` + the plugin's `diagnostics: true`). Open the page, then `curl -X POST localhost:3000/__solid/diagnostics -d '{"method":"begin"}'`, perform one interaction, and read `{"method":"costs"}` / `{"method":"end"}` — the artifact carries rule diagnostics plus per-re-run causality, self-time, waste and holds. Prefer this over reading the code or instrumenting it by hand. Loops and budgets: `node_modules/@solidjs/diagnostics/skills/agent-loops/SKILL.md`. One page under test at a time (first responder wins), and pass `{ name }` to memos/effects you intend to interrogate — anonymous `computed` rows are unactionable.
-- Reactivity diagnostics: `src/dev-diagnostics.ts` turns on Solid's attribution engine, called from `App` next to `initAuth()`. That is the opt-in tier that reports `[SILENT_HOLD]`, `[UNSTABLE_LIST_IDENTITY]`, `[IMMUTABLE_UPDATE_IN_STORE]`, `[ASYNC_WATERFALL]` and friends — the runtime evidence for Solid 2 hard rules that `solid2-kit check` can only see as tokens. Watch the browser console during `bun dev`; every code maps to a repair in `node_modules/solid-js/skills/reactivity-diagnostics/SKILL.md`. Stripped from production (`isDev`, plus an inert no-op build of `solid-js/attribution`), so it costs nothing there. Note the API moved in `solid-js` 2.0.0-rc.5+: it is `attribution` from `solid-js/attribution`, not the `DEV.attribution` the `solid-2` skill still documents (kit v0.11 predates the move — `solid2-kit sync` when a newer kit ships)
+- Reactivity diagnostics: `src/dev-diagnostics.ts` turns on Solid's attribution engine, called from `App` next to `initAuth()`. That is the opt-in tier that reports `[SILENT_HOLD]`, `[UNSTABLE_LIST_IDENTITY]`, `[IMMUTABLE_UPDATE_IN_STORE]`, `[ASYNC_WATERFALL]` and friends — the runtime evidence for Solid 2 hard rules that `solid2-kit check` can only see as tokens. Watch the browser console during `bun dev`; every code maps to a repair in `node_modules/solid-js/skills/reactivity-diagnostics/SKILL.md`. Stripped from production (`isDev`, plus an inert no-op build of `solid-js/attribution`), so it costs nothing there. The `solid-2` skill documents the engine from kit v0.11.1 on
 
 ## Commands
 
@@ -116,7 +116,7 @@ Two production surfaces (ADR 0010): the Convex **production deployment** for `co
 - `bun` is installed at `~/.bun/bin` and symlinked into `/usr/local/bin`, so it resolves in non-login shells too. `bunx` is not symlinked — use `bun x <tool>` (e.g. `bun x tsc --noEmit`, `bun x convex ...`).
 
 <!-- solid2-agent-kit:agents-section:start -->
-<!-- Managed by solid2-agent-kit v0.11.0. Do not edit inside this block; run `solid2-kit sync` to update. -->
+<!-- Managed by solid2-agent-kit v0.11.1. Do not edit inside this block; run `solid2-kit sync` to update. -->
 
 ## Solid 2.0 (not React, not Solid 1.x)
 
