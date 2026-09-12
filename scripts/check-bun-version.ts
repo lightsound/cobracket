@@ -15,10 +15,12 @@
  *   the pin is only worth a notice: erroring there would contradict the range
  *   the project just declared it supports.
  *
- * CI passes `--strict`, which promotes that notice to a failure. There the
- * runner installs BUN_VERSION, so an inexact match means the workflow and
- * `packageManager` have drifted apart — the one mismatch a range check cannot
- * see, since both versions sit inside the range.
+ * CI passes `--strict`, which promotes that notice to a failure. There
+ * setup-bun installs the version it reads out of `packageManager`, so the
+ * running Bun should be the pin exactly. Anything else means the action
+ * resolved something other than what is written down — its reader falls back
+ * to `engines.bun` (a range) and then to `latest`, neither of which fails on
+ * its own. This is the check that turns that silence into a red build.
  *
  * Version comparison goes through `Bun.semver`, never string equality: the
  * `packageManager` field may legally carry corepack's integrity hash
@@ -90,15 +92,16 @@ if (range && !Bun.semver.satisfies(running, range)) {
 }
 
 // Supported, just not the pinned build. Locally that is a caveat on any
-// version-sensitive result; under --strict (CI) it means the workflow's
-// BUN_VERSION and `packageManager` disagree, which is a config bug.
+// version-sensitive result; under --strict (CI) it means setup-bun installed
+// something other than the pin it was pointed at.
 const offPin = pinnedVersion !== undefined && Bun.semver.order(running, pinnedVersion) !== 0;
 
 if (offPin && strict) {
   problems.push(
     `running Bun ${running} is not the pinned bun@${pinnedVersion}. ` +
-      `In CI these must match exactly: bring BUN_VERSION in .github/workflows/deploy.yml ` +
-      `and \`packageManager\` in package.json back in step.`,
+      `In CI the runner installs the version read from \`packageManager\`, so this means ` +
+      `setup-bun resolved something else — check the bun-version-file step in ` +
+      `.github/workflows/deploy.yml.`,
   );
 }
 
