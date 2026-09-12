@@ -50,7 +50,19 @@ export function fakeId<Table extends TableNames>(value: string): Id<Table> {
 interface Flight {
   read: Accessor<unknown>;
   deliver: (value: unknown) => void;
-  /** Settle a still-pending flight; a no-op once a real delivery has landed. */
+  /**
+   * Settle a still-pending flight; a no-op once a real delivery has landed.
+   *
+   * Only the seeding path uses this, and only to avoid writing a value a
+   * `publishQuery` has already settled the flight with. No test can observe
+   * the difference — `deliver` would write the same value a second time —
+   * and the assertion that would, `expectNoWaste`, is unusable as a gate
+   * here: the re-delivery tests push identical data on purpose, so six of
+   * them recompute to unchanged values by design (7 to 81 wasted re-runs,
+   * measured). So this is defence in a harness whose whole subject is
+   * spurious reactive work, not behaviour under test — worth knowing before
+   * anyone deletes it for want of a failing test.
+   */
   seed: (value: unknown) => void;
 }
 
