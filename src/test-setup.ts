@@ -19,10 +19,19 @@
  * hold is real, recorded, and coded nowhere. `expectNoSilentHolds` asks that
  * question of the attribution tables instead, where no threshold applies.
  *
- * One boundary is worth knowing: the capture opens in `beforeEach`, so code at
- * a test file's module scope runs before it and is not gated. That is where a
- * file's fixtures and one-off setup live (`setLocale("en")`), never a render —
- * put anything reactive inside a test.
+ * The window has two ends, and both are worth knowing. It opens in
+ * `beforeEach`, so a test file's module scope runs before it and is not gated:
+ * that is where a file's fixtures and one-off setup live (`setLocale("en")`),
+ * never a render. It closes in `afterEach`, so work a test schedules and does
+ * not settle — a `setTimeout` callback, an un-awaited promise — lands after
+ * the capture is gone and is attributed to no test at all. Confirmed: the
+ * unkeyed-list fixture below, wrapped in an un-awaited `setTimeout`, never
+ * fails the test that scheduled it, while the same code run synchronously
+ * does. There is no
+ * failure to read, so settle deferred work before returning (`await
+ * resolve(...)`, `flush()`) or know the test is proving nothing. Measured both
+ * ways: with a test after it, the finding fails *that* test instead; with
+ * none, it is reported nowhere.
  *
  * Note the environment matters as much as the gate: under `environment: node`
  * the `node` export condition resolves Solid's *server* build, where writes
@@ -207,15 +216,19 @@ afterEach(async (context) => {
   capture = undefined;
   owner = undefined;
 
+  // Close the capture before anything else can leave this hook: its `finally`
+  // is what reads the attribution tables, stops the channel subscription and
+  // calls the engine's `disable()`, and aggregates reset on disable, not on
+  // the next `enable()`. Throwing the ownership error first — as this did —
+  // would leave the engine armed and the capture pending forever, which is
+  // the leak the sentence above it promises not to allow.
+  const settled = pending === undefined ? undefined : await pending;
+
   // Never assert on a capture this test did not open.
-  if (pending === undefined || openedBy !== context.task.id) {
+  if (settled === undefined || openedBy !== context.task.id) {
     throw ungatedError(context.task.name, pending, openedBy);
   }
 
-  // Always await, even on the failure path: the capture's `finally` is what
-  // reads the attribution tables and disables the engine again. Leaving it
-  // pending would leak the engine into the next test.
-  const { artifact } = await pending;
-  assertDiagnostics(artifact);
-  assertHoldFeedback(artifact);
+  assertDiagnostics(settled.artifact);
+  assertHoldFeedback(settled.artifact);
 });
