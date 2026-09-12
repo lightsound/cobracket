@@ -471,10 +471,21 @@ type SettingsChanges = Omit<FunctionArgs<typeof api.operations.updateTournament>
 // Only what changed is sent. The format in particular is a structural
 // change, so an unchanged family must not be re-submitted (its options would
 // fall back to their defaults).
+//
+// The value compared and the value sent have to be the same one. This
+// compared `draft.name.trim()` and then sent `draft.name`, so a real edit
+// shipped whatever whitespace was around it, the server stripped it
+// (`requireName`, `normalizeDisciplineName`), and the view came back
+// differing from the request — harmless, and the kind of drift that stops
+// being harmless as soon as something else reads the payload. Trim is the
+// part worth matching; a discipline's inner whitespace is collapsed
+// server-side too, which the client does not try to mirror.
 function settingsChanges(view: OrganizerView, draft: SettingsDraft): SettingsChanges {
+  const name = draft.name.trim();
+  const discipline = draft.discipline.trim();
   return {
-    ...(draft.name.trim() !== view.name && { name: draft.name }),
-    ...(draft.discipline.trim() !== view.discipline && { discipline: draft.discipline }),
+    ...(name !== view.name && { name }),
+    ...(discipline !== view.discipline && { discipline }),
     ...(draft.family !== view.format.family && { format: { family: draft.family } }),
   };
 }

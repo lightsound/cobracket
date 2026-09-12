@@ -191,6 +191,32 @@ test("saves only the settings that actually changed", async () => {
   expect(host.textContent).toContain("Saved.");
 });
 
+test("sends the settings values it compared, trimmed", async () => {
+  const host = await open();
+  answerMutation(api.operations.updateTournament, () => null);
+
+  const name = field(host, "Tournament name");
+  const save = button(host, "Save changes");
+
+  // Whitespace alone is not a change, and the button says so.
+  type(name, "  Friday Night Bracket  ");
+  expect(save.disabled).toBe(true);
+
+  type(name, "  Saturday Night Bracket  ");
+  expect(save.disabled).toBe(false);
+  save.closest("form")?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+  await settled();
+
+  // The trimmed value, because that is the value the comparison ran on — and
+  // the one the server would have stored either way.
+  expect(mutationCalls()).toEqual([
+    {
+      name: "operations:updateTournament",
+      args: { tournamentId: TOURNAMENT, name: "Saturday Night Bracket" },
+    },
+  ]);
+});
+
 test("a server change overrides a local settings edit", async () => {
   const host = await open();
   const name = field(host, "Tournament name");

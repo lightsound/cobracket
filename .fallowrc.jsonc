@@ -98,9 +98,11 @@
     // Read the listing, not the percentage: it is a static test-dependency
     // graph, so src/router.ts lazy-importing every page made it count
     // Tournament.tsx as covered the moment any page had a test, while nothing
-    // exercised a line of it. The backlog it names today is the app shell and
-    // the two toggles (App, Document, LocaleToggle, ThemeToggle,
-    // theme-preference) plus scripts/lint-theme.ts.
+    // exercised a line of it. The listing today is one file,
+    // scripts/lint-theme.ts, and it will not clear: its tests drive it as a
+    // subprocess (the only way to run a Bun script with its own Glob and
+    // cwd), and a subprocess is not an import edge. So this rule's floor is 1
+    // — keep it error for the listing, not for a green exit.
     "coverage-gaps": "error",
   },
 }
