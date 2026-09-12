@@ -94,9 +94,13 @@
     "dynamic-segment-name-conflict": "error",
     // On since src/bracket/*.test.ts gave the graph a path into src/. It gates
     // `fallow health --coverage-gaps` only (exit 1 instead of a listing) — the
-    // default run and `fallow audit` do not consult it, so CI stays green while
-    // the UI layer is still only partly tested (BracketView and Standings have
-    // component tests; the rest of src/*.tsx and src/pages/ are the backlog).
+    // default run and `fallow audit` do not consult it, so CI stays green.
+    // Read the listing, not the percentage: it is a static test-dependency
+    // graph, so src/router.ts lazy-importing every page made it count
+    // Tournament.tsx as covered the moment any page had a test, while nothing
+    // exercised a line of it. The backlog it names today is the app shell and
+    // the two toggles (App, Document, LocaleToggle, ThemeToggle,
+    // theme-preference) plus scripts/lint-theme.ts.
     "coverage-gaps": "error",
   },
 }
