@@ -29,33 +29,33 @@
     "verify": "bun run check:bun && bun run typecheck && bun run test && bun x vp check && bun run lint:imports && bun run lint:solid && bun run lint:theme && bun run build"
   },
   "dependencies": {
-    "@convex-dev/auth": "2.0.0-alpha.1",
+    "@convex-dev/auth": "2.0.0-alpha.2",
     "@fontsource-variable/space-grotesk": "^5.3.0",
-    "@solidjs/router": "2.0.0-next.24",
-    "@solidjs/web": "^2.0.0-rc.8",
-    "convex": "^1.45.0",
-    "solid-js": "^2.0.0-rc.8",
+    "@solidjs/router": "2.0.0-next.26",
+    "@solidjs/web": "^2.0.0-rc.9",
+    "convex": "^1.46.0",
+    "solid-js": "^2.0.0-rc.9",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@edge-runtime/vm": "^5.0.0",
     "@import-lint/cli": "^0.1.9",
-    "@solidjs/diagnostics": "^2.0.0-rc.8",
-    "@solidjs/vite-plugin": "^3.0.0-next.43",
+    "@solidjs/diagnostics": "^2.0.0-rc.9",
+    "@solidjs/vite-plugin": "^3.0.0-next.44",
     "@tailwindcss/vite": "^4.3.3",
     "@types/bun": "^1.4.2",
-    "convex-test": "^0.0.58",
-    "fallow": "^3.25.0",
+    "convex-test": "^0.0.59",
+    "fallow": "^3.27.0",
     "happy-dom": "^20.14.5",
-    "playwright-core": "1.56.1",
-    "solid2-agent-kit": "^0.11.1",
-    "typescript": "^7.1.0-dev.20260911.1",
-    "vite": "npm:@voidzero-dev/vite-plus-core@0.3.1",
-    "vite-plus": "0.3.1",
-    "wrangler": "^4.131.1"
+    "playwright-core": "1.63.0",
+    "solid2-agent-kit": "^0.13.0",
+    "typescript": "^7.1.0-dev.20260921.1",
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.3.3",
+    "vite-plus": "0.3.3",
+    "wrangler": "^4.136.1"
   },
   "overrides": {
-    "vite": "npm:@voidzero-dev/vite-plus-core@0.3.1"
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.3.3"
   },
   "engines": {
     "bun": "^1.4.0"

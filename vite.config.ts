@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => ({
       // out so a reader finds the dev-server half of the package next to the
       // plugin that serves it (src/test-setup.ts is the other half — that one
       // imports it, which is why it no longer needs a fallow ignore). Note
-      // this line is only a signpost — next.43 still starts and still prints
+      // this line is only a signpost — next.44 still starts and still prints
       // the endpoint when the package is absent, despite what the option's
       // docs say.
       diagnostics: true,

@@ -51,7 +51,7 @@ export function initDevDiagnostics(): void {
   // `log: false` because the default prints a why-chain for *every* re-run,
   // which buries the coded findings we actually want. The findings are a
   // separate channel and still report; the per-run trace is available on
-  // demand from the browser console via `attribution.costs()` /
-  // `attribution.feedback()` / `attribution.why(source)`.
+  // demand from the browser console via the named exports `costs()` /
+  // `feedback()` / `why(source)` from `solid-js/attribution`.
   attribution.enable({ log: false });
 }

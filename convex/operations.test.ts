@@ -21,9 +21,7 @@ type Organizer = ReturnType<Test["withIdentity"]>;
 
 async function newOrganizer(t: Test): Promise<{ userId: Id<"users">; as: Organizer }> {
   const userId = await t.mutation(internal.auth.createUserAnonymous, {
-    provider: "anonymous",
-    providerAccountId: "",
-    profile: {},
+    provider: { name: "anonymous", accountId: "", profile: {} },
   });
   return { userId, as: t.withIdentity({ subject: userId }) };
 }
@@ -1052,9 +1050,7 @@ test("getTournament answers null for malformed and unknown ids instead of throwi
   );
   // A well-formed id from another table is not a tournament either.
   const userId = await t.mutation(internal.auth.createUserAnonymous, {
-    provider: "anonymous",
-    providerAccountId: "",
-    profile: {},
+    provider: { name: "anonymous", accountId: "", profile: {} },
   });
   expect(await as.query(api.operations.getTournament, { tournamentId: userId })).toBeNull();
   // The real one still resolves.

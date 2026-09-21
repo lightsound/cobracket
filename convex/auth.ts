@@ -20,9 +20,11 @@ export const { signOut, refreshSession } = core;
 // returns. Anonymous sign-ins have no profile, so a sign-in mints a bare row.
 export const createUserAnonymous = internalMutation({
   args: {
-    provider: v.literal("anonymous"),
-    providerAccountId: v.string(),
-    profile: v.object({}),
+    provider: v.object({
+      name: v.literal("anonymous"),
+      accountId: v.string(),
+      profile: v.object({}),
+    }),
   },
   returns: v.id("users"),
   handler: async (ctx) => {
