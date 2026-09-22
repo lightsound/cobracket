@@ -18,9 +18,7 @@ type Test = ReturnType<typeof convexTest>;
 // What the anonymous provider sends the createUser callback on every sign-up.
 function signUp(t: Test) {
   return t.mutation(internal.auth.createUserAnonymous, {
-    provider: "anonymous",
-    providerAccountId: "",
-    profile: {},
+    provider: { name: "anonymous", accountId: "", profile: {} },
   });
 }
 

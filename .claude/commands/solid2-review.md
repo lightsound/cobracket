@@ -28,6 +28,11 @@ Steps:
      `isPending` treated as a global spinner instead of a per-expression question;
    - treating `<Errored>` as a terminal ErrorBoundary, or routing per-row mutation
      failures through it (those belong in the action / a projection-folded map);
+     error reporting done as a side effect inside `fallback` instead of
+     `configureClientErrors` / `configureServerErrors` / `render(..., { onError })`;
+   - store setter callbacks that `await` (the draft closes when the callback returns —
+     `[ASYNC_STORE_SETTER]`), store setters called at component-body top level, and
+     `latest()` used as a null-safe read of an unsettled source;
    - nested fetches assumed to waterfall, or `<Loading>` lifted along with a lifted fetch;
    - rewriting App with loading/error branches, or snapshot/restore, when wrapping
      a client store in server functions; disabling optimistic rows until ack;
@@ -52,7 +57,14 @@ Steps:
      attribution-only store/list/effect costs) left unaddressed;
    - context values passed as snapshots instead of accessors/setters/stores;
    - components with conditional/early returns on reactive values.
-5. Verify any API you are not certain about against the official docs mirror
+5. If the change set touches stores, lists, async computations, actions, or effects, run
+   the skill's development loop against the dev server: `/__solid/diagnostics` `begin` →
+   exercise the changed UI → `whyDidRun` for the changed scopes / `costs` → `end`
+   (`@solidjs/diagnostics` installed), or an `isDev`-guarded
+   `attribution.enable({ log: false })` + `why()` / `costs()` / `feedback()`. Report
+   every coded warning, the silent holds in `feedback().sources`, and the top
+   `costs().scopes` entries as findings.
+6. Verify any API you are not certain about against the official docs mirror
    (`https://v2-rebuild--solid-docs-v2.netlify.app/llms.txt`); never trust Solid 1.x or
    React memory.
 

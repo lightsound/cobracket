@@ -16,11 +16,17 @@
  *    `convex:dev` from AGENTS.md's workflow — so only the dev server starts.
  * 3. Neither (CI, a fresh container, a developer whose `.env.local` names a
  *    cloud deployment) — `convex dev` starts too, on the anonymous local
- *    deployment, and the auth keys ADR 0003 requires are generated when the
- *    first push reports them missing. That is the same sequence a human
- *    runs, automated: `auth:keys` is idempotent, and the CLI re-pushes on
- *    its own once the keys exist (observed, not assumed; the wait below is
- *    bounded in case that ever stops being true).
+ *    deployment. When the first push reports the auth keys ADR 0003 requires
+ *    are missing, `auth:keys` writes them and `convex dev` is started again.
+ *    The second process's first push is what has to succeed. Convex 1.46
+ *    re-pushes after a missing-env failure only when the env subscription
+ *    reports a change after its first snapshot, and `auth:keys` sets
+ *    `AUTH_PRIVATE_KEY` and `AUTH_JWKS` in two `convex env set` calls. The
+ *    first call wakes a retry that still lacks `AUTH_JWKS`; the second lands
+ *    during that push and is the next subscription's first snapshot, which
+ *    is ignored. Waiting on the original process never prints
+ *    `Convex functions ready` (measured on the 1.46 upgrade's CI run: the
+ *    90s wait expired on an `AUTH_JWKS`-only retry).
  *
  * The gate never writes to a deployment it did not choose. Its own
  * `convex dev` runs with `--env-file` pointing at a private file that names
@@ -82,10 +88,11 @@ interface Child {
   /**
    * The URL of the `└─ http://127.0.0.1:3210` line of Convex's deployment
    * banner, kept from the moment it arrives: the banner prints once at
-   * startup, and on the keyless path a push failure, `auth:keys` and a
-   * re-push follow it, so a scan of the tail after the fact could miss it.
+   * startup, and a later push failure scrolls it out of the tail.
    */
   announcedUrl: string | undefined;
+  /** Whether any line so far, not just the tail, matches `pattern`. */
+  saw(pattern: RegExp): boolean;
   /** Resolves when a line matching `pattern` arrives, past or future. */
   waitFor(pattern: RegExp, timeoutMs: number): Promise<void>;
 }
@@ -144,6 +151,9 @@ function start(label: string, command: string[], env: NodeJS.ProcessEnv): Child 
     },
     get announcedUrl() {
       return announcedUrl;
+    },
+    saw(pattern) {
+      return lines.some((line) => pattern.test(line));
     },
     waitFor(pattern, timeoutMs) {
       return new Promise<void>((resolve, reject) => {
@@ -311,18 +321,18 @@ async function ensureConvex(): Promise<Convex> {
   const dir = await mkdtemp(join(tmpdir(), "cobracket-e2e-"));
   const envFile = join(dir, "convex.env");
   await writeFile(envFile, `CONVEX_DEPLOYMENT=${DEPLOYMENT}\n`);
-  const convex = start(
-    "convex dev",
-    ["bun", "run", "convex:dev", "--env-file", envFile],
-    ANONYMOUS,
-  );
+  let convex = startConvex(envFile);
   const teardown = async () => {
     await stop(convex);
     await rm(dir, { recursive: true, force: true });
     await restoreEnvLocal(envLocalBefore);
   };
   try {
-    return { url: await awaitPushed(convex), teardown };
+    const url = await awaitPushed(convex, () => {
+      convex = startConvex(envFile);
+      return convex;
+    });
+    return { url, teardown };
   } catch (error) {
     // The caller only learns of the child on success, so a wait that gives
     // up has to take the process group down here — otherwise the backend
@@ -332,16 +342,29 @@ async function ensureConvex(): Promise<Convex> {
   }
 }
 
+/** `convex dev` against the gate's private env file. */
+function startConvex(envFile: string): Child {
+  return start("convex dev", ["bun", "run", "convex:dev", "--env-file", envFile], ANONYMOUS);
+}
+
 /**
- * Wait for the first push to land, generating the auth keys if it needs
- * them, and return the deployment URL the CLI announced.
+ * Wait for a push to land, and return the deployment URL the CLI announced.
+ *
+ * A keyless deployment fails that push. The keys are written while that
+ * process is still up (so `convex env set` has a backend), then the process
+ * group is taken down and a new `convex dev` is started. The new process
+ * reads the keys from the deployment and its first push does not depend on
+ * an env-change notification — the running process will not send one for the
+ * second of the two variables. See the file comment.
  */
-async function awaitPushed(convex: Child): Promise<string> {
+async function awaitPushed(convex: Child, restart: () => Child): Promise<string> {
   const ready = /Convex functions ready/;
   await convex.waitFor(/Convex functions ready|MissingEnvironmentVariables/, 180_000);
-  if (!convex.tail.some((line) => ready.test(line))) {
+  if (!convex.saw(ready)) {
     generateAuthKeys();
-    await convex.waitFor(ready, 90_000);
+    await stop(convex);
+    convex = restart();
+    await convex.waitFor(ready, 180_000);
   }
   const url = convex.announcedUrl;
   if (url === undefined) {

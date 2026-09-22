@@ -67,6 +67,9 @@ read these before writing route JSX.
 
 - https://v2-rebuild--solid-docs-v2.netlify.app/guides/avoid-unnecessary-effects.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/guides/debugging-reactivity.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/guides/performance.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/guides/observability.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/guides/observability-adapters.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/guides/lists.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/guides/data-fetching-patterns.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/guides/forms.md
@@ -117,9 +120,17 @@ verify API names against the reference pages above.
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/advanced/specialized-reactivity/on-cleanup.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/advanced/store-advanced/snapshot.md
 
-## Reference: diagnostics (dev builds only)
+## Reference: diagnostics, attribution, and observability
+
+`DEV` is dev builds only; `OBSERVE` and attribution exist on observe and dev builds;
+the error hooks fire on every build.
 
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/advanced/diagnostics-dev-hooks/dev.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/advanced/diagnostics-dev-hooks/observe.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/advanced/diagnostics-dev-hooks/attribution.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/advanced/diagnostics-dev-hooks/configure-client-errors.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/request-response/configure-server-errors.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/request-response/get-trace-context.md
 
 ## Reference: components and JSX (solid-js)
 
@@ -151,7 +162,6 @@ verify API names against the reference pages above.
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/head/use-head.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/components/portal.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/components/dynamic.md
-- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/components/dynamic-component.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/jsx-properties/ref.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/jsx-properties/class.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/jsx-properties/style.md
