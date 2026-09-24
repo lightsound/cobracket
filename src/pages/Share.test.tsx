@@ -6,7 +6,7 @@
  */
 import { expect, test, vi } from "vite-plus/test";
 import { api } from "../../convex/_generated/api";
-import { setLocale } from "../i18n";
+import { AppProviders } from "../providers";
 import { mount } from "../test-setup";
 import type { FunctionReturnType } from "convex/server";
 import { fakeId, publishQuery, routerHooks } from "../test-fakes";
@@ -19,7 +19,7 @@ vi.mock("@solidjs/router", async (importOriginal) => ({
 
 const { default: SharePage } = await import("./Share");
 
-setLocale("en");
+localStorage.setItem("cobracket:locale", "en");
 
 type SharedView = NonNullable<FunctionReturnType<typeof api.operations.getSharedTournament>>;
 
@@ -94,12 +94,20 @@ function sharedView(overrides: Partial<SharedView> = {}): SharedView {
 const settled = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 test("shows the loading fallback until the subscription delivers", () => {
-  const host = mount(() => <SharePage />);
+  const host = mount(() => (
+    <AppProviders>
+      <SharePage />
+    </AppProviders>
+  ));
   expect(host.textContent).toContain("Loading");
 });
 
 test("renders the tournament the share slug names, bracket and all", async () => {
-  const host = mount(() => <SharePage />);
+  const host = mount(() => (
+    <AppProviders>
+      <SharePage />
+    </AppProviders>
+  ));
   publishQuery(api.operations.getSharedTournament, sharedView());
   await settled();
 
@@ -113,14 +121,22 @@ test("renders the tournament the share slug names, bracket and all", async () =>
 });
 
 test("says so when the slug names nothing", async () => {
-  const host = mount(() => <SharePage />);
+  const host = mount(() => (
+    <AppProviders>
+      <SharePage />
+    </AppProviders>
+  ));
   publishQuery(api.operations.getSharedTournament, null);
   await settled();
   expect(host.textContent).toContain("This tournament is not available");
 });
 
 test("keeps the bracket's DOM across a subscription re-delivery", async () => {
-  const host = mount(() => <SharePage />);
+  const host = mount(() => (
+    <AppProviders>
+      <SharePage />
+    </AppProviders>
+  ));
   publishQuery(api.operations.getSharedTournament, sharedView());
   await settled();
   const firstCard = host.querySelector("button[style*='translate']");
@@ -138,7 +154,11 @@ test("keeps the bracket's DOM across a subscription re-delivery", async () => {
 });
 
 test("shows standings once the tournament is completed", async () => {
-  const host = mount(() => <SharePage />);
+  const host = mount(() => (
+    <AppProviders>
+      <SharePage />
+    </AppProviders>
+  ));
   const view = sharedView({ status: "completed" });
   if (view.bracket) {
     view.bracket.completed = true;

@@ -3,7 +3,7 @@
  * twice: the inline theme bootstrap.
  *
  * It has to be inline and it has to run before the first paint, so it cannot
- * import `src/theme-preference.ts` — it re-reads the same storage key by hand
+ * import `src/theme-preference.tsx` — it re-reads the same storage key by hand
  * under a "keep in sync" comment. That comment is the whole risk, so these
  * tests execute the script the component actually ships and assert it agrees
  * with the module: same key, same values honoured, same ones ignored.
@@ -72,7 +72,7 @@ test.each([["system"], ["midnight"], [""], [null]])(
   "leaves the scheme to the stylesheet when the stored value is %o",
   (stored) => {
     // The same set of honoured values as `storedPreference()` in
-    // src/theme-preference.ts: anything else means "system", and system is
+    // src/theme-preference.tsx: anything else means "system", and system is
     // `light-dark()` doing its job with no inline scheme at all.
     expect(runBootstrap(shell(), stored)).toBe("");
   },

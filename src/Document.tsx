@@ -2,7 +2,7 @@ import type { ParentProps } from "solid-js";
 import { HydrationScript } from "@solidjs/web";
 
 const THEME_BOOTSTRAP = `(() => {
-  // keep in sync with src/theme-preference.ts
+  // keep in sync with src/theme-preference.tsx
   try {
     const pref = localStorage.getItem("cobracket:theme");
     if (pref === "light" || pref === "dark") {

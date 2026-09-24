@@ -7,13 +7,18 @@
 import { expect, test } from "vite-plus/test";
 import { flush } from "solid-js";
 import { mount } from "./test-setup";
-import { setLocale } from "./i18n";
+import { AppProviders } from "./providers";
 import ThemeToggle from "./ThemeToggle";
 
-setLocale("en");
+localStorage.setItem("cobracket:locale", "en");
+localStorage.setItem("cobracket:theme", "system");
 
 function mountToggle(): HTMLButtonElement {
-  const host = mount(() => <ThemeToggle />);
+  const host = mount(() => (
+    <AppProviders>
+      <ThemeToggle />
+    </AppProviders>
+  ));
   const button = host.querySelector("button");
   if (!button) throw new Error("no theme button");
   return button;

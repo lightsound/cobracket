@@ -7,7 +7,7 @@
 import { expect, test, vi } from "vite-plus/test";
 import { flush } from "solid-js";
 import { api } from "../../convex/_generated/api";
-import { setLocale } from "../i18n";
+import { AppProviders } from "../providers";
 import { mount } from "../test-setup";
 import type { FunctionReturnType } from "convex/server";
 import {
@@ -28,14 +28,18 @@ vi.mock("@solidjs/router", async (importOriginal) => ({
 
 const { default: Home } = await import("./Home");
 
-setLocale("en");
+localStorage.setItem("cobracket:locale", "en");
 
 /** Let the async memos settle and the DOM catch up. */
 const settled = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 /** A live session with an empty list and suggestions answered. */
 async function ready(): Promise<HTMLElement> {
-  const host = mount(() => <Home />);
+  const host = mount(() => (
+    <AppProviders>
+      <Home />
+    </AppProviders>
+  ));
   publishQuery(api.auth.currentOrganizer, ORGANIZER);
   publishQuery(api.operations.listMyTournaments, []);
   publishQuery(api.operations.suggestDisciplines, []);
@@ -83,7 +87,11 @@ function type(input: HTMLInputElement, value: string): void {
 }
 
 test("invites a first-time visitor to create one, with no list", async () => {
-  const host = mount(() => <Home />);
+  const host = mount(() => (
+    <AppProviders>
+      <Home />
+    </AppProviders>
+  ));
   publishQuery(api.auth.currentOrganizer, null);
   await settled();
 
@@ -94,7 +102,11 @@ test("invites a first-time visitor to create one, with no list", async () => {
 });
 
 test("lists the organizer's tournaments once the session is live", async () => {
-  const host = mount(() => <Home />);
+  const host = mount(() => (
+    <AppProviders>
+      <Home />
+    </AppProviders>
+  ));
   publishQuery(api.auth.currentOrganizer, ORGANIZER);
   publishQuery(api.operations.listMyTournaments, tournaments());
   await settled();
@@ -109,7 +121,11 @@ test("lists the organizer's tournaments once the session is live", async () => {
 });
 
 test("keeps its rows across a subscription re-delivery", async () => {
-  const host = mount(() => <Home />);
+  const host = mount(() => (
+    <AppProviders>
+      <Home />
+    </AppProviders>
+  ));
   publishQuery(api.auth.currentOrganizer, ORGANIZER);
   publishQuery(api.operations.listMyTournaments, tournaments());
   await settled();
@@ -123,7 +139,11 @@ test("keeps its rows across a subscription re-delivery", async () => {
 });
 
 test("says the list is empty rather than showing nothing", async () => {
-  const host = mount(() => <Home />);
+  const host = mount(() => (
+    <AppProviders>
+      <Home />
+    </AppProviders>
+  ));
   publishQuery(api.auth.currentOrganizer, ORGANIZER);
   publishQuery(api.operations.listMyTournaments, []);
   await settled();
@@ -131,7 +151,11 @@ test("says the list is empty rather than showing nothing", async () => {
 });
 
 test("creates a tournament and navigates to it", async () => {
-  const host = mount(() => <Home />);
+  const host = mount(() => (
+    <AppProviders>
+      <Home />
+    </AppProviders>
+  ));
   publishQuery(api.auth.currentOrganizer, ORGANIZER);
   publishQuery(api.operations.listMyTournaments, []);
   publishQuery(api.operations.suggestDisciplines, []);
@@ -162,7 +186,11 @@ test("creates a tournament and navigates to it", async () => {
 });
 
 test("shows the reason when creating fails, and does not navigate", async () => {
-  const host = mount(() => <Home />);
+  const host = mount(() => (
+    <AppProviders>
+      <Home />
+    </AppProviders>
+  ));
   publishQuery(api.auth.currentOrganizer, ORGANIZER);
   publishQuery(api.operations.listMyTournaments, []);
   publishQuery(api.operations.suggestDisciplines, []);
@@ -182,7 +210,11 @@ test("shows the reason when creating fails, and does not navigate", async () => 
 });
 
 test("shows each keystroke while the suggestions query is still held", async () => {
-  const host = mount(() => <Home />);
+  const host = mount(() => (
+    <AppProviders>
+      <Home />
+    </AppProviders>
+  ));
   publishQuery(api.auth.currentOrganizer, ORGANIZER);
   publishQuery(api.operations.listMyTournaments, []);
   publishQuery(api.operations.suggestDisciplines, ["Chess"]);
@@ -297,7 +329,11 @@ function manyTournaments(): FunctionReturnType<typeof api.operations.listMyTourn
 }
 
 test("a long tournament list costs the list no per-row subscription", async () => {
-  const host = mount(() => <Home />);
+  const host = mount(() => (
+    <AppProviders>
+      <Home />
+    </AppProviders>
+  ));
   publishQuery(api.auth.currentOrganizer, ORGANIZER);
   publishQuery(api.operations.listMyTournaments, manyTournaments());
   publishQuery(api.operations.suggestDisciplines, []);

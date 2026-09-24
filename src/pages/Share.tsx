@@ -6,7 +6,7 @@ import { errorFallback } from "../ErrorFallback";
 import { SetupNotice } from "../SetupNotice";
 import { TournamentBoard } from "../TournamentBoard";
 import { TournamentHeader } from "../TournamentHeader";
-import { t } from "../i18n";
+import { useI18n } from "../i18n";
 import { createConvexQuery, getConvexUrl } from "../lib/convex";
 // fallow-ignore-next-line circular-dependency -- the official Solid Router 2 shape: the router lazy-imports pages (deferred dynamic import), pages link back through Router.paths; no init-order hazard
 import { Router } from "../router";
@@ -14,6 +14,7 @@ import { Router } from "../router";
 type SharedView = NonNullable<FunctionReturnType<typeof api.operations.getSharedTournament>>;
 
 export default function SharePage() {
+  const { t } = useI18n();
   if (!getConvexUrl()) return <SetupNotice />;
   const params = useParams(Router.paths.s);
   const shared = createConvexQuery(api.operations.getSharedTournament, () => ({
@@ -35,6 +36,7 @@ export default function SharePage() {
 }
 
 function SharedTournament(props: { view: SharedView }) {
+  const { t } = useI18n();
   return (
     <div class="flex flex-col gap-6">
       <TournamentHeader

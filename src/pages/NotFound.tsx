@@ -1,8 +1,9 @@
-import { t } from "../i18n";
+import { useI18n } from "../i18n";
 // fallow-ignore-next-line circular-dependency -- the official Solid Router 2 shape: the router lazy-imports pages (deferred dynamic import), pages link back through Router.paths; no init-order hazard
 import { Router } from "../router";
 
 export default function NotFound() {
+  const { t } = useI18n();
   return (
     <div class="flex flex-col items-start gap-3">
       <p class="text-lg">{t("app.notFound")}</p>

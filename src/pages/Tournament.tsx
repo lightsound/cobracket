@@ -11,7 +11,7 @@ import { SetupNotice } from "../SetupNotice";
 import { createOrganizer } from "../lib/auth";
 import { TournamentBoard } from "../TournamentBoard";
 import { TournamentHeader } from "../TournamentHeader";
-import { t } from "../i18n";
+import { useI18n } from "../i18n";
 import { createConvexQuery, getConvexUrl, runMutation } from "../lib/convex";
 // fallow-ignore-next-line circular-dependency -- the official Solid Router 2 shape: the router lazy-imports pages (deferred dynamic import), pages link back through Router.paths; no init-order hazard
 import { Router } from "../router";
@@ -20,6 +20,7 @@ type OrganizerView = NonNullable<FunctionReturnType<typeof api.operations.getTou
 type OrganizerMatch = NonNullable<OrganizerView["bracket"]>["matches"][number];
 
 export default function TournamentPage() {
+  const { t } = useI18n();
   if (!getConvexUrl()) return <SetupNotice />;
   const params = useParams(Router.paths.t);
   // getTournament rejects unauthenticated callers, so the subscription must
@@ -41,6 +42,7 @@ export default function TournamentPage() {
 // A terminal state of this URL for this browser (no session, or the id
 // names nothing of ours): explain and offer the way out, no Retry.
 function BackHomeNotice(props: { message: string }) {
+  const { t } = useI18n();
   return (
     <div class="flex flex-col items-start gap-3">
       <p class="text-sm text-ink-muted">{props.message}</p>
@@ -52,6 +54,7 @@ function BackHomeNotice(props: { message: string }) {
 }
 
 function OwnedTournament(props: { tournamentId: string }) {
+  const { t } = useI18n();
   // The raw URL segment goes to the server as-is: getTournament answers null
   // for malformed, missing, deleted, and foreign ids alike.
   const view = createConvexQuery(api.operations.getTournament, () => ({
@@ -68,11 +71,13 @@ function OwnedTournament(props: { tournamentId: string }) {
 }
 
 function bracketPlaceholder(view: OrganizerView): string {
+  const { t } = useI18n();
   if (view.participants.length < 2) return t("bracket.needTwo");
   return view.status === "published" ? t("bracket.stale") : t("bracket.none");
 }
 
 function Manager(props: { view: OrganizerView }) {
+  const { t } = useI18n();
   const [actionError, setActionError] = createSignal<string | null>(null);
   const [voidedCount, setVoidedCount] = createSignal(0);
   const [reportKey, setReportKey] = createSignal<string | null>(null);
@@ -157,6 +162,7 @@ function BracketControls(props: {
   editable: boolean;
   onError: (message: string | null) => void;
 }) {
+  const { t } = useI18n();
   const canPublish = () => props.view.status === "draft" && props.view.bracket !== null;
 
   async function run(mutate: () => Promise<unknown>): Promise<void> {
@@ -213,6 +219,7 @@ function BracketControls(props: {
 }
 
 function ShareLinkRow(props: { shareSlug: string }) {
+  const { t } = useI18n();
   const [copyState, setCopyState] = createSignal<"idle" | "copied" | "failed">("idle");
   // The share link as text (clipboard, visible label): a zero-arg call is
   // the path node's plain-string form, which a template literal needs.
@@ -264,6 +271,7 @@ function RosterSection(props: {
   editable: boolean;
   onError: (message: string | null) => void;
 }) {
+  const { t } = useI18n();
   const [singleName, setSingleName] = createSignal("");
   const [bulkText, setBulkText] = createSignal("");
   const [editingId, setEditingId] = createSignal<Id<"participants"> | null>(null);
@@ -494,6 +502,7 @@ function settingsChanges(view: OrganizerView, draft: SettingsDraft): SettingsCha
 // drafts are writable derivations of the server view, so a save — or an edit
 // landing from another tab — resets them to the committed values.
 function SettingsSection(props: { view: OrganizerView; formatEditable: boolean }) {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [name, setName] = createSignal(() => props.view.name);
   const [discipline, setDiscipline] = createSignal(() => props.view.discipline);
@@ -647,6 +656,7 @@ function ReportDialog(props: {
   onClose: () => void;
   onReported: (voidedCount: number) => void;
 }) {
+  const { t } = useI18n();
   function draftResetPerMatch<T>(initial: T) {
     return createSignal<T>((): T => {
       void props.reportKey;

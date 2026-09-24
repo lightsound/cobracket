@@ -1,5 +1,5 @@
 import type { Accessor, Element } from "solid-js";
-import { t } from "./i18n";
+import { useI18n } from "./i18n";
 
 // Thrown values are `unknown` in JavaScript, so every error surface needs the
 // same normalization. This module is the one place that does it — boundaries
@@ -24,6 +24,7 @@ export function ErrorNotice(props: { message: string; children?: Element }) {
 
 // The adapter every <Errored> boundary passes as its fallback.
 export function errorFallback(error: Accessor<unknown>, reset: () => void) {
+  const { t } = useI18n();
   return (
     <ErrorNotice message={errorMessage(error())}>
       <button

@@ -14,6 +14,32 @@ exist when a project has routing, server functions, or document head tags.
 It is not every Advanced reference page. When an API is missing here, look it up
 in `llms.txt` rather than guessing from Solid 1.x or React.
 
+## Read before using
+
+The skill does not cover these; fetch the pages when the task needs them.
+
+- Filesystem routing (`fileRoutes({ types: true })` from `filesystem-routing/vite`, `[id]` / `[[p]]` / `[...rest]` / `(group)/` names, `defineFileRoute`): https://v2-rebuild--solid-docs-v2.netlify.app/reference/filesystem-routing.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/filesystem-routing/vite.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/filesystem-routing/conventions.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/filesystem-routing/manifest.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-router/filesystem.md
+- A route array in its own file (`defineRoutes`, `RouteProps<typeof Router.paths.x>`, `matchFilters`): https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-router/router-factory.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-router/routes-and-paths.md
+- Layout routes, pathless routes, where router hooks may run: https://v2-rebuild--solid-docs-v2.netlify.app/routing/solid-router/nested-routes.md
+- Auth guards and redirect-after-sign-in (`next` validation): https://v2-rebuild--solid-docs-v2.netlify.app/guides/protected-routes.md
+- Unsaved-changes guard (`useBeforeLeave`): https://v2-rebuild--solid-docs-v2.netlify.app/routing/solid-router/navigation.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-router/navigation.md
+- Row selection without `createSelector` (id-keyed projection): https://v2-rebuild--solid-docs-v2.netlify.app/guides/lists.md, https://v2-rebuild--solid-docs-v2.netlify.app/guides/performance.md
+- Infinite scroll, polling, sharing one request: https://v2-rebuild--solid-docs-v2.netlify.app/guides/data-fetching-patterns.md
+- Writing a custom primitive (called under an owner, `MaybeAccessor`, `getOwner` / `runWithOwner` / `isDisposed` after async): https://v2-rebuild--solid-docs-v2.netlify.app/guides/custom-primitives.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/advanced/owner-introspection/get-owner.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/advanced/owner-introspection/run-with-owner.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/advanced/owner-introspection/is-disposed.md
+- Wrapping a non-Solid library, push feeds with a reactive argument, web components (`prop:`, event names): https://v2-rebuild--solid-docs-v2.netlify.app/guides/integrate-non-solid-code.md
+- Typed env (`env.ts` schema, `VITE_` client keys), `import "server-only"`, what compiles `"use server"`: https://v2-rebuild--solid-docs-v2.netlify.app/building-apps/environment.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/vite-plugin-solid/modules.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/vite-plugin-solid/server-functions.md
+- Sessions and cookies (`parseCookieHeader` / `serializeCookie`, `RequestEventLocals` typing, when a cookie write commits): https://v2-rebuild--solid-docs-v2.netlify.app/building-apps/sessions-and-auth.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/request-response/cookies.md
+- Middleware chains and API routes / webhooks (`createAPIHandler`, `httpMethods: true`): https://v2-rebuild--solid-docs-v2.netlify.app/building-apps/middleware-and-api-routes.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/filesystem-routing/api.md
+- Auth headers for every call, per-call `signal` / `keepalive` (`configureServerFunctionsClient`, `invoke`): https://v2-rebuild--solid-docs-v2.netlify.app/building-apps/server-functions/metadata-and-transport.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/server-functions/configure-client.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/server-functions/invoke.md
+- Server-function limits (`bodySizeLimit`, `maxArguments`): https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/server-functions/host-configuration.md
+- Static prerendering (`prerender-crawler/vite`, `prerendered()`), choosing client / SSR / prerender: https://v2-rebuild--solid-docs-v2.netlify.app/guides/choose-a-rendering-mode.md
+- SSR-safe code (what runs on the server, hydration mismatches): https://v2-rebuild--solid-docs-v2.netlify.app/guides/ssr-safe-code.md
+- Type helpers (`VoidProps`, `FlowProps`, `ComponentProps<"button">`, `JSX.EventHandler`, generic `<T,>` components): https://v2-rebuild--solid-docs-v2.netlify.app/guides/typescript.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/types/component-types.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/types/reactive-types.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/types/jsx-types.md
+- Head tag identity (OG `property`, `key`, layout `<Head>` groups): https://v2-rebuild--solid-docs-v2.netlify.app/building-apps/head-and-metadata.md
+- Server-side tests (`createRequestEvent`, `provideRequestEvent` from `@solidjs/web/storage`, a Node Vitest project): https://v2-rebuild--solid-docs-v2.netlify.app/guides/testing.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/request-response/provide-request-event.md
+- Migrating 1.x data fetching (`createResource`, `resource.latest`): https://v2-rebuild--solid-docs-v2.netlify.app/migration/data-fetching-from-solid-1.md
+- Terms used across the docs: https://v2-rebuild--solid-docs-v2.netlify.app/glossary.md; the mental model: https://v2-rebuild--solid-docs-v2.netlify.app/guides/thinking-in-solid.md
+
 ## Getting started
 
 - https://v2-rebuild--solid-docs-v2.netlify.app/getting-started/quick-start.md
@@ -66,6 +92,7 @@ read these before writing route JSX.
 ## Guides and migration
 
 - https://v2-rebuild--solid-docs-v2.netlify.app/guides/avoid-unnecessary-effects.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/guides/state-management.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/guides/debugging-reactivity.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/guides/performance.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/guides/observability.md

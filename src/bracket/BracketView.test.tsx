@@ -10,10 +10,10 @@
 import { createSignal, flush } from "solid-js";
 import { expect, test } from "vite-plus/test";
 import { mount } from "../test-setup";
-import { setLocale } from "../i18n";
+import { AppProviders } from "../providers";
 import { BracketView, type BracketViewProps, type ViewMatch } from "./BracketView";
 
-setLocale("en");
+localStorage.setItem("cobracket:locale", "en");
 
 const PARTICIPANTS = [
   { participantId: "p1", name: "Ada" },
@@ -78,7 +78,11 @@ function semisAndFinal(final: Partial<ViewMatch> = {}): ViewMatch[] {
 }
 
 function mountBracket(props: () => BracketViewProps): HTMLElement {
-  return mount(() => <BracketView {...props()} />);
+  return mount(() => (
+    <AppProviders>
+      <BracketView {...props()} />
+    </AppProviders>
+  ));
 }
 
 function cardLabels(host: HTMLElement): string[] {

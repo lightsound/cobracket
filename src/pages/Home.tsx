@@ -6,13 +6,14 @@ import { ErrorNotice, errorFallback, errorMessage } from "../ErrorFallback";
 import { FormatFieldset, type FormatFamily } from "../FormatFieldset";
 import { SetupNotice } from "../SetupNotice";
 import { StatusBadge } from "../StatusBadge";
-import { t } from "../i18n";
+import { useI18n } from "../i18n";
 import { createOrganizer, ensureOrganizer } from "../lib/auth";
 import { createConvexQuery, getConvexClient, getConvexUrl } from "../lib/convex";
 // fallow-ignore-next-line circular-dependency -- the official Solid Router 2 shape: the router lazy-imports pages (deferred dynamic import), pages link back through Router.paths; no init-order hazard
 import { Router } from "../router";
 
 export default function Home() {
+  const { t } = useI18n();
   if (!getConvexUrl()) return <SetupNotice />;
   const organizer = createOrganizer();
 
@@ -37,6 +38,7 @@ export default function Home() {
 }
 
 function TournamentList() {
+  const { t } = useI18n();
   const tournaments = createConvexQuery(api.operations.listMyTournaments, {});
 
   return (
@@ -69,6 +71,7 @@ function TournamentList() {
 }
 
 function CreateForm() {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [name, setName] = createSignal("");
   const [discipline, setDiscipline] = createSignal("");

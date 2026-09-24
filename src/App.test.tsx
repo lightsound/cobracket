@@ -9,7 +9,6 @@
  */
 import { expect, test, vi } from "vite-plus/test";
 import { api } from "../convex/_generated/api";
-import { setLocale } from "./i18n";
 import { mount } from "./test-setup";
 import { fakeId, publishQuery } from "./test-fakes";
 
@@ -18,7 +17,7 @@ vi.mock("./lib/auth", async () => (await import("./test-fakes")).authModule());
 
 const { default: App } = await import("./App");
 
-setLocale("en");
+localStorage.setItem("cobracket:locale", "en");
 
 const ORGANIZER = fakeId<"users">("user1");
 
