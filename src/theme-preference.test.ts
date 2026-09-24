@@ -1,32 +1,26 @@
 /**
- * The theme preference, which is a browser-only value read at module load.
+ * The theme preference, which is a browser-only value read when the provider
+ * creates it.
  *
  * Solid 2 client mode mounts into an empty body, so there is no hydration
- * mismatch to defend against: the signal reads `localStorage` directly when it
- * is created, rather than starting neutral and adopting the stored value after
+ * mismatch to defend against: `createThemePreference()` reads `localStorage`
+ * directly, rather than starting neutral and adopting the stored value after
  * mount (the React reflex, which would overwrite what the user chose). That is
- * the behaviour the first test pins, and the reason every case here loads the
- * module *after* arranging storage.
+ * the behaviour the first test pins, and the reason every case here arranges
+ * storage *before* calling the factory — the same ordering the provider sees
+ * on a fresh page load.
  */
 import { expect, test, vi } from "vite-plus/test";
 import { flush } from "solid-js";
+import { createThemePreference } from "./theme-preference";
 
 const STORAGE_KEY = "cobracket:theme";
 
-type ThemeModule = typeof import("./theme-preference");
-
-/** A fresh module instance, so the load-time read is part of the subject. */
-async function load(stored?: string): Promise<ThemeModule> {
-  vi.resetModules();
-  localStorage.clear();
-  if (stored !== undefined) localStorage.setItem(STORAGE_KEY, stored);
-  return import("./theme-preference");
-}
-
 const scheme = () => document.documentElement.style.colorScheme;
 
-test("adopts a stored preference when the signal is created", async () => {
-  const { themePreference } = await load("dark");
+test("adopts a stored preference when the signal is created", () => {
+  localStorage.setItem(STORAGE_KEY, "dark");
+  const { themePreference } = createThemePreference();
   expect(themePreference()).toBe("dark");
 });
 
@@ -37,16 +31,19 @@ test.each([
   ["", "system"],
   ["Dark", "system"],
   ["midnight", "system"],
-])("reads %o from storage as %s", async (stored, expected) => {
-  const { themePreference } = await load(stored);
+])("reads %o from storage as %s", (stored, expected) => {
+  localStorage.clear();
+  if (stored !== undefined) localStorage.setItem(STORAGE_KEY, stored);
+  const { themePreference } = createThemePreference();
   expect(themePreference()).toBe(expected);
 });
 
-test("cycles system → light → dark and back, applying and persisting each", async () => {
-  const { themePreference, cycleThemePreference } = await load();
+test("cycles system → light → dark and back, applying and persisting each", () => {
+  localStorage.clear();
+  const { themePreference, cycleThemePreference } = createThemePreference();
   document.documentElement.style.colorScheme = "";
   expect(themePreference()).toBe("system");
-  // Nothing is applied at load: the document's inline bootstrap owns the
+  // Nothing is applied at creation: the document's inline bootstrap owns the
   // first paint (see Document.ssr.test.tsx), this module owns the choice.
   expect(scheme()).toBe("");
 
@@ -71,22 +68,23 @@ test("cycles system → light → dark and back, applying and persisting each", 
   expect(localStorage.getItem(STORAGE_KEY)).toBe("system");
 });
 
-test("falls back to system when storage cannot be read", async () => {
+test("falls back to system when storage cannot be read", () => {
   // Private browsing and blocked site data throw on access rather than
   // returning null, which is why the module reads through a try/catch.
   const getItem = vi.spyOn(localStorage, "getItem").mockImplementation(() => {
     throw new DOMException("denied", "SecurityError");
   });
   try {
-    const { themePreference } = await load("dark");
+    const { themePreference } = createThemePreference();
     expect(themePreference()).toBe("system");
   } finally {
     getItem.mockRestore();
   }
 });
 
-test("still applies the scheme when storage cannot be written", async () => {
-  const { cycleThemePreference, themePreference } = await load();
+test("still applies the scheme when storage cannot be written", () => {
+  localStorage.clear();
+  const { cycleThemePreference, themePreference } = createThemePreference();
   const setItem = vi.spyOn(localStorage, "setItem").mockImplementation(() => {
     throw new DOMException("quota", "QuotaExceededError");
   });

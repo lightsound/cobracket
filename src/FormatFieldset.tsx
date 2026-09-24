@@ -1,5 +1,5 @@
 import { For, createUniqueId } from "solid-js";
-import { t } from "./i18n";
+import { useI18n } from "./i18n";
 
 export type FormatFamily = "single_elimination" | "double_elimination";
 
@@ -12,6 +12,7 @@ export function FormatFieldset(props: {
   onChange: (family: FormatFamily) => void;
   disabled?: boolean;
 }) {
+  const { t } = useI18n();
   // Radios group by name; a unique one keeps two forms on a page apart.
   const groupName = createUniqueId();
 

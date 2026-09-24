@@ -1,6 +1,6 @@
 # Hand-roll the i18n layer instead of adopting an i18n library
 
-Story 24 requires every UI string to go through an i18n layer from the first screen, English first with Japanese provided. We hand-roll that layer in `src/i18n/`: the English dictionary is the source of truth (its keys define `MessageKey`), the Japanese dictionary is typed `Record<MessageKey, string>` so the two cannot drift, and `t(key, params?)` reads a module-level locale signal so every JSX read re-renders on locale change — the Solid 2 model for app-wide singletons. The locale persists to `localStorage` following the `theme-preference.ts` pattern.
+Story 24 requires every UI string to go through an i18n layer from the first screen, English first with Japanese provided. We hand-roll that layer in `src/i18n/`: the English dictionary is the source of truth (its keys define `MessageKey`), the Japanese dictionary is typed `Record<MessageKey, string>` so the two cannot drift, and `t(key, params?)` reads a locale signal created inside `I18nProvider` at the app root and reached through `useI18n()` — the Solid 2 model for app-wide state (`createContext` + provider; a module-level signal would be shared by every SSR request). The locale persists to `localStorage` following the `theme-preference.tsx` pattern.
 
 ## Considered Options
 
@@ -9,6 +9,6 @@ Story 24 requires every UI string to go through an i18n layer from the first scr
 
 ## Consequences
 
-- The public surface is deliberately tiny — `t`, `locale`, `setLocale`, `Locale`, `MessageKey`, enforced by ImportLint — and dictionaries are flat keys, so a later migration to Paraglide is mechanical (messages move to inlang files; `t()` becomes a wrapper or call sites move to `m.*`).
+- The public surface is deliberately tiny — `useI18n()` (returning `t`, `locale`, `setLocale`), `I18nProvider`, `Locale`, `MessageKey`, enforced by ImportLint — and dictionaries are flat keys, so a later migration to Paraglide is mechanical (messages move to inlang files; `t()` becomes a wrapper or call sites move to `m.*`).
 - Known limitations accepted for MVP: placeholders are untyped (a `{name}` typo surfaces at runtime, mitigated by keys living in one reviewed module) and pluralization is naive (English copes with "result(s)"; Japanese needs no plural forms).
 - Revisit when any of these becomes true: translations are opened to non-developers (inlang editor/CAT tooling starts to matter), locale or key count grows enough that per-locale splitting and tree-shaking matter, or typed parameters / CLDR plural rules become necessary — or when a maintained Paraglide adapter for Solid 2 appears.

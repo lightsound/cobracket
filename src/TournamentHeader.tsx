@@ -1,6 +1,6 @@
 import type { Element } from "solid-js";
 import { StatusBadge, type TournamentStatus } from "./StatusBadge";
-import { t } from "./i18n";
+import { useI18n } from "./i18n";
 
 export function TournamentHeader(props: {
   name: string;
@@ -9,6 +9,8 @@ export function TournamentHeader(props: {
   formatFamily: "single_elimination" | "double_elimination";
   children?: Element;
 }) {
+  const { t } = useI18n();
+
   return (
     <header class="flex flex-col gap-2">
       <div class="flex flex-wrap items-center gap-3">

@@ -1,5 +1,5 @@
-import { t } from "./i18n";
-import { cycleThemePreference, themePreference, type ThemePreference } from "./theme-preference";
+import { useI18n } from "./i18n";
+import { useTheme, type ThemePreference } from "./theme-preference";
 
 const LABEL_KEYS = {
   system: "theme.system",
@@ -8,6 +8,9 @@ const LABEL_KEYS = {
 } as const satisfies Record<ThemePreference, string>;
 
 export default function ThemeToggle() {
+  const { t } = useI18n();
+  const { themePreference, cycleThemePreference } = useTheme();
+
   return (
     <button
       type="button"

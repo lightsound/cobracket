@@ -7,10 +7,10 @@
 import { createSignal, flush } from "solid-js";
 import { expect, test } from "vite-plus/test";
 import { mount } from "./test-setup";
-import { setLocale } from "./i18n";
+import { AppProviders } from "./providers";
 import { Standings, type StandingsProps } from "./Standings";
 
-setLocale("en");
+localStorage.setItem("cobracket:locale", "en");
 
 const PARTICIPANTS = [
   { participantId: "p1", name: "Ada" },
@@ -27,7 +27,11 @@ function placings(): StandingsProps["standings"] {
 }
 
 function mountStandings(props: () => StandingsProps): HTMLElement {
-  return mount(() => <Standings {...props()} />);
+  return mount(() => (
+    <AppProviders>
+      <Standings {...props()} />
+    </AppProviders>
+  ));
 }
 
 function rows(host: HTMLElement): string[][] {

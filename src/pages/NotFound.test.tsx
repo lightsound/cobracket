@@ -1,12 +1,16 @@
 import { expect, test } from "vite-plus/test";
-import { setLocale } from "../i18n";
+import { AppProviders } from "../providers";
 import { mount } from "../test-setup";
 import NotFound from "./NotFound";
 
-setLocale("en");
+localStorage.setItem("cobracket:locale", "en");
 
 test("offers the way home", () => {
-  const host = mount(() => <NotFound />);
+  const host = mount(() => (
+    <AppProviders>
+      <NotFound />
+    </AppProviders>
+  ));
   expect(host.querySelector("p")?.textContent).toContain("not found");
   expect(host.querySelector("a")?.getAttribute("href")).toBe("/");
 });

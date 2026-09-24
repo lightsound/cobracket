@@ -3,14 +3,25 @@ import LocaleToggle from "./LocaleToggle";
 import ThemeToggle from "./ThemeToggle";
 import { initDevDiagnostics } from "./dev-diagnostics";
 import { errorFallback } from "./ErrorFallback";
-import { t } from "./i18n";
+import { useI18n } from "./i18n";
 import { initAuth } from "./lib/auth";
+import { AppProviders } from "./providers";
 import { Router } from "./router";
 import "./theme.css";
 
 export default function App() {
   initDevDiagnostics();
   initAuth();
+
+  return (
+    <AppProviders>
+      <Shell />
+    </AppProviders>
+  );
+}
+
+function Shell() {
+  const { t } = useI18n();
 
   return (
     <Router>

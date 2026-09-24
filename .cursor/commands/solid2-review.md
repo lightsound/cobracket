@@ -26,14 +26,36 @@ Steps:
      `Promise<User>` props;
    - `latest(selectedId)` as the default highlight (hold is the default);
      `isPending` treated as a global spinner instead of a per-expression question;
-   - treating `<Errored>` as a terminal ErrorBoundary, or routing per-row mutation
-     failures through it (those belong in the action / a projection-folded map);
+   - treating `<Errored>` as a terminal ErrorBoundary, or expecting it to catch
+     mutation failures (an error thrown out of an `action` reverts the overlay and
+     rejects the call — catch it in the action / a projection-folded map, or `.catch`
+     the call in the handler);
+   - effect `apply` functions with expression bodies (`(t) => (document.title = t)`,
+     `(v) => setX(v)`) — any return value but a cleanup halts reactivity; `onCleanup`
+     inside `apply` (never runs) or inside `onSettled`, and memos/effects/`flush()`
+     inside an `onSettled` callback (all throw);
+   - writes to a store outside its setter (`todos.push(x)`, `todo.done = ...` — silently
+     ignored) and `Map`/`Set`/`Date` fields mutated in a draft (not tracked);
+   - app-wide state as a module-level signal/store instead of a provider at the root
+     of `App` (shared across SSR requests);
+   - value-form `createOptimisticStore([])` / `createOptimistic(v)` holding durable
+     data (writes vanish on settle) instead of the function form refreshed after `yield`;
+   - route `preload` returning data read as `props.data` (captured once per match)
+     instead of `void getX(params.id)` + `createMemo(() => getX(props.params.id))`;
+   - `throw redirect()` / `return reload()` in server functions called without Solid
+     Router `action`/`query` (the caller gets a raw `Response` or `null`, never its
+     data), and POST forms built on a bare function's `.url` (TS2339) instead of a
+     router `action`;
      error reporting done as a side effect inside `fallback` instead of
-     `configureClientErrors` / `configureServerErrors` / `render(..., { onError })`;
+     `configureClientErrors` / `configureServerErrors` / `render(fn, root, undefined, { onError })`
+     (options are `render`'s 4th argument — a 3rd-argument object is `init`);
    - store setter callbacks that `await` (the draft closes when the callback returns —
      `[ASYNC_STORE_SETTER]`), store setters called at component-body top level, and
      `latest()` used as a null-safe read of an unsettled source;
    - nested fetches assumed to waterfall, or `<Loading>` lifted along with a lifted fetch;
+   - mutations on a value read through `live()` that settle on `yield save()` alone or
+     `refresh()` the live-derived store, instead of `yield until(predicate, { timeout })`
+     for the stream's echo (the old value flashes back when the overlay drops);
    - rewriting App with loading/error branches, or snapshot/restore, when wrapping
      a client store in server functions; disabling optimistic rows until ack;
    - tRPC / type-gen around `"use server"`, a client `fetch` after a mutation,

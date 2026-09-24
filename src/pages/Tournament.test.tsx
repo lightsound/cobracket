@@ -9,7 +9,7 @@ import { expect, test, vi } from "vite-plus/test";
 import { flush } from "solid-js";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "../../convex/_generated/api";
-import { setLocale } from "../i18n";
+import { AppProviders } from "../providers";
 import { mount } from "../test-setup";
 import {
   answerMutation,
@@ -29,7 +29,7 @@ vi.mock("@solidjs/router", async (importOriginal) => ({
 
 const { default: TournamentPage } = await import("./Tournament");
 
-setLocale("en");
+localStorage.setItem("cobracket:locale", "en");
 
 type OrganizerView = NonNullable<FunctionReturnType<typeof api.operations.getTournament>>;
 
@@ -86,7 +86,11 @@ function type(input: HTMLInputElement, value: string): void {
 }
 
 async function open(overrides: Partial<OrganizerView> = {}): Promise<HTMLElement> {
-  const host = mount(() => <TournamentPage />);
+  const host = mount(() => (
+    <AppProviders>
+      <TournamentPage />
+    </AppProviders>
+  ));
   publishQuery(api.auth.currentOrganizer, ORGANIZER);
   publishQuery(api.operations.getTournament, view(overrides));
   publishQuery(api.operations.suggestDisciplines, []);
@@ -95,7 +99,11 @@ async function open(overrides: Partial<OrganizerView> = {}): Promise<HTMLElement
 }
 
 test("asks a visitor with no session to start their own", async () => {
-  const host = mount(() => <TournamentPage />);
+  const host = mount(() => (
+    <AppProviders>
+      <TournamentPage />
+    </AppProviders>
+  ));
   publishQuery(api.auth.currentOrganizer, null);
   await settled();
   expect(host.textContent).toContain("this browser has no Organizer session");
@@ -103,7 +111,11 @@ test("asks a visitor with no session to start their own", async () => {
 });
 
 test("says so when the id names nothing of ours", async () => {
-  const host = mount(() => <TournamentPage />);
+  const host = mount(() => (
+    <AppProviders>
+      <TournamentPage />
+    </AppProviders>
+  ));
   publishQuery(api.auth.currentOrganizer, ORGANIZER);
   publishQuery(api.operations.getTournament, null);
   await settled();

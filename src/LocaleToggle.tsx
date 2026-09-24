@@ -1,6 +1,7 @@
-import { locale, setLocale, t } from "./i18n";
+import { useI18n } from "./i18n";
 
 export default function LocaleToggle() {
+  const { locale, setLocale, t } = useI18n();
   const next = () => (locale() === "en" ? "ja" : "en");
   return (
     <button

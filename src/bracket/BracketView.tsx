@@ -1,5 +1,5 @@
 import { For, Show, createMemo, createSignal } from "solid-js";
-import { t } from "../i18n";
+import { useI18n } from "../i18n";
 import { CARD_HEIGHT, CARD_WIDTH, layoutBracket } from "./layout";
 import type { BracketSectionName } from "./layout";
 
@@ -62,6 +62,7 @@ const SECTION_LABEL_KEYS = {
  * @public
  */
 export function BracketView(props: BracketViewProps) {
+  const { t } = useI18n();
   const layout = createMemo(() => layoutBracket(props.matches), { name: "layout" });
   /**
    * The layout positions and the match data, joined once per update.
@@ -276,6 +277,7 @@ function MatchCard(props: {
   names: Map<string, string>;
   onSelect?: (key: string) => void;
 }) {
+  const { t } = useI18n();
   const reportable = () => props.onSelect !== undefined && isReportable(props.match);
 
   return (
@@ -325,6 +327,7 @@ function OccupantRow(props: {
   match: ViewMatch;
   names: Map<string, string>;
 }) {
+  const { t } = useI18n();
   const participantId = () => {
     const occupant = props.occupant;
     return occupant !== undefined && occupant.kind === "participant"

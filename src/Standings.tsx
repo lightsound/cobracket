@@ -1,5 +1,5 @@
 import { For, Show } from "solid-js";
-import { t } from "./i18n";
+import { useI18n } from "./i18n";
 
 export interface StandingsProps {
   standings: { participantId: string; placement: number }[];
@@ -8,6 +8,7 @@ export interface StandingsProps {
 }
 
 export function Standings(props: StandingsProps) {
+  const { t } = useI18n();
   const nameOf = (participantId: string) =>
     props.participants.find((participant) => participant.participantId === participantId)?.name ??
     participantId;
