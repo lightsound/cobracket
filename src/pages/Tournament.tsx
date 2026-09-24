@@ -11,7 +11,7 @@ import { SetupNotice } from "../SetupNotice";
 import { createOrganizer } from "../lib/auth";
 import { TournamentBoard } from "../TournamentBoard";
 import { TournamentHeader } from "../TournamentHeader";
-import { useI18n } from "../i18n";
+import { useI18n, type I18n } from "../i18n";
 import { createConvexQuery, getConvexUrl, runMutation } from "../lib/convex";
 // fallow-ignore-next-line circular-dependency -- the official Solid Router 2 shape: the router lazy-imports pages (deferred dynamic import), pages link back through Router.paths; no init-order hazard
 import { Router } from "../router";
@@ -70,8 +70,7 @@ function OwnedTournament(props: { tournamentId: string }) {
   );
 }
 
-function bracketPlaceholder(view: OrganizerView): string {
-  const { t } = useI18n();
+function bracketPlaceholder(t: I18n["t"], view: OrganizerView): string {
   if (view.participants.length < 2) return t("bracket.needTwo");
   return view.status === "published" ? t("bracket.stale") : t("bracket.none");
 }
@@ -130,7 +129,7 @@ function Manager(props: { view: OrganizerView }) {
           bracket={props.view.bracket}
           participants={props.view.participants}
           completed={props.view.status === "completed"}
-          fallback={<p class="text-sm text-ink-muted">{bracketPlaceholder(props.view)}</p>}
+          fallback={<p class="text-sm text-ink-muted">{bracketPlaceholder(t, props.view)}</p>}
           onSelectMatch={reportingOpen() ? (key) => setReportKey(key) : undefined}
         />
       </section>
