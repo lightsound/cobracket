@@ -1,5 +1,5 @@
 import { isServer } from "@solidjs/web";
-import { createContext, createSignal, useContext, type ParentProps } from "solid-js";
+import { createContext, createSignal, useContext, type Accessor, type ParentProps } from "solid-js";
 
 export type ThemePreference = "system" | "light" | "dark";
 
@@ -30,7 +30,17 @@ function applyPreference(pref: ThemePreference): void {
   }
 }
 
-export function createThemePreference() {
+/**
+ * The theme surface for one mounted app — per browser tab, per SSR request.
+ * Components read it through `useTheme()`.
+ */
+export interface Theme {
+  /** The current preference, reactive. */
+  themePreference: Accessor<ThemePreference>;
+  cycleThemePreference: () => void;
+}
+
+export function createThemePreference(): Theme {
   const [themePreference, setPreference] = createSignal(storedPreference());
 
   function setThemePreference(pref: ThemePreference): void {
@@ -45,8 +55,6 @@ export function createThemePreference() {
 
   return { themePreference, cycleThemePreference };
 }
-
-type Theme = ReturnType<typeof createThemePreference>;
 
 const ThemeContext = createContext<Theme>();
 
