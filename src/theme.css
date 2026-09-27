@@ -3,10 +3,12 @@
  * light and dark via light-dark(): a single utility class (e.g. bg-surface)
  * is theme-complete, so `dark:` variants must never appear in this codebase.
  * The default Tailwind palette is wiped so raw palette utilities
- * (bg-slate-800, text-red-500, ...) do not exist. Enforced by `bun run
- * lint:theme`.
+ * (bg-slate-800, text-red-500, ...) do not exist. Enforced by @shadcn/lint
+ * in `vp check` and `bun run lint:theme` (ADR 0012).
  */
-@import "tailwindcss";
+/* Scan src/ only: the default scans the whole repo, so class names in test
+ * fixtures and docs (bg-[#ff0000] in the lint tests) shipped as CSS. */
+@import "tailwindcss" source(".");
 @import "@fontsource-variable/space-grotesk";
 
 @theme {
@@ -38,6 +40,31 @@
     "Yu Gothic UI", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
   --font-display:
     "Space Grotesk Variable", ui-sans-serif, system-ui, "Hiragino Sans", "Noto Sans JP", sans-serif;
+}
+
+/* BracketView's pan and zoom change on every drag frame. Registered as
+ * non-inheriting, a change restyles the canvas alone instead of every card
+ * below it (ADR 0012); the utility that reads them sits beside the
+ * registrations so the pair stays together. --card-w / --card-h stay
+ * unregistered: the cards read them by inheritance. */
+@property --pan-x {
+  syntax: "*";
+  inherits: false;
+}
+
+@property --pan-y {
+  syntax: "*";
+  inherits: false;
+}
+
+@property --zoom {
+  syntax: "*";
+  inherits: false;
+}
+
+@utility bracket-pan-zoom {
+  translate: var(--pan-x) var(--pan-y);
+  scale: var(--zoom);
 }
 
 @layer base {

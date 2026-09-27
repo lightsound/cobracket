@@ -56,17 +56,34 @@ describe("lint:theme", () => {
     expect(output).toContain("1 finding(s)");
   });
 
-  test("rejects arbitrary color values in every notation", async () => {
+  test("rejects style outside src/bracket, in either form", async () => {
     const { status, output } = await lint({
-      "src/Hex.tsx": `export const a = "bg-[#ff0000]";\n`,
-      "src/Rgb.tsx": `export const a = "text-[rgb(0_0_0)]";\n`,
-      "src/Oklch.tsx": `export const a = "border-[oklch(0.7_0.1_20)]";\n`,
-      "src/Mix.tsx": `export const a = "bg-[color-mix(in_oklch,red,blue)]";\n`,
-      "src/Hsl.css": `.x { background: theme(--x-[hsl(0,0%,0%)]); }\n`,
+      "src/Card.tsx": [
+        `export const A = () => <p style={{ padding: "1px" }} />;`,
+        `export const B = () => <p style="color: red" />;`,
+        `export const C = () => (`,
+        `  <p`,
+        `    style={{ "--gap": "13px" }}`,
+        `  />`,
+        `);`,
+        ``,
+      ].join("\n"),
     });
     expect(status).toBe(1);
-    expect(output).toContain("arbitrary color value is banned");
-    expect(output).toContain("5 finding(s)");
+    expect(output).toContain("src/Card.tsx:1:");
+    expect(output).toContain("src/Card.tsx:2:");
+    expect(output).toContain("src/Card.tsx:5:");
+    expect(output).toContain("style is banned outside src/bracket");
+    expect(output).toContain("3 finding(s)");
+  });
+
+  test("allows style in src/bracket, and style as a property elsewhere", async () => {
+    const { status, output } = await lint({
+      "src/bracket/View.tsx": `export const V = () => <div style={{ "--card-x": "1px" }} />;\n`,
+      "src/theme.ts": `document.documentElement.style.colorScheme = "dark";\n`,
+    });
+    expect(status).toBe(0);
+    expect(output).toContain("lint:theme passed.");
   });
 
   test("leaves src/theme.css alone — it is where token values live", async () => {
@@ -94,7 +111,7 @@ describe("lint:theme", () => {
 
   test("reports every finding rather than stopping at the first", async () => {
     const { status, output } = await lint({
-      "src/A.tsx": `export const a = "dark:bg-black";\nexport const b = "bg-[#fff]";\n`,
+      "src/A.tsx": `export const a = "dark:bg-black";\nexport const B = () => <p style={{ padding: 0 }} />;\n`,
       "src/B.tsx": `export const c = "dark:text-white";\n`,
     });
     expect(status).toBe(1);

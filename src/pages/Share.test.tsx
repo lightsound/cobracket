@@ -113,9 +113,9 @@ test("renders the tournament the share slug names, bracket and all", async () =>
 
   expect(host.textContent).toContain("Sunday Cup");
   expect(host.textContent).toContain("Chess");
-  expect(host.querySelectorAll("button[style*='translate']")).toHaveLength(3);
+  expect(host.querySelectorAll("button[style*='--card-x']")).toHaveLength(3);
   // A viewer has no Organizer controls, so no card is reportable.
-  for (const card of host.querySelectorAll("button[style*='translate']")) {
+  for (const card of host.querySelectorAll("button[style*='--card-x']")) {
     expect(card.hasAttribute("disabled")).toBe(true);
   }
 });
@@ -139,13 +139,13 @@ test("keeps the bracket's DOM across a subscription re-delivery", async () => {
   ));
   publishQuery(api.operations.getSharedTournament, sharedView());
   await settled();
-  const firstCard = host.querySelector("button[style*='translate']");
+  const firstCard = host.querySelector("button[style*='--card-x']");
 
   // The same tournament, all-new objects: an idle push from Convex.
   publishQuery(api.operations.getSharedTournament, sharedView());
   await settled();
 
-  expect(host.querySelector("button[style*='translate']")).toBe(firstCard);
+  expect(host.querySelector("button[style*='--card-x']")).toBe(firstCard);
 
   // And a real change still lands, through the page rather than around it.
   publishQuery(api.operations.getSharedTournament, sharedView({ name: "Sunday Cup — Final" }));

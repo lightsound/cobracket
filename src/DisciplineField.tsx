@@ -2,15 +2,13 @@ import { For, Loading, createUniqueId } from "solid-js";
 import { api } from "../convex/_generated/api";
 import { useI18n } from "./i18n";
 import { createConvexQuery } from "./lib/convex";
+import { TextInput } from "./TextInput";
 
 // The freeform Discipline field with suggestions (story 2), shared by the
-// create form and the tournament settings so both offer the same
-// completions. Uncontrolled beyond `value`: the parent owns the signal.
-export function DisciplineInput(props: {
-  value: string;
-  onInput: (value: string) => void;
-  class: string;
-}) {
+// create form and the tournament settings so both offer the same label and
+// completions. Uncontrolled beyond `value`: the parent owns the signal. It
+// owns its look too: callers place it, they do not restyle it (ADR 0012).
+export function DisciplineField(props: { value: string; onInput: (value: string) => void }) {
   const { t } = useI18n();
   const listId = createUniqueId();
   const suggestions = createConvexQuery(api.operations.suggestDisciplines, () => ({
@@ -18,17 +16,16 @@ export function DisciplineInput(props: {
   }));
 
   return (
-    <>
-      <input
-        class={props.class}
-        required
+    <label class="flex flex-col gap-1 text-sm">
+      <span class="text-ink-muted">{t("home.create.discipline")}</span>
+      <TextInput
         // A plain read, and no `latest()`: the boundary below owns its own
         // wait, so the parent's write is never held and there is no
         // uncommitted value to preview.
         value={props.value}
+        onInput={(value) => props.onInput(value)}
         placeholder={t("home.create.disciplinePlaceholder")}
         list={listId}
-        onInput={(event) => props.onInput(event.currentTarget.value)}
       />
       <datalist id={listId}>
         {/*
@@ -47,6 +44,6 @@ export function DisciplineInput(props: {
           </For>
         </Loading>
       </datalist>
-    </>
+    </label>
   );
 }

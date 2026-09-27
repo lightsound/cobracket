@@ -74,6 +74,25 @@ export default defineConfig(({ mode }) => ({
   },
   lint: {
     ignorePatterns: ["convex/_generated/**"],
+    // Tailwind vocabulary (ADR 0012): reads src/theme.css and fails on any
+    // class the theme does not define, with a "Did you mean" repair in the
+    // message. Not officially Solid-aware — it reads `class` the way it reads
+    // Vue's — so scripts/shadcn-lint.test.ts pins the forms this repo writes.
+    jsPlugins: ["@shadcn/lint"],
+    // Every component this repo imports by relative path is one of its own,
+    // so each is guarded by `no-restyle` from the day it exists: callers may
+    // place a component (layout), never restyle it.
+    settings: { shadcn: { componentImports: ["^\\.\\.?/"] } },
+    rules: {
+      "shadcn/no-restyle": ["error", { allow: ["layout"] }],
+      "shadcn/no-raw-colors": "error",
+      "shadcn/no-arbitrary-values": "error",
+      "shadcn/no-unknown-classes": "error",
+      "shadcn/require-static-classes": "error",
+      // Only src/bracket may carry `style` at all (lint:theme), and there it
+      // may set custom properties only; classes decide what they style.
+      "shadcn/no-inline-styles": "error",
+    },
     // Full type-aware path: `vp check` also runs TypeScript type checks
     // (tsgolint), alongside the project's `bun x tsc --noEmit`.
     options: {

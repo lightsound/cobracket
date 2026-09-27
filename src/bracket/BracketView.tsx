@@ -125,8 +125,8 @@ export function BracketView(props: BracketViewProps) {
 
   return (
     <div
-      class="relative overflow-hidden rounded-lg border border-ink-muted/30 bg-surface-raised select-none"
-      style={{ height: `${viewportHeight()}px`, "touch-action": "none" }}
+      class="relative h-(--viewport-h) touch-none overflow-hidden rounded-lg border border-ink-muted/30 bg-surface-raised select-none"
+      style={{ "--viewport-h": `${viewportHeight()}px` }}
       onPointerDown={(event) => {
         if (event.button !== 0) return;
         // Capture so pointerup outside the viewport still ends the drag.
@@ -154,12 +154,19 @@ export function BracketView(props: BracketViewProps) {
         drag = null;
       }}
     >
+      {/* Runtime geometry reaches the stylesheet as custom properties only:
+          `style` sets values, classes decide what they style (ADR 0012). The
+          card size is set once here and inherited by every card. */}
       <div
+        class="bracket-pan-zoom h-(--canvas-h) w-(--canvas-w) origin-top-left"
         style={{
-          transform: `translate(${pan().x + CANVAS_PADDING}px, ${pan().y + CANVAS_PADDING}px) scale(${scale()})`,
-          "transform-origin": "0 0",
-          width: `${layout().width}px`,
-          height: `${layout().height + labelSpace()}px`,
+          "--pan-x": `${pan().x + CANVAS_PADDING}px`,
+          "--pan-y": `${pan().y + CANVAS_PADDING}px`,
+          "--zoom": `${scale()}`,
+          "--canvas-w": `${layout().width}px`,
+          "--canvas-h": `${layout().height + labelSpace()}px`,
+          "--card-w": `${CARD_WIDTH}px`,
+          "--card-h": `${CARD_HEIGHT}px`,
         }}
       >
         <svg
@@ -195,9 +202,10 @@ export function BracketView(props: BracketViewProps) {
           <For each={sections()} keyed={(section) => section.bracket}>
             {(section) => (
               <span
-                class="absolute text-xs font-display font-medium tracking-widest uppercase text-ink-muted"
+                class="absolute translate-x-(--label-x) translate-y-(--label-y) text-xs font-display font-medium tracking-widest uppercase text-ink-muted"
                 style={{
-                  transform: `translate(${section().x}px, ${section().y + labelSpace() - 26}px)`,
+                  "--label-x": `${section().x}px`,
+                  "--label-y": `${section().y + labelSpace() - 26}px`,
                 }}
               >
                 {t(SECTION_LABEL_KEYS[section().bracket])}
@@ -285,7 +293,7 @@ function MatchCard(props: {
       type="button"
       disabled={!reportable()}
       class={[
-        "absolute flex flex-col justify-center gap-1 rounded-md border-2 bg-surface px-2 py-1 text-left text-sm",
+        "absolute flex h-(--card-h) w-(--card-w) translate-x-(--card-x) translate-y-(--card-y) flex-col justify-center gap-1 rounded-md border-2 bg-surface px-2 py-1 text-left text-sm",
         {
           "border-live shadow-sm": props.ready && !props.voided,
           "border-loss": props.voided,
@@ -296,11 +304,7 @@ function MatchCard(props: {
           "cursor-default": !reportable(),
         },
       ]}
-      style={{
-        transform: `translate(${props.x}px, ${props.y}px)`,
-        width: `${CARD_WIDTH}px`,
-        height: `${CARD_HEIGHT}px`,
-      }}
+      style={{ "--card-x": `${props.x}px`, "--card-y": `${props.y}px` }}
       onPointerDown={(event) => event.stopPropagation()}
       onClick={() => {
         if (reportable()) props.onSelect?.(props.match.key);
