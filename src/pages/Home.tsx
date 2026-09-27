@@ -1,7 +1,8 @@
 import { useNavigate } from "@solidjs/router";
 import { Errored, For, Loading, Show, createSignal } from "solid-js";
 import { api } from "../../convex/_generated/api";
-import { DisciplineInput } from "../DisciplineInput";
+import { DisciplineField } from "../DisciplineField";
+import { NameField } from "../NameField";
 import { ErrorNotice, errorFallback, errorMessage } from "../ErrorFallback";
 import { FormatFieldset, type FormatFamily } from "../FormatFieldset";
 import { SetupNotice } from "../SetupNotice";
@@ -100,20 +101,12 @@ function CreateForm() {
     <section class="flex max-w-xl flex-col gap-3">
       <h2 class="font-display text-xl font-medium">{t("home.create.heading")}</h2>
       <form class="flex flex-col gap-4" onSubmit={(event) => void submit(event)}>
-        <label class="flex flex-col gap-1 text-sm">
-          <span class="text-ink-muted">{t("home.create.name")}</span>
-          <input
-            class="rounded-md border border-ink-muted/40 bg-surface-raised px-3 py-2 text-base"
-            required
-            value={name()}
-            placeholder={t("home.create.namePlaceholder")}
-            onInput={(event) => setName(event.currentTarget.value)}
-          />
-        </label>
-        <label class="flex flex-col gap-1 text-sm">
-          <span class="text-ink-muted">{t("home.create.discipline")}</span>
-          <DisciplineInput value={discipline()} onInput={(value) => setDiscipline(value)} />
-        </label>
+        <NameField
+          value={name()}
+          onInput={(value) => setName(value)}
+          placeholder={t("home.create.namePlaceholder")}
+        />
+        <DisciplineField value={discipline()} onInput={(value) => setDiscipline(value)} />
         <FormatFieldset value={family()} onChange={(next) => setFamily(next)} />
         <Show when={createError()}>{(message) => <ErrorNotice message={message()} />}</Show>
         <button

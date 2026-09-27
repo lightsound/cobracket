@@ -4,7 +4,8 @@ import { Errored, For, Loading, Show, createSignal } from "solid-js";
 import type { FunctionArgs, FunctionReturnType } from "convex/server";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
-import { DisciplineInput } from "../DisciplineInput";
+import { DisciplineField } from "../DisciplineField";
+import { NameField } from "../NameField";
 import { ErrorNotice, errorFallback, errorMessage } from "../ErrorFallback";
 import { FormatFieldset, type FormatFamily } from "../FormatFieldset";
 import { SetupNotice } from "../SetupNotice";
@@ -545,7 +546,6 @@ function SettingsSection(props: { view: OrganizerView; formatEditable: boolean }
     }
   }
 
-  const fieldClass = "rounded-md border border-ink-muted/40 bg-surface-raised px-3 py-2 text-base";
   const secondaryButton =
     "rounded-md border border-ink-muted/40 bg-surface px-3 py-1.5 text-sm hover:border-accent disabled:opacity-50";
 
@@ -553,19 +553,8 @@ function SettingsSection(props: { view: OrganizerView; formatEditable: boolean }
     <section class="flex max-w-xl flex-col gap-4">
       <h2 class="font-display text-xl font-medium">{t("settings.heading")}</h2>
       <form class="flex flex-col gap-3" onSubmit={(event) => void save(event)}>
-        <label class="flex flex-col gap-1 text-sm">
-          <span class="text-ink-muted">{t("home.create.name")}</span>
-          <input
-            class={fieldClass}
-            required
-            value={name()}
-            onInput={(event) => setName(event.currentTarget.value)}
-          />
-        </label>
-        <label class="flex flex-col gap-1 text-sm">
-          <span class="text-ink-muted">{t("home.create.discipline")}</span>
-          <DisciplineInput value={discipline()} onInput={(value) => setDiscipline(value)} />
-        </label>
+        <NameField value={name()} onInput={(value) => setName(value)} />
+        <DisciplineField value={discipline()} onInput={(value) => setDiscipline(value)} />
         <FormatFieldset
           value={family()}
           onChange={(next) => setFamily(next)}

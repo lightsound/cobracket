@@ -40,7 +40,7 @@ VITE_CONVEX_URL=http://127.0.0.1:3210 bun dev --port 3000
 ## Golden path through the UI
 
 1. `/` — header `🐍 cobracket`, locale toggle (`日本語` ⇄ `English`, aria-label `Language`/`言語`), theme toggle (`Theme: Auto` → Light → Dark → Auto; sets `documentElement.style.colorScheme` to `"light dark"`/`light`/`dark`). Persists `cobracket:locale` ∈ {en,ja} and `cobracket:theme` ∈ {system,light,dark}.
-2. Create form: name input, DisciplineInput (plain `<input>` + datalist), Format fieldset radios, `Create tournament` → anonymous `ensureOrganizer()` sign-in → `createTournament` → router navigates to `/t/:id`.
+2. Create form: name input, DisciplineField (a label around a plain `<input>` + datalist), Format fieldset radios, `Create tournament` → anonymous `ensureOrganizer()` sign-in → `createTournament` → router navigates to `/t/:id`.
 3. `/t/:id` — roster: bulk textarea (`Paste a list of names — one per line`) + `Add all`; bracket: `Generate Bracket` (needs ≥2 participants), `Publish` (only while draft with a bracket). Match cards are clickable only when status ≠ draft — publish **before** testing the `Record result` Portal dialog.
 4. `/s/:slug` — readonly: TournamentHeader + TournamentBoard only (all cards `disabled`, no roster/generate controls). Same header toggles — locale switches here too.
 5. `*404` — `Page not found.` + `Back to home` (separate surface worth one visit).
