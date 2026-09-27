@@ -85,22 +85,26 @@ cobracket is a learning project first — a way to learn Solid 2.0 and Convex by
 
 - **Production is live for the owner's design review** (decided 2026-09-27). The deployment pipeline (ADR 0010) deploys every push to `main`, so design feedback is given against the real URL rather than a local dev server. The URL is not yet shared with real people.
 - **Sharing it with real people is the owner's call, on the owner's timing** — when the feature set and the UI feel ready, which they judge as they build. It is not gated on a checklist in this document, and nobody else decides it.
+- **No user testing, rehearsals, or dry runs before that decision.** Validation with real people starts only once the owner judges cobracket usable; until then the owner's own use of the product is the only review, and work is not sequenced around preparing for real use.
 - Until then, production data is the owner's own test data and is treated as disposable: schema changes may clear it instead of migrating it, and pre-release dependency churn (ADR 0004) is absorbed as routine work.
 
 ## First milestone
 
-Run one real community tournament (8–16 participants) end to end on cobracket alone. Personal connections may supply this tournament but are not counted on; self-hosting one counts. Reaching it presupposes the sharing decision above.
+Run one real community tournament (8–16 participants) end to end on cobracket alone. Personal connections may supply this tournament but are not counted on; self-hosting one counts. Reaching it presupposes the sharing decision above, so it is where the plan ends, not what it is organized around.
 
-## Path to the first milestone (current plan)
+## Plan (current)
 
-Decided 2026-09, after the MVP web UI shipped and the MCP surface was deferred (ADR 0009). Steps 1–2 are done as engineering; the order of the rest is a preference, not a gate, and feature work continues alongside.
+Re-sequenced 2026-09-27 by the owner: the project is a way to exercise Convex and Solid 2.0 on a real product, so feature work is the main line and anything whose only purpose is real use waits for the sharing decision.
 
-1. **Production deployment** — the Share Link must be a real URL strangers can open; until then nothing else on this list can be validated. _Configured (ADR 0010); live for design review since 2026-09-27, shared when the owner decides (see Project posture)._
-2. **Small operational gaps** that real use surfaces first (e.g. renaming or deleting a tournament). _Done for the gaps foreseeable without real use (stories 26–27, ADR 0011); the rest waits for the first real tournament._
-3. **Share Link OGP images** (ADR 0007's static SVG renderer) — the one URL dropped in a group chat should unfurl well. _Only meaningful once a public URL exists; sequenced with go-live._
-4. A **deliberate UI/UX overhaul** once the feature set has settled; the **mobile experience** (touch pan/zoom, fit-to-view) lands with or after that overhaul, not piecemeal before it.
+1. **Feature work** — the main line. It continues from the roadmap candidates below, in whatever order the owner picks.
+2. A **deliberate UI/UX overhaul** once the feature set has settled, before the sharing decision. The **mobile experience** (touch pan/zoom, fit-to-view, narrow layouts) lands as part of that overhaul, not piecemeal before it. The desktop UI raised no major issue in the owner's review on 2026-09-27.
+3. **Go-live work, held until the sharing decision** — what only matters once real people use the URL:
+   - **Share Link OGP images** (ADR 0007's static SVG renderer, served by a Worker in front of `/s/*` per ADR 0010) — the one URL dropped in a group chat should unfurl well.
+   - Operational gaps that only real use surfaces. The foreseeable ones are done (stories 26–27, ADR 0011).
 
-MCP (stories 18–20) waits for Event hosting or a concrete demand signal from a real tournament (ADR 0009).
+Done: **production deployment** (ADR 0010), live for the owner's design review since 2026-09-27.
+
+**MCP (stories 18–20) is at the owner's discretion** (ADR 0009): built when the owner wants to build it, with no trigger to wait for. The single operations API it depends on stays in force, so that choice stays open.
 
 ## Roadmap candidates after MVP
 
