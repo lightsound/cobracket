@@ -564,11 +564,7 @@ function SettingsSection(props: { view: OrganizerView; formatEditable: boolean }
         </label>
         <label class="flex flex-col gap-1 text-sm">
           <span class="text-ink-muted">{t("home.create.discipline")}</span>
-          <DisciplineInput
-            class={fieldClass}
-            value={discipline()}
-            onInput={(value) => setDiscipline(value)}
-          />
+          <DisciplineInput value={discipline()} onInput={(value) => setDiscipline(value)} />
         </label>
         <FormatFieldset
           value={family()}

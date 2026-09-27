@@ -112,11 +112,7 @@ function CreateForm() {
         </label>
         <label class="flex flex-col gap-1 text-sm">
           <span class="text-ink-muted">{t("home.create.discipline")}</span>
-          <DisciplineInput
-            class="rounded-md border border-ink-muted/40 bg-surface-raised px-3 py-2 text-base"
-            value={discipline()}
-            onInput={(value) => setDiscipline(value)}
-          />
+          <DisciplineInput value={discipline()} onInput={(value) => setDiscipline(value)} />
         </label>
         <FormatFieldset value={family()} onChange={(next) => setFamily(next)} />
         <Show when={createError()}>{(message) => <ErrorNotice message={message()} />}</Show>

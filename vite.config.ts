@@ -78,10 +78,13 @@ export default defineConfig(({ mode }) => ({
     // class the theme does not define, with a "Did you mean" repair in the
     // message. Not officially Solid-aware — it reads `class` the way it reads
     // Vue's — so scripts/shadcn-lint.test.ts pins the forms this repo writes.
-    // `no-restyle` stays off until there are shared components for it to
-    // guard; enabled with nothing to recognize, it would pass by not running.
     jsPlugins: ["@shadcn/lint"],
+    // Every component this repo imports by relative path is one of its own,
+    // so each is guarded by `no-restyle` from the day it exists: callers may
+    // place a component (layout), never restyle it.
+    settings: { shadcn: { componentImports: ["^\\.\\.?/"] } },
     rules: {
+      "shadcn/no-restyle": ["error", { allow: ["layout"] }],
       "shadcn/no-raw-colors": "error",
       "shadcn/no-arbitrary-values": "error",
       "shadcn/no-unknown-classes": "error",

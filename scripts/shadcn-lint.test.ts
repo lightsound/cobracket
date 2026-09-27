@@ -21,6 +21,7 @@ import { afterAll, beforeAll, expect, test } from "vite-plus/test";
 const REPO = join(import.meta.dirname, "..");
 
 const FIXTURE = [
+  `import { Box } from "./Box";`,
   `const tone = "text-ink-mute";`,
   `export const Fixture = (props: { on: boolean }) => (`,
   `  <div>`,
@@ -32,8 +33,16 @@ const FIXTURE = [
   `    <p class="bg-surface" style={{ padding: "1px" }}>style property</p>`,
   `    <p class="translate-x-(--x)" style={{ "--x": "1px" }}>custom property</p>`,
   `    <p class="bg-surface text-ink">tokens</p>`,
+  `    <Box class="bg-surface-raised" />`,
+  `    <Box class="mt-2 w-full" />`,
   `  </div>`,
   `);`,
+  ``,
+].join("\n");
+
+// A component of the repo's own, imported by relative path like every other.
+const COMPONENT = [
+  `export const Box = (props: { class?: string }) => <div class={props.class} />;`,
   ``,
 ].join("\n");
 
@@ -56,41 +65,50 @@ beforeAll(async () => {
     ].join("\n"),
   );
   await writeFile(join(root, "src/Fixture.tsx"), FIXTURE);
+  await writeFile(join(root, "src/Box.tsx"), COMPONENT);
 });
 
 afterAll(async () => {
   await rm(root, { recursive: true, force: true });
 });
 
-test("reports a mistake in every class form this repo writes", () => {
-  const result = spawnSync(
-    join(REPO, "node_modules/.bin/vp"),
-    ["lint", "--format", "json", "src"],
-    {
-      cwd: root,
-      encoding: "utf8",
-    },
-  );
-  // A linter that failed to start (or to load the plugin) prints nothing to
-  // stdout; show its stderr rather than a JSON parse error.
-  expect(result.stdout, result.stderr).not.toBe("");
-  const { diagnostics } = JSON.parse(result.stdout) as {
-    diagnostics: { code: string; labels: { span: { line: number } }[] }[];
-  };
-  const found = diagnostics
-    .filter((diagnostic) => diagnostic.code.startsWith("shadcn("))
-    .map((diagnostic) => `${diagnostic.labels[0]?.span.line} ${diagnostic.code}`)
-    .sort();
+// A whole linter in a subprocess: warm it is under two seconds, but its first
+// cold run here took over five, the default budget.
+test(
+  "reports a mistake in every class form this repo writes, and restyled components",
+  { timeout: 30_000 },
+  () => {
+    const result = spawnSync(
+      join(REPO, "node_modules/.bin/vp"),
+      ["lint", "--format", "json", "src"],
+      {
+        cwd: root,
+        encoding: "utf8",
+      },
+    );
+    // A linter that failed to start (or to load the plugin) prints nothing to
+    // stdout; show its stderr rather than a JSON parse error.
+    expect(result.stdout, result.stderr).not.toBe("");
+    const { diagnostics } = JSON.parse(result.stdout) as {
+      diagnostics: { code: string; labels: { span: { line: number } }[] }[];
+    };
+    const found = diagnostics
+      .filter((diagnostic) => diagnostic.code.startsWith("shadcn("))
+      .map((diagnostic) => `${diagnostic.labels[0]?.span.line} ${diagnostic.code}`)
+      .sort();
 
-  expect(found).toEqual(
-    [
-      "1 shadcn(no-raw-colors)", // constant, reported where it is declared
-      "4 shadcn(no-unknown-classes)", // string
-      "5 shadcn(no-raw-colors)", // object in array
-      "6 shadcn(no-raw-colors)", // `&&` in array
-      "7 shadcn(no-arbitrary-values)", // template literal
-      "9 shadcn(no-inline-styles)", // style property
-      // 10 and 11 are clean: a custom property, and plain tokens.
-    ].sort(),
-  );
-});
+    expect(found).toEqual(
+      [
+        "2 shadcn(no-raw-colors)", // constant, reported where it is declared
+        "5 shadcn(no-unknown-classes)", // string
+        "6 shadcn(no-raw-colors)", // object in array
+        "7 shadcn(no-raw-colors)", // `&&` in array
+        "8 shadcn(no-arbitrary-values)", // template literal
+        "10 shadcn(no-inline-styles)", // style property
+        // 11 and 12 are clean: a custom property, and plain tokens.
+        "13 shadcn(no-restyle)", // a color on an imported component
+        // 14 is clean: placing a component (margin, width) is layout.
+      ].sort(),
+    );
+  },
+);

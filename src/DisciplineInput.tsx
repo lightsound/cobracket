@@ -5,12 +5,9 @@ import { createConvexQuery } from "./lib/convex";
 
 // The freeform Discipline field with suggestions (story 2), shared by the
 // create form and the tournament settings so both offer the same
-// completions. Uncontrolled beyond `value`: the parent owns the signal.
-export function DisciplineInput(props: {
-  value: string;
-  onInput: (value: string) => void;
-  class: string;
-}) {
+// completions. Uncontrolled beyond `value`: the parent owns the signal. It
+// owns its look too: callers place it, they do not restyle it (ADR 0012).
+export function DisciplineInput(props: { value: string; onInput: (value: string) => void }) {
   const { t } = useI18n();
   const listId = createUniqueId();
   const suggestions = createConvexQuery(api.operations.suggestDisciplines, () => ({
@@ -20,7 +17,7 @@ export function DisciplineInput(props: {
   return (
     <>
       <input
-        class={props.class}
+        class="rounded-md border border-ink-muted/40 bg-surface-raised px-3 py-2 text-base"
         required
         // A plain read, and no `latest()`: the boundary below owns its own
         // wait, so the parent's write is never held and there is no
