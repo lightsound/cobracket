@@ -20,6 +20,6 @@ Lock-in is small and deliberately bounded: `wrangler.jsonc`, one `wrangler` devD
 
 ## Consequences
 
-- Production needs three secrets: `CONVEX_DEPLOY_KEY` (Convex production deploy key, with the env-write permission so `bun run auth:keys` can seed `AUTH_PRIVATE_KEY`/`AUTH_JWKS`), `CLOUDFLARE_API_TOKEN`, and `CLOUDFLARE_ACCOUNT_ID`. The runbook lives in AGENTS.md.
+- Production needs three secrets: `CONVEX_DEPLOY_KEY` (Convex production deploy key, with the env permissions so the deploy job can seed `AUTH_PRIVATE_KEY`/`AUTH_JWKS` on a fresh deployment), `CLOUDFLARE_API_TOKEN`, and `CLOUDFLARE_ACCOUNT_ID`. The runbook lives in AGENTS.md.
 - Backend and frontend are deployed by two commands in one job. If the asset upload fails after the function push succeeds, production runs new functions with the previous bundle; re-running the workflow is the fix.
 - The deployment has no server-side rendering, so anything needing per-URL HTML (OGP, crawlers) is a future Worker script, not a hosting migration.

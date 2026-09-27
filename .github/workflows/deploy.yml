@@ -88,6 +88,25 @@ jobs:
           bun-version-file: package.json
       - run: bun install --frozen-lockfile
 
+      # convex.config.ts requires AUTH_PRIVATE_KEY/AUTH_JWKS (ADR 0003), so a
+      # fresh production deployment rejects the first push until they exist.
+      # Seeding them here makes the first deploy self-sufficient; afterwards
+      # the step only reads the variable names. The check is ours, not the
+      # auth CLI's: that CLI treats a failed read as "unset" and would rotate
+      # the signing key — signing every anonymous Organizer out of their
+      # tournaments — whereas a failed `env list` fails this step. Names
+      # only, so no value reaches the log.
+      - name: Seed the auth signing keys on a fresh deployment
+        run: |
+          names=$(bun x convex env list --names-only)
+          if grep -qx AUTH_PRIVATE_KEY <<<"$names" && grep -qx AUTH_JWKS <<<"$names"; then
+            echo "AUTH_PRIVATE_KEY and AUTH_JWKS are set; left unchanged."
+          else
+            bun run auth:keys
+          fi
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+
       # Deploys convex/ to the deployment CONVEX_DEPLOY_KEY belongs to, and
       # runs the client build with VITE_CONVEX_URL set to that deployment's
       # URL. The build runs first, so a broken build aborts before any
