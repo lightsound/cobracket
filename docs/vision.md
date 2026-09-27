@@ -83,9 +83,9 @@ Settled in the final audit rounds; each is nearly free on day one and expensive 
 
 cobracket is a learning project first — a way to learn Solid 2.0 and Convex by building something real — and it is developed the way a real product would be: features land continuously, with the domain model, specs, ADRs, and gates of a product that intends to ship. That is the point of the exercise, not a contradiction. The consequences for planning:
 
-- **Production is configured but deliberately not live.** The deployment pipeline (ADR 0010) is written end to end but has never run a deploy; the production secrets are intentionally unset, and CI skips the deploy step while they are. Nothing in the repository should treat this as an incident or prompt for the secrets.
-- **Going live is the owner's call, on the owner's timing** — when the feature set and the UI feel ready to be handed to real people, which they judge as they build. It is not gated on a checklist in this document, and nobody else decides it.
-- Until then, the freedom of having no production data is used deliberately: schema changes need no migration, and pre-release dependency churn (ADR 0004) is absorbed as routine work.
+- **Production is live for the owner's design review** (decided 2026-09-27). The deployment pipeline (ADR 0010) deploys every push to `main`, so design feedback is given against the real URL rather than a local dev server. The URL is not yet shared with real people.
+- **Sharing it with real people is the owner's call, on the owner's timing** — when the feature set and the UI feel ready, which they judge as they build. It is not gated on a checklist in this document, and nobody else decides it.
+- Until then, production data is the owner's own test data and is treated as disposable: schema changes may clear it instead of migrating it, and pre-release dependency churn (ADR 0004) is absorbed as routine work.
 
 ## First milestone
 
@@ -95,7 +95,7 @@ Run one real community tournament (8–16 participants) end to end on cobracket 
 
 Decided 2026-09, after the MVP web UI shipped and the MCP surface was deferred (ADR 0009). Steps 1–2 are done as engineering; the order of the rest is a preference, not a gate, and feature work continues alongside.
 
-1. **Production deployment** — the Share Link must be a real URL strangers can open; until then nothing else on this list can be validated. _Configured (ADR 0010); goes live when the owner decides (see Project posture)._
+1. **Production deployment** — the Share Link must be a real URL strangers can open; until then nothing else on this list can be validated. _Configured (ADR 0010); live for design review since 2026-09-27, shared when the owner decides (see Project posture)._
 2. **Small operational gaps** that real use surfaces first (e.g. renaming or deleting a tournament). _Done for the gaps foreseeable without real use (stories 26–27, ADR 0011); the rest waits for the first real tournament._
 3. **Share Link OGP images** (ADR 0007's static SVG renderer) — the one URL dropped in a group chat should unfurl well. _Only meaningful once a public URL exists; sequenced with go-live._
 4. A **deliberate UI/UX overhaul** once the feature set has settled; the **mobile experience** (touch pan/zoom, fit-to-view) lands with or after that overhaul, not piecemeal before it.
