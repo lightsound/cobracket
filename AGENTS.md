@@ -18,7 +18,7 @@ This file gives coding agents project-specific context. Keep it short and update
 
 - Product: cobracket — host and manage tournaments of any format, from the web or from chat (MCP). Read `docs/vision.md` for direction, `CONTEXT.md` for the domain glossary (use its terms in code and docs), `docs/adr/` for decisions, `docs/specs/mvp.md` for the current spec
 - Posture: a learning project (Solid 2.0, Convex) developed like a real product — features land continuously with specs, ADRs, and gates. The owner decided on 2026-09-27 to take production live for design review on the real URL; it is not yet shared with real users, and sharing it widely is a separate owner decision (`docs/vision.md` "Project posture")
-- Current code: the format engine (`convex/format/`), the operations API (`convex/operations.ts`, Seam 2), and the MVP web UI (Organizer home `/`, management `/t/:tournamentId`, Share Link `/s/:shareSlug`). MCP (stories 18–20) is deferred until Events or real demand (ADR 0009)
+- Current code: the format engine (`convex/format/`), the operations API (`convex/operations.ts`, Seam 2), and the MVP web UI (Organizer home `/`, management `/t/:tournamentId`, Share Link `/s/:shareSlug`). MCP (stories 18–20) is built when the owner chooses to (ADR 0009, amended 2026-09-27); keep every Organizer capability in `convex/operations.ts` so that stays possible
 - Main entry points: `src/App.tsx`, `src/Document.tsx` (Solid start convention, no `index.html`), `src/router.ts`, `convex/schema.ts`, `convex/operations.ts`
 - Important directories: `src/` (UI), `src/bracket/` (pure bracket layout + renderer), `convex/` (backend functions)
 
