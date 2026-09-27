@@ -89,7 +89,7 @@ cobracket is a learning project first — a way to learn Solid 2.0 and Convex by
 
 ## First milestone
 
-Run one real community tournament (8–16 participants) end to end on cobracket alone. Personal connections may supply this tournament but are not counted on; self-hosting one counts. Reaching it presupposes the go-live decision above.
+Run one real community tournament (8–16 participants) end to end on cobracket alone. Personal connections may supply this tournament but are not counted on; self-hosting one counts. Reaching it presupposes the sharing decision above.
 
 ## Path to the first milestone (current plan)
 
