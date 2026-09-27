@@ -158,7 +158,7 @@ export function BracketView(props: BracketViewProps) {
           `style` sets values, classes decide what they style (ADR 0012). The
           card size is set once here and inherited by every card. */}
       <div
-        class="h-(--canvas-h) w-(--canvas-w) origin-top-left translate-x-(--pan-x) translate-y-(--pan-y) scale-(--zoom)"
+        class="bracket-pan-zoom h-(--canvas-h) w-(--canvas-w) origin-top-left"
         style={{
           "--pan-x": `${pan().x + CANVAS_PADDING}px`,
           "--pan-y": `${pan().y + CANVAS_PADDING}px`,

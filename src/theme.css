@@ -44,24 +44,27 @@
 
 /* BracketView's pan and zoom change on every drag frame. Registered as
  * non-inheriting, a change restyles the canvas alone instead of every card
- * below it (ADR 0012). --card-w / --card-h stay unregistered: the cards read
- * them by inheritance. */
-/* fallow-ignore-next-line css-dead-surface -- set by BracketView's style, read by its translate-*/scale-* classes */
+ * below it (ADR 0012); the utility that reads them sits beside the
+ * registrations so the pair stays together. --card-w / --card-h stay
+ * unregistered: the cards read them by inheritance. */
 @property --pan-x {
   syntax: "*";
   inherits: false;
 }
 
-/* fallow-ignore-next-line css-dead-surface -- set by BracketView's style, read by its translate-*/scale-* classes */
 @property --pan-y {
   syntax: "*";
   inherits: false;
 }
 
-/* fallow-ignore-next-line css-dead-surface -- set by BracketView's style, read by its translate-*/scale-* classes */
 @property --zoom {
   syntax: "*";
   inherits: false;
+}
+
+@utility bracket-pan-zoom {
+  translate: var(--pan-x) var(--pan-y);
+  scale: var(--zoom);
 }
 
 @layer base {

@@ -21,3 +21,4 @@ The split between the two tools is by the question each asks. `@shadcn/lint` ans
 - Two forms are not read: a bare object `class={{ ... }}` and a string `style="..."`. Conditional classes are therefore written as an object inside an array (`class={["base", { "text-win": won() }]}`), which is also what the Solid hard rules ask for; the string `style` falls under the `lint:theme` ban.
 - Oxlint's JS plugin support is alpha. Accepted: the plugin sits behind one config key and one dev dependency.
 - CSS files are not linted by either tool. ADR 0007 already keeps styling out of stylesheets; `src/theme.css` is the one that exists.
+- Custom properties inherit, so one that changes every frame (pan, zoom) would restyle every card below the canvas. Those are registered with `@property … { inherits: false }` in `src/theme.css`, next to the `bracket-pan-zoom` utility that reads them; values the cards should inherit (`--card-w`, `--card-h`) stay unregistered.
