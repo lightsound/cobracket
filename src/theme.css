@@ -3,10 +3,12 @@
  * light and dark via light-dark(): a single utility class (e.g. bg-surface)
  * is theme-complete, so `dark:` variants must never appear in this codebase.
  * The default Tailwind palette is wiped so raw palette utilities
- * (bg-slate-800, text-red-500, ...) do not exist. Enforced by `bun run
- * lint:theme`.
+ * (bg-slate-800, text-red-500, ...) do not exist. Enforced by @shadcn/lint
+ * in `vp check` and `bun run lint:theme` (ADR 0012).
  */
-@import "tailwindcss";
+/* Scan src/ only: the default scans the whole repo, so class names in test
+ * fixtures and docs (bg-[#ff0000] in the lint tests) shipped as CSS. */
+@import "tailwindcss" source(".");
 @import "@fontsource-variable/space-grotesk";
 
 @theme {

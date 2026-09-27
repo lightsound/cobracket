@@ -288,7 +288,7 @@ test("reports a result from the dialog the bracket opens", async () => {
   answerMutation(api.operations.reportResult, () => ({ status: "live" as const, voided: [] }));
 
   // The card is the only way in: the dialog has no independent entry point.
-  host.querySelector<HTMLButtonElement>("button[style*='translate']")?.click();
+  host.querySelector<HTMLButtonElement>("button[style*='--card-x']")?.click();
   flush();
 
   const dialog = document.body.querySelector("form.max-w-sm");

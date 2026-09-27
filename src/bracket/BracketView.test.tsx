@@ -86,7 +86,7 @@ function mountBracket(props: () => BracketViewProps): HTMLElement {
 }
 
 function cardLabels(host: HTMLElement): string[] {
-  return [...host.querySelectorAll("button[style*='translate']")].map((card) =>
+  return [...host.querySelectorAll("button[style*='--card-x']")].map((card) =>
     (card.textContent ?? "").trim(),
   );
 }
@@ -118,7 +118,7 @@ test("survives a refetch that replaces every match object", () => {
     readyMatchKeys: ready(),
     voidedMatchKeys: [],
   }));
-  const before = host.querySelector("button[style*='translate']");
+  const before = host.querySelector("button[style*='--card-x']");
 
   // Same data, all-new objects — an idle subscription push.
   setMatches(semisAndFinal());
@@ -126,7 +126,7 @@ test("survives a refetch that replaces every match object", () => {
 
   // Identity survived: the DOM node was updated in place, not rebuilt. The
   // gate catches the same mistake from the other side (UNSTABLE_LIST_IDENTITY).
-  expect(host.querySelector("button[style*='translate']")).toBe(before);
+  expect(host.querySelector("button[style*='--card-x']")).toBe(before);
 
   // And a real change still lands.
   setMatches(
@@ -158,7 +158,7 @@ test("reports only the matches an organizer may score", () => {
     onSelectMatch: (key) => selected.push(key),
   }));
 
-  for (const card of host.querySelectorAll<HTMLButtonElement>("button[style*='translate']")) {
+  for (const card of host.querySelectorAll<HTMLButtonElement>("button[style*='--card-x']")) {
     card.click();
   }
   flush();
@@ -187,30 +187,35 @@ test("zooming and panning move the canvas without disturbing the cards", () => {
     voidedMatchKeys: [],
   }));
   const viewport = host.firstElementChild as HTMLElement;
-  // The pan/zoom canvas: the viewport's first child, holding the transform.
+  // The pan/zoom canvas: the viewport's first child. Its geometry reaches the
+  // stylesheet as custom properties (ADR 0012), so those are what move.
   const canvas = viewport.firstElementChild as HTMLElement;
+  const geometry = () => ({
+    x: canvas.style.getPropertyValue("--pan-x"),
+    y: canvas.style.getPropertyValue("--pan-y"),
+    zoom: canvas.style.getPropertyValue("--zoom"),
+  });
   const before = cardLabels(host);
 
   host.querySelector<HTMLButtonElement>("button[aria-label='Zoom in']")?.click();
   flush();
-  expect(canvas.style.transform).toContain("scale(1.25)");
+  expect(geometry().zoom).toBe("1.25");
 
   // Pan by a known delta. CANVAS_PADDING (24) is the untouched origin, so the
   // translate is the drag distance plus it.
   drag(viewport, [100, 100], [140, 70]);
-  expect(canvas.style.transform).toContain("translate(64px, -6px)");
+  expect(geometry()).toMatchObject({ x: "64px", y: "-6px" });
 
   // Released: further movement is not a drag.
   viewport.dispatchEvent(
     new PointerEvent("pointermove", { pointerId: 1, bubbles: true, clientX: 300, clientY: 300 }),
   );
   flush();
-  expect(canvas.style.transform).toContain("translate(64px, -6px)");
+  expect(geometry()).toMatchObject({ x: "64px", y: "-6px" });
 
   host.querySelector<HTMLButtonElement>("button[aria-label='Reset view']")?.click();
   flush();
-  expect(canvas.style.transform).toContain("scale(1)");
-  expect(canvas.style.transform).toContain("translate(24px, 24px)");
+  expect(geometry()).toEqual({ x: "24px", y: "24px", zoom: "1" });
   expect(cardLabels(host)).toEqual(before);
 });
 
@@ -264,13 +269,13 @@ test("a tournament-sized bracket costs the list no per-row subscription", () => 
     readyMatchKeys: ["w1m0"],
     voidedMatchKeys: [],
   }));
-  expect(host.querySelectorAll("button[style*='translate']")).toHaveLength(31);
-  const before = host.querySelector("button[style*='translate']");
+  expect(host.querySelectorAll("button[style*='--card-x']")).toHaveLength(31);
+  const before = host.querySelector("button[style*='--card-x']");
 
   // A subscription push with all-new objects, at scale.
   setMatches(bigBracket());
   flush();
 
-  expect(host.querySelector("button[style*='translate']")).toBe(before);
-  expect(host.querySelectorAll("button[style*='translate']")).toHaveLength(31);
+  expect(host.querySelector("button[style*='--card-x']")).toBe(before);
+  expect(host.querySelectorAll("button[style*='--card-x']")).toHaveLength(31);
 });
