@@ -67,8 +67,9 @@ A tournament in seconds, from the web or from chat: an Organizer opens cobracket
 - Good tests assert external behavior: results in → progression, standings, and current/next matches out. No tests against internal bracket bookkeeping.
 - **Seam 1 — the format engine (pure)**: the bulk of tests live here. Property-style coverage for single and double elimination: any roster size (byes), walkovers, DQs, grand-final reset, correction/void recomputation.
 - **Seam 2 — the operations API (Convex functions)**: lifecycle tests through the same functions the UI and MCP server call — create → roster → generate → publish → report → correct → complete — using `convex-test`. This seam is deliberately the only integration surface; the MCP server needs no separate behavioral tests beyond tool-wiring.
-- The repo has no tests yet; these establish the pattern. `flush()` before observing state in any Solid-side test, per repo rules.
-- UI is exercised through the real app (two dev processes, per AGENTS.md) rather than component tests in MVP.
+- **Pages — the web UI under the diagnostics gate**: `src/pages/*.test.tsx` render whole pages on happy-dom with the data seam (ADR 0004) replaced by `src/test-fakes.ts`, and every test under `src/` fails on any Solid diagnostic or unacknowledged hold. `flush()` before observing state in any Solid-side test, per repo rules.
+- **The browser gate**: `e2e/share-link.test.ts` drives Chromium through the whole Organizer path against the dev server and a local Convex deployment, nothing faked, judged by the same diagnostics verdict.
+- The mechanics of both UI gates (fixtures, declared findings, scale-dependent codes, how to run them) live in AGENTS.md; this spec does not restate them.
 
 ## Out of Scope
 
@@ -79,5 +80,4 @@ Deferred after the first operational pass (revisit when real use asks for them):
 ## Further Notes
 
 - Success milestone: one real community tournament (8–16 participants) run end to end on cobracket alone.
-- The existing `tasks` demo (schema, functions, UI) is template scaffolding to be replaced, not extended.
 - The spec-stage checklist in `docs/vision.md` lists deferred items that must be revisited when their feature areas open.
