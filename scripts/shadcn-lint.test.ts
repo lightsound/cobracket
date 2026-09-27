@@ -71,6 +71,9 @@ test("reports a mistake in every class form this repo writes", () => {
       encoding: "utf8",
     },
   );
+  // A linter that failed to start (or to load the plugin) prints nothing to
+  // stdout; show its stderr rather than a JSON parse error.
+  expect(result.stdout, result.stderr).not.toBe("");
   const { diagnostics } = JSON.parse(result.stdout) as {
     diagnostics: { code: string; labels: { span: { line: number } }[] }[];
   };
