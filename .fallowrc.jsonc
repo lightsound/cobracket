@@ -9,7 +9,7 @@
     "src/Document.tsx",
     "scripts/lint-theme.ts",
     "cloudflare.config.ts",
-    "wrangler.config.ts"
+    "wrangler.config.ts",
   ],
   "ignorePatterns": ["convex/_generated/**", "src/vite-env.d.ts"],
   // Vitest resolves the edge-runtime test environment by name from the
