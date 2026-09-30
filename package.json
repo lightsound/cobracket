@@ -13,8 +13,8 @@
     "convex:codegen": "convex codegen",
     "deploy": "bun run deploy:backend && bun run deploy:web",
     "deploy:backend": "convex deploy --cmd 'bun run build' --cmd-url-env-var-name VITE_CONVEX_URL",
-    "deploy:web": "wrangler deploy",
-    "serve:hosting": "wrangler dev",
+    "deploy:web": "cf deploy",
+    "serve:hosting": "cf dev",
     "test": "vp test run --project '!e2e'",
     "test:e2e": "vp test run --project e2e",
     "lint:solid": "solid2-kit check && solid2-kit doctor",
@@ -45,6 +45,7 @@
     "@solidjs/vite-plugin": "^3.0.0-next.44",
     "@tailwindcss/vite": "^4.3.3",
     "@types/bun": "^1.4.2",
+    "cf": "^1.0.0-beta.5",
     "convex-test": "^0.0.59",
     "fallow": "^3.27.0",
     "happy-dom": "^20.14.5",
@@ -54,7 +55,7 @@
     "vite": "npm:@voidzero-dev/vite-plus-core@1.0.0",
     "vite-plus": "1.0.0",
     "vitest": "5.0.1",
-    "wrangler": "^4.136.1"
+    "wrangler": "^4.144.0"
   },
   "overrides": {
     "vite": "npm:@voidzero-dev/vite-plus-core@1.0.0",

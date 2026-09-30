@@ -1,7 +1,16 @@
 {
   "$schema": "./node_modules/fallow/schema.json",
   // Every rule is error, except `policy-violation` — see its entry for why.
-  "entry": ["src/App.tsx", "src/Document.tsx", "scripts/lint-theme.ts"],
+  // cloudflare.config.ts and wrangler.config.ts are read by the cf and
+  // wrangler CLIs, never imported: the worker config and the build-time
+  // fields cf delegates to wrangler. They are entry points, not dead code.
+  "entry": [
+    "src/App.tsx",
+    "src/Document.tsx",
+    "scripts/lint-theme.ts",
+    "cloudflare.config.ts",
+    "wrangler.config.ts",
+  ],
   "ignorePatterns": ["convex/_generated/**", "src/vite-env.d.ts"],
   // Vitest resolves the edge-runtime test environment by name from the
   // convex project in vitest.config.ts (convex-test files); it is never
