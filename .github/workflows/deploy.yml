@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 # One production deploy at a time, and never cancel one midway: `convex deploy`
-# pushes functions and `wrangler deploy` uploads assets, so an interrupted run
+# pushes functions and `cf deploy` uploads assets, so an interrupted run
 # can leave the two halves on different revisions.
 concurrency:
   group: deploy-production
@@ -116,12 +116,16 @@ jobs:
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
 
-      # Uploads dist/client to the Worker declared in wrangler.jsonc. The
-      # checkout has no .env.local, so wrangler cannot pick up a local
+      # Uploads dist/client to the Worker declared in cloudflare.config.ts. The
+      # checkout has no .env.local, so the build cannot pick up a local
       # deployment URL as a Worker variable.
       - name: Deploy the web UI
         run: bun run deploy:web
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Telemetry is off twice: cf reads CF_SEND_TELEMETRY (falling back to
+          # WRANGLER_SEND_METRICS), and the wrangler it delegates the build to
+          # reads only WRANGLER_SEND_METRICS.
+          CF_SEND_TELEMETRY: "false"
           WRANGLER_SEND_METRICS: "false"
