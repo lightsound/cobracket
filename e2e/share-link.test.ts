@@ -87,7 +87,25 @@ test("creating, publishing and sharing a 16-player double elimination raises no 
       await bracket.nth(MATCHES - 1).waitFor();
       return bracket.count();
     },
-    { scenario: "16-player double elimination to Share Link" },
+    {
+      scenario: "16-player double elimination to Share Link",
+      // Engine thresholds at their defaults — a real browser is where the
+      // wall-clock ones mean something — with one exception. `[FALLBACK_FLASH]`
+      // (engine 2.0.0-rc.10 on, `info`) reports a `<Loading>` fallback shown
+      // for under 150ms, and what decides that here is the anonymous local
+      // Convex deployment answering over loopback: measured on this
+      // scenario, six fallbacks between 1.7ms and 37ms (the Home list, the
+      // discipline suggestions, the management page, the Share Link), each
+      // the time a local subscription took to deliver its first value. The
+      // same boundaries against the production deployment wait a network
+      // round trip, which is the latency the finding is about and the one
+      // neither gate has. Read it in the dev-server artifact loop against a
+      // real deployment (AGENTS.md); here it would report loopback. This
+      // option rules only because the app's own hold stands down in
+      // `--mode e2e` (`src/dev-diagnostics.ts`): holds combine by the most
+      // demanding request per key, and the app's defaults would re-arm it.
+      attribution: { fallbackFlashes: false },
+    },
   );
   await context.close();
 
