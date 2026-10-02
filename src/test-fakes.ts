@@ -221,6 +221,10 @@ export function convexModule(): Record<string, unknown> {
     getConvexUrl: () => FAKE_URL,
     getConvexClient: () => ({ mutation: fakeRunMutation }),
     createConvexQuery: fakeCreateConvexQuery,
+    // A preload is an early subscription the page then finds in the client;
+    // the fake's flights are keyed per read already, so there is nothing to
+    // warm and nothing to assert — the router's preloads are a no-op here.
+    prefetchConvexQuery: () => {},
     runMutation: fakeRunMutation,
   };
 }

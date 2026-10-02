@@ -188,9 +188,10 @@ async function fetchSessionState(
  * The current Organizer's user id, or null when signed out — as the backend
  * sees it (derived from the verified access token, never from client state).
  *
- * A reactive Convex subscription: read it under `<Loading>` / `<Errored>`
- * boundaries inside a component, gated on `getConvexUrl()` like every other
- * Convex read. Flips from null to the id once the session is live.
+ * A reactive Convex subscription, created once for the whole app by
+ * `src/organizer.tsx` and read through `useOrganizer()` under `<Loading>` /
+ * `<Errored>` boundaries, gated on `getConvexUrl()` like every other Convex
+ * read. Flips from null to the id once the session is live.
  *
  * @public
  */

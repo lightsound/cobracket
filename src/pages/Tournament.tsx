@@ -9,11 +9,11 @@ import { NameField } from "../NameField";
 import { ErrorNotice, errorFallback, errorMessage } from "../ErrorFallback";
 import { FormatFieldset, type FormatFamily } from "../FormatFieldset";
 import { SetupNotice } from "../SetupNotice";
-import { createOrganizer } from "../lib/auth";
 import { TournamentBoard } from "../TournamentBoard";
 import { TournamentHeader } from "../TournamentHeader";
 import { useI18n, type I18n } from "../i18n";
 import { createConvexQuery, getConvexUrl, runMutation } from "../lib/convex";
+import { useOrganizer } from "../organizer";
 // fallow-ignore-next-line circular-dependency -- the official Solid Router 2 shape: the router lazy-imports pages (deferred dynamic import), pages link back through Router.paths; no init-order hazard
 import { Router } from "../router";
 
@@ -26,8 +26,10 @@ export default function TournamentPage() {
   const params = useParams(Router.paths.t);
   // getTournament rejects unauthenticated callers, so the subscription must
   // wait for the restored session — otherwise a direct open or reload of
-  // this URL lands on the error fallback even for the owner.
-  const organizer = createOrganizer();
+  // this URL lands on the error fallback even for the owner. The session is
+  // the app's one subscription (`src/organizer.tsx`), so after the first page
+  // this read answers from the client's cache rather than a round trip.
+  const organizer = useOrganizer();
 
   return (
     <Errored fallback={errorFallback}>
