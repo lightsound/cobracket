@@ -44,6 +44,51 @@ export async function runMutation<Mutation extends FunctionReference<"mutation">
 }
 
 /**
+ * How long a prefetched subscription is held open, so the page it was started
+ * for finds the result in the client when it subscribes. Hover-to-click is
+ * well under a second; the margin is for a link hovered and then clicked a
+ * while later, and costs one idle subscription per prefetch until it expires.
+ */
+const PREFETCH_HOLD_MS = 10_000;
+
+/**
+ * Start a query's subscription ahead of the page that will read it, so that
+ * page's `createConvexQuery` finds the answer already in the client.
+ *
+ * The Convex client keeps one subscription per query-and-args and delivers
+ * its current value to every new subscriber, so "preloading" here is simply
+ * subscribing early and holding the subscription open for a grace period.
+ * Nothing is cached outside the client: when the hold expires (or the query
+ * fails, which releases it at once so no error lingers for the page to
+ * inherit) the subscription ends like any other, and the page's own is the
+ * only one left. Meant for route `preload`s on link intent; a page that
+ * subscribes a round trip after a hover then shows no fallback at all.
+ *
+ * @public
+ */
+export function prefetchConvexQuery<Query extends FunctionReference<"query">>(
+  query: Query,
+  args: FunctionArgs<Query>,
+): void {
+  const convex = getConvexClient();
+  if (!convex) return;
+  let released = false;
+  const release = () => {
+    if (released) return;
+    released = true;
+    clearTimeout(timer);
+    subscription.unsubscribe();
+  };
+  const subscription = convex.onUpdate(
+    query,
+    args,
+    () => {},
+    () => release(),
+  );
+  const timer = setTimeout(release, PREFETCH_HOLD_MS);
+}
+
+/**
  * Bridges a Convex subscription into Solid's async model.
  *
  * - Reads suspend to the nearest `<Loading>` until the first result arrives;
@@ -67,7 +112,6 @@ export function createConvexQuery<Query extends FunctionReference<"query">>(
   args: FunctionArgs<Query> | Accessor<FunctionArgs<Query>>,
 ): Accessor<FunctionReturnType<Query>> {
   type Result = FunctionReturnType<Query>;
-  const convex = getConvexClient();
   const readArgs =
     typeof args === "function" ? (args as Accessor<FunctionArgs<Query>>) : () => args;
 
@@ -76,6 +120,12 @@ export function createConvexQuery<Query extends FunctionReference<"query">>(
   // would otherwise share the anonymous `computed` label.
   return createMemo(
     () => {
+      // Inside the computation, not at creation: a memo is lazy, so a query
+      // created by a provider nothing reads (a test mounting `AppProviders`
+      // around a component that never touches the backend) never constructs
+      // a client, let alone a websocket. The client itself is created once
+      // and shared, so resolving it per run costs nothing.
+      const convex = getConvexClient();
       // Reading reactive args here makes them a dependency of the computation.
       const resolvedArgs = readArgs();
 

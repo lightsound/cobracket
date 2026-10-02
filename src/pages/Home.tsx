@@ -8,15 +8,16 @@ import { FormatFieldset, type FormatFamily } from "../FormatFieldset";
 import { SetupNotice } from "../SetupNotice";
 import { StatusBadge } from "../StatusBadge";
 import { useI18n } from "../i18n";
-import { createOrganizer, ensureOrganizer } from "../lib/auth";
+import { ensureOrganizer } from "../lib/auth";
 import { createConvexQuery, getConvexClient, getConvexUrl } from "../lib/convex";
+import { useOrganizer } from "../organizer";
 // fallow-ignore-next-line circular-dependency -- the official Solid Router 2 shape: the router lazy-imports pages (deferred dynamic import), pages link back through Router.paths; no init-order hazard
 import { Router } from "../router";
 
 export default function Home() {
   const { t } = useI18n();
   if (!getConvexUrl()) return <SetupNotice />;
-  const organizer = createOrganizer();
+  const organizer = useOrganizer();
 
   return (
     <div class="flex flex-col gap-10">
