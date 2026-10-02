@@ -26,6 +26,7 @@ The skill does not cover these; fetch the pages when the task needs them.
 - Row selection without `createSelector` (id-keyed projection): https://v2-rebuild--solid-docs-v2.netlify.app/guides/lists.md, https://v2-rebuild--solid-docs-v2.netlify.app/guides/performance.md
 - Infinite scroll, polling, sharing one request: https://v2-rebuild--solid-docs-v2.netlify.app/guides/data-fetching-patterns.md
 - Writing a custom primitive (called under an owner, `MaybeAccessor`, `getOwner` / `runWithOwner` / `isDisposed` after async): https://v2-rebuild--solid-docs-v2.netlify.app/guides/custom-primitives.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/advanced/owner-introspection/get-owner.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/advanced/owner-introspection/run-with-owner.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/advanced/owner-introspection/is-disposed.md
+- Library code that must know whether it is hydrating, or write a keyed server-to-client value (`isHydrating`, `isHydratable`, `getHydrationWriter` / `takeHydrationValue`): https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/advanced/manual-hydration/is-hydrating.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/advanced/manual-hydration/is-hydratable.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/rendering-ssr/get-hydration-writer.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/rendering-ssr/take-hydration-value.md
 - Wrapping a non-Solid library, push feeds with a reactive argument, web components (`prop:`, event names): https://v2-rebuild--solid-docs-v2.netlify.app/guides/integrate-non-solid-code.md
 - Typed env (`env.ts` schema, `VITE_` client keys), `import "server-only"`, what compiles `"use server"`: https://v2-rebuild--solid-docs-v2.netlify.app/building-apps/environment.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/vite-plugin-solid/modules.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/vite-plugin-solid/server-functions.md
 - Sessions and cookies (`parseCookieHeader` / `serializeCookie`, `RequestEventLocals` typing, when a cookie write commits): https://v2-rebuild--solid-docs-v2.netlify.app/building-apps/sessions-and-auth.md, https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/request-response/cookies.md
@@ -158,6 +159,7 @@ the error hooks fire on every build.
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/advanced/diagnostics-dev-hooks/configure-client-errors.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/request-response/configure-server-errors.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/request-response/get-trace-context.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-web/performance-tracks/enable-performance-tracks.md
 
 ## Reference: components and JSX (solid-js)
 

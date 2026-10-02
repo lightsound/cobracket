@@ -20,13 +20,16 @@ export default defineConfig(({ mode }) => ({
       // The dev dependency alone auto-enables this; the option is spelled
       // out so a reader finds the dev-server half of the package next to the
       // plugin that serves it (src/test-setup.ts is the other half — that one
-      // imports it, which is why it no longer needs a fallow ignore). Note
-      // this line is only a signpost — next.44 still starts and still prints
-      // the endpoint when the package is absent, despite what the option's
-      // docs say.
+      // imports it, which is why it no longer needs a fallow ignore). Since
+      // next.47 `true` also fails the dev server loudly if the package goes
+      // missing (next.44 started anyway and printed the endpoint), so the
+      // line is a declared dependency as well as a signpost.
       diagnostics: true,
-      // `bun run test:e2e` serves the app with `--mode e2e`, and the one
-      // thing that mode changes is the solid-refresh HMR transform. Its
+      // `bun run test:e2e` serves the app with `--mode e2e`, and that mode
+      // changes three things: the two dev-only injections below, and the
+      // app's own attribution hold (`src/dev-diagnostics.ts` stands down so
+      // the gate's capture owns the engine). First, the solid-refresh HMR
+      // transform. Its
       // wrapper around every component declaration is a reactive source, so
       // a list's insert effect subscribes to one node per component row and a
       // 30+ row list reports [WIDE_SCOPE_DEPS] in `bun dev` with every source
@@ -35,8 +38,20 @@ export default defineConfig(({ mode }) => ({
       // must pass. The vitest `src` project turns the transform off for the
       // same reason (vitest.config.ts); here it stays on for `bun dev`, where
       // HMR is the point, and off for the gate, which measures the graph the
-      // app ships. Nothing else about the e2e server differs from `bun dev`.
+      // app ships.
       refresh: mode === "e2e" ? { disabled: true } : undefined,
+      // Same reasoning, second dev-only transform. Since next.47 the dev
+      // server injects `@solidjs/web/performance-tracks` ahead of the app
+      // entry, which paints every record the engine emits — each re-run,
+      // node creation, effect, flush and flight — onto the Chrome
+      // Performance panel as it happens. That painting runs inside the
+      // scopes the gate times: measured on the browser gate, the `<Show>`
+      // that instantiates the management page and the roster's `<For>` went
+      // from under the 8ms `[HOT_SCOPE_TIME]` budget to 13.8ms and 14.2ms
+      // with the tracks on, and back under it with them off, on the same
+      // code and the same container. Tracks stay on for `bun dev`, where a
+      // human reads them; the gate measures the app, not the devtools.
+      performanceTracks: mode === "e2e" ? false : undefined,
       start: {
         // Optional peer `@solidjs/start-devtools` is not installed.
         // next.32+ treats Vite's optional-peer stub as missing, but keep

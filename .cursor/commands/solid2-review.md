@@ -14,7 +14,8 @@ Steps:
 4. Review every changed `.tsx`/`.jsx`/`.ts` file against the checklist, prioritizing what
    regexes cannot see:
    - reactive reads at component-body top level, or extracted into plain `const`s;
-   - async computations reading reactive inputs **after** the first `await`;
+   - async computations reading reactive inputs **after** the first `await` (dev reports
+     `[UNTRACKED_READ_AFTER_AWAIT]` on V8);
    - effects that copy state instead of deriving it, or reading stores in the apply phase;
    - `<For>` over server/refetched rows without a stable-id key function;
    - core `action` bodies that are not generators (plain `async` functions) or that write
@@ -23,7 +24,8 @@ Steps:
    - `<Loading>`/`<Errored>` wrapping page chrome instead of the data slot, or
      `const u = user()` extracted then passed (a real parent-side read). Passing
      `user={user()}` is the colorless form — do not "fix" it into accessors or
-     `Promise<User>` props;
+     `Promise<User>` props; `<Loading on={id}>` handed the accessor instead of a read
+     (`on={id()}`), or the boundary's data also read outside it (`[LOADING_ON_OUTSIDE_HOLD]`);
    - `latest(selectedId)` as the default highlight (hold is the default);
      `isPending` treated as a global spinner instead of a per-expression question;
    - treating `<Errored>` as a terminal ErrorBoundary, or expecting it to catch
@@ -39,7 +41,7 @@ Steps:
    - app-wide state as a module-level signal/store instead of a provider at the root
      of `App` (shared across SSR requests);
    - value-form `createOptimisticStore([])` / `createOptimistic(v)` holding durable
-     data (writes vanish on settle) instead of the function form refreshed after `yield`;
+     data (writes vanish on settle) <!-- upstream:optimistic-value-overlay --> instead of the function form refreshed after `yield`;
    - route `preload` returning data read as `props.data` (captured once per match)
      instead of `void getX(params.id)` + `createMemo(() => getX(props.params.id))`;
    - `throw redirect()` / `return reload()` in server functions called without Solid
@@ -50,8 +52,9 @@ Steps:
      `configureClientErrors` / `configureServerErrors` / `render(fn, root, undefined, { onError })`
      (options are `render`'s 4th argument — a 3rd-argument object is `init`);
    - store setter callbacks that `await` (the draft closes when the callback returns —
-     `[ASYNC_STORE_SETTER]`), store setters called at component-body top level, and
-     `latest()` used as a null-safe read of an unsettled source;
+     `[ASYNC_STORE_SETTER]` <!-- upstream:async-store-setter-throws -->), store setters called at
+     component-body top level <!-- upstream:store-write-owned-scope -->, and `latest()` used as a
+     null-safe read of an unsettled source <!-- upstream:latest-throws-unsettled -->;
    - nested fetches assumed to waterfall, or `<Loading>` lifted along with a lifted fetch;
    - mutations on a value read through `live()` that settle on `yield save()` alone or
      `refresh()` the live-derived store, instead of `yield until(predicate, { timeout })`
@@ -73,7 +76,8 @@ Steps:
      thrown failures, or router forms without server-side validation (`throw respond(...)`)
      and `useSubmissions` inline errors;
    - browser-only *values* handled with a `clientOnly` component split or an `isServer`
-     branch instead of `ssrSource: "client"` / `"hybrid"` on the memo/signal/derived store;
+     branch instead of `ssrSource: "client"` on the memo/signal/derived store (`"hybrid"`
+     only continues an async-iterable source after hydration <!-- upstream:ssr-source-hybrid-stream -->);
    - held writes with no feedback (`isPending` / `latest` / optimistic value / `affects()`)
      — the `[SILENT_HOLD]` shape — and dev-console diagnostics (`[STRICT_READ_UNTRACKED]`,
      attribution-only store/list/effect costs) left unaddressed;

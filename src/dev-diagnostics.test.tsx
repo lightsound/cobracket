@@ -3,12 +3,15 @@
  * subject, because the two want the same engine.
  *
  * The gate (`src/test-setup.ts`) enables Solid's attribution engine around
- * every test body and then reads its tables. `enable()` is not additive: it
- * replaces the options and clears every aggregate — `scopeCosts`, `holdLog`,
- * `feedbackSources`, the lot. So app code calling it mid-test erases the
- * evidence the gate is about to judge, for that test, silently. `App` calls
- * this function, so any test rendering the app shell would have been gated on
- * an empty table without knowing it.
+ * every test body and then reads its tables. `enable()` is a hold on the one
+ * shared engine, and a hold taken while it is already on opens a fresh window
+ * over the ring buffers and the fold tables — `history("hold")`, `costs()`,
+ * `feedback()` read from that moment on (engine 2.0.0-rc.10; before it,
+ * `enable()` replaced the options and cleared every aggregate outright, which
+ * came to the same thing). So app code calling it mid-test hides the evidence
+ * the gate is about to judge, for that test, silently. `App` calls this
+ * function, so any test rendering the app shell would have been gated on an
+ * empty window without knowing it.
  *
  * The function therefore stands down under vitest, where the harness owns the
  * engine, and this file is the proof: a silent hold recorded *before* the call

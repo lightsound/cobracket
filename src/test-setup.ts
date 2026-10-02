@@ -14,8 +14,9 @@
  * (`SILENT_HOLD`, `UNSTABLE_LIST_IDENTITY`, `IMMUTABLE_UPDATE_IN_STORE`,
  * `ASYNC_WATERFALL`, ...) in the first place; they reach the same diagnostics
  * channel as the core ones, so one `expectNoDiagnostics` covers every code
- * this gate can see — 35 of the engine's 36, since `[HOT_SCOPE_TIME]` is
- * switched off below for reasons that have nothing to do with the app.
+ * this gate can see — 61 of the engine's 63, since `[HOT_SCOPE_TIME]` and
+ * `[FALLBACK_FLASH]` are switched off below for reasons that have nothing to
+ * do with the app.
  * It is not the whole story either: the engine emits a hold's code only
  * once the hold outlasts a duration threshold, so a *short* unacknowledged
  * hold is real, recorded, and coded nowhere. `expectNoSilentHolds` asks that
@@ -171,27 +172,43 @@ beforeEach((context) => {
       }),
     {
       scenario: context.task.name,
-      // Every engine threshold is left at its default except the wall-clock
-      // one, which is off: `[HOT_SCOPE_TIME]` cannot mean anything here.
+      // Every engine threshold is left at its default except the two
+      // wall-clock ones, which are off, because neither can mean anything
+      // here: `[HOT_SCOPE_TIME]` measures a DOM that is emulated, and
+      // `[FALLBACK_FLASH]` measures a backend that is faked.
       //
-      // Its 8ms default is "half a frame spent in one scope" — a real
-      // browser's frame. Here the DOM is emulated in JS, so constructing a
-      // page costs an order of magnitude more: the Tournament page's first
-      // render spends 11-13ms in the memo that instantiates it, idle. That
-      // alone only argued for a larger number, and this did run at 40ms for a
-      // while. What settles it is that the measurement is wall-clock while
-      // five vitest projects transform and run concurrently: on a cold 4-core
-      // runner the same page render was measured at 91.9ms and a list test at
-      // 48.3ms, green on the six runs after. A budget that reports the runner
-      // is a gate that cries wolf, and the failure names an innocent page.
+      // `[HOT_SCOPE_TIME]`'s 8ms default is "half a frame spent in one
+      // scope" — a real browser's frame. Here the DOM is emulated in JS, so
+      // constructing a page costs an order of magnitude more: the Tournament
+      // page's first render spends 11-13ms in the memo that instantiates it,
+      // idle. That alone only argued for a larger number, and this did run
+      // at 40ms for a while. What settles it is that the measurement is
+      // wall-clock while five vitest projects transform and run
+      // concurrently: on a cold 4-core runner the same page render was
+      // measured at 91.9ms and a list test at 48.3ms, green on the six runs
+      // after. A budget that reports the runner is a gate that cries wolf,
+      // and the failure names an innocent page.
+      //
+      // `[FALLBACK_FLASH]` (engine 2.0.0-rc.10 on) is the same problem from
+      // the other side: it reports a `<Loading>` fallback shown for under
+      // 150ms, a spinner that read as a flicker — and here the data behind
+      // every boundary is `src/test-fakes.ts`, whose first read is a promise
+      // that settles the moment the test delivers it. Measured on the page
+      // tests the day it arrived: 89 findings across 34 tests, every one
+      // between 1ms and 25ms, on code that had not changed. The shell's
+      // boundary, the page's, and a list's each showed for the microtask it
+      // took the fake to answer. Whether a real fallback flashes is a
+      // property of the backend's latency, which no fixture here has, so the
+      // finding is read where it means something — a browser against a real
+      // deployment — and not asked of a stand-in.
       //
       // So time budgets are measured where they mean something — the
       // dev-server artifact loop in AGENTS.md, against a real browser — and
-      // every assertion this gate makes is now count-based or structural.
+      // every assertion this gate makes is count-based or structural.
       // The other duration-gated codes stay on: an unacknowledged hold and a
       // sequential-flight waterfall are shapes the app either has or does
-      // not, and a slow runner does not invent one.
-      attribution: { hotTime: false },
+      // not, and neither a slow runner nor an instant fixture invents one.
+      attribution: { hotTime: false, fallbackFlashes: false },
     },
   );
 });

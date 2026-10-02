@@ -9,12 +9,14 @@
  * one fails on, the other fails on too.
  *
  * Two questions, because one is not enough. `expectNoDiagnostics` covers all
- * 36 codes at once: Solid grades most of them `warn` or `info` and offers no
- * switch to escalate, which is why enforcing them lives in a test rather than
- * a setting. `expectNoSilentHolds` covers what that leaves: the engine emits a
- * hold's code only once the hold outlasts its `holds.infoMs` threshold
- * (100ms), so a shorter unacknowledged hold is real, recorded, and coded
- * nowhere — the attribution tables answer that question without a threshold.
+ * 63 codes at once (each capture decides which thresholds are armed; the
+ * verdict is the same whichever are): Solid grades most of them `warn` or
+ * `info` and offers no switch to escalate, which is why enforcing them lives
+ * in a test rather than a setting. `expectNoSilentHolds` covers what that
+ * leaves: the engine emits a hold's code only once the hold outlasts its
+ * `holds.infoMs` threshold (100ms), so a shorter unacknowledged hold is real,
+ * recorded, and coded nowhere — the attribution tables answer that question
+ * without a threshold.
  */
 import {
   type DiagnosticCode,
