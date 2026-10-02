@@ -13,10 +13,10 @@
  * verdict is the same whichever are): Solid grades most of them `warn` or
  * `info` and offers no switch to escalate, which is why enforcing them lives
  * in a test rather than a setting. `expectNoSilentHolds` covers what that
- * leaves: the engine emits a
- * hold's code only once the hold outlasts its `holds.infoMs` threshold
- * (100ms), so a shorter unacknowledged hold is real, recorded, and coded
- * nowhere — the attribution tables answer that question without a threshold.
+ * leaves: the engine emits a hold's code only once the hold outlasts its
+ * `holds.infoMs` threshold (100ms), so a shorter unacknowledged hold is real,
+ * recorded, and coded nowhere — the attribution tables answer that question
+ * without a threshold.
  */
 import {
   type DiagnosticCode,

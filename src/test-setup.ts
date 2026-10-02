@@ -178,15 +178,16 @@ beforeEach((context) => {
       // `[FALLBACK_FLASH]` measures a backend that is faked.
       //
       // `[HOT_SCOPE_TIME]`'s 8ms default is "half a frame spent in one
-      // scope" — a real browser's frame. Here the DOM is emulated in JS, so constructing a
-      // page costs an order of magnitude more: the Tournament page's first
-      // render spends 11-13ms in the memo that instantiates it, idle. That
-      // alone only argued for a larger number, and this did run at 40ms for a
-      // while. What settles it is that the measurement is wall-clock while
-      // five vitest projects transform and run concurrently: on a cold 4-core
-      // runner the same page render was measured at 91.9ms and a list test at
-      // 48.3ms, green on the six runs after. A budget that reports the runner
-      // is a gate that cries wolf, and the failure names an innocent page.
+      // scope" — a real browser's frame. Here the DOM is emulated in JS, so
+      // constructing a page costs an order of magnitude more: the Tournament
+      // page's first render spends 11-13ms in the memo that instantiates it,
+      // idle. That alone only argued for a larger number, and this did run
+      // at 40ms for a while. What settles it is that the measurement is
+      // wall-clock while five vitest projects transform and run
+      // concurrently: on a cold 4-core runner the same page render was
+      // measured at 91.9ms and a list test at 48.3ms, green on the six runs
+      // after. A budget that reports the runner is a gate that cries wolf,
+      // and the failure names an innocent page.
       //
       // `[FALLBACK_FLASH]` (engine 2.0.0-rc.10 on) is the same problem from
       // the other side: it reports a `<Loading>` fallback shown for under
