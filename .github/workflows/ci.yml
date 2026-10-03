@@ -24,7 +24,7 @@ permissions:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
@@ -50,7 +50,7 @@ jobs:
   # be added to every `bun run verify`, locally included. The job is
   # independent, so a red here names the browser gate and nothing else.
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2

@@ -26,7 +26,7 @@ jobs:
   # `ci.yml` publishes on pull requests: check runs are identified by job
   # name, and `verify` there is the one a branch ruleset requires.
   gates:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
@@ -55,7 +55,7 @@ jobs:
   # workflow edit. (The secrets context is not available in a job-level `if`,
   # hence the step that reads them into an output.)
   preflight:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       configured: ${{ steps.check.outputs.configured }}
     steps:
@@ -80,7 +80,7 @@ jobs:
   deploy:
     needs: [gates, preflight]
     if: needs.preflight.outputs.configured == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
