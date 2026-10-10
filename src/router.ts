@@ -1,4 +1,4 @@
-import { createRouter, defineRoute } from "@solidjs/router";
+import { createRouter, defineRoute, pendingLinks } from "@solidjs/router";
 import { lazy } from "solid-js";
 import { api } from "../convex/_generated/api";
 import { prefetchConvexQuery } from "./lib/convex";
@@ -14,7 +14,17 @@ import { prefetchConvexQuery } from "./lib/convex";
 // session is restored, so it is skipped. `prefetchConvexQuery` holds the
 // subscription open briefly and releases it at once on failure, so a hover
 // while signed out leaves nothing for the page to inherit.
+//
+// `links: pendingLinks` is what acknowledges a navigation's held location
+// write. Router 2.0.0-next.37 made `data-pending` opt-in, and with it the
+// claims sweep's `isPending` read of the in-flight navigation: without the
+// plugin nothing reads that state, so every navigation that waits on a
+// lazy page or its first Convex value is an unacknowledged hold. Measured on
+// the browser gate: the create-then-open and the Share Link navigations
+// reported two silent holds (43ms and 16ms) after the upgrade, and none
+// before it, when the sweep read pending state unconditionally.
 export const Router = createRouter({
+  links: pendingLinks,
   routes: [
     defineRoute({
       path: "/",
