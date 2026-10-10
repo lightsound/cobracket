@@ -252,14 +252,18 @@ const MANY_PARTICIPANTS = Array.from({ length: 32 }, (_, index) => ({
 }));
 
 /**
- * The gate has scale-dependent codes, and the 3-match fixtures above cannot
- * reach them: [WIDE_SCOPE_DEPS] fires at 30 sources on one scope, so a
+ * The gate has scale-dependent checks, and the 3-match fixtures above cannot
+ * reach them: a scope fails at 30 sources (`WIDE_SCOPE_SOURCES`), so a
  * bracket has to be tournament-sized before a per-row cost shows up at all.
  * This is the case that caught the real one — a per-row `<Show>` narrowing
  * each card's match made every row a source of the list's insert effect, and
  * 15 matches were already enough to report it in the browser while every test
- * here passed. Keep this fixture above the threshold: it is the only thing
- * standing between a per-row reactive wrapper and a silent regression.
+ * here passed. Since Solid 2.0.0-rc.14 no diagnostic code reports it (the
+ * engine exempts that effect from [WIDE_SCOPE_DEPS]); the gate counts the
+ * effect's sources itself (`src/scope-widths.ts`), and with that defect
+ * re-injected this test fails at 31. Keep this fixture above the threshold:
+ * it is the only thing standing between a per-row reactive wrapper and a
+ * silent regression.
  */
 test("a tournament-sized bracket costs the list no per-row subscription", () => {
   const [matches, setMatches] = createSignal(bigBracket(), { name: "matches" });

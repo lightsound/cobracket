@@ -1,5 +1,6 @@
 import { isDev, isServer } from "@solidjs/web";
 import { attribution } from "solid-js/attribution";
+import { exposeScopeWidths } from "./scope-widths";
 
 // Solid's reactivity diagnostics come in two tiers, both dev-build only.
 //
@@ -56,7 +57,15 @@ export function initDevDiagnostics(): void {
   // threshold the gate turns off stays armed while this hold stands beside
   // it — measured: the gate's `fallbackFlashes: false` reported six
   // `[FALLBACK_FLASH]` findings until this hold stood down.
-  if (import.meta.env.VITEST || import.meta.env.MODE === "e2e") return;
+  if (import.meta.env.VITEST) return;
+  // What that gate does need from the page is the scope-width recorder: the
+  // count it judges is in the engine's records and in no artifact, and
+  // `page.evaluate` cannot reach the app's own copy of Solid
+  // (`src/scope-widths.ts`).
+  if (import.meta.env.MODE === "e2e") {
+    exposeScopeWidths();
+    return;
+  }
 
   // `log: false` because the default prints a why-chain for *every* re-run,
   // which buries the coded findings we actually want. The findings are a

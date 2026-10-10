@@ -120,11 +120,14 @@ export function createConvexQuery<Query extends FunctionReference<"query">>(
   // would otherwise share the anonymous `computed` label.
   return createMemo(
     () => {
-      // Inside the computation, not at creation: a memo is lazy, so a query
-      // created by a provider nothing reads (a test mounting `AppProviders`
-      // around a component that never touches the backend) never constructs
-      // a client, let alone a websocket. The client itself is created once
-      // and shared, so resolving it per run costs nothing.
+      // Inside the computation, not at module scope. A memo's computation
+      // runs when the memo is created, not on first read, so a query created
+      // by a provider subscribes at once whether or not anything reads it.
+      // What keeps a test that mounts `AppProviders` around a component that
+      // never touches the backend from opening a websocket is this call
+      // returning no client when `VITE_CONVEX_URL` is unset. The client
+      // itself is created once and shared, so resolving it per run costs
+      // nothing.
       const convex = getConvexClient();
       // Reading reactive args here makes them a dependency of the computation.
       const resolvedArgs = readArgs();

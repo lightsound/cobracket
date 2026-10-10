@@ -4,7 +4,7 @@
  * The happy-dom gate (`src/test-setup.ts`) judges every test under `src/`,
  * and it let a finding through that only a browser reported: an 8-player
  * double elimination (15 matches) put `BracketView`'s list insert effect over
- * the [WIDE_SCOPE_DEPS] threshold, and a human found it in `bun dev`. Fixture size explained part
+ * the then 30-source [WIDE_SCOPE_DEPS] threshold, and a human found it in `bun dev`. Fixture size explained part
  * of that, and the `src` tests now render above the thresholds — but their
  * data seam is a fake, their DOM is emulated, and their time budget is
  * loosened for it. This gate closes the rest of the gap: a scripted Chromium
@@ -17,25 +17,29 @@
  * One scenario, the Organizer's whole path: create a tournament, add the
  * roster, generate, publish, open the Share Link. Sixteen players in double
  * elimination, not the eight the story needs, because the bracket is what
- * the gate is for and the thresholds are counted in sources: 8 players is 15
+ * the gate is for and the threshold is counted in sources: 8 players is 15
  * matches, and the defect that motivated this gate (a per-row `<Show>` in
  * `BracketView`) costs the insert effect one source per row, so 15 rows sit
- * under the 30-source threshold and the pre-fix code passes. Measured, with
- * that defect re-injected: 8 players report nothing, 16 players (31 matches)
- * report [WIDE_SCOPE_DEPS] with 31 sources on both the management page and
- * the Share Link — and the shipped code reports nothing at either size.
- * (The human's 8-player finding was real only because solid-refresh doubled
- * the count, 15 rows to 30 sources — the wrapper made the defect visible by
- * luck, which is not a gate.)
+ * under the 30-source line and the pre-fix code passes. 16 players (31
+ * matches) do not.
  *
- * The other half of that measurement is why the dev server runs in `--mode
- * e2e`: with solid-refresh on, the *fixed* code reports the same 31 sources
- * at 16 players, every one named `[solid-refresh]MatchCard` (vite.config.ts).
+ * Since Solid 2.0.0-rc.14 no diagnostic code reports that defect: the engine
+ * leaves the insert effect out of [WIDE_SCOPE_DEPS] and raised its default to
+ * 200. The verdict counts it itself, from the scope widths the page records
+ * beside the capture (`src/scope-widths.ts`, installed by
+ * `initDevDiagnostics` in this mode). Measured on rc.14 with the defect
+ * re-injected: the insert effect tracked 31 sources, and with the shipped
+ * code the widest scope tracked 9.
+ *
+ * The dev server runs in `--mode e2e` with solid-refresh off because its
+ * wrapper memos are sources too: with it on, the *fixed* code tracked the
+ * same 31, every one named `[solid-refresh]MatchCard` (vite.config.ts).
  */
 import { afterAll, beforeAll, expect, inject, test } from "vite-plus/test";
 import { captureBrowserArtifact } from "@solidjs/diagnostics/playwright";
 import { type Browser, chromium } from "playwright-core";
 import { assertGate } from "../src/diagnostics-verdict";
+import { SCOPE_WIDTHS_GLOBAL, type ScopeWidthsBridge } from "../src/scope-widths";
 
 const PLAYERS = 16;
 /** 16 players, double elimination: 15 winners + 14 losers + grand final + reset. */
@@ -61,6 +65,13 @@ test("creating, publishing and sharing a 16-player double elimination raises no 
 
   await page.goto(`${inject("e2eBaseUrl")}/`);
   await page.waitForFunction(() => "__SOLID_DIAGNOSTICS__" in globalThis);
+
+  // Recorded beside the capture: the verdict's third question (scope widths)
+  // is in the engine's records, not in the artifact.
+  await page.waitForFunction((key) => key in globalThis, SCOPE_WIDTHS_GLOBAL);
+  await page.evaluate((key) => {
+    (globalThis as unknown as Record<string, ScopeWidthsBridge>)[key].begin();
+  }, SCOPE_WIDTHS_GLOBAL);
 
   const names = Array.from({ length: PLAYERS }, (_, i) => `Player ${i + 1}`).join("\n");
   const { artifact, result: cards } = await captureBrowserArtifact(
@@ -107,6 +118,10 @@ test("creating, publishing and sharing a 16-player double elimination raises no 
       attribution: { fallbackFlashes: false },
     },
   );
+  const scopes = await page.evaluate(
+    (key) => (globalThis as unknown as Record<string, ScopeWidthsBridge>)[key].end(),
+    SCOPE_WIDTHS_GLOBAL,
+  );
   await context.close();
 
   // The capture spanned what it was meant to: the Share Link's bracket at a
@@ -116,6 +131,7 @@ test("creating, publishing and sharing a 16-player double elimination raises no 
   expect(pageErrors).toEqual([]);
   expect(cards).toBe(MATCHES);
   expect(artifact.attribution?.reruns.length).toBeGreaterThan(0);
+  expect(scopes.length).toBeGreaterThan(0);
 
-  assertGate(artifact);
+  assertGate(artifact, scopes);
 });

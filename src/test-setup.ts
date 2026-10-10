@@ -21,7 +21,10 @@
  * once the hold outlasts a duration threshold, so a *short* unacknowledged
  * hold is real, recorded, and coded nowhere. `expectNoSilentHolds` asks that
  * question of the attribution tables instead, where no threshold applies.
- * Both questions are asked by `assertGate` in `src/diagnostics-verdict.ts`,
+ * A third question has no code since Solid 2.0.0-rc.14: whether a scope's
+ * source count grew with a list (`src/scope-widths.ts`). This file records
+ * the widths beside the capture.
+ * All three are asked by `assertGate` in `src/diagnostics-verdict.ts`,
  * shared with the real-browser gate under `e2e/`, which captures the same
  * artifact format from Chromium; this file is the happy-dom half — the
  * capture window and the per-test declarations.
@@ -49,6 +52,7 @@ import { type Element, flush } from "solid-js";
 import { render } from "@solidjs/web";
 import { captureArtifact, type CaptureResult, type DiagnosticCode } from "@solidjs/diagnostics";
 import { assertGate } from "./diagnostics-verdict";
+import { type ScopeWidth, watchScopeWidths } from "./scope-widths";
 
 /**
  * `captureArtifact` is scenario-shaped (it runs a function), but a global gate
@@ -63,6 +67,8 @@ import { assertGate } from "./diagnostics-verdict";
  */
 let endScenario: (() => void) | undefined;
 let capture: Promise<CaptureResult<void>> | undefined;
+/** Stops the open test's scope-width recording and reports it. */
+let stopWidths: (() => ScopeWidth[]) | undefined;
 let owner: string | undefined;
 /** Dispose functions for the roots this test mounted, newest last. */
 const roots: (() => void)[] = [];
@@ -71,6 +77,7 @@ let required: DiagnosticCode[] = [];
 /** Codes this test may produce, without having to. */
 let tolerated: DiagnosticCode[] = [];
 let requiredSilentHold = false;
+let requiredWideScope = false;
 
 /**
  * Declare that the current test's subject *is* a diagnostic: each code must be
@@ -103,6 +110,17 @@ export function expectDiagnostics(...codes: DiagnosticCode[]): void {
 export function expectSilentHold(): void {
   requiredSilentHold = true;
   tolerated.push("SILENT_HOLD", "LONG_HOLD");
+}
+
+/**
+ * The same declaration for a scope tracking `WIDE_SCOPE_SOURCES` sources or
+ * more, which no diagnostic code reports since rc.14. Requires the current
+ * test to leave one.
+ *
+ * @public
+ */
+export function expectWideScope(): void {
+  requiredWideScope = true;
 }
 
 /**
@@ -165,6 +183,7 @@ beforeEach((context) => {
   required = [];
   tolerated = [];
   requiredSilentHold = false;
+  requiredWideScope = false;
   capture = captureArtifact<void>(
     () =>
       new Promise<void>((resolve) => {
@@ -211,6 +230,9 @@ beforeEach((context) => {
       attribution: { hotTime: false, fallbackFlashes: false },
     },
   );
+  // `captureArtifact` enables the engine synchronously, before its scenario
+  // runs, so the recording covers the whole test body.
+  stopWidths = watchScopeWidths();
 });
 
 afterEach(async (context) => {
@@ -221,6 +243,8 @@ afterEach(async (context) => {
 
   const pending = capture;
   const openedBy = owner;
+  const scopes = stopWidths?.() ?? [];
+  stopWidths = undefined;
   endScenario?.();
   endScenario = undefined;
   capture = undefined;
@@ -240,5 +264,10 @@ afterEach(async (context) => {
     throw ungatedError(context.task.name, pending, openedBy);
   }
 
-  assertGate(settled.artifact, { required, tolerated, requiredSilentHold });
+  assertGate(settled.artifact, scopes, {
+    required,
+    tolerated,
+    requiredSilentHold,
+    requiredWideScope,
+  });
 });
