@@ -21,9 +21,12 @@ import { createOrganizer } from "./lib/auth";
  * Session identity is app-wide state, and app-wide state lives in a provider
  * at the root of `App` (CLAUDE.md rule 11). Creating the query here keeps the
  * subscription alive for the app's lifetime, so a page reads an answer the
- * client already holds. The memo is lazy: nothing subscribes until a page
- * reads it under its boundaries, so providers mounted without a configured
- * client (tests of components that never touch the backend) open nothing.
+ * client already holds. A memo's computation runs when the memo is created,
+ * not on first read, so the subscription opens with the provider, before any
+ * page reads it. A provider mounted without a configured client (no
+ * `VITE_CONVEX_URL`, as in tests of components that never touch the backend)
+ * opens nothing, because `createConvexQuery` resolves the client inside that
+ * computation and finds none.
  */
 const OrganizerContext = createContext<Accessor<Id<"users"> | null>>();
 
