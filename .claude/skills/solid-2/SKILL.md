@@ -548,28 +548,64 @@ and thrown errors reach `<Errored>`. Integration layers should return a plain ac
 ```tsx
 import { createMemo, onCleanup } from 'solid-js';
 
-function createSubscriptionQuery<T>(
-  subscribe: (next: (value: T) => void, fail: (error: unknown) => void) => () => void,
+function createSubscriptionQuery<A, T>(
+  args: () => A,
+  subscribe: (args: A, next: (value: T) => void, fail: (error: unknown) => void) => () => void,
+  name: string,
 ) {
-  const queue: T[] = [];
-  let failure: unknown;
-  let wake = () => {};
-  // Custom primitive: unsubscribe is tied to the caller's owner via onCleanup.
-  // Component bodies use onSettled and return cleanup instead.
-  onCleanup(subscribe(
-    (value) => { queue.push(value); wake(); },
-    (error) => { failure = error; wake(); },
-  ));
+  return createMemo(() => {
+    const resolved = args(); // tracked, and read before any await: a change re-subscribes
+    let current: T | undefined;
+    let version = 0;
+    let failure: unknown;
+    let disposed = false;
+    let wake = () => {};
+    const unsubscribe = subscribe(
+      resolved,
+      (value) => { current = value; version += 1; failure = undefined; wake(); },
+      (error) => { failure = error; wake(); },
+    );
+    // Inside a computation, onCleanup runs before the next run and on disposal.
+    onCleanup(() => { disposed = true; unsubscribe(); wake(); });
 
-  return createMemo(() => (async function* () {
-    while (true) {
-      if (failure !== undefined) throw failure;
-      if (queue.length > 0) { yield queue.shift() as T; continue; }
-      await new Promise<void>((resolve) => { wake = resolve; });
-    }
-  })());
+    return (async function* () {
+      let seen = 0;
+      while (!disposed) {
+        if (failure !== undefined) throw failure;
+        if (version > seen) { seen = version; yield current as T; continue; }
+        await new Promise<void>((resolve) => { wake = resolve; });
+      }
+    })();
+  }, { name }); // e.g. `query:${functionName}` — attribution tables name rows by it
 }
 ```
+
+Open the subscription **inside the compute**, not around the memo. Then a change of
+`args` closes the old subscription and opens the new one, `refresh(query)` and
+`<Errored>`'s `reset` re-run the compute into a fresh subscription with the failure
+cleared (a subscription opened outside the memo keeps its failure, so a retry never
+recovers), and unmounting the owner closes it. Results that are snapshots (query
+results) conflate to the latest value, as above; an event stream where every message
+matters keeps a queue instead. A memo's compute runs **when it is created**, not on
+first read (only `{ lazy: true }` defers it, and that also tears the memo down whenever
+nothing observes it), so a subscription memo created in a provider connects even if
+nothing reads it — resolve the client inside the compute and return a never-settling
+iterable when there is none, rather than constructing it at module scope.
+
+Identity-like subscriptions (the session, the current user) are app-wide state
+(rule 11): create them **once**, in a provider at the root. One per page is torn down
+on unmount and re-opened on mount, so every navigation starts with a fallback for one
+round trip, and a page query that waits on it behind its own boundary is a sequential
+pair — `[ASYNC_WATERFALL]` under attribution.
+
+Clients that share one subscription per query-and-args and hand its current value to
+every new subscriber (Convex, most reactive database clients) prefetch by subscribing
+**early**: in the route's `preload` on link intent, held open for a short grace period
+(seconds) and released at once on error, so a hover while signed out leaves no failure
+for the page to inherit. Skip `intent === "initial"` there — on the first match the page
+subscribes on mount anyway, and an identity-gated read would run before the session is
+restored. Nothing is cached outside the client; the page's own subscription is the only
+one left when the hold expires.
 
 Server-function `live()` sources are the same shape (async iterable → memo). Connection
 state is `source.onstatus` (`"connected"` / `"reconnecting"` / `"closed"`), not a field
@@ -798,6 +834,30 @@ Choosing the keying mode:
 Never `{todos().map((t) => <Row todo={t} />)}` and never `<For each={todos().map(...)}>`.
 The `.map` form *renders*; it just rebuilds every row. `children().toArray().map` is
 fine — those nodes are already resolved.
+
+Join and narrow **upstream of the list**, not per row. A row that narrows its own
+lookup — `<For each={layout().cards}>{(card) => <Show when={byKey().get(card().key)}>…}` —
+makes every row a reactive source of the list's insert effect (one per row; a plain
+element or component row costs none), so every row change re-runs one effect that
+tracks the whole list. Nothing flags it below 2000 rows: `[WIDE_SCOPE_DEPS]` skips that
+insert pass by design (and defaults to 200 sources), and only the always-on
+`[HUGE_FAN_IN]` reports it, from 2000 — so this is a review rule, not something a
+diagnostics gate catches. <!-- upstream:per-row-show-insert-sources --> Build the joined
+rows in one memo and iterate those; `flatMap` drops the misses without a `!`:
+
+```tsx
+const cards = createMemo(() => {
+  const byKey = new Map(props.matches.map((m) => [m.key, m]));
+  return layout().cards.flatMap((card) => {
+    const match = byKey.get(card.key);
+    return match === undefined ? [] : [{ card, match }];
+  });
+}, { name: "cards" });
+
+<For each={cards()} keyed={(row) => row.card.key}>
+  {(row) => <MatchCard match={row().match} x={row().card.x} />}
+</For>
+```
 
 `<Repeat from={start()} count={20}>{(index) => ...}</Repeat>` renders by absolute index with
 no array diffing — use for fixed slot counts and virtual scrolling windows.
@@ -1078,9 +1138,11 @@ Testing Library's `render(…, { location })` is typed but not implemented (1.0.
 `jsxImportSource` for tests and app code is `"@solidjs/web"`, not `"solid-js"`.
 Vite plugin is `@solidjs/vite-plugin`, not `vite-plugin-solid`.
 
-To turn those dev diagnostics into a hard gate, patch `console.warn` in the test setup
-file to rethrow unexpected warnings — then any top-level reactive read or unowned write
-an agent sneaks in fails the suite instead of scrolling by.
+To turn those dev diagnostics into a hard gate on every test, capture them per test
+with `@solidjs/diagnostics` — see
+[Gating every test on diagnostics](#gating-every-test-on-diagnostics). Patching
+`console.warn` sees only what the console reporter prints, and none of the
+attribution-tier findings or the hold tables.
 
 ### Dev diagnostics and attribution
 
@@ -1208,13 +1270,110 @@ expect(artifact).toHaveNoDiagnostics();
 expect(artifact).toHaveNoSilentHolds();
 ```
 
-`toHaveNoDiagnostics` fails on any coded warning (`info` findings excluded);
+`toHaveNoDiagnostics` fails on every captured finding, `info` ones included
+(`[FALLBACK_FLASH]`, `[OPTIMISTIC_REVERTED]`, …) — its `allow` list names codes to
+tolerate;
 `toStayWithinRerunBudget` / `toHaveNoWaste` catch recompute regressions. The
 `agent-loops` skill the package ships
 (`node_modules/@solidjs/diagnostics/skills/agent-loops/SKILL.md`) documents the agent
 verification loops: capture until the channel is quiet, scenario budgets as the
 definition of done, and hold/latency gates. See the debugging-reactivity guide in
 [references/official-docs.md](references/official-docs.md).
+
+### Gating every test on diagnostics
+
+Solid grades its findings `info` / `warn` / `error` and offers no switch to escalate
+them, so "diagnostics are errors" is enforced in tests. The shape that holds up is a
+setup file that wraps **every** test body in one capture, so a test written by someone
+who never heard of the engine is gated anyway:
+
+```ts
+// src/test-setup.ts — listed in the vitest project's `setupFiles`
+import { afterEach, beforeEach } from 'vitest';
+import { flush } from 'solid-js';
+import { captureArtifact, expectNoDiagnostics, expectNoSilentHolds } from '@solidjs/diagnostics';
+
+let end: (() => void) | undefined;
+let capture: ReturnType<typeof captureArtifact<void>> | undefined;
+export const roots: (() => void)[] = []; // a `mount()` helper pushes each render's dispose
+
+beforeEach((context) => {
+  if (capture) throw new Error('tests under the gate must run sequentially');
+  capture = captureArtifact<void>(() => new Promise<void>((resolve) => { end = resolve; }), {
+    scenario: context.task.name,
+    attribution: { hotTime: false, fallbackFlashes: false }, // wall-clock: see below
+  });
+});
+
+afterEach(async () => {
+  for (const dispose of roots.splice(0).reverse()) dispose();
+  flush();
+  end?.();
+  const pending = capture;
+  capture = undefined;
+  if (pending === undefined) throw new Error('this test ran outside the gate');
+  const { artifact } = await pending; // close the capture before asserting anything
+  expectNoDiagnostics(artifact);
+  expectNoSilentHolds(artifact);
+});
+```
+
+What the shape has to get right:
+
+- **A DOM environment** (`happy-dom` / `jsdom`) for every reactive test, `.test.ts`
+  included. Under vitest's `node` environment the export conditions select Solid's
+  **server build**: writes are inert (`[SERVER_WRITE]`), effects never run, and the
+  attribution tables stay empty — a green test that proves nothing. Components that only
+  exist in the server build (a `<html>` document shell) get their own `node` project
+  rendered with `renderToString`, outside the gate.
+- **No HMR transform in the test project**: `solid({ refresh: { disabled: true } })`.
+  The refresh transform wraps every component declaration in a memo, so the graph
+  under test is not the graph production ships, and tests have no HMR to serve. (The
+  wrappers are marked as plumbing, so the engine does not count them as sources.)
+  <!-- upstream:per-row-show-insert-sources -->
+- **Two assertions, not one.** `[SILENT_HOLD]` is emitted only once a hold outlasts
+  `holds.infoMs` (100ms), so a shorter unacknowledged hold is recorded and coded
+  nowhere; `expectNoSilentHolds` asks the hold table, where no threshold applies.
+- **Wall-clock checks off where the clock means nothing.** `hotTime`'s 8ms budget is
+  half a real browser frame; an emulated DOM spends more than that rendering a page, and
+  a loaded runner several times more, so the failure names an innocent component.
+  `[FALLBACK_FLASH]` measures backend latency, and a fake that settles at once flashes
+  every fallback. Keep the count-based and structural checks (holds, waterfalls, list
+  identity, wide scopes); measure time in a real browser.
+- **Sequential tests only.** The diagnostics channel and the engine are process-global,
+  so under `test.concurrent` one test's finding lands in another's artifact — refuse the
+  overlap rather than blame the wrong test.
+- **Dispose what the test mounted** before the capture closes. A root left alive re-runs
+  on later writes, and its finding fails whichever test is open then.
+- **Settle deferred work** (`await resolve(...)`, `flush()`) before the body returns: an
+  un-awaited timer or promise lands in the next test's capture, or in none. Module scope
+  runs before the first capture opens — keep fixtures there, never a render.
+- **The app's own `attribution.enable()` stands down under a harness**
+  (`if (import.meta.env.VITEST) return;`, and in the browser gate's mode). A hold taken
+  while the engine is enabled opens a fresh window over `history()` / `costs()` /
+  `feedback()`, which erases what the capture recorded so far, and options combine by
+  the most demanding value per key, so the app's default hold re-arms every threshold
+  the gate turned off. <!-- upstream:attribution-hold-window -->
+- **A test whose subject is a finding requires it** (`expectDiagnostic(artifact, code)`
+  and then `allow` it), so the test fails when it stops provoking the code instead of
+  decaying into a mute. Never `allow` a finding about real code.
+- **Fixtures above the threshold** for scale-dependent codes. `[WIDE_SCOPE_DEPS]` fires
+  at 200 dependencies by default, `[HUGE_FAN_OUT]` / `[HUGE_FAN_IN]` and
+  `[HOT_SCOPE_RERUNS]` at their own counts, so a fixture of three rows cannot falsify a
+  per-row cost. When a gate is meant to catch one, give it a fixture past the code's
+  threshold (or a lower threshold in the capture's `attribution` options) and check it
+  fails with the defect re-injected. A per-row cost in a list's own insert pass is
+  outside `[WIDE_SCOPE_DEPS]` entirely (see [Lists](#lists-for-child-signatures-per-keying-mode)).
+
+An emulated DOM cannot see everything, so keep one **real-browser gate** for the main
+path: `captureBrowserArtifact(page, interact, { scenario })` from
+`@solidjs/diagnostics/playwright` drives the same capture through the bridge the Vite
+plugin injects into `vite dev`, and returns the same artifact, so one verdict function
+judges both. Serve that dev server in a dedicated mode with `refresh: { disabled: true }`
+and `performanceTracks: false`: the tracks paint every record from inside the scopes the
+engine times, enough to push a page's first render past the 8ms `[HOT_SCOPE_TIME]`
+budget. The wall-clock thresholds mean something there — except `fallbackFlashes`
+against a backend on loopback.
 
 ### Development loop: self-diagnose before finishing
 
@@ -1492,7 +1651,12 @@ Link state needs no component code: the router sets `aria-current="page"` (same 
 and same query — parameter order and hash aside), `data-active` (exact or descendant
 on the path only — the `/` link is active only on exact match), and, with the opt-in
 `createRouter({ links: pendingLinks })` plugin, `data-pending` (in-flight navigation
-target) on the anchors it handles; style them in CSS. Highlight nav links on
+target) on the anchors it handles; style them in CSS. The plugin is also a *reader* of
+the in-flight navigation: without it, or a `useLinkState().pending` / `isPending` read of
+the location somewhere on screen, nothing reads it, so every navigation that waits on a
+lazy page or its first data is an unacknowledged hold (`[SILENT_HOLD]` past 100ms,
+shorter ones only in `toHaveNoSilentHolds`). Create the router with
+`links: pendingLinks` by default, even when no stylesheet uses `data-pending` yet. <!-- upstream:pending-links-opt-in --> Highlight nav links on
 `data-active`, not `aria-current`: a nav link to `/products` is not current on
 `/products?page=2`. An `aria-current` you write
 yourself is yours — the router only manages the attribute on links where it set it.
@@ -1967,6 +2131,8 @@ how to reuse. Prefer the form on the right.
 | `Object.assign({}, props)` / expecting `merge` to skip `undefined` like 1.x `mergeProps` | `omit` / `merge` — explicit `undefined` **overrides** (Object.assign) |
 | `isPending(user())` / `latest(user())` | `isPending(user)` / `latest(user)` — pass the accessor (or `() => user()`). Calling it first evaluates the read before the helper runs |
 | `isPending(...)` as the first-load spinner | `<Loading>` owns first flight; `isPending` is the *refetch* indicator after a settled answer exists |
+| `<For each={rows()}>{(row) => <Show when={byKey().get(row().key)}>…</Show>}</For>` (narrowing per row) | join in one memo upstream and iterate the joined rows (`flatMap` drops misses) — a per-row `<Show>` makes every row a source of the list's insert effect, which no diagnostic flags below `[HUGE_FAN_IN]`'s 2000 <!-- upstream:per-row-show-insert-sources --> |
+| a subscription opened beside `createMemo(() => iterate())` instead of inside its compute | open it inside the compute with `onCleanup` there — args changes re-subscribe, `refresh` / `reset` retry with a fresh subscription, unmount closes it |
 | a held write with no feedback anywhere | pair it with `isPending()` / `latest()` / an optimistic value / `affects()` — otherwise dev + attribution reports `[SILENT_HOLD]` |
 | `refresh(getUser.key)` / `revalidate(user)` / `return refresh()` from `"use server"` | three APIs: core `refresh(source)` reruns a reactive source; router `revalidate(getUser.key)` invalidates the query cache; `return reload({ revalidate: "todos" })` asks the integration to refresh cached data |
 | `return redirect(...)` as the only redirect shape | guards `throw redirect("/sign-in")`; `redirect()` / `respond()` take `revalidate` too when the mutation also moves or returns a value |
@@ -2136,6 +2302,10 @@ Known stale pages — this skill is verified against the installed release and w
 - `reference/solid-js/reactivity/create-signal` says a write to a writable derivation
   wins over a same-tick recompute; a source change in the same update re-runs the
   function, which receives the write as `prev`. <!-- upstream:docs-derived-write-stale -->
+- `guides/performance` ("tracks 30 or more sources") and the attribution reference
+  (`wideDeps`, "default 30") give the old `[WIDE_SCOPE_DEPS]` threshold; the default is
+  200, and a list's insert pass is exempt from the check (see
+  [Lists](#lists-for-child-signatures-per-keying-mode)). <!-- upstream:docs-wide-deps-stale -->
 
 **Never** consult Solid 1.x sources (docs.solidjs.com, pre-2.0 tutorials, old Stack Overflow).
 Solid 2.0 is a breaking rewrite; 1.x answers are wrong here. The banned-API table is in the
@@ -2215,6 +2385,10 @@ always-applied rules installed alongside this skill.
       `feedback`) whenever the change touched stores, lists, async, actions, or
       effects. Name interrogated scopes (`{ name: "total" }`). `observe: true` is a
       production opt-in, not a dev step.
+- [ ] Tests that render run under a DOM environment with the HMR transform off and a
+      per-test capture asserting `expectNoDiagnostics` + `expectNoSilentHolds`; app code
+      does not call `attribution.enable()` under the harness. List rows do not narrow
+      themselves with a per-row `<Show>` (no diagnostic catches it).
 - [ ] If the project has a router: `createRouter({ routes })`, not JSX `<Route>` / `<A>`.
       One instance, no nested `<Router>`. Navigate with `useNavigate` / `<a href>`, not
       `window.location`. Router `action`/`query` come from `@solidjs/router` (POST forms + cache), not

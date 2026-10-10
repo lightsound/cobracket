@@ -7,7 +7,7 @@ Project guidance for Claude Code.
 cobracket hosts and manages tournaments of any format, from the web or from chat (MCP). Direction: `docs/vision.md`. Domain glossary: `CONTEXT.md` — use its terms in code, docs, and commits. Decisions: `docs/adr/`. Current spec: `docs/specs/mvp.md`.
 
 <!-- solid2-agent-kit:solid-rules:start -->
-<!-- Managed by solid2-agent-kit v0.20.0. Do not edit inside this block; run `solid2-kit sync` to update. -->
+<!-- Managed by solid2-agent-kit v0.21.0. Do not edit inside this block; run `solid2-kit sync` to update. -->
 
 # Solid 2.0 — not React, not Solid 1.x
 
@@ -545,12 +545,14 @@ directory (default `src/`).
 
 When unsure about any API, verify against the official Solid 2.0 docs — fetchable URLs are
 listed in `references/official-docs.md` next to the `solid-2` skill. Do not guess from
-Solid 1.x or React memory. Two official pages still describe the previous release —
+Solid 1.x or React memory. Some official pages still describe the previous release —
 these rules win there: the router navigation page lists `data-pending` as automatic
-(it needs `links: pendingLinks`) <!-- upstream:docs-pending-links-stale -->, and the
+(it needs `links: pendingLinks`) <!-- upstream:docs-pending-links-stale -->, the
 `createSignal` reference says a write to a writable derivation wins over a same-tick
 recompute (a source change in the same update now re-runs it with the write as
-`prev`). <!-- upstream:docs-derived-write-stale -->
+`prev`) <!-- upstream:docs-derived-write-stale -->, and the performance guide and
+attribution reference give `[WIDE_SCOPE_DEPS]` a threshold of 30 (the default
+`wideDeps` is 200). <!-- upstream:docs-wide-deps-stale -->
 
 `createRenderEffect` exists in Solid 2 but is not a default. `storePath`
 (the 1.x path-setter migration helper) is no longer exported from `solid-js` as of
