@@ -68,9 +68,10 @@ Steps:
      (`filter` for removal is fine — survivors keep identity; only fresh-tree wholesale
      replacement needs `reconcile` / the derived form);
    - hand-rolled link-active comparisons (`location.pathname === ...`) instead of the
-     automatic `aria-current` / `data-active` / `data-pending` attributes (+ CSS) or
+     automatic `aria-current` / `data-active` attributes (+ CSS) — `data-pending` is
+     opt-in via `createRouter({ links: pendingLinks })` — or
      `useLinkState` / `useIsRouting`; hand-rolled query parsing instead of
-     `useSearchParams`;
+     `useSearchParams`; <!-- upstream:pending-links-opt-in -->
    - search inputs bound to a held value without `latest`, effect-based debounce, fully
      controlled forms without `name`s, `{ success: false }` result objects instead of
      thrown failures, or router forms without server-side validation (`throw respond(...)`)

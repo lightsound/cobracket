@@ -39,7 +39,7 @@ Practical consequences:
 | Object that is replaced wholesale (fetch response, selected item, `User \| null`) | `createSignal(objectValue)` |
 | Value derived from other reactive values | plain function `() => ...` (never a signal synced by an effect) |
 | Expensive derivation, multiple consumers, or equality boundary needed | `createMemo(() => ...)` |
-| Follows a prop but user can locally override; prop change resets | writable derivation: `createSignal(() => props.value)` / `createStore(() => props.value, fallback)` |
+| Follows a prop but user can locally override; prop change resets | writable derivation: `createSignal(() => props.value)` / `createStore(() => props.value, fallback)` — a write lands at once and the function receives it as `prev` (the draft on a store) on re-run; honoring `prev` keeps the edit across source changes <!-- upstream:derived-write-prev --> |
 | Shared by a subtree, independent per provider instance | signal/store created inside a provider component, passed via context |
 | App-wide state (theme, session, cart, locale) | the same provider, placed at the root of `App` — not a module-level signal/store (under SSR one module instance serves every request) |
 | Constants (a category list, a formatter, the `createContext` call) | module scope |
@@ -69,7 +69,7 @@ Most React `useEffect` code should NOT become `createEffect`:
 | Inspect, count, or iterate children | `children(() => props.children)` then `.toArray()` |
 | Code-split a component | `lazy(() => import("./X"))` read under `<Loading>` |
 | Named export from a lazy module | `lazy(() => import("./pages"), { export: "About" })` |
-| Pick a component/tag from reactive state | `dynamic(() => ...)` from `@solidjs/web` (stable identity; `<Dynamic>` is deprecated) <!-- upstream:dynamic-deprecated --> |
+| Pick a component/tag from reactive state | `dynamic(() => ...)` from `@solidjs/web` (stable identity; `<Dynamic>` is deprecated) <!-- upstream:dynamic-deprecated --> — `dynamicComponent(() => ...)` when the source only answers with a component, never a tag <!-- upstream:dynamic-component-export --> |
 | Overlay / modal | `<Portal>` — hoist async reads *above* the portal (reads inside start on the client) |
 | Async value used several layers down | Create the memo high; pass `value={memo()}` through intermediates (they do not wait); put `<Loading>` around the leaf read |
 | Nested child with its own fetch | Leave it nested — it runs in parallel. Sequential only when the second call needs the first response (`fetchAuthor(story().authorId)`) |
@@ -268,6 +268,13 @@ is **deprecated** since 2.0.0-rc.9 — `@deprecated` in the types, no runtime wa
 still shipped in 2.0. <!-- upstream:dynamic-deprecated --> Hoist a `dynamic()` per component instance (or per module for a
 constant tag) instead.
 
+When the source only ever answers with a component — never a tag name — use
+`dynamicComponent()` instead: same contract and hydration shape minus the tag arm, so
+a tag name is a compile error and a page whose only dynamic mounts are components
+retains no element runtime (`createElement` / `spread` / the namespace tables). It
+is the documented way to mount a server component: `dynamicComponent(() =>
+getStory(props.id))`. <!-- upstream:dynamic-component-export -->
+
 ### Two-phase effect (imperative boundary only)
 
 ```tsx
@@ -331,7 +338,12 @@ const [signInError, setSignInError] = createSignal<string | null>(() => {
 ```
 
 The writable form spells exactly this: derive from the source, allow a local
-override, reset when the source changes. (React needs `useState(props.x)` plus a
+override, reset when the source changes. The mechanics: a write lands at once,
+and on the next source change the function re-runs receiving the write as `prev`
+(a store receives it as the draft). A function that ignores `prev` resets — this
+pattern — and also discards a write staged in the same update as a source change;
+one that honors `prev` can keep the local value. <!-- upstream:derived-write-prev -->
+(React needs `useState(props.x)` plus a
 `previousX` comparison reset during render for the same behavior.)
 
 ### Async data — fetch high, block low
@@ -507,7 +519,11 @@ rendered), `render` / `client` (a `<Loading>` fragment rejected, client re-rende
 hydration value would not serialize), `server-function` / `thrown` (`direct: true` for
 an in-process call during SSR), `server-function` / `channel` (a rejection or throw
 escaping through the result graph — a promise, an iterable, or a stream — after the
-head committed). A monitoring SDK's `init()` that
+head committed), and `request` / `failed` — a failure outside render and server
+functions (middleware, request setup) reported via
+`reportRequestFailure(error, event)` from `@solidjs/web`. A synchronous throw out of
+`renderToString` / `renderToStream`'s first pass is reported `render` / `failed`
+before rethrow. <!-- upstream:report-request-failure --> A monitoring SDK's `init()` that
 registers this hook must load before the server graph — put it in the plugin's
 `start: { instrument: "./src/instrument.ts" }`, not at the top of an entry (see
 [Production observability](#production-observability-the-observe-build)).
@@ -965,7 +981,12 @@ onSettled(() => {
 
 Effect callbacks follow the same shape: return the cleanup from `apply` (an
 `onCleanup` there never runs), and `flush()` inside one is a no-op
-(`[FLUSH_IN_EFFECT_CALLBACK]`).
+(`[FLUSH_IN_EFFECT_CALLBACK]`). Creating a memo, an effect, or a root inside `apply`
+throws in dev (`[PRIMITIVE_IN_EFFECT_CALLBACK]` — the effect phase has no owner to
+dispose them; `runWithOwner(null, …)` does not lift it): create them in the
+component body or the compute phase, or attach them to an owner captured with
+`getOwner()` in the body via `runWithOwner(owner, …)`.
+<!-- upstream:primitive-in-effect-callback -->
 
 ### Per-value SSR policy: `ssrSource`
 
@@ -1234,6 +1255,11 @@ effects** — a pure markup or styling change does not need it.
    observe build it records in production). Under `vite dev` the plugin also paints the
    same records as tracks in the Chrome Performance panel (`performanceTracks`, on by
    default; `false` opts out) — record there when a timeline reads better than tables.
+   The six attribution cost checks (`hotRuns`, `hotTime`, `wideDeps`, `unstableMemos`,
+   `fanOut`, `wastedRecompute`) are opt-in there: `performanceTracks: { attribution:
+   { checks: true } }` (or `enablePerformanceTracks({ attribution: { checks: true } })`,
+   or your own `attribution.enable()` hold — the diagnostics-session path above already
+   turns them on). <!-- upstream:perf-tracks-cost-checks -->
 4. **Read the verdicts, then the tables.** Fix every coded warning the session raised
    (`[SILENT_HOLD]`, `[IMMUTABLE_UPDATE_IN_STORE]`, `[UNSTABLE_LIST_IDENTITY]`,
    `[EFFECT_RELAY_TEAR]`, `[EFFECT_WRITES_OWN_SOURCE]`, `[ASYNC_WATERFALL]`,
@@ -1398,7 +1424,8 @@ export default function App() {
 
 The `<Loading>` covers the first load of the lazy pages (and lets SSR stream the shell);
 later navigations hold the current page while the next one loads (links get
-`data-pending`). Create the instance at **module scope**. Nested layouts are `children` arrays
+`data-pending` when the router is created with `links: pendingLinks`
+<!-- upstream:pending-links-opt-in -->). Create the instance at **module scope**. Nested layouts are `children` arrays
 on the route objects, not nested `<Route>` / nested routers. Solid Router does
 **not** support nested `<Router>` instances — compose one route tree (or a lazy
 `children` thunk). Navigate with
@@ -1461,13 +1488,20 @@ Link warming: `preload="false"` skips that link's *data* preload; `preloadLinks:
 disables automatic link preloading. Intent values are `"initial"` / `"navigate"` /
 `"native"` / `"preload"`. One router per app.
 
-Link state needs no component code: the router sets `aria-current="page"` (exact
-match), `data-active` (exact or descendant — the `/` link is active only on exact
-match), and `data-pending` (in-flight navigation target) on the anchors it handles;
-style them in CSS. For non-anchors, or state needed in JSX, `useLinkState(() => href,
-{ end })` returns the same three as accessors (`active` / `current` / `pending`);
-`useIsRouting()` is the page-level pending flag for progress bars. Hand-rolled
+Link state needs no component code: the router sets `aria-current="page"` (same path
+and same query — parameter order and hash aside), `data-active` (exact or descendant
+on the path only — the `/` link is active only on exact match), and, with the opt-in
+`createRouter({ links: pendingLinks })` plugin, `data-pending` (in-flight navigation
+target) on the anchors it handles; style them in CSS. Highlight nav links on
+`data-active`, not `aria-current`: a nav link to `/products` is not current on
+`/products?page=2`. An `aria-current` you write
+yourself is yours — the router only manages the attribute on links where it set it.
+For non-anchors, or state needed in JSX, `useLinkState(() => href,
+{ end })` returns the same three as accessors (`active` / `current` / `pending` —
+`pending` works without the plugin); `useIsRouting()` is the page-level pending
+flag for progress bars. Hand-rolled
 `location.pathname === ...` comparisons are the wrong tool.
+<!-- upstream:pending-links-opt-in -->
 
 Build URLs from `paths`: static segments are properties (`Router.paths.about`, never
 `Router.paths.about()`), parameterized segments are calls (`paths.products(id)`),
@@ -1860,6 +1894,7 @@ how to reuse. Prefer the form on the right.
 | `lazy(() => import("./p").then((m) => ({ default: m.About })))` | `lazy(() => import("./p"), { export: "About" })` |
 | `dangerouslySetInnerHTML={{ __html }}` | `innerHTML={html()}` (sanitized); never with JSX children |
 | `onClick={setCount}` | `onClick={() => setCount((c) => c + 1)}` |
+| `onclick={fn}` / `onmouseover={fn}` (lowercase handlers) | `onClick={fn}` — a lowercase `on*` name is a plain attribute (dev warns `[LOWERCASE_EVENT_ATTRIBUTE]`), not an event <!-- upstream:lowercase-event-attribute --> |
 | `event.target.value` | `event.currentTarget.value` |
 | `createContext(emptyStore)` for reactive state | `createContext<Todos>()` — dummy defaults silently no-op |
 | `<For keyed={(t) => t.id}>{(todo) => todo.title}` | `todo().title` — key-function items are accessors |
@@ -1911,7 +1946,7 @@ how to reuse. Prefer the form on the right.
 | `action={"/_server/" + id}` / `action={createTodo.url}` on a POST form | a router action: `const save = action(createTodo, "create-todo")` + `<form action={save} method="post">` over a `(form: FormData)` server function (other signatures are TS2322) — `.url` on a bare `"use server"` function is TS2339; it is typed only on `GET()` / `live()` references (GET search forms) |
 | `<form method="get" action={update.url}>` for a mutation | GET forms only for idempotent search; mutations are POST |
 | `window.location.href = ...` / `history.pushState` | `useNavigate()` or `<a href={Router.paths...}>` |
-| `class={{ active: location.pathname === "/about" }}` hand-rolled link state | CSS on automatic `aria-current` / `data-active` / `data-pending`; `useLinkState` in JSX, `useIsRouting()` for progress bars |
+| `class={{ active: location.pathname === "/about" }}` hand-rolled link state | CSS on `aria-current` / `data-active` (+ `data-pending` via `links: pendingLinks`); `useLinkState` in JSX, `useIsRouting()` for progress bars <!-- upstream:pending-links-opt-in --> |
 | `new URLSearchParams(location.search)` hand-rolled query parsing | `useSearchParams()` (setter merges, no scroll); typed via a route `search` schema + `useSearchParams(Router.paths.search)` |
 | `Router.paths.about()` / string-concatenated URLs | static nodes are properties (`Router.paths.about`); calls bind params, then search object and hash |
 | `httpStatus(404)` in a click handler | call it bare in the component / error-fallback body (a scope declaration, not a mutation) |
@@ -2092,6 +2127,16 @@ agent use the mirror, which serves every page as plain markdown:
 
 A curated URL list is in [references/official-docs.md](references/official-docs.md).
 
+Known stale pages — this skill is verified against the installed release and wins:
+
+- `routing/solid-router/navigation` lists `data-pending` among the attributes the router
+  sets on its own; it needs `createRouter({ links: pendingLinks })`, and `aria-current`
+  also compares the query (the link-state paragraph under Solid Router 2 above).
+  <!-- upstream:docs-pending-links-stale -->
+- `reference/solid-js/reactivity/create-signal` says a write to a writable derivation
+  wins over a same-tick recompute; a source change in the same update re-runs the
+  function, which receives the write as `prev`. <!-- upstream:docs-derived-write-stale -->
+
 **Never** consult Solid 1.x sources (docs.solidjs.com, pre-2.0 tutorials, old Stack Overflow).
 Solid 2.0 is a breaking rewrite; 1.x answers are wrong here. The banned-API table is in the
 always-applied rules installed alongside this skill.
@@ -2176,8 +2221,8 @@ always-applied rules installed alongside this skill.
       core `action`/`refresh`. Forms: `<form action={save} method="post">`. Core `action`
       bodies are generators (`function*` / `async function*`) suspending on `yield`,
       never plain `async` functions. Link state is automatic attributes + CSS
-      (`aria-current` / `data-active` / `data-pending`; `useLinkState` / `useIsRouting`
-      in JSX). Search params via `useSearchParams`. Forms validate on the server
+      (`aria-current` / `data-active`, `data-pending` via `links: pendingLinks`;
+      `useLinkState` / `useIsRouting` in JSX). <!-- upstream:pending-links-opt-in --> Search params via `useSearchParams`. Forms validate on the server
       (`throw respond({ issues }, { status: 400 })`) with inline errors from
       `useSubmissions`.
 - [ ] `render(() => <App />, root)` — a function, not `render(<App />)`. `hydrate` when

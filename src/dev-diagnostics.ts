@@ -69,8 +69,13 @@ export function initDevDiagnostics(): void {
   // `@solidjs/web/performance-tracks` ahead of the app entry
   // (`performanceTracks`, on by default), and that adapter takes its own
   // hold with the same `log: false`. Options combine by the most demanding
-  // request per key, so the two agree, and this hold is what keeps the
-  // engine on for the console if that plugin default is ever turned off.
+  // request per key, so the two agree on logging, and this hold is what
+  // keeps the engine on for the console if that plugin default is ever
+  // turned off. It is also what keeps the six cost checks (`hotRuns`,
+  // `hotTime`, `wideDeps`, `unstableMemos`, `fanOut`, `wastedRecompute`)
+  // on: since @solidjs/web 2.0.0-rc.14 the tracks' hold asks for them off
+  // unless `performanceTracks: { attribution: { checks: true } }`, while
+  // this hold takes the engine default, which is on.
   // The release is dropped on purpose: the hold lasts as long as the page.
   attribution.enable({ log: false });
 }
