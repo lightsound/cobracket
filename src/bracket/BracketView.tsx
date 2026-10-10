@@ -86,7 +86,6 @@ export function BracketView(props: BracketViewProps) {
     },
     { name: "cards" },
   );
-  const matchByKey = createMemo(() => new Map(props.matches.map((m) => [m.key, m])));
   const nameOf = createMemo(
     () =>
       new Map(
@@ -214,21 +213,17 @@ export function BracketView(props: BracketViewProps) {
             )}
           </For>
         </Show>
-        <For each={layout().cards} keyed={(card) => card.key}>
-          {(card) => (
-            <Show when={matchByKey().get(card().key)}>
-              {(match) => (
-                <MatchCard
-                  match={match()}
-                  x={card().x}
-                  y={card().y + labelSpace()}
-                  ready={readyKeys().has(card().key)}
-                  voided={voidedKeys().has(card().key)}
-                  names={nameOf()}
-                  onSelect={props.onSelectMatch}
-                />
-              )}
-            </Show>
+        <For each={cards()} keyed={(entry) => entry.card.key}>
+          {(entry) => (
+            <MatchCard
+              match={entry().match}
+              x={entry().card.x}
+              y={entry().card.y + labelSpace()}
+              ready={readyKeys().has(entry().card.key)}
+              voided={voidedKeys().has(entry().card.key)}
+              names={nameOf()}
+              onSelect={props.onSelectMatch}
+            />
           )}
         </For>
       </div>
