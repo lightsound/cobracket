@@ -53,7 +53,7 @@ One place on a Track's registration list: confirmed, waitlisted, or holding an O
 _Avoid_: Application, sign-up
 
 **Withdrawal**:
-The state of a Participant whose Entry is no longer active — cancelled, removed, or lapsed — while the Participant is on a pinned Roster or in the last publication. The Participant stays in the bracket until the Organizer substitutes, restores, walks them over, or applies the change; an Entry that never reached a Roster simply ends.
+The state of a Participant whose Entry is no longer active — cancelled, removed, or lapsed — while the Participant is on a pinned Roster or in the last publication. The Participant stays in the bracket, its unplayed matches Walkovers by default (derived), until the Organizer substitutes, restores, or applies the change; an automatic publication drops withdrawn Participants it does not refill. An Entry that never reached a Roster simply ends.
 _Avoid_: Drop, dropout, forfeit (a forfeit is a Walkover, recorded on a match)
 
 **Capacity**:
@@ -69,7 +69,7 @@ A freed place held for a limited time for the next waitlisted Registrant who cho
 _Avoid_: Promotion, invitation (that is a separate, Organizer-initiated mechanism)
 
 **Publish**:
-Making an Event, or a tournament's bracket, visible to others; unpublishing takes it back while nothing depends on it yet. A tournament keeps a record of its last publication, which is what players and Spectators see while it is being revised; publishing a Track's tournament closes that Track's public registration. A published tournament's structure is fixed; a tournament inside an Event can be published only while its Event is (one published before a cancellation may be republished after it). Distinct from Visibility (who may open what is published) and from a Track being open for registration.
+Making an Event, or a tournament's bracket, visible to others; unpublishing takes it back while nothing depends on it yet. A tournament keeps a record of its last publication, against which Registrants' status is read; while it is being revised, players and Spectators see by default only that it is being updated, or — the Organizer's choice — that publication under a banner; publishing a Track's tournament closes that Track's public registration. A published tournament's structure is fixed; a tournament inside an Event can be published only while its Event is (one published before a cancellation may be republished after it). Distinct from Visibility (who may open what is published) and from a Track being open for registration.
 _Avoid_: Launch, release, go live (a tournament goes live on its first result)
 
 **Access Grant**:
@@ -107,7 +107,7 @@ A person or team competing in one tournament — a tournament-local record, whic
 _Avoid_: Player (that means the cross-tournament identity), entrant, competitor
 
 **Roster**:
-A tournament's Participants taken as a whole. For a Track's tournament it follows the confirmed Entries until the Organizer pins it; afterwards the difference is shown as pending changes the Organizer applies — membership only while the tournament is a draft (a confirmed Entry taken off the Roster stays as an alternate), names at any time, and substitutions or restorations for withdrawn Participants even during play.
+A tournament's Participants taken as a whole. For a Track's tournament it follows the confirmed Entries until the Organizer pins it; afterwards the difference is shown as pending changes the Organizer applies — membership only while the tournament is a draft (a confirmed Entry taken off the Roster stays as an alternate), and substitutions or restorations for withdrawn Participants even during play — except that an automatic publication applies the changes confirmed by its time itself. Names are labels, not pending changes: a rename reaches the Participant at once.
 _Avoid_: Participant list, lineup, entrant list
 
 **Player**:
