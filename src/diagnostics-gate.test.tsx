@@ -4,22 +4,25 @@
  *
  *   1. the engine finds real Solid mistakes in this environment (happy-dom,
  *      the browser build, attribution on) — not only in a dev browser. One
- *      case per channel the gate reads: a coded diagnostic, and a silent hold,
- *      which below the engine's console threshold has no code at all;
+ *      case per channel the gate reads: a coded diagnostic; a silent hold,
+ *      which below the engine's console threshold has no code at all; and a
+ *      scope whose sources grew with a list, which no code reports since
+ *      Solid 2.0.0-rc.14;
  *   2. an undeclared finding fails the test that caused it.
  *
  * (2) cannot be asserted from inside a test the gate is watching — a failing
  * test is the evidence — so it re-runs this very file in a child vitest with
  * `COBRACKET_DIAGNOSTICS_SELFTEST=1`. That flag withholds the declarations in
- * (1) and skips (2), so the child is exactly two broken scenarios with nothing
- * declared, and its exit code is the assertion.
+ * (1) and skips (2), so the child is exactly three broken scenarios with
+ * nothing declared, and its exit code is the assertion.
  */
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { expect, test } from "vite-plus/test";
-import { createMemo, createSignal, flush, For, resolve } from "solid-js";
+import { createMemo, createSignal, flush, For, resolve, Show } from "solid-js";
 import { Loading } from "@solidjs/web";
-import { expectDiagnostics, expectSilentHold, mount } from "./test-setup";
+import { WIDE_SCOPE_SOURCES } from "./diagnostics-verdict";
+import { expectDiagnostics, expectSilentHold, expectWideScope, mount } from "./test-setup";
 
 const SELFTEST = process.env.COBRACKET_DIAGNOSTICS_SELFTEST === "1";
 
@@ -82,6 +85,37 @@ test("the engine records a held write the screen never acknowledged", async () =
   expect(host.textContent).toContain("item 2");
 });
 
+/** A row component, so the row is what `BracketView` renders: a component behind a narrowing. */
+function Label(props: { text: string }) {
+  return <li>{props.text}</li>;
+}
+
+test("the engine counts a list whose rows each narrow their own data", () => {
+  // Withheld in the child run, same as above.
+  if (!SELFTEST) expectWideScope();
+
+  const rows = Array.from({ length: WIDE_SCOPE_SOURCES }, (_, index) => ({
+    key: `k${index}`,
+    label: `row ${index}`,
+  }));
+  const byKey = createMemo(() => new Map(rows.map((row) => [row.key, row])), { name: "byKey" });
+
+  // The shape `BracketView` once had: each row looks its record up and
+  // narrows it with a <Show>, which makes the row a source of the list's
+  // insert effect. No code reports it — the engine exempts that effect.
+  const host = mount(() => (
+    <ul>
+      <For each={rows} keyed={(row) => row.key}>
+        {(row) => (
+          <Show when={byKey().get(row().key)}>{(found) => <Label text={found().label} />}</Show>
+        )}
+      </For>
+    </ul>
+  ));
+
+  expect(host.querySelectorAll("li")).toHaveLength(WIDE_SCOPE_SOURCES);
+});
+
 test.skipIf(SELFTEST)(
   "an undeclared finding fails the test that caused it",
   () => {
@@ -103,12 +137,13 @@ test.skipIf(SELFTEST)(
 
     expect(child.status, output).not.toBe(0);
     // The failures have to be the gate's, naming what it found, not some other
-    // breakage — and both channels have to fail, not just the coded one. Both
+    // breakage — and every channel has to fail, not just the coded one. The
     // messages together say that; a failure count would only restate it in a
     // reporter's wording.
     expect(output).toContain("Expected no diagnostics");
     expect(output).toContain("UNSTABLE_LIST_IDENTITY");
     expect(output).toContain("Expected no silent holds");
+    expect(output).toContain("Expected no scope to track");
   },
   120_000,
 );

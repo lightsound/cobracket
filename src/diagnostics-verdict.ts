@@ -17,6 +17,11 @@
  * `holds.infoMs` threshold (100ms), so a shorter unacknowledged hold is real,
  * recorded, and coded nowhere — the attribution tables answer that question
  * without a threshold.
+ *
+ * A third question comes from beside the artifact: how many sources each
+ * scope tracked (`src/scope-widths.ts`). Since Solid 2.0.0-rc.14 no code
+ * reports a list whose rows each cost its insert effect a source, the defect
+ * both gates were sized to catch, so the verdict counts it itself.
  */
 import {
   type DiagnosticCode,
@@ -26,6 +31,17 @@ import {
   expectNoDiagnostics,
   expectNoSilentHolds,
 } from "@solidjs/diagnostics";
+import type { ScopeWidth } from "./scope-widths";
+
+/**
+ * The most sources one scope may track: the `[WIDE_SCOPE_DEPS]` default
+ * before rc.14 raised it to 200, and the number both gates' fixtures are
+ * sized above (31 rows). The widest scope in the shipped app tracks 9 — a
+ * match card's attribute effect — so a scope at 30 has grown with its data.
+ *
+ * @public
+ */
+export const WIDE_SCOPE_SOURCES = 30;
 
 /**
  * What a test declared about its own subject before the artifact is judged.
@@ -41,6 +57,8 @@ export interface GateDeclarations {
   tolerated?: readonly DiagnosticCode[];
   /** The scenario must leave a hold unacknowledged. */
   requiredSilentHold?: boolean;
+  /** The scenario must leave a scope at or above `WIDE_SCOPE_SOURCES`. */
+  requiredWideScope?: boolean;
 }
 
 function assertDiagnostics(artifact: DiagnosticsArtifact, declarations: GateDeclarations): void {
@@ -77,17 +95,43 @@ function assertHoldFeedback(artifact: DiagnosticsArtifact, declarations: GateDec
   }
 }
 
+function assertScopeWidths(scopes: readonly ScopeWidth[], declarations: GateDeclarations): void {
+  const wide = scopes
+    .filter((scope) => scope.sources >= WIDE_SCOPE_SOURCES)
+    .sort((a, b) => b.sources - a.sources);
+  if (declarations.requiredWideScope === true) {
+    if (wide.length === 0) {
+      throw new Error(
+        "expectWideScope() was declared but no scope tracked " +
+          `${WIDE_SCOPE_SOURCES} sources or more.`,
+      );
+    }
+    return;
+  }
+  if (wide.length > 0) {
+    const named = wide.map((scope) => `${scope.kind} "${scope.name}" (${scope.sources})`);
+    throw new Error(
+      `Expected no scope to track ${WIDE_SCOPE_SOURCES} sources or more, found ` +
+        `${named.join(", ")}. A count that grows with a list is usually a per-row ` +
+        "reactive wrapper (a <Show> narrowing each row): join the data in one memo " +
+        "above the <For> instead.",
+    );
+  }
+}
+
 /**
- * Fail unless the artifact is clean: no diagnostic beyond the declared ones
- * (each declared-required one present), and no hold the screen never
- * acknowledged, unless one was declared.
+ * Fail unless the run is clean: no diagnostic beyond the declared ones (each
+ * declared-required one present), no hold the screen never acknowledged, and
+ * no scope as wide as `WIDE_SCOPE_SOURCES`, unless declared.
  *
  * @public
  */
 export function assertGate(
   artifact: DiagnosticsArtifact,
+  scopes: readonly ScopeWidth[],
   declarations: GateDeclarations = {},
 ): void {
   assertDiagnostics(artifact, declarations);
   assertHoldFeedback(artifact, declarations);
+  assertScopeWidths(scopes, declarations);
 }
