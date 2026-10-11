@@ -171,12 +171,13 @@ async function requireOrganizer(ctx: QueryCtx): Promise<Id<"users">> {
 // "Missing" and "not yours" deliberately read the same so the API never
 // confirms a foreign tournament's existence. The lookup accepts the raw
 // string a URL carries: a malformed id is just another way of naming
-// nothing, not an argument error.
+// nothing, not an argument error. The caller resolves identity first, at the
+// top of its handler, where the access-control lint looks for it.
 async function findOwnedTournament(
   ctx: QueryCtx,
+  organizerId: Id<"users">,
   tournamentId: string,
 ): Promise<Doc<"tournaments"> | null> {
-  const organizerId = await requireOrganizer(ctx);
   const normalizedId = ctx.db.normalizeId("tournaments", tournamentId);
   const tournament = normalizedId === null ? null : await ctx.db.get("tournaments", normalizedId);
   if (tournament === null || tournament.organizerId !== organizerId) {
@@ -192,7 +193,8 @@ async function requireOwnedTournament(
   ctx: QueryCtx,
   tournamentId: Id<"tournaments">,
 ): Promise<Doc<"tournaments">> {
-  const tournament = await findOwnedTournament(ctx, tournamentId);
+  const organizerId = await requireOrganizer(ctx);
+  const tournament = await findOwnedTournament(ctx, organizerId, tournamentId);
   if (tournament === null) {
     throw new ConvexError("Tournament not found");
   }
@@ -260,18 +262,32 @@ const PRE_LIVE: readonly TournamentStatus[] = ["draft", "published"];
 // Shared loading and derivation helpers
 // ---------------------------------------------------------------------------
 
-// All .collect() calls below are bounded by one tournament's size: roster,
-// bracket matches (< 2x roster for the MVP formats), and results (matches
-// played plus corrections).
+// Every per-tournament set is bounded by a limit its writes enforce (roster,
+// matches, results; see MAX_ROSTER_SIZE). Reads take one row past the bound,
+// so a broken invariant fails loudly instead of truncating silently.
+async function takeAll<T>(
+  query: { take(n: number): Promise<T[]> },
+  bound: number,
+  what: string,
+): Promise<T[]> {
+  const rows = await query.take(bound + 1);
+  if (rows.length > bound) {
+    throw new Error(`Invariant violated: more than ${bound} ${what} in one tournament`);
+  }
+  return rows;
+}
 
 async function loadRoster(
   ctx: QueryCtx,
   tournamentId: Id<"tournaments">,
 ): Promise<Doc<"participants">[]> {
-  const roster = await ctx.db
-    .query("participants")
-    .withIndex("by_tournament", (q) => q.eq("tournamentId", tournamentId))
-    .collect();
+  const roster = await takeAll(
+    ctx.db
+      .query("participants")
+      .withIndex("by_tournament", (q) => q.eq("tournamentId", tournamentId)),
+    MAX_ROSTER_SIZE,
+    "participants",
+  );
   return roster.sort((a, b) => a.seed - b.seed);
 }
 
@@ -283,10 +299,11 @@ interface StoredBracket {
 }
 
 async function loadBracket(ctx: QueryCtx, tournament: Doc<"tournaments">): Promise<StoredBracket> {
-  const matchDocs = await ctx.db
-    .query("matches")
-    .withIndex("by_tournament", (q) => q.eq("tournamentId", tournament._id))
-    .collect();
+  const matchDocs = await takeAll(
+    ctx.db.query("matches").withIndex("by_tournament", (q) => q.eq("tournamentId", tournament._id)),
+    MAX_MATCHES,
+    "matches",
+  );
   const structure: BracketStructure = {
     format: tournament.format,
     matches: matchDocs.map((doc) => ({
@@ -313,10 +330,11 @@ async function loadResults(
   ctx: QueryCtx,
   tournamentId: Id<"tournaments">,
 ): Promise<Doc<"results">[]> {
-  return await ctx.db
-    .query("results")
-    .withIndex("by_tournament", (q) => q.eq("tournamentId", tournamentId))
-    .collect();
+  return await takeAll(
+    ctx.db.query("results").withIndex("by_tournament", (q) => q.eq("tournamentId", tournamentId)),
+    MAX_RESULTS,
+    "results",
+  );
 }
 
 function toRecordedResults(
@@ -468,6 +486,12 @@ async function buildTournamentView(
 // can bloat documents or push generateBracket into transaction limits.
 const MAX_NAME_LENGTH = 120;
 const MAX_ROSTER_SIZE = 128;
+// Double elimination with a grand-final reset is the largest MVP format:
+// 2n - 1 matches for n participants.
+const MAX_MATCHES = 2 * MAX_ROSTER_SIZE;
+// Results are append-only (ADR 0005), so corrections grow them: room for
+// every match to be recorded and then corrected three times.
+const MAX_RESULTS = 4 * MAX_MATCHES;
 
 function requireName(raw: string, label: string): string {
   const name = raw.trim();
@@ -584,6 +608,7 @@ export const createTournament = mutation({
 // Suggestions for the freeform Discipline field (story 2): prefix search on
 // the normalized form. Public on purpose — discipline names are not
 // organizer-private, and the create form runs before any tournament exists.
+// oxlint-disable-next-line @convex-dev/require-access-control -- public until events.md narrows it to the caller's own Disciplines
 export const suggestDisciplines = query({
   args: { prefix: v.string() },
   returns: v.array(v.string()),
@@ -656,11 +681,13 @@ export const deleteTournament = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const tournament = await requireOwnedTournament(ctx, args.tournamentId);
+    const bounds = { results: MAX_RESULTS, matches: MAX_MATCHES, participants: MAX_ROSTER_SIZE };
     for (const table of ["results", "matches", "participants"] as const) {
-      const docs = await ctx.db
-        .query(table)
-        .withIndex("by_tournament", (q) => q.eq("tournamentId", tournament._id))
-        .collect();
+      const docs = await takeAll(
+        ctx.db.query(table).withIndex("by_tournament", (q) => q.eq("tournamentId", tournament._id)),
+        bounds[table],
+        table,
+      );
       for (const doc of docs) {
         await ctx.db.delete(table, doc._id);
       }
@@ -678,10 +705,11 @@ export const deleteTournament = mutation({
 // (structure is fixed at generation), so it is dropped and must be
 // regenerated. Safe pre-live: no results exist yet, so nothing is orphaned.
 async function invalidateBracket(ctx: MutationCtx, tournamentId: Id<"tournaments">): Promise<void> {
-  const matchDocs = await ctx.db
-    .query("matches")
-    .withIndex("by_tournament", (q) => q.eq("tournamentId", tournamentId))
-    .collect();
+  const matchDocs = await takeAll(
+    ctx.db.query("matches").withIndex("by_tournament", (q) => q.eq("tournamentId", tournamentId)),
+    MAX_MATCHES,
+    "matches",
+  );
   for (const doc of matchDocs) {
     await ctx.db.delete("matches", doc._id);
   }
@@ -945,6 +973,9 @@ export const reportResult = mutation({
     const sides = requireTwoSides(args.sides);
     const bracket = await loadBracket(ctx, tournament);
     const resultDocs = await loadResults(ctx, tournament._id);
+    if (resultDocs.length >= MAX_RESULTS) {
+      throw new ConvexError(`A tournament can record at most ${MAX_RESULTS} results`);
+    }
     const recorded = toRecordedResults(resultDocs, bracket);
     // Results already void before this append (voided by an earlier
     // correction, still awaiting re-entry) are not news; the return value
@@ -1032,7 +1063,8 @@ export const getTournament = query({
   args: { tournamentId: v.string() },
   returns: v.union(organizerTournamentViewValidator, v.null()),
   handler: async (ctx, args) => {
-    const tournament = await findOwnedTournament(ctx, args.tournamentId);
+    const organizerId = await requireOrganizer(ctx);
+    const tournament = await findOwnedTournament(ctx, organizerId, args.tournamentId);
     if (tournament === null) {
       return null;
     }
@@ -1047,6 +1079,16 @@ export const getTournament = query({
   },
 });
 
+// The Share Link's access rule: the slug is the bearer credential, and it
+// opens only a published, non-private tournament. MVP behavior is
+// unlisted-only, but the gate reads the visibility field from day one so a
+// future mutation exposing it cannot leak by omission.
+function canViewShared(tournament: Doc<"tournaments"> | null): tournament is Doc<"tournaments"> {
+  return (
+    tournament !== null && tournament.status !== "draft" && tournament.visibility !== "private"
+  );
+}
+
 // The Share Link read (stories 21–23): unauthenticated, realtime, and
 // view-only. Drafts stay invisible; null (rather than an error) covers both
 // unknown slugs and not-yet-published tournaments without confirming which.
@@ -1058,13 +1100,7 @@ export const getSharedTournament = query({
       .query("tournaments")
       .withIndex("by_share_slug", (q) => q.eq("shareSlug", args.shareSlug))
       .unique();
-    // MVP behavior is unlisted-only, but the gate reads the visibility field
-    // from day one so a future mutation exposing it cannot leak by omission.
-    if (
-      tournament === null ||
-      tournament.status === "draft" ||
-      tournament.visibility === "private"
-    ) {
+    if (!canViewShared(tournament)) {
       return null;
     }
     return (await buildTournamentView(ctx, tournament)).view;

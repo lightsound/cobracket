@@ -93,7 +93,37 @@ export default defineConfig(({ mode }) => ({
     // class the theme does not define, with a "Did you mean" repair in the
     // message. Not officially Solid-aware — it reads `class` the way it reads
     // Vue's — so scripts/shadcn-lint.test.ts pins the forms this repo writes.
-    jsPlugins: ["@shadcn/lint"],
+    // Convex's own rules (https://docs.convex.dev/eslint), run through Oxlint
+    // as its docs describe. Every rule is listed and every one is `error`,
+    // including the three the plugin's `recommended` leaves off or at `warn`:
+    // `require-access-control` (each public function calls a `require*` /
+    // `check*` / `can*` guard at the top of its handler — the deliberate
+    // public reads say why on an oxlint-disable line), `no-filter-in-query`,
+    // and `import-wrong-runtime` (no "use node" file yet; it guards the first).
+    // Oxlint gives JS plugins no type information, so `explicit-table-ids` and
+    // `no-collect-in-query` run on syntax alone: they still report, without
+    // autofixes, and `no-collect-in-query` cannot tell a query from a
+    // mutation or a test, so it applies to all three: bounded sets are read
+    // with `.take(bound)`.
+    jsPlugins: ["@shadcn/lint", "@convex-dev/eslint-plugin"],
+    overrides: [
+      {
+        files: ["convex/**/*.ts"],
+        rules: {
+          "@convex-dev/no-old-registered-function-syntax": "error",
+          "@convex-dev/require-args-validator": "error",
+          "@convex-dev/require-access-control": "error",
+          "@convex-dev/import-wrong-runtime": "error",
+          "@convex-dev/explicit-table-ids": "error",
+          "@convex-dev/no-filter-in-query": "error",
+          "@convex-dev/no-collect-in-query": "error",
+          "@convex-dev/no-top-of-hour-crons": "error",
+          "@convex-dev/no-schema-import-cycle": "error",
+          "@convex-dev/no-duplicate-indexes": "error",
+          "@convex-dev/no-process-env": "error",
+        },
+      },
+    ],
     // Every component this repo imports by relative path is one of its own,
     // so each is guarded by `no-restyle` from the day it exists: callers may
     // place a component (layout), never restyle it.

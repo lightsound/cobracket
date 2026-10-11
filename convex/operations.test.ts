@@ -804,6 +804,28 @@ test("writes are bounded: roster size, name length, and scores", async () => {
   ).rejects.toThrow(/at most 128 participants/);
 });
 
+test("results are bounded: append-only corrections cannot grow a tournament forever", async () => {
+  const t = convexTest(schema, modules);
+  const { userId, as } = await newOrganizer(t);
+  const { tournamentId, ids } = await seededTournament(as, ["A", "B"]);
+  await as.mutation(api.operations.publishTournament, { tournamentId });
+  const matchId = matchAt(bracketOf(await ownedView(as, tournamentId)), "winners", 1, 0).matchId;
+  const sides = [
+    { participantId: ids.get("A")!, outcome: "win" as const },
+    { participantId: ids.get("B")!, outcome: "loss" as const },
+  ];
+  // MAX_RESULTS: four records for each of the 256 matches a full roster can
+  // generate. Seeded directly — a thousand reports would only slow the test.
+  await t.run(async (ctx) => {
+    for (let i = 0; i < 1024; i++) {
+      await ctx.db.insert("results", { tournamentId, matchId, sides, recordedBy: userId });
+    }
+  });
+  await expect(as.mutation(api.operations.reportResult, { matchId, sides })).rejects.toThrow(
+    /at most 1024 results/,
+  );
+});
+
 // ---------------------------------------------------------------------------
 // Disciplines (story 2)
 // ---------------------------------------------------------------------------
@@ -827,7 +849,7 @@ test("disciplines deduplicate on their normalized form and feed suggestions", as
     format: { family: "single_elimination" },
   });
 
-  const disciplines = await t.run(async (ctx) => await ctx.db.query("disciplines").collect());
+  const disciplines = await t.run(async (ctx) => await ctx.db.query("disciplines").take(10));
   expect(disciplines.map((d) => d.name).sort()).toEqual(["Street Fighter 6", "Strive"]);
 
   // Suggestions are a public prefix search over the normalized form.
@@ -862,7 +884,7 @@ test("name and discipline are editable in every status; the bracket is untouched
   expect(view.name).toBe("Friday Finals");
   expect(view.discipline).toBe("Street Fighter 6");
   expect(view.bracket).not.toBeNull();
-  const disciplines = await t.run(async (ctx) => await ctx.db.query("disciplines").collect());
+  const disciplines = await t.run(async (ctx) => await ctx.db.query("disciplines").take(10));
   expect(disciplines).toHaveLength(1);
 
   // A partial update leaves the other fields alone.
@@ -1016,17 +1038,17 @@ test("deleting a tournament removes it whole, in any status, and darkens its Sha
     participants: await ctx.db
       .query("participants")
       .withIndex("by_tournament", (q) => q.eq("tournamentId", tournamentId))
-      .collect(),
+      .first(),
     matches: await ctx.db
       .query("matches")
       .withIndex("by_tournament", (q) => q.eq("tournamentId", tournamentId))
-      .collect(),
+      .first(),
     results: await ctx.db
       .query("results")
       .withIndex("by_tournament", (q) => q.eq("tournamentId", tournamentId))
-      .collect(),
+      .first(),
   }));
-  expect(leftovers).toEqual({ participants: [], matches: [], results: [] });
+  expect(leftovers).toEqual({ participants: null, matches: null, results: null });
   // Deleting twice reads as not found, like any missing tournament.
   await expect(as.mutation(api.operations.deleteTournament, { tournamentId })).rejects.toThrow(
     /not found/,

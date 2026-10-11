@@ -38,6 +38,7 @@
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
+    "@convex-dev/eslint-plugin": "^5.0.0",
     "@edge-runtime/vm": "^5.0.0",
     "@import-lint/cli": "^0.1.9",
     "@shadcn/lint": "^0.2.0",
