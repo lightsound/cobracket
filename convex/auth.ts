@@ -69,6 +69,7 @@ export async function getOrganizer(ctx: QueryCtx): Promise<Id<"users"> | null> {
 }
 
 // The same answer for clients, as a subscribable query.
+// oxlint-disable-next-line @convex-dev/require-access-control -- answers who the caller is
 export const currentOrganizer = query({
   args: {},
   returns: v.union(v.id("users"), v.null()),
@@ -78,6 +79,7 @@ export const currentOrganizer = query({
 // The full distinction, for the client's session verification: it must
 // react differently to a missing user row (drop the dead session) and an
 // unverifiable token (keep the session, report the misconfiguration).
+// oxlint-disable-next-line @convex-dev/require-access-control -- answers who the caller is
 export const sessionState = query({
   args: {},
   returns: v.union(

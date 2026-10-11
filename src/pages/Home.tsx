@@ -41,7 +41,7 @@ export default function Home() {
 
 function TournamentList() {
   const { t } = useI18n();
-  const tournaments = createConvexQuery(api.operations.listMyTournaments, {});
+  const tournaments = createConvexQuery(api.tournaments.listMyTournaments, {});
 
   return (
     <Loading fallback={<p class="text-sm text-ink-muted">{t("app.loading")}</p>}>
@@ -87,7 +87,7 @@ function CreateForm() {
     setCreateError(null);
     try {
       await ensureOrganizer();
-      const created = await convex.mutation(api.operations.createTournament, {
+      const created = await convex.mutation(api.tournaments.createTournament, {
         name: name(),
         discipline: discipline(),
         format: { family: family() },

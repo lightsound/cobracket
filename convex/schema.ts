@@ -118,9 +118,7 @@ export default defineSchema({
     indexInRound: v.number(),
     // Exactly two slots for the MVP formats.
     slots: v.array(slotSource),
-  })
-    .index("by_tournament", ["tournamentId"])
-    .index("by_tournament_key", ["tournamentId", "key"]),
+  }).index("by_tournament", ["tournamentId"]),
 
   // Append-style result records (ADR 0005). Never patched or deleted: a
   // correction appends a newer record for the same match, and the latest

@@ -18,15 +18,16 @@
     "test": "vp test run --project '!e2e'",
     "test:e2e": "vp test run --project e2e",
     "lint:solid": "solid2-kit check && solid2-kit doctor",
-    "lint:imports": "bunx @import-lint/cli",
+    "lint:imports": "import-lint",
     "lint:theme": "bun scripts/lint-theme.ts",
     "check:bun": "bun scripts/check-bun-version.ts",
     "fallow": "fallow",
     "fallow:audit": "fallow audit",
+    "fallow:ci": "bun scripts/fallow-ci.ts",
     "fallow:dead-code": "fallow dead-code",
     "auth:keys": "bun x @convex-dev/auth",
     "typecheck": "tsc --noEmit && tsc --noEmit -p convex && tsc --noEmit -p scripts",
-    "verify": "bun run check:bun && bun run typecheck && bun run test && bun x vp check && bun run lint:imports && bun run lint:solid && bun run lint:theme && bun run build"
+    "verify": "bun run check:bun && bun run typecheck && bun run test && bun x vp check && bun run lint:imports && bun run fallow:ci && bun run lint:solid && bun run lint:theme && bun run build"
   },
   "dependencies": {
     "@convex-dev/auth": "2.0.0-alpha.2",
@@ -38,6 +39,7 @@
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
+    "@convex-dev/eslint-plugin": "^5.0.0",
     "@edge-runtime/vm": "^5.0.0",
     "@import-lint/cli": "^0.1.9",
     "@shadcn/lint": "^0.2.0",
@@ -46,8 +48,8 @@
     "@tailwindcss/vite": "^4.3.3",
     "@types/bun": "^1.4.2",
     "cf": "^1.0.0-beta.5",
-    "convex-test": "^0.0.59",
-    "fallow": "^3.27.0",
+    "convex-test": "^0.0.61",
+    "fallow": "3.33.1",
     "happy-dom": "^20.14.5",
     "playwright-core": "1.63.0",
     "solid2-agent-kit": "0.21.0",

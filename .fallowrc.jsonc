@@ -21,9 +21,17 @@
   // happy-dom is resolved by name the same way and is deliberately absent:
   // fallow does not report it (it knows the built-in vitest environments),
   // and an ignore for a rule that never fires is a stale suppression.
-  // @shadcn/lint is loaded by Oxlint from the `lint.jsPlugins` string in
-  // vite.config.ts; nothing imports it.
-  "ignoreDependencies": ["@edge-runtime/vm", "@shadcn/lint", "solid2-agent-kit"],
+  // @shadcn/lint and @convex-dev/eslint-plugin are loaded by Oxlint from the
+  // `lint.jsPlugins` strings in vite.config.ts; nothing imports them.
+  // @import-lint/cli is run by its bin name, `import-lint`, from the
+  // lint:imports script, which fallow does not map back to the package.
+  "ignoreDependencies": [
+    "@convex-dev/eslint-plugin",
+    "@edge-runtime/vm",
+    "@import-lint/cli",
+    "@shadcn/lint",
+    "solid2-agent-kit",
+  ],
   // Architecture zones. Deliberately narrow: ImportLint already enforces
   // imports at export granularity (every directory is a package; exports are
   // package-private unless tagged @public), which is what keeps risky
