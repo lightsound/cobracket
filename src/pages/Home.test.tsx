@@ -41,14 +41,14 @@ async function ready(): Promise<HTMLElement> {
     </AppProviders>
   ));
   publishQuery(api.auth.currentOrganizer, ORGANIZER);
-  publishQuery(api.operations.listMyTournaments, []);
-  publishQuery(api.operations.suggestDisciplines, []);
+  publishQuery(api.tournaments.listMyTournaments, []);
+  publishQuery(api.disciplines.suggestDisciplines, []);
   await settled();
   return host;
 }
 
 /** Rebuilt on every call — the way each subscription push delivers it. */
-function tournaments(): FunctionReturnType<typeof api.operations.listMyTournaments> {
+function tournaments(): FunctionReturnType<typeof api.tournaments.listMyTournaments> {
   return [
     {
       tournamentId: fakeId<"tournaments">("t1"),
@@ -108,7 +108,7 @@ test("lists the organizer's tournaments once the session is live", async () => {
     </AppProviders>
   ));
   publishQuery(api.auth.currentOrganizer, ORGANIZER);
-  publishQuery(api.operations.listMyTournaments, tournaments());
+  publishQuery(api.tournaments.listMyTournaments, tournaments());
   await settled();
 
   const rows = [...host.querySelectorAll("ul li")];
@@ -127,12 +127,12 @@ test("keeps its rows across a subscription re-delivery", async () => {
     </AppProviders>
   ));
   publishQuery(api.auth.currentOrganizer, ORGANIZER);
-  publishQuery(api.operations.listMyTournaments, tournaments());
+  publishQuery(api.tournaments.listMyTournaments, tournaments());
   await settled();
   const firstRow = host.querySelector("ul li");
 
   // Same tournaments, all-new objects.
-  publishQuery(api.operations.listMyTournaments, tournaments());
+  publishQuery(api.tournaments.listMyTournaments, tournaments());
   await settled();
 
   expect(host.querySelector("ul li")).toBe(firstRow);
@@ -145,7 +145,7 @@ test("says the list is empty rather than showing nothing", async () => {
     </AppProviders>
   ));
   publishQuery(api.auth.currentOrganizer, ORGANIZER);
-  publishQuery(api.operations.listMyTournaments, []);
+  publishQuery(api.tournaments.listMyTournaments, []);
   await settled();
   expect(host.textContent).toContain("No tournaments yet");
 });
@@ -157,10 +157,10 @@ test("creates a tournament and navigates to it", async () => {
     </AppProviders>
   ));
   publishQuery(api.auth.currentOrganizer, ORGANIZER);
-  publishQuery(api.operations.listMyTournaments, []);
-  publishQuery(api.operations.suggestDisciplines, []);
+  publishQuery(api.tournaments.listMyTournaments, []);
+  publishQuery(api.disciplines.suggestDisciplines, []);
   await settled();
-  answerMutation(api.operations.createTournament, () => ({
+  answerMutation(api.tournaments.createTournament, () => ({
     tournamentId: fakeId<"tournaments">("t9"),
     shareSlug: "t9-share",
   }));
@@ -174,7 +174,7 @@ test("creates a tournament and navigates to it", async () => {
 
   expect(mutationCalls()).toEqual([
     {
-      name: "operations:createTournament",
+      name: "tournaments:createTournament",
       args: {
         name: "Friday Night Bracket",
         discipline: "Chess",
@@ -192,10 +192,10 @@ test("shows the reason when creating fails, and does not navigate", async () => 
     </AppProviders>
   ));
   publishQuery(api.auth.currentOrganizer, ORGANIZER);
-  publishQuery(api.operations.listMyTournaments, []);
-  publishQuery(api.operations.suggestDisciplines, []);
+  publishQuery(api.tournaments.listMyTournaments, []);
+  publishQuery(api.disciplines.suggestDisciplines, []);
   await settled();
-  answerMutation(api.operations.createTournament, () => {
+  answerMutation(api.tournaments.createTournament, () => {
     throw new Error("Discipline is required");
   });
 
@@ -216,8 +216,8 @@ test("shows each keystroke while the suggestions query is still held", async () 
     </AppProviders>
   ));
   publishQuery(api.auth.currentOrganizer, ORGANIZER);
-  publishQuery(api.operations.listMyTournaments, []);
-  publishQuery(api.operations.suggestDisciplines, ["Chess"]);
+  publishQuery(api.tournaments.listMyTournaments, []);
+  publishQuery(api.disciplines.suggestDisciplines, ["Chess"]);
   await settled();
 
   const discipline = field(host, "Discipline");
@@ -233,7 +233,7 @@ test("shows each keystroke while the suggestions query is still held", async () 
 
 test("submits what was typed even with the suggestions still in flight", async () => {
   const host = await ready();
-  answerMutation(api.operations.createTournament, () => ({
+  answerMutation(api.tournaments.createTournament, () => ({
     tournamentId: fakeId<"tournaments">("t9"),
     shareSlug: "t9-share",
   }));
@@ -256,7 +256,7 @@ test("submits what was typed even with the suggestions still in flight", async (
 
 test("submits an edited discipline, not the one it replaced", async () => {
   const host = await ready();
-  answerMutation(api.operations.createTournament, () => ({
+  answerMutation(api.tournaments.createTournament, () => ({
     tournamentId: fakeId<"tournaments">("t9"),
     shareSlug: "t9-share",
   }));
@@ -282,7 +282,7 @@ test("a suggestion published while the keystroke is in flight is the one that sh
   // Typing opens a new subscription; the answer for it lands before the fake
   // would have seeded the flight from the previous result.
   type(field(host, "Discipline"), "Che");
-  publishQuery(api.operations.suggestDisciplines, ["Chess", "Checkers"]);
+  publishQuery(api.disciplines.suggestDisciplines, ["Chess", "Checkers"]);
   await settled();
 
   expect([...host.querySelectorAll("datalist option")].map((o) => o.getAttribute("value"))).toEqual(
@@ -292,7 +292,7 @@ test("a suggestion published while the keystroke is in flight is the one that sh
 
 test("clears the completions while a new prefix is in flight", async () => {
   const host = await ready();
-  publishQuery(api.operations.suggestDisciplines, ["Chess"]);
+  publishQuery(api.disciplines.suggestDisciplines, ["Chess"]);
   await settled();
   const options = () =>
     [...host.querySelectorAll("datalist option")].map((o) => o.getAttribute("value"));
@@ -305,7 +305,7 @@ test("clears the completions while a new prefix is in flight", async () => {
   type(field(host, "Discipline"), "Che");
   expect(options()).toEqual([]);
 
-  publishQuery(api.operations.suggestDisciplines, ["Chess", "Checkers"]);
+  publishQuery(api.disciplines.suggestDisciplines, ["Chess", "Checkers"]);
   await settled();
   expect(options()).toEqual(["Chess", "Checkers"]);
 });
@@ -317,7 +317,7 @@ test("clears the completions while a new prefix is in flight", async () => {
  * hold a component (`StatusBadge`), which is the other shape worth measuring
  * rather than reasoning about.
  */
-function manyTournaments(): FunctionReturnType<typeof api.operations.listMyTournaments> {
+function manyTournaments(): FunctionReturnType<typeof api.tournaments.listMyTournaments> {
   return Array.from({ length: 32 }, (_, index) => ({
     tournamentId: fakeId<"tournaments">(`t${index + 1}`),
     name: `Tournament ${index + 1}`,
@@ -335,14 +335,14 @@ test("a long tournament list costs the list no per-row subscription", async () =
     </AppProviders>
   ));
   publishQuery(api.auth.currentOrganizer, ORGANIZER);
-  publishQuery(api.operations.listMyTournaments, manyTournaments());
-  publishQuery(api.operations.suggestDisciplines, []);
+  publishQuery(api.tournaments.listMyTournaments, manyTournaments());
+  publishQuery(api.disciplines.suggestDisciplines, []);
   await settled();
   expect(host.querySelectorAll("ul li")).toHaveLength(32);
   const firstRow = host.querySelector("ul li");
 
   // A subscription push with all-new objects, at scale.
-  publishQuery(api.operations.listMyTournaments, manyTournaments());
+  publishQuery(api.tournaments.listMyTournaments, manyTournaments());
   await settled();
 
   expect(host.querySelector("ul li")).toBe(firstRow);

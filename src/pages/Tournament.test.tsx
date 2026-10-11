@@ -31,7 +31,7 @@ const { default: TournamentPage } = await import("./Tournament");
 
 localStorage.setItem("cobracket:locale", "en");
 
-type OrganizerView = NonNullable<FunctionReturnType<typeof api.operations.getTournament>>;
+type OrganizerView = NonNullable<FunctionReturnType<typeof api.tournaments.getTournament>>;
 
 const ORGANIZER = fakeId<"users">("user1");
 const TOURNAMENT = fakeId<"tournaments">("t1");
@@ -92,8 +92,8 @@ async function open(overrides: Partial<OrganizerView> = {}): Promise<HTMLElement
     </AppProviders>
   ));
   publishQuery(api.auth.currentOrganizer, ORGANIZER);
-  publishQuery(api.operations.getTournament, view(overrides));
-  publishQuery(api.operations.suggestDisciplines, []);
+  publishQuery(api.tournaments.getTournament, view(overrides));
+  publishQuery(api.disciplines.suggestDisciplines, []);
   await settled();
   return host;
 }
@@ -117,7 +117,7 @@ test("says so when the id names nothing of ours", async () => {
     </AppProviders>
   ));
   publishQuery(api.auth.currentOrganizer, ORGANIZER);
-  publishQuery(api.operations.getTournament, null);
+  publishQuery(api.tournaments.getTournament, null);
   await settled();
   expect(host.textContent).toContain("does not exist, was deleted, or belongs to a different");
 });
@@ -135,14 +135,14 @@ test("keeps the roster's rows across a subscription re-delivery", async () => {
   const firstRow = host.querySelector("ol li");
 
   // Same tournament, all-new objects: an idle push from Convex.
-  publishQuery(api.operations.getTournament, view());
+  publishQuery(api.tournaments.getTournament, view());
   await settled();
 
   expect(host.querySelector("ol li")).toBe(firstRow);
 
   // A real change still lands, in place.
   publishQuery(
-    api.operations.getTournament,
+    api.tournaments.getTournament,
     view({ participants: [{ participantId: P.ada, name: "Ada Lovelace", seed: 1 }] }),
   );
   await settled();
@@ -151,7 +151,7 @@ test("keeps the roster's rows across a subscription re-delivery", async () => {
 
 test("adds a participant and clears the field", async () => {
   const host = await open();
-  answerMutation(api.operations.addParticipant, () => fakeId<"participants">("p3"));
+  answerMutation(api.roster.addParticipant, () => fakeId<"participants">("p3"));
 
   const input = host.querySelector<HTMLInputElement>("input[placeholder='Participant name']");
   if (!input) throw new Error("no roster input");
@@ -160,14 +160,14 @@ test("adds a participant and clears the field", async () => {
   await settled();
 
   expect(mutationCalls()).toEqual([
-    { name: "operations:addParticipant", args: { tournamentId: TOURNAMENT, name: "Alan" } },
+    { name: "roster:addParticipant", args: { tournamentId: TOURNAMENT, name: "Alan" } },
   ]);
   expect(input.value).toBe("");
 });
 
 test("reports why a roster change was refused, and keeps the text", async () => {
   const host = await open();
-  answerMutation(api.operations.addParticipant, () => {
+  answerMutation(api.roster.addParticipant, () => {
     throw new Error("That name is already taken");
   });
 
@@ -183,7 +183,7 @@ test("reports why a roster change was refused, and keeps the text", async () => 
 
 test("saves only the settings that actually changed", async () => {
   const host = await open();
-  answerMutation(api.operations.updateTournament, () => null);
+  answerMutation(api.tournaments.updateTournament, () => null);
 
   const name = field(host, "Tournament name");
   expect(name.value).toBe("Friday Night Bracket");
@@ -196,7 +196,7 @@ test("saves only the settings that actually changed", async () => {
   // Discipline and format are untouched, so they are not in the patch.
   expect(mutationCalls()).toEqual([
     {
-      name: "operations:updateTournament",
+      name: "tournaments:updateTournament",
       args: { tournamentId: TOURNAMENT, name: "Saturday Night Bracket" },
     },
   ]);
@@ -205,7 +205,7 @@ test("saves only the settings that actually changed", async () => {
 
 test("sends the settings values it compared, trimmed", async () => {
   const host = await open();
-  answerMutation(api.operations.updateTournament, () => null);
+  answerMutation(api.tournaments.updateTournament, () => null);
 
   const name = field(host, "Tournament name");
   const save = button(host, "Save changes");
@@ -223,7 +223,7 @@ test("sends the settings values it compared, trimmed", async () => {
   // the one the server would have stored either way.
   expect(mutationCalls()).toEqual([
     {
-      name: "operations:updateTournament",
+      name: "tournaments:updateTournament",
       args: { tournamentId: TOURNAMENT, name: "Saturday Night Bracket" },
     },
   ]);
@@ -237,7 +237,7 @@ test("a server change overrides a local settings edit", async () => {
   // The writable derivation is `createSignal(() => props.view.name)`: a new
   // server value re-runs it, so the field follows the source of truth rather
   // than stranding an edit nobody saved.
-  publishQuery(api.operations.getTournament, view({ name: "Renamed Elsewhere" }));
+  publishQuery(api.tournaments.getTournament, view({ name: "Renamed Elsewhere" }));
   await settled();
 
   expect(field(host, "Tournament name").value).toBe("Renamed Elsewhere");
@@ -245,7 +245,7 @@ test("a server change overrides a local settings edit", async () => {
 
 test("deletes only after a second confirmation, then goes home", async () => {
   const host = await open();
-  answerMutation(api.operations.deleteTournament, () => null);
+  answerMutation(api.tournaments.deleteTournament, () => null);
 
   button(host, "Delete tournament…").click();
   flush();
@@ -256,7 +256,7 @@ test("deletes only after a second confirmation, then goes home", async () => {
   await settled();
 
   expect(mutationCalls()).toEqual([
-    { name: "operations:deleteTournament", args: { tournamentId: TOURNAMENT } },
+    { name: "tournaments:deleteTournament", args: { tournamentId: TOURNAMENT } },
   ]);
   expect(navigations()).toEqual(["/"]);
 });
@@ -285,7 +285,7 @@ test("reports a result from the dialog the bracket opens", async () => {
       standings: [],
     },
   });
-  answerMutation(api.operations.reportResult, () => ({ status: "live" as const, voided: [] }));
+  answerMutation(api.bracket.reportResult, () => ({ status: "live" as const, voided: [] }));
 
   // The card is the only way in: the dialog has no independent entry point.
   host.querySelector<HTMLButtonElement>("button[style*='--card-x']")?.click();
@@ -304,7 +304,7 @@ test("reports a result from the dialog the bracket opens", async () => {
 
   expect(mutationCalls()).toEqual([
     {
-      name: "operations:reportResult",
+      name: "bracket:reportResult",
       args: {
         matchId: "m1",
         sides: [
@@ -320,7 +320,7 @@ test("reports a result from the dialog the bracket opens", async () => {
 
 test("saves an edited discipline even with the suggestions still in flight", async () => {
   const host = await open();
-  answerMutation(api.operations.updateTournament, () => null);
+  answerMutation(api.tournaments.updateTournament, () => null);
 
   // The settings form's half of the same bug: `settingsChanges` omits a key
   // it thinks is unchanged, so a held write did not ship a stale discipline —
@@ -334,7 +334,7 @@ test("saves an edited discipline even with the suggestions still in flight", asy
 
   expect(mutationCalls()).toEqual([
     {
-      name: "operations:updateTournament",
+      name: "tournaments:updateTournament",
       args: {
         tournamentId: TOURNAMENT,
         name: "Saturday Night Bracket",
@@ -368,7 +368,7 @@ test("a tournament-sized roster costs the list no per-row subscription", async (
   const firstRow = host.querySelector("ol li");
 
   // A subscription push with all-new objects, at scale.
-  publishQuery(api.operations.getTournament, view({ participants: bigRoster() }));
+  publishQuery(api.tournaments.getTournament, view({ participants: bigRoster() }));
   await settled();
 
   expect(host.querySelector("ol li")).toBe(firstRow);

@@ -11,13 +11,13 @@ import { createConvexQuery, getConvexUrl } from "../lib/convex";
 // fallow-ignore-next-line circular-dependency -- the official Solid Router 2 shape: the router lazy-imports pages (deferred dynamic import), pages link back through Router.paths; no init-order hazard
 import { Router } from "../router";
 
-type SharedView = NonNullable<FunctionReturnType<typeof api.operations.getSharedTournament>>;
+type SharedView = NonNullable<FunctionReturnType<typeof api.share.getSharedTournament>>;
 
 export default function SharePage() {
   const { t } = useI18n();
   if (!getConvexUrl()) return <SetupNotice />;
   const params = useParams(Router.paths.s);
-  const shared = createConvexQuery(api.operations.getSharedTournament, () => ({
+  const shared = createConvexQuery(api.share.getSharedTournament, () => ({
     shareSlug: params.shareSlug,
   }));
 

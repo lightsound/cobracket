@@ -8,6 +8,8 @@ Revisit when the first of these happens: Event hosting lands (the north-star loo
 
 **Amended 2026-09-27:** the triggers above are no longer what reopens this. MCP is built when the owner chooses to build it, at any time, with no external signal to wait for — the project exists to exercise Convex and Solid 2.0, and the owner decides which surface is worth exercising next. What does not change is the part that keeps the choice open: one operations API, identity resolved only through `getOrganizer`, and no Organizer capability implemented outside `convex/operations.ts`.
 
+**Amended 2026-10-11 ([ADR 0020](./0020-convex-code-layout.md)):** `convex/operations.ts` is split into API modules — the top-level files of `convex/` — over a shared `convex/model/`. The operations API is now the set of public functions those modules register, and "no Organizer capability outside the operations API" is enforced rather than named: Oxlint refuses a function registered anywhere in `convex/` but a top-level file, and `@convex-dev/require-access-control` requires each public one to call its guard. Identity still resolves only through `getOrganizer` in `convex/auth.ts`.
+
 ## Consequences
 
 - Stories 18–20 are annotated as deferred in `docs/specs/mvp.md`; the MVP slice ships without a chat surface.

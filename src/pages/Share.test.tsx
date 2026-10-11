@@ -21,7 +21,7 @@ const { default: SharePage } = await import("./Share");
 
 localStorage.setItem("cobracket:locale", "en");
 
-type SharedView = NonNullable<FunctionReturnType<typeof api.operations.getSharedTournament>>;
+type SharedView = NonNullable<FunctionReturnType<typeof api.share.getSharedTournament>>;
 
 const P = {
   ada: fakeId<"participants">("p1"),
@@ -108,7 +108,7 @@ test("renders the tournament the share slug names, bracket and all", async () =>
       <SharePage />
     </AppProviders>
   ));
-  publishQuery(api.operations.getSharedTournament, sharedView());
+  publishQuery(api.share.getSharedTournament, sharedView());
   await settled();
 
   expect(host.textContent).toContain("Sunday Cup");
@@ -126,7 +126,7 @@ test("says so when the slug names nothing", async () => {
       <SharePage />
     </AppProviders>
   ));
-  publishQuery(api.operations.getSharedTournament, null);
+  publishQuery(api.share.getSharedTournament, null);
   await settled();
   expect(host.textContent).toContain("This tournament is not available");
 });
@@ -137,18 +137,18 @@ test("keeps the bracket's DOM across a subscription re-delivery", async () => {
       <SharePage />
     </AppProviders>
   ));
-  publishQuery(api.operations.getSharedTournament, sharedView());
+  publishQuery(api.share.getSharedTournament, sharedView());
   await settled();
   const firstCard = host.querySelector("button[style*='--card-x']");
 
   // The same tournament, all-new objects: an idle push from Convex.
-  publishQuery(api.operations.getSharedTournament, sharedView());
+  publishQuery(api.share.getSharedTournament, sharedView());
   await settled();
 
   expect(host.querySelector("button[style*='--card-x']")).toBe(firstCard);
 
   // And a real change still lands, through the page rather than around it.
-  publishQuery(api.operations.getSharedTournament, sharedView({ name: "Sunday Cup — Final" }));
+  publishQuery(api.share.getSharedTournament, sharedView({ name: "Sunday Cup — Final" }));
   await settled();
   expect(host.textContent).toContain("Sunday Cup — Final");
 });
@@ -168,7 +168,7 @@ test("shows standings once the tournament is completed", async () => {
     ];
     view.bracket.championId = P.ada;
   }
-  publishQuery(api.operations.getSharedTournament, view);
+  publishQuery(api.share.getSharedTournament, view);
   await settled();
 
   expect(host.textContent).toContain("Standings");

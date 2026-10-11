@@ -30,7 +30,7 @@ export const Router = createRouter({
       path: "/",
       component: lazy(() => import("./pages/Home")),
       preload: ({ intent }) => {
-        if (intent !== "initial") prefetchConvexQuery(api.operations.listMyTournaments, {});
+        if (intent !== "initial") prefetchConvexQuery(api.tournaments.listMyTournaments, {});
       },
     }),
     defineRoute({
@@ -38,7 +38,7 @@ export const Router = createRouter({
       component: lazy(() => import("./pages/Tournament")),
       preload: ({ params, intent }) => {
         if (intent !== "initial") {
-          prefetchConvexQuery(api.operations.getTournament, {
+          prefetchConvexQuery(api.tournaments.getTournament, {
             tournamentId: params.tournamentId,
           });
         }
@@ -49,7 +49,7 @@ export const Router = createRouter({
       component: lazy(() => import("./pages/Share")),
       preload: ({ params, intent }) => {
         if (intent !== "initial") {
-          prefetchConvexQuery(api.operations.getSharedTournament, { shareSlug: params.shareSlug });
+          prefetchConvexQuery(api.share.getSharedTournament, { shareSlug: params.shareSlug });
         }
       },
     }),

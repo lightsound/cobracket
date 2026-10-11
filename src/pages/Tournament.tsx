@@ -17,7 +17,7 @@ import { useOrganizer } from "../organizer";
 // fallow-ignore-next-line circular-dependency -- the official Solid Router 2 shape: the router lazy-imports pages (deferred dynamic import), pages link back through Router.paths; no init-order hazard
 import { Router } from "../router";
 
-type OrganizerView = NonNullable<FunctionReturnType<typeof api.operations.getTournament>>;
+type OrganizerView = NonNullable<FunctionReturnType<typeof api.tournaments.getTournament>>;
 type OrganizerMatch = NonNullable<OrganizerView["bracket"]>["matches"][number];
 
 export default function TournamentPage() {
@@ -60,7 +60,7 @@ function OwnedTournament(props: { tournamentId: string }) {
   const { t } = useI18n();
   // The raw URL segment goes to the server as-is: getTournament answers null
   // for malformed, missing, deleted, and foreign ids alike.
-  const view = createConvexQuery(api.operations.getTournament, () => ({
+  const view = createConvexQuery(api.tournaments.getTournament, () => ({
     tournamentId: props.tournamentId,
   }));
 
@@ -187,7 +187,7 @@ function BracketControls(props: {
             disabled={props.view.participants.length < 2}
             onClick={() =>
               void run(() =>
-                runMutation(api.operations.generateBracket, {
+                runMutation(api.bracket.generateBracket, {
                   tournamentId: props.view.tournamentId,
                 }),
               )
@@ -203,7 +203,7 @@ function BracketControls(props: {
             title={t("bracket.publishHint")}
             onClick={() =>
               void run(() =>
-                runMutation(api.operations.publishTournament, {
+                runMutation(api.bracket.publishTournament, {
                   tournamentId: props.view.tournamentId,
                 }),
               )
@@ -293,7 +293,7 @@ function RosterSection(props: {
   async function addSingle(event: SubmitEvent) {
     event.preventDefault();
     const ok = await run(() =>
-      runMutation(api.operations.addParticipant, {
+      runMutation(api.roster.addParticipant, {
         tournamentId: props.view.tournamentId,
         name: singleName(),
       }),
@@ -303,7 +303,7 @@ function RosterSection(props: {
 
   async function addBulk() {
     const ok = await run(() =>
-      runMutation(api.operations.addParticipants, {
+      runMutation(api.roster.addParticipants, {
         tournamentId: props.view.tournamentId,
         text: bulkText(),
       }),
@@ -318,7 +318,7 @@ function RosterSection(props: {
     if (index < 0 || target < 0 || target >= order.length) return;
     [order[index], order[target]] = [order[target]!, order[index]!];
     void run(() =>
-      runMutation(api.operations.reorderSeeding, {
+      runMutation(api.roster.reorderSeeding, {
         tournamentId: props.view.tournamentId,
         orderedParticipantIds: order,
       }),
@@ -329,7 +329,7 @@ function RosterSection(props: {
     const participantId = editingId();
     if (participantId === null) return;
     const ok = await run(() =>
-      runMutation(api.operations.renameParticipant, { participantId, name: draftName() }),
+      runMutation(api.roster.renameParticipant, { participantId, name: draftName() }),
     );
     if (ok) setEditingId(null);
   }
@@ -414,7 +414,7 @@ function RosterSection(props: {
                           class={rowButton}
                           onClick={() =>
                             void run(() =>
-                              runMutation(api.operations.removeParticipant, {
+                              runMutation(api.roster.removeParticipant, {
                                 participantId: participant().participantId,
                               }),
                             )
@@ -476,7 +476,7 @@ function RosterSection(props: {
 }
 
 type SettingsDraft = { name: string; discipline: string; family: FormatFamily };
-type SettingsChanges = Omit<FunctionArgs<typeof api.operations.updateTournament>, "tournamentId">;
+type SettingsChanges = Omit<FunctionArgs<typeof api.tournaments.updateTournament>, "tournamentId">;
 
 // Only what changed is sent. The format in particular is a structural
 // change, so an unchanged family must not be re-submitted (its options would
@@ -524,7 +524,7 @@ function SettingsSection(props: { view: OrganizerView; formatEditable: boolean }
     event.preventDefault();
     setSaveError(null);
     try {
-      await runMutation(api.operations.updateTournament, {
+      await runMutation(api.tournaments.updateTournament, {
         tournamentId: props.view.tournamentId,
         ...changes(),
       });
@@ -539,7 +539,7 @@ function SettingsSection(props: { view: OrganizerView; formatEditable: boolean }
   async function remove() {
     setDeleteError(null);
     try {
-      await runMutation(api.operations.deleteTournament, {
+      await runMutation(api.tournaments.deleteTournament, {
         tournamentId: props.view.tournamentId,
       });
       navigate(Router.paths);
@@ -671,7 +671,7 @@ function ReportDialog(props: {
 
   async function report(winner: string, loser: string): Promise<number> {
     const decided = decidedBy();
-    const result = await runMutation(api.operations.reportResult, {
+    const result = await runMutation(api.bracket.reportResult, {
       matchId: props.match.matchId,
       sides: [
         resultSide(winner, "win", parsedScore(winner)),

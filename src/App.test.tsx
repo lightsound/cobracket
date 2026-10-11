@@ -42,8 +42,8 @@ async function routed(host: HTMLElement): Promise<HTMLElement> {
 test("frames the routed page with the header and the toggles", async () => {
   const host = mount(() => <App />);
   publishQuery(api.auth.currentOrganizer, ORGANIZER);
-  publishQuery(api.operations.listMyTournaments, []);
-  publishQuery(api.operations.suggestDisciplines, []);
+  publishQuery(api.tournaments.listMyTournaments, []);
+  publishQuery(api.disciplines.suggestDisciplines, []);
   const heading = await routed(host);
 
   const home = host.querySelector("header a");
@@ -70,8 +70,8 @@ test("keeps the shell up while the routed page is still waiting on data", async 
   expect(host.querySelectorAll("header button")).toHaveLength(2);
 
   publishQuery(api.auth.currentOrganizer, ORGANIZER);
-  publishQuery(api.operations.listMyTournaments, []);
-  publishQuery(api.operations.suggestDisciplines, []);
+  publishQuery(api.tournaments.listMyTournaments, []);
+  publishQuery(api.disciplines.suggestDisciplines, []);
   await settled();
 
   expect(host.querySelector("main")?.textContent).not.toContain("Checking your session…");

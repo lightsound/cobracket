@@ -11,7 +11,7 @@ import { TextInput } from "./TextInput";
 export function DisciplineField(props: { value: string; onInput: (value: string) => void }) {
   const { t } = useI18n();
   const listId = createUniqueId();
-  const suggestions = createConvexQuery(api.operations.suggestDisciplines, () => ({
+  const suggestions = createConvexQuery(api.disciplines.suggestDisciplines, () => ({
     prefix: props.value,
   }));
 

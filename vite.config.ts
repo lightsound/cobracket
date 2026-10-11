@@ -121,7 +121,36 @@ export default defineConfig(({ mode }) => ({
           "@convex-dev/no-schema-import-cycle": "error",
           "@convex-dev/no-duplicate-indexes": "error",
           "@convex-dev/no-process-env": "error",
+          // ADR 0020: a top-level file in convex/ is an API module, and a
+          // subdirectory is a library (convex/model, the format engine), so
+          // only the top level may register functions. The override below
+          // lifts this there; everywhere else in convex/ it holds.
+          "no-restricted-imports": [
+            "error",
+            {
+              patterns: [
+                {
+                  group: ["**/_generated/server"],
+                  importNames: [
+                    "query",
+                    "mutation",
+                    "action",
+                    "internalQuery",
+                    "internalMutation",
+                    "internalAction",
+                    "httpAction",
+                  ],
+                  message:
+                    "Only a top-level file in convex/ registers functions (ADR 0020); keep helpers in convex/model and call them from there.",
+                },
+              ],
+            },
+          ],
         },
+      },
+      {
+        files: ["convex/*.ts"],
+        rules: { "no-restricted-imports": "off" },
       },
     ],
     // Every component this repo imports by relative path is one of its own,
