@@ -50,6 +50,7 @@ Five families, no custom formats (ADR 0002): single elimination, double eliminat
 
 - **Organizer**: operates everything. Anonymous by default, upgradeable to an account.
 - **Participant / Spectator**: view-only through the Share Link, realtime, no account.
+- **Registrant** (Events): registers for a Track from the Event's page, signed in with a verified email by default or anonymously where the Organizer allows it, and follows their own status (`docs/specs/events.md`).
 - Participant self-reporting of results and co-organizing are post-MVP candidates.
 
 ## MVP scope (current plan)
