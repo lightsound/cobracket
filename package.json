@@ -18,7 +18,7 @@
     "test": "vp test run --project '!e2e'",
     "test:e2e": "vp test run --project e2e",
     "lint:solid": "solid2-kit check && solid2-kit doctor",
-    "lint:imports": "bunx @import-lint/cli",
+    "lint:imports": "import-lint",
     "lint:theme": "bun scripts/lint-theme.ts",
     "check:bun": "bun scripts/check-bun-version.ts",
     "fallow": "fallow",
