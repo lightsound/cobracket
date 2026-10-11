@@ -26,7 +26,7 @@ export async function loadRoster(
   return roster.sort((a, b) => a.seed - b.seed);
 }
 
-interface StoredBracket {
+export interface StoredBracket {
   matchDocs: Doc<"matches">[];
   byKey: Map<string, Doc<"matches">>;
   byId: Map<Id<"matches">, Doc<"matches">>;
