@@ -46,7 +46,7 @@
     "@tailwindcss/vite": "^4.3.3",
     "@types/bun": "^1.4.2",
     "cf": "^1.0.0-beta.5",
-    "convex-test": "^0.0.59",
+    "convex-test": "^0.0.61",
     "fallow": "^3.27.0",
     "happy-dom": "^20.14.5",
     "playwright-core": "1.63.0",
