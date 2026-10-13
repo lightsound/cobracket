@@ -107,7 +107,7 @@ A person or team competing in one tournament — a tournament-local record, whic
 _Avoid_: Player (that means the cross-tournament identity), entrant, competitor
 
 **Roster**:
-A tournament's Participants taken as a whole. For a Track's tournament it follows the confirmed Entries until the Organizer pins it; afterwards the difference is shown as pending changes the Organizer applies — membership only while the tournament is a draft (a confirmed Entry taken off the Roster stays as an alternate), and substitutions or restorations for withdrawn Participants even during play — except that an automatic publication applies the changes confirmed by its time itself. Names are labels, not pending changes: a rename reaches the Participant at once.
+A tournament's Participants taken as a whole. For a Track's tournament it follows the confirmed Entries until the Organizer pins it; afterwards the difference is shown as pending changes the Organizer applies — membership only while the tournament is a draft (a confirmed Entry taken off the Roster stays as an alternate), and substitutions or restorations for withdrawn Participants even during play — except that an automatic publication applies the pending changes as of its time itself. Names are labels, not pending changes: a rename reaches the Participant at once.
 _Avoid_: Participant list, lineup, entrant list
 
 **Player**:

@@ -11,10 +11,10 @@ Reachability is what makes a waitlist fair to run automatically: while registrat
 - **Waitlists open to anyone, promoted silently.** Promotions close to the event reach nobody and turn into no-shows; queueing is free to abuse.
 - **Let each Organizer allow anonymous waitlists per Track.** A waitlist that cannot reach its members does not work, so offering the switch is a trap rather than a choice.
 - **Verify an email only when joining the waitlist.** Verifying an address is signing in with it; this is the same rule under another name.
-- **Host-approved promotion only** (Luma). Reliable, but it leaves seats empty until the Organizer acts; Offers keep the queue moving without surprising anyone.
+- **Host-approved promotion only** (Luma). Reliable, but it leaves seats empty until the Organizer acts; automatic confirmation (or an Offer, for those who ask) keeps the queue moving without surprising anyone.
 
 ## Consequences
 
 - Capacity cannot be lowered below the confirmed Entries plus outstanding Offers plus unused reserved seats.
-- One predicate — whether a Track is accepting registrations now — serves both the decision function and the settle function, so an Offer is never issued where a registration would be refused.
+- One predicate — whether a Track is accepting registrations now — serves both the decision function and the settle function, so an Offer is never issued where a registration would be refused — except that settle running after a close fills the seats recorded as free at it (amended 2026-10-11).
 - The waitlist order and the moment an Entry was confirmed are stored explicitly; creation time is fixed when a mutation starts, not when it commits, and an Entry confirmed from the Waitlist is confirmed long after it was created.
