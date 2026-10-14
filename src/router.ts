@@ -1,4 +1,4 @@
-import { createRouter, defineRoute, pendingLinks } from "@solidjs/router";
+import { createRouter, defineRoute, intentPreload, pendingLinks } from "@solidjs/router";
 import { lazy } from "solid-js";
 import { api } from "../convex/_generated/api";
 import { prefetchConvexQuery } from "./lib/convex";
@@ -13,7 +13,12 @@ import { prefetchConvexQuery } from "./lib/convex";
 // anyway — and for the two Organizer-gated reads it would run before the
 // session is restored, so it is skipped. `prefetchConvexQuery` holds the
 // subscription open briefly and releases it at once on failure, so a hover
-// while signed out leaves nothing for the page to inherit.
+// while signed out leaves nothing for the page to inherit. Since router
+// 2.0.0-next.38 link preloading is opt-in and none is the default:
+// `preloadLinks: intentPreload()` is what runs these `preload` functions on
+// hover (after a 20ms rest), focus and touch. next.37 preloaded on hover by
+// default; its focus and touch listeners were gated on `evt.button`, which
+// those events lack, so they never fired.
 //
 // `links: pendingLinks` is what acknowledges a navigation's held location
 // write. Router 2.0.0-next.37 made `data-pending` opt-in, and with it the
@@ -25,6 +30,7 @@ import { prefetchConvexQuery } from "./lib/convex";
 // before it, when the sweep read pending state unconditionally.
 export const Router = createRouter({
   links: pendingLinks,
+  preloadLinks: intentPreload(),
   routes: [
     defineRoute({
       path: "/",

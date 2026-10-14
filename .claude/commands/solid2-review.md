@@ -71,7 +71,9 @@ Steps:
      automatic `aria-current` / `data-active` attributes (+ CSS) — `data-pending` is
      opt-in via `createRouter({ links: pendingLinks })` — or
      `useLinkState` / `useIsRouting`; hand-rolled query parsing instead of
-     `useSearchParams`; <!-- upstream:pending-links-opt-in -->
+     `useSearchParams`; <!-- upstream:pending-links-opt-in --> route `preload`
+     functions written to run on hover in a router without `preloadLinks: intentPreload()`
+     (link preloading is opt-in; a boolean `preloadLinks` preloads nothing) <!-- upstream:preload-links-opt-in -->;
    - search inputs bound to a held value without `latest`, effect-based debounce, fully
      controlled forms without `name`s, `{ success: false }` result objects instead of
      thrown failures, or router forms without server-side validation (`throw respond(...)`)
