@@ -111,12 +111,16 @@ A tournament's Participants taken as a whole. For a Track's tournament it follow
 _Avoid_: Participant list, lineup, entrant list
 
 **Player**:
-The persistent, account-backed identity of a competitor across tournaments. Self-made Entries link to a Player automatically; organizer-entered Participants can be claimed by their Player later. Rankings attach to Players, not Participants.
+The persistent identity of a competitor across tournaments: a record holding no personal data, created at a person's first Entry and kept after their account is deleted. Self-made Entries link to a Player automatically; organizer-entered Participants can be claimed by their Player later. Rankings attach to Players, not Participants.
 _Avoid_: User, member
 
 **Spectator**:
 Anyone following a tournament without competing in or operating it.
 _Avoid_: Viewer, audience
+
+**Account**:
+A user who has verified an email address by signing in with a one-time code, and so is Reachable. Every user starts as an anonymous identity tied to one browser; verifying an email upgrades it in place, or merges it into the account that already holds that email. Publishing an Event, joining a Waitlist, registering on a reachable-only Track, and using MCP need one. Deleting it removes the person's data and keeps the records they appear in.
+_Avoid_: Profile, login, registered user
 
 **Share Link**:
 A tournament's unlisted URL granting view-only, real-time access to its bracket with no account required, wherever the tournament's Visibility is unlisted or public. How participants and spectators follow a tournament.
