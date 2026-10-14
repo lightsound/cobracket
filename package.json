@@ -32,10 +32,10 @@
   "dependencies": {
     "@convex-dev/auth": "2.0.0-alpha.2",
     "@fontsource-variable/space-grotesk": "^5.3.0",
-    "@solidjs/router": "2.0.0-next.37",
-    "@solidjs/web": "^2.0.0-rc.14",
+    "@solidjs/router": "2.0.0-next.39",
+    "@solidjs/web": "^2.0.0-rc.15",
     "convex": "^1.46.0",
-    "solid-js": "^2.0.0-rc.14",
+    "solid-js": "^2.0.0-rc.15",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
@@ -43,8 +43,8 @@
     "@edge-runtime/vm": "^5.0.0",
     "@import-lint/cli": "^0.1.9",
     "@shadcn/lint": "^0.2.0",
-    "@solidjs/diagnostics": "^2.0.0-rc.14",
-    "@solidjs/vite-plugin": "^3.0.0-next.49",
+    "@solidjs/diagnostics": "^2.0.0-rc.15",
+    "@solidjs/vite-plugin": "^3.0.0-next.50",
     "@tailwindcss/vite": "^4.3.3",
     "@types/bun": "^1.4.2",
     "cf": "^1.0.0-beta.5",
@@ -52,7 +52,7 @@
     "fallow": "3.33.1",
     "happy-dom": "^20.14.5",
     "playwright-core": "1.63.0",
-    "solid2-agent-kit": "0.21.0",
+    "solid2-agent-kit": "0.22.0",
     "typescript": "^7.1.0-dev.20260921.1",
     "vite": "npm:@voidzero-dev/vite-plus-core@1.0.0",
     "vite-plus": "1.0.0",

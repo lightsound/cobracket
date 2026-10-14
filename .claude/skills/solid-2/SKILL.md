@@ -69,7 +69,7 @@ Most React `useEffect` code should NOT become `createEffect`:
 | Inspect, count, or iterate children | `children(() => props.children)` then `.toArray()` |
 | Code-split a component | `lazy(() => import("./X"))` read under `<Loading>` |
 | Named export from a lazy module | `lazy(() => import("./pages"), { export: "About" })` |
-| Pick a component/tag from reactive state | `dynamic(() => ...)` from `@solidjs/web` (stable identity; `<Dynamic>` is deprecated) <!-- upstream:dynamic-deprecated --> — `dynamicComponent(() => ...)` when the source only answers with a component, never a tag <!-- upstream:dynamic-component-export --> |
+| Pick a component/tag from reactive state | `dynamic(() => ...)` from `@solidjs/web` (stable identity; `<Dynamic>` is deprecated) <!-- upstream:dynamic-deprecated --> — `dynamicComponent(() => ...)` from `solid-js` when the source only answers with a component, never a tag <!-- upstream:dynamic-component-export --> |
 | Overlay / modal | `<Portal>` — hoist async reads *above* the portal (reads inside start on the client) |
 | Async value used several layers down | Create the memo high; pass `value={memo()}` through intermediates (they do not wait); put `<Loading>` around the leaf read |
 | Nested child with its own fetch | Leave it nested — it runs in parallel. Sequential only when the second call needs the first response (`fetchAuthor(story().authorId)`) |
@@ -238,7 +238,10 @@ const About = lazy(() => import('./pages'), { export: 'About' });
 Never `React.lazy` / `<Suspense>`. The lazy component suspends through
 `<Loading>` on first render; `.preload()` starts the import early. Named
 exports must use `{ export: "About" }` — a `.then((m) => ({ default: m.About }))`
-wrapper hydrates incorrectly (the name is not a call-site literal).
+wrapper hydrates incorrectly (the name is not a call-site literal). A module that is
+not a component (a route table, a parser) takes `lazyModule(() => import("./x"))` from
+`solid-js`: call it (or `.preload()`) for the cached promise, `.peek()` for the module
+once it has landed; the server preloads it before hydration by module id.
 
 ### Dynamic component: `dynamic()` (canonical)
 
@@ -269,7 +272,8 @@ still shipped in 2.0. <!-- upstream:dynamic-deprecated --> Hoist a `dynamic()` p
 constant tag) instead.
 
 When the source only ever answers with a component — never a tag name — use
-`dynamicComponent()` instead: same contract and hydration shape minus the tag arm, so
+`dynamicComponent()` from `solid-js` instead (`@solidjs/web` re-exports it): same
+contract and hydration shape minus the tag arm, so
 a tag name is a compile error and a page whose only dynamic mounts are components
 retains no element runtime (`createElement` / `spread` / the namespace tables). It
 is the documented way to mount a server component: `dynamicComponent(() =>
@@ -600,7 +604,8 @@ pair — `[ASYNC_WATERFALL]` under attribution.
 
 Clients that share one subscription per query-and-args and hand its current value to
 every new subscriber (Convex, most reactive database clients) prefetch by subscribing
-**early**: in the route's `preload` on link intent, held open for a short grace period
+**early**: in the route's `preload` on link intent (`preloadLinks: intentPreload()` on
+the router — without a strategy nothing preloads on hover <!-- upstream:preload-links-opt-in -->), held open for a short grace period
 (seconds) and released at once on error, so a hover while signed out leaves no failure
 for the page to inherit. Skip `intent === "initial"` there — on the first match the page
 subscribes on mount anyway, and an identity-gated read would run before the session is
@@ -1135,6 +1140,14 @@ write and `flush()`: `const { setA, b, dispose } = createRoot((dispose) => { …
 the test — `createRouter({ routes, history: memoryHistory("/orders/42") })` — because
 Testing Library's `render(…, { location })` is typed but not implemented (1.0.0-beta.3). <!-- upstream:testing-library-location -->
 
+An end-to-end test that must wait for hydration of an SSR page waits on a marker set from
+`onHydrationEnd` (`solid-js`, `@experimental`): register it *after* `hydrate()`, e.g.
+`onHydrationEnd(() => { document.documentElement.dataset.hydrated = ""; })`. It fires when
+the hydration phase ends — including when a module preload failed and the markup was left
+non-interactive — so it is a test-tooling marker, never a branch for what the app renders
+(`isHydrating()` / `onSettled` own that). Outside hydration it runs in the next microtask.
+<!-- upstream:hydration-end-experimental -->
+
 `jsxImportSource` for tests and app code is `"@solidjs/web"`, not `"solid-js"`.
 Vite plugin is `@solidjs/vite-plugin`, not `vite-plugin-solid`.
 
@@ -1595,7 +1608,7 @@ Session location is `useLocation` / `useParams`,
 not `Router.paths`.
 
 **Route `preload` starts reads; the page reads them in a memo.** `preload` runs when
-the route matches (and on link hover), so it should kick off the query and return
+the route matches (and ahead of a click under a `preloadLinks` strategy <!-- upstream:preload-links-opt-in -->), so it should kick off the query and return
 nothing; the component reads the same query through a memo that tracks the params:
 
 ```tsx
@@ -1643,9 +1656,16 @@ data that stays fixed while the route is matched. The factory `preload` on
 undefined` per key) — wrap a route in `defineRoute` when `preload` or the component
 needs `params.id: string`.
 
-Link warming: `preload="false"` skips that link's *data* preload; `preloadLinks: false`
-disables automatic link preloading. Intent values are `"initial"` / `"navigate"` /
-`"native"` / `"preload"`. One router per app.
+Link warming is **opt-in**: `createRouter({ routes, preloadLinks: intentPreload() })`
+warms a link's route code and runs its `preload` on hover (after a short delay), focus
+and touch. Without `preloadLinks` nothing preloads ahead of the click. The other
+strategies, all from `@solidjs/router` and combinable as an array: `tapPreload()`
+(pointerdown), `viewportPreload()` and `eagerPreload()` (code only by default, for links
+marked `preload="viewport"` / `preload="eager"`, or every link with `{ all: true }`).
+`preload="false"` on an anchor opts that link out; `usePreloadRoute()` warms a route by
+hand. A boolean `preloadLinks` (the old on/off switch) only warns in dev and preloads
+nothing. <!-- upstream:preload-links-opt-in --> Intent values are `"initial"` /
+`"navigate"` / `"native"` / `"preload"`. One router per app.
 
 Link state needs no component code: the router sets `aria-current="page"` (same path
 and same query — parameter order and hash aside), `data-active` (exact or descendant
@@ -2111,6 +2131,7 @@ how to reuse. Prefer the form on the right.
 | `<form method="get" action={update.url}>` for a mutation | GET forms only for idempotent search; mutations are POST |
 | `window.location.href = ...` / `history.pushState` | `useNavigate()` or `<a href={Router.paths...}>` |
 | `class={{ active: location.pathname === "/about" }}` hand-rolled link state | CSS on `aria-current` / `data-active` (+ `data-pending` via `links: pendingLinks`); `useLinkState` in JSX, `useIsRouting()` for progress bars <!-- upstream:pending-links-opt-in --> |
+| `createRouter({ routes, preloadLinks: true })` (or `false`) | `preloadLinks: intentPreload()` for hover/focus warming; omit the option for none — it takes strategies and a boolean preloads nothing <!-- upstream:preload-links-opt-in --> |
 | `new URLSearchParams(location.search)` hand-rolled query parsing | `useSearchParams()` (setter merges, no scroll); typed via a route `search` schema + `useSearchParams(Router.paths.search)` |
 | `Router.paths.about()` / string-concatenated URLs | static nodes are properties (`Router.paths.about`); calls bind params, then search object and hash |
 | `httpStatus(404)` in a click handler | call it bare in the component / error-fallback body (a scope declaration, not a mutation) |
