@@ -13,7 +13,7 @@ Existing tournament tools are slow, dated in design, and confusing to operate. H
 Differentiators, in order:
 
 1. **Chat operations via MCP** (ADR 0001): an Organizer runs a tournament from their own AI client. Almost no existing tool offers this.
-2. **Zero-friction start** (ADR 0003): no sign-up — create a tournament anonymously in seconds, upgrade to an account later.
+2. **A tournament in a minute** (ADR 0003, amended by ADR 0024 on 2026-10-14): one email code, no password, no profile — then create a tournament in seconds. Registrants still need no account where the Organizer allows it.
 3. **Fast, modern, realtime UI**: spectators watch the bracket update live through the Share Link.
 
 ## North star
@@ -48,10 +48,11 @@ Five families, no custom formats (ADR 0002): single elimination, double eliminat
 
 ## Roles
 
-- **Organizer**: operates everything. Anonymous by default, upgradeable to an account; publishing an Event needs one (ADR 0021).
+- **Organizer**: operates everything, as a member of the Community that owns the Event or tournament (ADR 0023) — every person's first Community is created with their account, so a solo Organizer never sees the difference. An account with a verified email (ADR 0024).
+- **Community**: the named group that owns Events and tournaments and, later, publishes its own Rankings. One owner, any number of organizers; invitations are links (ADR 0023).
 - **Participant / Spectator**: view-only through the Share Link, realtime, no account.
 - **Registrant** (Events): registers for a Track from the Event's page, signed in with a verified email by default or anonymously where the Organizer allows it, and follows their own status (`docs/specs/events.md`).
-- Participant self-reporting of results and co-organizing are post-MVP candidates.
+- Participant self-reporting of results is a post-MVP candidate; co-organizing is specified (`docs/specs/events.md`, slice 2).
 
 ## MVP scope (current plan)
 
@@ -59,9 +60,9 @@ Formats: **single elimination and double elimination.**
 
 Organizer flow: create tournament → enter participants (typed or pasted as a name list; no self-entry) → seeding (random by default, manual reordering) → generate bracket → record results (an outcome plus an optional score) → tournament completes. The app surfaces "in progress / up next" matches; table assignment is out.
 
-Chat: **MCP server** wrapping the same operations API as the web UI. The MCP client authenticates with a token issued from the web UI (to an account with a verified email; an anonymous Organizer attaches one first — ADR 0021). Deferred out of the MVP slice (ADR 0009); the operations-API constraint it imposes is already built.
+Chat: **MCP server** wrapping the same operations API as the web UI. The MCP client authenticates with a token issued from the web UI to the Organizer's account (every Organizer is one, ADR 0024) and acts as them in every Community they belong to (ADR 0023). Deferred out of the MVP slice (ADR 0009); the operations-API constraint it imposes is already built.
 
-Explicitly not in MVP: Discord bot, in-app AI assistant, participant accounts, co-organizers, round robin / Swiss / group stages, payments, ads.
+Explicitly not in MVP: Discord bot, in-app AI assistant, participant accounts, co-organizers (since specified: `docs/specs/events.md`, slice 2), round robin / Swiss / group stages, payments, ads.
 
 ## Design principles
 
@@ -109,7 +110,7 @@ Done: **production deployment** (ADR 0010), live for the owner's design review s
 
 ## Roadmap candidates after MVP
 
-Rough order: luma-style Event hosting with Tracks, registration, and check-in (MCP-operable — the north-star loop starts here, and registration removes the name-typing pain) → Discord bot as the second chat surface, once the operations API covers Events → participant self-reporting and co-organizers (Communities) → remaining format families → Player accounts with claiming of past results → rankings and seasons (community-run and official, feeding seeding) → spectator-page ads → paid-entry tournaments with fee collection.
+Rough order: account sign-in and Communities (the owners of everything an Organizer runs — ADR 0023, 0024; moved ahead on 2026-10-14 because every later rule depends on who owns an Event) → luma-style Event hosting with Tracks, registration, and check-in (MCP-operable — the north-star loop starts here, and registration removes the name-typing pain) → Discord bot as the second chat surface, once the operations API covers Events → participant self-reporting → remaining format families → Player accounts with claiming of past results → rankings and seasons (community-run and official, feeding seeding) → spectator-page ads → paid-entry tournaments with fee collection.
 
 ## Open questions
 
@@ -129,7 +130,7 @@ Deferred deliberately — none of these threaten the domain model, but they must
 - Seeding provenance: record which Ranking edition seeded a bracket
 - Day-of operation under poor venue connectivity (the stack is online-first)
 - Match-call notifications for participants at large events
-- Anti-spam and rate limiting for anonymous tournament and event creation
+- Anti-spam and rate limiting: per-account creation limits (Organizers are accounts, ADR 0024) and the Registrant side's anonymous identities
 - Rendering and querying very large brackets: a major can exceed 2,000 participants — the core design target stays 8–64, but the schema must not hard-cap size
 - Global read latency from a single-region Convex deployment
 - Public read API / data export for communities (roadmap candidate)

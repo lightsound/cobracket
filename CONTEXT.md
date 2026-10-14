@@ -73,7 +73,7 @@ Making an Event, or a tournament's bracket, visible to others; unpublishing take
 _Avoid_: Launch, release, go live (a tournament goes live on its first result)
 
 **Access Grant**:
-A secret link or code that lets its holder perform one action — register, claim an Entry, and later join an Event's organizers. A register Grant works within its own time window and use limit, past its Track's invite-only or hidden setting (an Event-wide one passes invite-only Tracks only), and into a full Track only if it reserves its seats (a single-Track Grant with a use limit may, holding one seat per remaining use). "Invite link" is its everyday name in the UI.
+A secret link or code that lets its holder perform one action — register, claim an Entry, join a Community, take over an Event, or record results on one tournament. A register Grant works within its own time window and use limit, past its Track's invite-only or hidden setting (an Event-wide one passes invite-only Tracks only), and into a full Track only if it reserves its seats (a single-Track Grant with a use limit may, holding one seat per remaining use). "Invite link" is its everyday name in the UI.
 _Avoid_: Token, password, coupon, unlock code
 
 **Visibility**:
@@ -87,12 +87,12 @@ _Avoid_: Attendance, arrival
 ### People
 
 **Organizer**:
-The person who creates a tournament or event and operates it end to end: managing participants, entering results, advancing the tournament.
-_Avoid_: Admin, host, owner
+A member of the Community that owns a tournament or Event, operating it end to end: managing participants, entering results, advancing the tournament. Always an Account. The role of a member — owner or organizer — says which capabilities they hold; "owner" names the one member who manages the Community itself, not an Organizer.
+_Avoid_: Admin, host, co-organizer (an Organizer is one already)
 
 **Community**:
-A named group of organizers that owns Events and can publish its own Rankings.
-_Avoid_: Organization, guild, group
+The named group that owns Events, tournaments, bans, and participant numbers, and can publish its own Rankings; every Organizer acts as a member of one. Each Account gets a first Community, named after the person, that is in no way special. It has exactly one owner, who manages members and the Community itself, and any number of organizers; people join through an Access Grant, an Event is handed to another Community through one, and a Community is deleted by its owner while nothing published is pending.
+_Avoid_: Organization, guild, group, team (a competing team is not a Community)
 
 **Reachable**:
 Said of a user cobracket can actually send a message to, through at least one verified channel such as a confirmed email address. Being signed in is not enough. Waiting states (the Waitlist) and reachable-only Tracks require it.
@@ -119,7 +119,7 @@ Anyone following a tournament without competing in or operating it.
 _Avoid_: Viewer, audience
 
 **Account**:
-A user who has verified an email address by signing in with a one-time code, and so is Reachable. Every user starts as an anonymous identity tied to one browser; verifying an email upgrades it in place, or merges it into the account that already holds that email. Publishing an Event, joining a Waitlist, registering on a reachable-only Track, and using MCP need one. Deleting it removes the person's data and keeps the records they appear in.
+A user who has verified an email address by signing in with a one-time code, and so is Reachable. A Registrant may start as an anonymous identity tied to one browser; verifying an email upgrades it in place, or merges its Entries into the account that already holds that email. Everything on the Organizer side, joining a Waitlist, registering on a reachable-only Track, and using MCP need one. Deleting it removes the person's data and keeps the records they appear in.
 _Avoid_: Profile, login, registered user
 
 **Share Link**:
