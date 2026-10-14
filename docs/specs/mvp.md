@@ -52,9 +52,9 @@ A tournament in seconds, from the web or from chat: an Organizer opens cobracket
 
 **Lifecycle.** (Narrowed by `events.md` and ADR 0016: structure is editable in draft only, and published → draft is allowed before the first result.) Draft (roster and seeding editable, bracket regenerable) → published (bracket visible on the Share Link) → live (first result recorded; roster locked, regeneration locked) → completed (final resolved; automatic). Mid-tournament dropouts are handled by the Organizer recording walkovers match by match; automated DQ cascades are deferred.
 
-**Operations API.** One set of Convex functions covers every Organizer capability; the web UI and the MCP server are both thin clients of it (ADR 0001). MCP tokens are issued and revoked from the web UI, work for anonymous Organizers, and authenticate the MCP server as that Organizer. Stories 18–20 (the tokens and the MCP server itself) are deferred out of the MVP slice (ADR 0009); the single-API constraint they impose is built and stays in force.
+**Operations API.** One set of Convex functions covers every Organizer capability; the web UI and the MCP server are both thin clients of it (ADR 0001). MCP tokens are issued and revoked from the web UI, work for anonymous Organizers (amended 2026-10-14: for accounts with a verified email only, ADR 0021), and authenticate the MCP server as that Organizer. Stories 18–20 (the tokens and the MCP server itself) are deferred out of the MVP slice (ADR 0009); the single-API constraint they impose is built and stays in force.
 
-**Auth.** Convex Auth v2 (preview) Anonymous Sign-In, isolated behind a single auth module exposing only the current Organizer identity; ImportLint enforces the boundary (ADR 0003). No account upgrade flow in MVP.
+**Auth.** Convex Auth v2 (preview) Anonymous Sign-In, isolated behind a single auth module exposing only the current Organizer identity; ImportLint enforces the boundary (ADR 0003). No account upgrade flow in MVP (the upgrade is specified in `events.md`, slice 4; ADR 0021).
 
 **Frontend.** Solid 2.0 per the repo's rules: async data as computations under Loading/Errored boundaries, stores reconciled from Convex subscriptions, keyed `<For>` rows. The Share Link page is a realtime read-only view of the same derived bracket state the Organizer sees. UI strings go through an i18n layer from the first screen; English first, Japanese provided.
 
@@ -73,7 +73,7 @@ A tournament in seconds, from the web or from chat: an Organizer opens cobracket
 
 ## Out of Scope
 
-Events, Tracks, Entries, check-in, participant self-entry and self-reporting, Player accounts and claiming, Communities and co-organizing, rankings/seasons/methods, round robin / Swiss / group stages, third-place matches, automated DQ cascades, late roster additions after the first result, table/station assignment, match-call notifications, Discord bot, in-app AI assistant, payments, ads, account upgrade from anonymous, public/private visibility behavior (field only; private becomes real in `events.md`), custom formats (ADR 0002 — permanently out).
+Events, Tracks, Entries, check-in, participant self-entry and self-reporting, Player accounts and claiming, Communities and co-organizing, rankings/seasons/methods, round robin / Swiss / group stages, third-place matches, automated DQ cascades, late roster additions after the first result, table/station assignment, match-call notifications, Discord bot, in-app AI assistant, payments, ads, account upgrade from anonymous (now `events.md`, slice 4), public/private visibility behavior (field only; private becomes real in `events.md`), custom formats (ADR 0002 — permanently out).
 
 Deferred after the first operational pass (revisit when real use asks for them): a `cancelled` lifecycle status (deletion covers a tournament called off before play; an abandoned live tournament keeps its results — ADR 0011); unpublishing (now in scope, `events.md`); pagination of the Organizer's tournament list (`listMyTournaments` returns the newest 100, which no MVP Organizer approaches); recovery of tournaments whose anonymous session was lost (that is the account-upgrade problem).
 

@@ -48,7 +48,7 @@ Five families, no custom formats (ADR 0002): single elimination, double eliminat
 
 ## Roles
 
-- **Organizer**: operates everything. Anonymous by default, upgradeable to an account.
+- **Organizer**: operates everything. Anonymous by default, upgradeable to an account; publishing an Event needs one (ADR 0021).
 - **Participant / Spectator**: view-only through the Share Link, realtime, no account.
 - **Registrant** (Events): registers for a Track from the Event's page, signed in with a verified email by default or anonymously where the Organizer allows it, and follows their own status (`docs/specs/events.md`).
 - Participant self-reporting of results and co-organizing are post-MVP candidates.
@@ -59,7 +59,7 @@ Formats: **single elimination and double elimination.**
 
 Organizer flow: create tournament → enter participants (typed or pasted as a name list; no self-entry) → seeding (random by default, manual reordering) → generate bracket → record results (an outcome plus an optional score) → tournament completes. The app surfaces "in progress / up next" matches; table assignment is out.
 
-Chat: **MCP server** wrapping the same operations API as the web UI. The MCP client authenticates with a token issued from the web UI (an anonymous Organizer can issue one too). Deferred out of the MVP slice (ADR 0009); the operations-API constraint it imposes is already built.
+Chat: **MCP server** wrapping the same operations API as the web UI. The MCP client authenticates with a token issued from the web UI (to an account with a verified email; an anonymous Organizer attaches one first — ADR 0021). Deferred out of the MVP slice (ADR 0009); the operations-API constraint it imposes is already built.
 
 Explicitly not in MVP: Discord bot, in-app AI assistant, participant accounts, co-organizers, round robin / Swiss / group stages, payments, ads.
 
@@ -71,7 +71,7 @@ Settled in the final audit rounds; each is nearly free on day one and expensive 
 - **Match outcomes are general**: win, loss, draw, walkover, disqualification. Draws exist in some disciplines and round robin is in scope, so "winner required" is never baked into the schema; whether draws are allowed is per-tournament configuration within what the Format permits (elimination formats require a decisive outcome).
 - **Disciplines can alias and merge** from day one: freeform entry will produce "SF6" vs "Street Fighter 6"; the schema must let them merge later with results following, or ranking data rots.
 - **Visibility is a field from day one**: public / unlisted / private on tournaments and events. MVP behavior is unlisted only.
-- **Display names are separable from identity**: a Player can be pseudonymized on request without breaking recorded results or brackets.
+- **Display names are separable from identity**: a Player can be pseudonymized on request without breaking recorded results or brackets (an operator redaction, ADR 0022; account deletion itself keeps names in records).
 - **Participant self-reporting (post-MVP) is symmetric**: either participant of a match can report the result; the opponent confirms or disputes; conflicting reports escalate to the Organizer, whose entry always wins. ADR 0005 (auditable, correctable results) is what makes auto-advancing the bracket on self-reports safe. At major scale (2,000+ participants) this, plus match-call notifications, is what keeps operations light.
 
 ## Monetization hypothesis
