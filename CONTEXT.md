@@ -143,13 +143,21 @@ _Avoid_: Subscription (the mechanism, not the domain term), watch
 ### Rankings
 
 **Ranking**:
-A published standing of Players in a Discipline. Identified by its publisher (cobracket official or a Community), its Method, its aggregation window (a Season or a rolling period), and the scope of results it counts. One publisher can publish several Rankings for the same Discipline, one per Method.
-_Avoid_: Leaderboard, standings (that means placements within one tournament)
+A Community's published reading of public tournament results: a standing of Players in one Discipline under one Method, over the tournaments its publisher chose, computed Season by Season. Any Community publishes one (a person through their own first Community; cobracket official is the operator's Community), counting any non-private tournament it can view without the Organizer's consent, and never more visible than the narrowest tournament it counts.
+_Avoid_: Leaderboard, standings (that means placements within one tournament), power ranking
 
 **Method**:
-The measurement methodology a Ranking uses to turn tournament results into standings (e.g. placement-point tables weighted by tournament size, rating systems).
+One of three fixed ways a Ranking turns results into standings — placement points (with named settings such as tiers, entrants multiplier, field strength, head-to-head, best-N), a rating updated per match, or a manual order over the Players in the counted tournaments. Settings are named knobs with defaults, never a formula.
 _Avoid_: Algorithm, formula
 
 **Season**:
-A publisher-defined time window whose tournament results aggregate into one edition of a Ranking. Each publisher cuts its own windows — official and community seasons over the same Discipline can differ freely.
-_Avoid_: Period, cycle
+One window of a Ranking, cut by its publisher — fixed dates or a rolling length, with the timezone of its boundaries — carrying its own scope of counted tournaments and Method settings, so a change for one Season never moves another. A rolling window is a Season with no end.
+_Avoid_: Period, cycle, edition
+
+**Revision**:
+One stored computation of a Season's standings, with its instant, the tournaments it counted, and the difference from the previous one and its cause. A Season has no frozen final: its last Revision at the window's end is its final standings, and a later correction adds a newer one beside it.
+_Avoid_: Snapshot, version, edition
+
+**Intervention**:
+A hand of a Ranking's publisher that changes what a Revision would otherwise compute — a tournament added or excluded by hand, a tier assigned, a point adjustment, a typed name linked to a Player, a manual reorder — always listed on the Ranking with a reason from a fixed set.
+_Avoid_: Override, correction (that is a result's)

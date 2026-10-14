@@ -32,7 +32,7 @@ Events, registration, rankings, and seasons are direction, not MVP scope; the MV
 - **Brackets are published before event day** — players prepare, spectators anticipate matchups. Check-in (QR-based, luma-style) confirms attendance; no-shows become Walkovers, never a regenerated bracket.
 - **Event mechanics follow luma as the reference**: capacity, approval-based registration, waitlists, invitations/unlock codes for invited players, QR check-in with express scanning. Recurring events are served by cloning an Event (participants reset, everything else copied) rather than a recurrence system.
 - **Season windows are defined by the ranking's publisher**, not globally: cobracket official might publish semiannually while a community runs monthly windows over the same discipline. Windows can also be rolling (ATP-style "last 12 months"), not only fixed seasons.
-- cobracket official can publish **multiple rankings per discipline**, one per measurement Method; each Ranking also scopes which tournaments it counts (a community counts its own events; official counts the discipline at large).
+- **Any Community publishes Rankings** (ADR 0025): a person through their own first Community, cobracket official through the operator's. A Ranking is a publisher's reading of public results — it counts the tournaments its publisher chooses, by condition or by hand, without the Organizer's consent and never more visibly than the tournaments themselves — and every intervention and every recomputation is on record (Revisions). One publisher can publish several Rankings per discipline, each under one Method; Methods are three fixed types with named settings, never formulas (ADR 0026).
 - **Rankings attach to Players, not Participants.** The dependency chain this creates: participant self-entry and Player accounts (with claiming of organizer-entered results) must exist before rankings can.
 - Disciplines are **freeform at first** (organizer-entered with suggestions); official curation arrives only where official rankings do.
 
@@ -49,7 +49,7 @@ Five families, no custom formats (ADR 0002): single elimination, double eliminat
 ## Roles
 
 - **Organizer**: operates everything, as a member of the Community that owns the Event or tournament (ADR 0023) — every person's first Community is created with their account, so a solo Organizer never sees the difference. An account with a verified email (ADR 0024).
-- **Community**: the named group that owns Events and tournaments and, later, publishes its own Rankings. One owner, any number of organizers; invitations are links (ADR 0023).
+- **Community**: the named group that owns Events and tournaments and publishes Rankings (ADR 0025: any Community may, over any non-private tournaments it can view). One owner, any number of organizers; invitations are links (ADR 0023).
 - **Participant / Spectator**: view-only through the Share Link, realtime, no account.
 - **Registrant** (Events): registers for a Track from the Event's page, signed in with a verified email by default or anonymously where the Organizer allows it, and follows their own status (`docs/specs/events.md`).
 - Participant self-reporting of results is a post-MVP candidate; co-organizing is specified (`docs/specs/events.md`, slice 2).
@@ -110,12 +110,11 @@ Done: **production deployment** (ADR 0010), live for the owner's design review s
 
 ## Roadmap candidates after MVP
 
-Rough order: account sign-in and Communities (the owners of everything an Organizer runs — ADR 0023, 0024; moved ahead on 2026-10-14 because every later rule depends on who owns an Event) → luma-style Event hosting with Tracks, registration, and check-in (MCP-operable — the north-star loop starts here, and registration removes the name-typing pain) → Discord bot as the second chat surface, once the operations API covers Events → participant self-reporting → remaining format families → Player accounts with claiming of past results → rankings and seasons (community-run and official, feeding seeding) → spectator-page ads → paid-entry tournaments with fee collection.
+Rough order: account sign-in and Communities (the owners of everything an Organizer runs — ADR 0023, 0024; moved ahead on 2026-10-14 because every later rule depends on who owns an Event) → luma-style Event hosting with Tracks, registration, and check-in (MCP-operable — the north-star loop starts here, and registration removes the name-typing pain) → Discord bot as the second chat surface, once the operations API covers Events → participant self-reporting → remaining format families → Player accounts with claiming of past results → Rankings and Seasons (ADR 0025, 0026: manual first, then placement points, then ratings; feeding seeding) → spectator-page ads → paid-entry tournaments with fee collection.
 
 ## Open questions
 
 - **Team competitions**: some disciplines are inherently team-based. Whether rankings score the team, its members, or both is unresolved.
-- **Official-ranking eligibility**: anyone can host events, so official Rankings cannot count arbitrary tournaments — farmed or fake events must not move official standings. The eligibility criteria (minimum size, community reputation, manual curation, verified events) are unresolved.
 - **Claim verification**: how a Player's claim of an organizer-entered Participant record is verified, and how disputes are handled.
 
 ## Spec-stage checklist
@@ -125,9 +124,7 @@ Deferred deliberately — none of these threaten the domain model, but they must
 - Walkover cascades: mid-tournament withdrawal or disqualification propagation rules
 - Best-of-N match detail (per-game results) as an additive extension to the outcome-plus-score result
 - Composite format modeling: whether group-stage-into-playoffs is one tournament with phases or chained tournaments
-- Season boundaries and timezones (store UTC; the publisher picks the boundary timezone)
 - Spectator-scale reads: a popular Share Link can have orders of magnitude more viewers than participants
-- Seeding provenance: record which Ranking edition seeded a bracket
 - Day-of operation under poor venue connectivity (the stack is online-first)
 - Match-call notifications for participants at large events
 - Anti-spam and rate limiting: per-account creation limits (Organizers are accounts, ADR 0024) and the Registrant side's anonymous identities
