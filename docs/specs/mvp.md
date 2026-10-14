@@ -8,7 +8,7 @@ An Organizer who wants to run a small community tournament (8–64 participants,
 
 ## Solution
 
-A tournament in seconds, from the web or from chat: an Organizer opens cobracket, creates a Tournament with zero sign-up (anonymous identity, ADR 0003), enters participant names, generates a single- or double-elimination Bracket, and runs the whole thing — results, progression, completion — from a fast realtime UI or from their own AI client through the cobracket MCP server (ADR 0001). Everyone else follows along live through a Share Link, no account needed.
+A tournament in seconds, from the web or from chat: an Organizer opens cobracket, signs in with one email code (ADR 0024, amending the zero sign-up of ADR 0003; the tournament is owned by their Community, ADR 0023), creates a Tournament, enters participant names, generates a single- or double-elimination Bracket, and runs the whole thing — results, progression, completion — from a fast realtime UI or from their own AI client through the cobracket MCP server (ADR 0001). Everyone else follows along live through a Share Link, no account needed.
 
 ## User Stories
 
@@ -36,7 +36,7 @@ A tournament in seconds, from the web or from chat: an Organizer opens cobracket
 22. As a Spectator, I want the Share Link to work with no account and update in real time, so that following the tournament is effortless.
 23. As a Spectator, I want final standings visible on the Share Link after completion, so that the record of the tournament persists.
 24. As an Organizer, I want the UI in English or Japanese, so that my community can use it in its own language.
-25. As a returning Organizer, I want my anonymous identity to persist in my browser, so that my tournaments are still mine when I come back.
+25. As a returning Organizer, I want my tournaments to be mine when I come back — originally through an anonymous identity persisted in the browser, since 2026-10-14 through my account (ADR 0024: the Organizer side requires an email account; a session persists in the browser as before).
 26. As an Organizer, I want to rename the Tournament, fix its Discipline, or change its Format before play starts, so that a typo or a wrong choice at creation does not stick to the Share Link I already sent.
 27. As an Organizer, I want to delete a Tournament, so that test runs and mistakes do not clutter my list, and a tournament called off before play stops showing a bracket on its Share Link.
 
@@ -52,9 +52,9 @@ A tournament in seconds, from the web or from chat: an Organizer opens cobracket
 
 **Lifecycle.** (Narrowed by `events.md` and ADR 0016: structure is editable in draft only, and published → draft is allowed before the first result.) Draft (roster and seeding editable, bracket regenerable) → published (bracket visible on the Share Link) → live (first result recorded; roster locked, regeneration locked) → completed (final resolved; automatic). Mid-tournament dropouts are handled by the Organizer recording walkovers match by match; automated DQ cascades are deferred.
 
-**Operations API.** One set of Convex functions covers every Organizer capability; the web UI and the MCP server are both thin clients of it (ADR 0001). MCP tokens are issued and revoked from the web UI, work for anonymous Organizers (amended 2026-10-14: for accounts with a verified email only, ADR 0021), and authenticate the MCP server as that Organizer. Stories 18–20 (the tokens and the MCP server itself) are deferred out of the MVP slice (ADR 0009); the single-API constraint they impose is built and stays in force.
+**Operations API.** One set of Convex functions covers every Organizer capability; the web UI and the MCP server are both thin clients of it (ADR 0001). MCP tokens are issued and revoked from the web UI, work for anonymous Organizers (amended 2026-10-14: every Organizer is an account with a verified email, ADR 0024, and a token acts as the person in every Community they belong to, ADR 0023), and authenticate the MCP server as that Organizer. Stories 18–20 (the tokens and the MCP server itself) are deferred out of the MVP slice (ADR 0009); the single-API constraint they impose is built and stays in force.
 
-**Auth.** Convex Auth v2 (preview) Anonymous Sign-In, isolated behind a single auth module exposing only the current Organizer identity; ImportLint enforces the boundary (ADR 0003). No account upgrade flow in MVP (the upgrade is specified in `events.md`, slice 4; ADR 0021).
+**Auth.** Convex Auth v2 (preview) Anonymous Sign-In, isolated behind a single auth module exposing only the current Organizer identity; ImportLint enforces the boundary (ADR 0003). No account upgrade flow in MVP (the upgrade is specified in `events.md`, slice 1; ADR 0021). Amended 2026-10-14 (ADR 0024): the Organizer side requires an email account, built as `events.md` slice 1; the anonymous identity remains for Registrants.
 
 **Frontend.** Solid 2.0 per the repo's rules: async data as computations under Loading/Errored boundaries, stores reconciled from Convex subscriptions, keyed `<For>` rows. The Share Link page is a realtime read-only view of the same derived bracket state the Organizer sees. UI strings go through an i18n layer from the first screen; English first, Japanese provided.
 
@@ -73,7 +73,7 @@ A tournament in seconds, from the web or from chat: an Organizer opens cobracket
 
 ## Out of Scope
 
-Events, Tracks, Entries, check-in, participant self-entry and self-reporting, Player accounts and claiming, Communities and co-organizing, rankings/seasons/methods, round robin / Swiss / group stages, third-place matches, automated DQ cascades, late roster additions after the first result, table/station assignment, match-call notifications, Discord bot, in-app AI assistant, payments, ads, account upgrade from anonymous (now `events.md`, slice 4), public/private visibility behavior (field only; private becomes real in `events.md`), custom formats (ADR 0002 — permanently out).
+Events, Tracks, Entries, check-in, participant self-entry and self-reporting, Player accounts and claiming, Communities and co-organizing (specified in `events.md`, slice 2; ADR 0023), rankings/seasons/methods, round robin / Swiss / group stages, third-place matches, automated DQ cascades, late roster additions after the first result, table/station assignment, match-call notifications, Discord bot, in-app AI assistant, payments, ads, account upgrade from anonymous (now `events.md`, slice 1), public/private visibility behavior (field only; private becomes real in `events.md`), custom formats (ADR 0002 — permanently out).
 
 Deferred after the first operational pass (revisit when real use asks for them): a `cancelled` lifecycle status (deletion covers a tournament called off before play; an abandoned live tournament keeps its results — ADR 0011); unpublishing (now in scope, `events.md`); pagination of the Organizer's tournament list (`listMyTournaments` returns the newest 100, which no MVP Organizer approaches); recovery of tournaments whose anonymous session was lost (that is the account-upgrade problem).
 
