@@ -16,8 +16,9 @@ import { prefetchConvexQuery } from "./lib/convex";
 // while signed out leaves nothing for the page to inherit. Since router
 // 2.0.0-next.38 link preloading is opt-in and none is the default:
 // `preloadLinks: intentPreload()` is what runs these `preload` functions on
-// hover (after a 20ms rest), focus and touch; next.37 preloaded on hover and
-// focus by default.
+// hover (after a 20ms rest), focus and touch. next.37 preloaded on hover by
+// default; its focus and touch listeners were gated on `evt.button`, which
+// those events lack, so they never fired.
 //
 // `links: pendingLinks` is what acknowledges a navigation's held location
 // write. Router 2.0.0-next.37 made `data-pending` opt-in, and with it the

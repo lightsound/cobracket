@@ -241,7 +241,10 @@ exports must use `{ export: "About" }` — a `.then((m) => ({ default: m.About }
 wrapper hydrates incorrectly (the name is not a call-site literal). A module that is
 not a component (a route table, a parser) takes `lazyModule(() => import("./x"))` from
 `solid-js`: call it (or `.preload()`) for the cached promise, `.peek()` for the module
-once it has landed; the server preloads it before hydration by module id.
+once it has landed (`undefined` before that, and on the client after a hydration
+miss). A server render that reads `.peek()` registers the module by id so the client
+has it before hydration, holding the shell while it loads; `.preload()` on the server
+only hints assets.
 
 ### Dynamic component: `dynamic()` (canonical)
 
@@ -1141,8 +1144,13 @@ the test — `createRouter({ routes, history: memoryHistory("/orders/42") })` �
 Testing Library's `render(…, { location })` is typed but not implemented (1.0.0-beta.3). <!-- upstream:testing-library-location -->
 
 An end-to-end test that must wait for hydration of an SSR page waits on a marker set from
-`onHydrationEnd` (`solid-js`, `@experimental`): register it *after* `hydrate()`, e.g.
-`onHydrationEnd(() => { document.documentElement.dataset.hydrated = ""; })`. It fires when
+`onHydrationEnd` (`solid-js`, `@experimental`), registered while hydration is running:
+after `hydrate()` in an authored entry, or — under `start: true`, where the plugin
+generates the entry and calls `hydrate()` after importing `App` — from the `App`
+component body (`if (!isServer) onHydrationEnd(() => { document.documentElement.dataset.hydrated = ""; });`;
+the server version also runs the callback, where `document` does not exist). Registered
+at `App.tsx` module scope it runs before hydration starts, in the next microtask, ahead
+of the streamed boundaries it was meant to wait for. It fires when
 the hydration phase ends — including when a module preload failed and the markup was left
 non-interactive — so it is a test-tooling marker, never a branch for what the app renders
 (`isHydrating()` / `onSettled` own that). Outside hydration it runs in the next microtask.
@@ -1662,8 +1670,11 @@ and touch. Without `preloadLinks` nothing preloads ahead of the click. The other
 strategies, all from `@solidjs/router` and combinable as an array: `tapPreload()`
 (pointerdown), `viewportPreload()` and `eagerPreload()` (code only by default, for links
 marked `preload="viewport"` / `preload="eager"`, or every link with `{ all: true }`).
-`preload="false"` on an anchor opts that link out; `usePreloadRoute()` warms a route by
-hand. A boolean `preloadLinks` (the old on/off switch) only warns in dev and preloads
+`preload="false"` on an anchor opts that link out of every strategy — the **string**:
+the types also accept `preload={false}`, but a `false` attribute is removed, so that link
+is still preloaded. `usePreloadRoute()` warms a route by hand (code only;
+`{ preloadData: true }` also runs its `preload`). A boolean `preloadLinks` (the old
+on/off switch) is a type error, and at runtime it only warns in dev and preloads
 nothing. <!-- upstream:preload-links-opt-in --> Intent values are `"initial"` /
 `"navigate"` / `"native"` / `"preload"`. One router per app.
 
@@ -2008,8 +2019,13 @@ existing Express / Fastify app, mount the `listener` that file exports — do no
 hand-write a Node↔web bridge (`node dist/server/server.js` starts nothing: it is the
 handler module). Client-only `start: true` is still static `dist/client`
 — there is no handler to wrap. Request middleware is the Vite option
-`start: { middleware: "./src/middleware.ts" }` (web `Request` + `next`), not
-Express `app.use`. Server functions that return components
+`start: { middleware: "./src/middleware.ts" }`, not Express `app.use`: its default
+export is `(event, next) => Response` (type `StartMiddleware` from
+`@solidjs/vite-plugin`), or an array of them. The request is `event.request`; `next()`
+takes no arguments — assign `event.request` first to substitute it, and set per-request
+render inputs (`event.nonce`, `event.renderMode`) before calling it. A `(request, next)`
+middleware written from older examples receives the event as `request`.
+<!-- upstream:start-middleware-event --> Server functions that return components
 (`serverFunctions: { components: true }`) are experimental preview — do not use
 them unless the project already has that flag on.
 
@@ -2131,7 +2147,8 @@ how to reuse. Prefer the form on the right.
 | `<form method="get" action={update.url}>` for a mutation | GET forms only for idempotent search; mutations are POST |
 | `window.location.href = ...` / `history.pushState` | `useNavigate()` or `<a href={Router.paths...}>` |
 | `class={{ active: location.pathname === "/about" }}` hand-rolled link state | CSS on `aria-current` / `data-active` (+ `data-pending` via `links: pendingLinks`); `useLinkState` in JSX, `useIsRouting()` for progress bars <!-- upstream:pending-links-opt-in --> |
-| `createRouter({ routes, preloadLinks: true })` (or `false`) | `preloadLinks: intentPreload()` for hover/focus warming; omit the option for none — it takes strategies and a boolean preloads nothing <!-- upstream:preload-links-opt-in --> |
+| `createRouter({ routes, preloadLinks: true })` (or `false`) | `preloadLinks: intentPreload()` for hover/focus/touch warming; omit the option for none — it takes strategies and a boolean preloads nothing <!-- upstream:preload-links-opt-in --> |
+| `<a href={...} preload={false}>` to skip warming one link | `preload="false"` (the string) — a `false` attribute is removed, so the link is still preloaded <!-- upstream:preload-links-opt-in --> |
 | `new URLSearchParams(location.search)` hand-rolled query parsing | `useSearchParams()` (setter merges, no scroll); typed via a route `search` schema + `useSearchParams(Router.paths.search)` |
 | `Router.paths.about()` / string-concatenated URLs | static nodes are properties (`Router.paths.about`); calls bind params, then search object and hash |
 | `httpStatus(404)` in a click handler | call it bare in the component / error-fallback body (a scope declaration, not a mutation) |
