@@ -111,7 +111,7 @@ A tournament's Participants taken as a whole. For a Track's tournament it follow
 _Avoid_: Participant list, lineup, entrant list
 
 **Player**:
-The persistent identity of a competitor across tournaments: a record holding no personal data, created at a person's first Entry and kept after their account is deleted. Self-made Entries link to a Player automatically; organizer-entered Participants can be claimed by their Player later. Rankings attach to Players, not Participants.
+The persistent identity of a competitor across tournaments: a record holding no contact data (it still links one person's records, so it is personal data in law), created at a person's first Entry and kept after their account is deleted. Self-made Entries link to a Player automatically; organizer-entered Participants can be claimed by their Player later. Rankings attach to Players, not Participants.
 _Avoid_: User, member
 
 **Spectator**:

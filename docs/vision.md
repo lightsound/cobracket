@@ -71,7 +71,7 @@ Settled in the final audit rounds; each is nearly free on day one and expensive 
 - **Match outcomes are general**: win, loss, draw, walkover, disqualification. Draws exist in some disciplines and round robin is in scope, so "winner required" is never baked into the schema; whether draws are allowed is per-tournament configuration within what the Format permits (elimination formats require a decisive outcome).
 - **Disciplines can alias and merge** from day one: freeform entry will produce "SF6" vs "Street Fighter 6"; the schema must let them merge later with results following, or ranking data rots.
 - **Visibility is a field from day one**: public / unlisted / private on tournaments and events. MVP behavior is unlisted only.
-- **Display names are separable from identity**: a Player can be pseudonymized on request without breaking recorded results or brackets.
+- **Display names are separable from identity**: a Player can be pseudonymized on request without breaking recorded results or brackets (an operator redaction, ADR 0022; account deletion itself keeps names in records).
 - **Participant self-reporting (post-MVP) is symmetric**: either participant of a match can report the result; the opponent confirms or disputes; conflicting reports escalate to the Organizer, whose entry always wins. ADR 0005 (auditable, correctable results) is what makes auto-advancing the bracket on self-reports safe. At major scale (2,000+ participants) this, plus match-call notifications, is what keeps operations light.
 
 ## Monetization hypothesis
