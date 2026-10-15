@@ -153,7 +153,7 @@ A standing list of Players a Community keeps for competition — several per Com
 _Avoid_: Roster (that is a tournament's Participants), lineup, team (a Squad is a team's standing list of players, not the team)
 
 **Entrant**:
-A person on an Entry: invited or requested before consenting, active while on the team, then declined, left, or removed. Carries whether they play (a coach does not) and, on an ad-hoc team, whether they are its captain — the one playing Entrant who acts for the team; a Squad's Entry has no captain, its staff act for it. On a one-player Track the Entry's single Entrant.
+A person on an Entry: invited or requested before consenting, active while on the team, then declined, left, or removed. Carries whether they play (a coach does not) and, on an ad-hoc team, whether they are its captain — the one playing Entrant who acts for the team; a Squad's Entry has no captain while its Squad link is live, its staff act for it. On a one-player Track the Entry's single Entrant.
 _Avoid_: Member (in the UI that is the Japanese word for it, but in English a member is a Community's), player (that is the cross-tournament identity)
 
 **Lineup**:
