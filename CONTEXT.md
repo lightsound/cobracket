@@ -81,7 +81,7 @@ A secret link or code that lets its holder perform one action — register, clai
 _Avoid_: Token, password, coupon, unlock code
 
 **Visibility**:
-Who may open something that is published: unlisted (anyone holding its link, the default) or private (only its Organizer, people with an active Entry in it, holders of an Access Grant they can still act on, and — for their own bracket only — withdrawn Participants). It only narrows from Event to Track to tournament; a hidden Track is private within its Event. Public — findable without a link — is reserved for when cobracket has a directory.
+Who may open something that is published: unlisted (anyone holding its link, the default) or private (only its Organizer, people with an active Entry in it, holders of an Access Grant they can still act on, and — for their own bracket only — withdrawn Participants). It only narrows from Event to Track to tournament; a hidden Track is private within its Event. A Community page has a Visibility too (ADR 0028): private there means its members only. Public — findable without a link — is reserved for when cobracket has a directory.
 _Avoid_: Privacy, access level, audience
 
 **Check-in**:
@@ -145,7 +145,7 @@ _Avoid_: Block, blacklist
 ### Teams
 
 **Team**:
-The everyday word for a Community that carries a Squad, and, in a tournament, for an Entry with more than one playing Entrant. Not a kind of record: a persistent team is a Community, a team in a bracket is an Entry. An Entry without a Squad link is an _ad-hoc_ team, acting through its captain — the one playing Entrant carrying the captain flag; a Squad-linked Entry acts through the Squad's staff.
+The everyday word for a Community that carries a Squad, and, in a tournament, for an Entry with more than one playing Entrant. Not a kind of record: a persistent team is a Community, a team in a bracket is an Entry. An Entry without a Squad link is an _ad-hoc_ team, acting through its captain — the one playing Entrant carrying the captain flag; a Squad-linked Entry acts through the Squad's staff while its link is live.
 _Avoid_: Crew, clan, roster (as the team itself)
 
 **Squad**:
