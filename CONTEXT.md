@@ -48,6 +48,10 @@ _Avoid_: Meetup, gathering. (Beware: start.gg inverts this vocabulary — its "t
 A registration unit within an Event that participants enter: one game's competition, or the pro and amateur splits of the same game. Open to anyone who can see the Event, invite-only, or hidden. A Track may later run a tournament, and may declare other Tracks it cannot be combined with.
 _Avoid_: Division, slot, sub-event
 
+**Registration requirement**:
+A Track's setting saying who may be an Entrant — one ladder of three rungs: anonymous allowed (anonymous identities, and a captain may type a name with a claim link) ⊂ account required (the default: every Entrant is an Account with a verified email, that is, Reachable; typed names only by the Organizer) ⊂ Squad-linked teams only (every Entry links a Squad). It applies to every Entrant of every Entry on the Track.
+_Avoid_: Reachable-only, verified-only, open
+
 **Entry**:
 The unit that takes one place on a Track's registration list — a team, or on a one-player Track a single person: forming while it has no seat yet; confirmed, waitlisted, or holding an Offer while active; cancelled, removed, or lapsed once it has ended (ended Entries are kept, visible to the Organizer only). The people on it are its Entrants. Made by its captain or a Squad's staff, or by the Organizer on someone's behalf by name alone. When the Track runs a tournament, confirmed Entries flow into its draft Roster until the Organizer pins it, and after that only as changes the Organizer applies.
 _Avoid_: Application, sign-up, registration (that is the act)
@@ -61,11 +65,11 @@ The number of confirmed Entries a Track accepts. Unset means unlimited. A confir
 _Avoid_: Limit, slots
 
 **Waitlist**:
-The ordered queue of Entries waiting for a Track's Capacity to free up. Only Registrants the platform can reach may join it.
+The ordered queue of Entries waiting for a Track's Capacity to free up. Its unit is the Entry; only an Entry whose captain is Reachable, or that is Squad-linked, joins it.
 _Avoid_: Queue, standby, reserve list
 
 **Offer**:
-A freed place held for a limited time for the next waitlisted Registrant who chose to be asked first (by default a freed place confirms the next person at once); accepting it confirms the Entry, and declining it or letting it expire ends the Entry as lapsed; if the Track stops accepting registrations first, it returns to the Waitlist with the person's place kept.
+A freed place held for a limited time for the next waitlisted Entry that chose to be asked first (by default a freed place confirms the next Entry at once), taken by the Entry's captain or by a Squad's staff; accepting it confirms the Entry, and declining it or letting it expire ends the Entry as lapsed; if the Track stops accepting registrations first, it returns to the Waitlist with the Entry's place kept.
 _Avoid_: Promotion, invitation (that is a separate, Organizer-initiated mechanism)
 
 **Publish**:
@@ -73,7 +77,7 @@ Making an Event, or a tournament's bracket, visible to others; unpublishing take
 _Avoid_: Launch, release, go live (a tournament goes live on its first result)
 
 **Access Grant**:
-A secret link or code that lets its holder perform one action — register, claim an Entry, join a Community, take over an Event, move a Community under another, or record results on one tournament. A register Grant works within its own time window and use limit, past its Track's invite-only or hidden setting (an Event-wide one passes invite-only Tracks only), and into a full Track only if it reserves its seats (a single-Track Grant with a use limit may, holding one seat per remaining use); one scoped to a single Entry is a team's join link, admitting Entrants onto that Entry. "Invite link" is its everyday name in the UI.
+A secret link or code that lets its holder perform one action — register, claim a typed-name Entrant of an Entry, join a Community, take over an Event, move a Community under another, or record results on one tournament. A register Grant works within its own time window and use limit, past its Track's invite-only or hidden setting (an Event-wide one passes invite-only Tracks only), and into a full Track only if it reserves its seats (a single-Track Grant with a use limit may, holding one seat per remaining use); one scoped to a single Entry is a team's join link, admitting Entrants onto that Entry. "Invite link" is its everyday name in the UI.
 _Avoid_: Token, password, coupon, unlock code
 
 **Visibility**:
@@ -87,15 +91,15 @@ _Avoid_: Attendance, arrival
 ### People
 
 **Organizer**:
-A member of the Community that owns a tournament or Event, operating it end to end: managing participants, entering results, advancing the tournament. Always an Account. The role of a member — owner or organizer — says which capabilities they hold; "owner" names the one member who manages the Community itself, not an Organizer.
-_Avoid_: Admin, host, co-organizer (an Organizer is one already)
+A member of the Community that owns a tournament or Event, operating it end to end: managing participants, entering results, advancing the tournament. Always an Account. The role of a member — owner, admin, or organizer — says which capabilities they hold; "owner" names the one member who manages the Community itself, not an Organizer, and "admin" the members who govern it beside the owner.
+_Avoid_: Admin as a word for an Organizer (it is a member's role), host, co-organizer (an Organizer is one already)
 
 **Community**:
-The named group that owns Events, tournaments, bans, and participant codes, can publish its own Rankings, and may carry Squads of players; every Organizer acts as a member of one, and a Community with a Squad is what everyone calls a team. Each Account gets a first Community, named after the person, that is in no way special. It has exactly one owner, who manages members and the Community itself, and any number of organizers; people join through an Access Grant, an Event is handed to another Community through one, and a Community is deleted by its owner while nothing published is pending. Communities nest under exactly one parent, three deep: the parent's owner and admin govern the children and the parent's bans apply to them.
+The named group that owns Events, tournaments, bans, and participant codes, can publish its own Rankings, and may carry Squads of players; every Organizer acts as a member of one, and a Community with a Squad is what everyone calls a team. Each Account gets a first Community, named after the person, that is in no way special. It has exactly one owner, who manages members and the Community itself, any number of admins, who govern it beside the owner, and any number of organizers; people join through an Access Grant, an Event is handed to another Community through one, and a Community is deleted by its owner while nothing published is pending. Communities nest under exactly one parent, three deep: the parent's owner and admin govern the children and the parent's bans apply to them.
 _Avoid_: Organization, guild, group, club (all of these are Communities)
 
 **Reachable**:
-Said of a user cobracket can actually send a message to, through at least one verified channel such as a confirmed email address. Being signed in is not enough. Waiting states (the Waitlist) and reachable-only Tracks require it.
+Said of a user cobracket can actually send a message to, through at least one verified channel such as a confirmed email address. Being signed in is not enough. Waiting states (the Waitlist) and account-required Tracks require it.
 _Avoid_: Verified, registered, logged in
 
 **Registrant**:
@@ -111,7 +115,7 @@ A tournament's Participants taken as a whole. For a Track's tournament it follow
 _Avoid_: Participant list, entrant list, squad (a Squad is a team's standing roster; a Lineup is who played)
 
 **Player**:
-The persistent identity of a competitor across tournaments: a record holding no contact data (it still links one person's records, so it is personal data in law), created at a person's first Entry and kept after their account is deleted. Self-made Entrants link to a Player automatically; typed-name Entrants are claimed by their Player later. Merging two identities keeps both rows, one as an alias, so no stored standing loses its key. Rankings attach to Players, not Participants.
+The persistent identity of a competitor across tournaments: a record holding no contact data (it still links one person's records, so it is personal data in law), created at a person's first Entry and kept after their account is deleted. Self-made Entrants link to a Player automatically; typed-name Entrants are claimed by their Player later. Merging two identities keeps both rows, one as an alias, so no stored standing loses its key. Rankings attach to Players or to chains of Entries, never to Participants.
 _Avoid_: User, member
 
 **Spectator**:
@@ -119,7 +123,7 @@ Anyone following a tournament without competing in or operating it.
 _Avoid_: Viewer, audience
 
 **Account**:
-A user who has verified an email address by signing in with a one-time code, and so is Reachable. A Registrant may start as an anonymous identity tied to one browser; verifying an email upgrades it in place, or merges its Entries into the account that already holds that email. Everything on the Organizer side, joining a Waitlist, registering on a reachable-only Track, and using MCP need one. Deleting it removes the person's data and keeps the records they appear in.
+A user who has verified an email address by signing in with a one-time code, and so is Reachable. A Registrant may start as an anonymous identity tied to one browser; verifying an email upgrades it in place, or merges its Entries into the account that already holds that email. Everything on the Organizer side, joining a Waitlist, registering on an account-required Track, and using MCP need one. Deleting it removes the person's data and keeps the records they appear in.
 _Avoid_: Profile, login, registered user
 
 **Share Link**:
@@ -131,8 +135,12 @@ A signed-in account's notice to the operator that something on cobracket is abus
 _Avoid_: Flag, complaint
 
 **Suspension**:
-The operator's sanction on an account, a Community, or an Event. A suspended Event stops everything that reaches other people and is kept intact; a suspended person can only sign in to see why, reach the operator, read their own data, or delete the account. Distinct from a Community's ban and an Organizer's block.
-_Avoid_: Ban (a Community's), block (a Track's), takedown
+The operator's sanction on an account, a Community, or an Event. A suspended Event stops everything that reaches other people and is kept intact; a suspended person can only sign in to see why, reach the operator, read their own data, or delete the account. Distinct from a Sanction, which an Organizer or a Community sets.
+_Avoid_: Ban, block (both are Sanctions), takedown
+
+**Sanction**:
+One row that replaces the Organizer's block and the Community's ban. Its scope is a Track or a Community — a Community-scope Sanction is a ban and reads along the tree, binding the Community's descendants — and its target a person or a Community. Set by the Organizer from an Entrant row; lifted by the Organizer (Track scope) or by the banning Community's owner or admin (Community scope), which ends the row and reinstates nothing. Stored per person and never shown to anyone else; a dormant row keeps the person's participant code.
+_Avoid_: Block, blacklist
 
 ### Teams
 
@@ -141,7 +149,7 @@ The everyday word for a Community that carries a Squad, and, in a tournament, fo
 _Avoid_: Crew, clan, roster (as the team itself)
 
 **Squad**:
-A roster of Players a Community keeps for competition — several per Community if it fields more than one unit. Joining one needs an Account and is standing consent to be entered in tournaments by the Community's staff; it confers no permission; each member may carry one display label (coach, sub, …). Named by the Community's name, plus its own where the Community has several.
+A roster of Players a Community keeps for competition — several per Community if it fields more than one unit. Its players are called Squad members; a Community's people are members. Joining one needs an Account and is standing consent to be entered in tournaments by the Community's staff; it confers no permission; each Squad member may carry one display label (coach, sub, …). "Staff" means the Community's members acting for its Squads and Squad-linked Entries, whatever their role: every member (owner, admin, organizer, staff) may operate a Squad-linked Entry — register it, set its lineup, accept or decline an Offer, cancel it — while creating or deleting a Squad and editing its roster and labels take the owner, admin, or organizer, and removing a player from a descendant's Squad takes the ancestor's owner or admin. Named by the Community's name, plus its own where the Community has several.
 _Avoid_: Roster (that is a tournament's Participants), lineup, team (a Squad is a team's roster, not the team)
 
 **Entrant**:
