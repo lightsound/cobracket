@@ -197,5 +197,5 @@ One stored computation of a Season's standings, with its instant, the tournament
 _Avoid_: Snapshot, version, edition
 
 **Intervention**:
-A hand of a Ranking's publisher that changes what a Revision would otherwise compute — a tournament added or excluded by hand, a tier assigned, a point adjustment (on a team or on a Player, across every team they are on), a typed name linked to a Player, an Entry declared a new team or the same team as an earlier one, a manual reorder — always listed on the Ranking with a reason from a fixed set.
+A hand of a Ranking's publisher that changes what a Revision would otherwise compute — a tournament added or excluded by hand, a tier assigned, a point adjustment or an exclusion (on a team or on a Player, across every team they are on), a typed name linked to a Player, an Entry declared a new team or the same team as an earlier one, a manual reorder — always listed on the Ranking with a reason from a fixed set.
 _Avoid_: Override, correction (that is a result's)
