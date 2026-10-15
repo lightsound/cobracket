@@ -108,7 +108,7 @@ Re-sequenced 2026-09-27 by the owner: the project is a way to exercise Convex an
 
 Done: **production deployment** (ADR 0010), live for the owner's design review since 2026-09-27.
 
-**MCP (stories 18–20) is at the owner's discretion** (ADR 0009): built when the owner wants to build it, with no trigger to wait for. The single operations API it depends on stays in force, so that choice stays open.
+**MCP (`mvp.md` stories 18–20) is at the owner's discretion** (ADR 0009): built when the owner wants to build it, with no trigger to wait for. The single operations API it depends on stays in force, so that choice stays open.
 
 ## Roadmap candidates after MVP
 
