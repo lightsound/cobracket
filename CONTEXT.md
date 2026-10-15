@@ -107,7 +107,7 @@ A person with an active Entrant row on an Entry of a Track (or an ended one, for
 _Avoid_: Applicant, attendee, member (that is a Community's)
 
 **Participant**:
-A person or team competing in one tournament — a tournament-local record standing for one Entry on a Track's tournament (a standalone tournament has none); for a team it keeps, once the tournament completes, the Players credited with its placement (the Lineup of at least one of its matches).
+A person or team competing in one tournament — a tournament-local record standing for one Entry on a Track's tournament (a standalone tournament has none); once the tournament completes, it keeps the Players credited with its placement (the Lineup of at least one of its matches; the one Player on a one-player Track).
 _Avoid_: Player (that means the cross-tournament identity), competitor
 
 **Roster**:
