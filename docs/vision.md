@@ -33,6 +33,7 @@ Events, registration, rankings, and seasons are direction, not MVP scope; the MV
 - **Event mechanics follow luma as the reference**: capacity, approval-based registration, waitlists, invitations/unlock codes for invited players, QR check-in with express scanning. Recurring events are served by cloning an Event (participants reset, everything else copied) rather than a recurrence system.
 - **Season windows are defined by the ranking's publisher**, not globally: cobracket official might publish semiannually while a community runs monthly windows over the same discipline. Windows can also be rolling (ATP-style "last 12 months"), not only fixed seasons.
 - **Any Community publishes Rankings** (ADR 0025): a person through their own first Community, cobracket official through the operator's. A Ranking is a publisher's reading of public results — it counts the tournaments its publisher chooses, by condition or by hand, without the Organizer's consent and never more visibly than the tournaments themselves — and every intervention and every recomputation is on record (Revisions). One publisher can publish several Rankings per discipline, each under one Method; Methods are three fixed types with named settings, never formulas (ADR 0026).
+- **Abuse limits sit where something reaches other people** (ADR 0027): a robot check where a free identity is minted or a code email is sent, rate limits on the account and size limits on the container, publishing limited rather than drafting, no pre-moderation but reports and operator suspensions, nothing indexed until it is discoverable, and no account recovery on someone's word — the operator decides what is allowed, never who someone is.
 - **Rankings attach to Players, not Participants.** The dependency chain this creates: participant self-entry and Player accounts (with claiming of organizer-entered results) must exist before rankings can.
 - Disciplines are **freeform at first** (organizer-entered with suggestions); official curation arrives only where official rankings do.
 
@@ -127,7 +128,6 @@ Deferred deliberately — none of these threaten the domain model, but they must
 - Spectator-scale reads: a popular Share Link can have orders of magnitude more viewers than participants
 - Day-of operation under poor venue connectivity (the stack is online-first)
 - Match-call notifications for participants at large events
-- Anti-spam and rate limiting: per-account creation limits (Organizers are accounts, ADR 0024) and the Registrant side's anonymous identities
 - Rendering and querying very large brackets: a major can exceed 2,000 participants — the core design target stays 8–64, but the schema must not hard-cap size
 - Global read latency from a single-region Convex deployment
 - Public read API / data export for communities (roadmap candidate)
