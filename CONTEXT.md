@@ -65,7 +65,7 @@ The number of confirmed Entries a Track accepts. Unset means unlimited. A confir
 _Avoid_: Limit, slots
 
 **Waitlist**:
-The ordered queue of Entries waiting for a Track's Capacity to free up. Its unit is the Entry; only an Entry whose captain is Reachable, or that is Squad-linked, joins it.
+The ordered queue of Entries waiting for a Track's Capacity to free up. Its unit is the Entry; only an Entry whose captain is Reachable, or whose Squad link is live, joins it.
 _Avoid_: Queue, standby, reserve list
 
 **Offer**:
@@ -139,7 +139,7 @@ The operator's sanction on an account, a Community, or an Event. A suspended Eve
 _Avoid_: Ban, block (both are Sanctions), takedown
 
 **Sanction**:
-One row that replaces the Organizer's block and the Community's ban. Its scope is a Track or a Community — a Community-scope Sanction is a ban and reads along the tree, binding the Community's descendants — and its target a person or a Community. A person-target row is set from an Entrant row — by the Organizer on a Track, by the banning Community's owner or admin at Community scope — and carries the person and that source Entrant; a Community-target row (a ban on a team, Community scope only) is set by the banning Community's owner or admin from the ban preview or the Community page and carries neither. Lifted by whoever may set it, which ends the row and reinstates nothing. A person-target row is stored per person and never shown to anyone else; a dormant row keeps the person's participant code.
+One row that replaces the Organizer's block and the Community's ban. Its scope is a Track or a Community — a Community-scope Sanction is a ban and reads along the tree, binding the Community's descendants — and its target a person or a Community. A person-target row is set from an Entrant row (or, from the ban preview, from a Squad member with none) — by the Organizer on a Track, by the banning Community's owner or admin at Community scope — and carries the person and that source Entrant; a Community-target row (a ban on a team, Community scope only) is set by the banning Community's owner or admin from the ban preview or the Community page and carries neither. Lifted by whoever may set it, which ends the row and reinstates nothing. A person-target row is stored per person and never shown to anyone else; a dormant row keeps the person's participant code.
 _Avoid_: Block, blacklist
 
 ### Teams
