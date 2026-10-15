@@ -81,7 +81,7 @@ A secret link or code that lets its holder perform one action — register, clai
 _Avoid_: Token, password, coupon, unlock code
 
 **Visibility**:
-Who may open something that is published: unlisted (anyone holding its link, the default) or private (only its Organizer, people with an active Entry in it, holders of an Access Grant they can still act on, and — for their own bracket only — withdrawn Participants). It only narrows from Event to Track to tournament; a hidden Track is private within its Event. A Community page has a Visibility too (ADR 0028): private there means its members only. Public — findable without a link — is reserved for when cobracket has a directory.
+Who may open something that is published: unlisted (anyone holding its link, the default) or private (only its Organizer, people with an active Entry in it, people invited onto an Entry in it, holders of an Access Grant they can still act on, and — for their own bracket only — withdrawn Participants). It only narrows from Event to Track to tournament; a hidden Track is private within its Event. A Community page has a Visibility too (ADR 0028): private there means its members only. Public — findable without a link — is reserved for when cobracket has a directory.
 _Avoid_: Privacy, access level, audience
 
 **Check-in**:
@@ -107,7 +107,7 @@ A person with an active Entrant row on an Entry of a Track (or an ended one, for
 _Avoid_: Applicant, attendee, member (that is a Community's)
 
 **Participant**:
-A person or team competing in one tournament — a tournament-local record standing for one Entry; for a team it keeps, once the tournament completes, the Players credited with its placement (the Lineup of at least one of its matches).
+A person or team competing in one tournament — a tournament-local record standing for one Entry on a Track's tournament (a standalone tournament has none); for a team it keeps, once the tournament completes, the Players credited with its placement (the Lineup of at least one of its matches).
 _Avoid_: Player (that means the cross-tournament identity), competitor
 
 **Roster**:

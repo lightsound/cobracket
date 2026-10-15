@@ -12,7 +12,7 @@ Today a tournament is owned by one user (`tournaments.organizerId`), every permi
 | ------------------------------------------------------------------------------------- | ----- | ----- | --------- | ----- |
 | Delete, rename, or transfer the Community                                             | ✓     |       |           |       |
 | Invite, remove, and re-role members                                                   | ✓     | ✓     |           |       |
-| Hand an Event to another Community; ban a person                                      | ✓     | ✓     |           |       |
+| Hand an Event to another Community; ban a person or a Community (ADR 0028)            | ✓     | ✓     |           |       |
 | Cancel or delete an Event; change any Visibility                                      | ✓     | ✓     | ✓         |       |
 | Create, edit, publish, and delete Rankings (ADR 0025)                                 | ✓     | ✓     | ✓         |       |
 | Create and edit Events and Tracks, publish, issue Grants, announce, connect a webhook | ✓     | ✓     | ✓         |       |
