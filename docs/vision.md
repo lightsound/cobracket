@@ -34,6 +34,7 @@ Events, registration, rankings, and seasons are direction, not MVP scope; the MV
 - **Season windows are defined by the ranking's publisher**, not globally: cobracket official might publish semiannually while a community runs monthly windows over the same discipline. Windows can also be rolling (ATP-style "last 12 months"), not only fixed seasons.
 - **Any Community publishes Rankings** (ADR 0025): a person through their own first Community, cobracket official through the operator's. A Ranking is a publisher's reading of public results — it counts the tournaments its publisher chooses, by condition or by hand, without the Organizer's consent and never more visibly than the tournaments themselves — and every intervention and every recomputation is on record (Revisions). One publisher can publish several Rankings per discipline, each under one Method; Methods are three fixed types with named settings, never formulas (ADR 0026).
 - **Abuse limits sit where something reaches other people** (ADR 0027): a robot check where a free identity is minted or a code email is sent, rate limits on the account and size limits on the container, publishing limited rather than drafting, no pre-moderation but reports and operator suspensions, nothing indexed until it is discoverable, and no account recovery on someone's word — the operator decides what is allowed, never who someone is.
+- **A team is a Community with a Squad, and fans follow it** ([ADR 0028](./0028-teams-are-communities-with-squads.md), 2026-10-15): the owner decided that teams exist as pages across tournaments — their tournaments, strength, members, sponsors — and that a persistent team is simply a Community carrying a roster of Players, Communities nesting under one parent. A team enters a Track as an Entry with several Entrants, forming before it registers ([ADR 0029](./0029-entries-and-entrants-how-teams-register.md)); a team Ranking stands chains of Entries identified by Squad or by shared players, and a team's placement is credited to the players who played ([ADR 0030](./0030-team-rankings-chains-of-entries.md)).
 - **Rankings attach to Players, not Participants.** The dependency chain this creates: participant self-entry and Player accounts (with claiming of organizer-entered results) must exist before rankings can.
 - Disciplines are **freeform at first** (organizer-entered with suggestions); official curation arrives only where official rankings do.
 
@@ -50,7 +51,7 @@ Five families, no custom formats (ADR 0002): single elimination, double eliminat
 ## Roles
 
 - **Organizer**: operates everything, as a member of the Community that owns the Event or tournament (ADR 0023) — every person's first Community is created with their account, so a solo Organizer never sees the difference. An account with a verified email (ADR 0024).
-- **Community**: the named group that owns Events and tournaments and publishes Rankings (ADR 0025: any Community may, over any non-private tournaments it can view). One owner, any number of organizers; invitations are links (ADR 0023).
+- **Community**: the named group that owns Events and tournaments, publishes Rankings (ADR 0025: any Community may, over any non-private tournaments it can view), and may carry Squads of players — which is what a team is (ADR 0028). One owner, any number of organizers; invitations are links (ADR 0023); Communities nest under one parent.
 - **Participant / Spectator**: view-only through the Share Link, realtime, no account.
 - **Registrant** (Events): registers for a Track from the Event's page, signed in with a verified email by default or anonymously where the Organizer allows it, and follows their own status (`docs/specs/events.md`).
 - Participant self-reporting of results is a post-MVP candidate; co-organizing is specified (`docs/specs/events.md`, slice 2).
@@ -111,11 +112,10 @@ Done: **production deployment** (ADR 0010), live for the owner's design review s
 
 ## Roadmap candidates after MVP
 
-Rough order: account sign-in and Communities (the owners of everything an Organizer runs — ADR 0023, 0024; moved ahead on 2026-10-14 because every later rule depends on who owns an Event) → luma-style Event hosting with Tracks, registration, and check-in (MCP-operable — the north-star loop starts here, and registration removes the name-typing pain) → Discord bot as the second chat surface, once the operations API covers Events → participant self-reporting → remaining format families → Player accounts with claiming of past results → Rankings and Seasons (ADR 0025, 0026: manual first, then placement points, then ratings; feeding seeding) → spectator-page ads → paid-entry tournaments with fee collection.
+Rough order: account sign-in and Communities (the owners of everything an Organizer runs — ADR 0023, 0024; moved ahead on 2026-10-14 because every later rule depends on who owns an Event) → luma-style Event hosting with Tracks, registration, and check-in (MCP-operable — the north-star loop starts here, and registration removes the name-typing pain) → Discord bot as the second chat surface, once the operations API covers Events → participant self-reporting → remaining format families → Player accounts with claiming of past results → Rankings and Seasons (ADR 0025, 0026: manual first, then placement points, then ratings; feeding seeding) → teams (ADR 0028–0030: Squads and the Community tree, team Entries, Follows, team Rankings) → spectator-page ads → paid-entry tournaments with fee collection.
 
 ## Open questions
 
-- **Team competitions**: some disciplines are inherently team-based. Whether rankings score the team, its members, or both is unresolved.
 - **Claim verification**: how a Player's claim of an organizer-entered Participant record is verified, and how disputes are handled.
 
 ## Spec-stage checklist
