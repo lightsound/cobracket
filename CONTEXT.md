@@ -126,6 +126,14 @@ _Avoid_: Profile, login, registered user
 A tournament's unlisted URL granting view-only, real-time access to its bracket with no account required, wherever the tournament's Visibility is unlisted or public. How participants and spectators follow a tournament.
 _Avoid_: Public link, invite link
 
+**Report**:
+A signed-in account's notice to the operator that something on cobracket is abusive — phishing, harassment, or other. It only queues the item for the operator; nothing happens automatically, and the reported side never learns of it.
+_Avoid_: Flag, complaint
+
+**Suspension**:
+The operator's sanction on an account or an Event. A suspended Event stops everything that reaches other people and is kept intact; a suspended person can only sign in to see why, reach the operator, read their own data, or delete the account. Distinct from a Community's ban and an Organizer's block.
+_Avoid_: Ban (a Community's), block (a Track's), takedown
+
 ### Communication
 
 **Activity**:
