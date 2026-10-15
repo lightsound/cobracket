@@ -8,19 +8,19 @@ Today a tournament is owned by one user (`tournaments.organizerId`), every permi
 
 **Roles are the unit of permission, and a Community has exactly one owner.** A membership row carries a role; a capability table maps roles to capabilities, so finer permissions are rows and columns added to the table, never per-person switches (which make "who can delete this Event" unanswerable without reading every member). Two roles ship first; two more are defined so the table does not move when they are built:
 
-| Capability                                                                            | owner | admin | organizer | staff |
-| ------------------------------------------------------------------------------------- | ----- | ----- | --------- | ----- |
-| Delete, rename, or transfer the Community                                             | ✓     |       |           |       |
-| Invite, remove, and re-role members                                                   | ✓     | ✓     |           |       |
-| Hand an Event to another Community; ban a person or a Community (ADR 0028)            | ✓     | ✓     |           |       |
-| Cancel or delete an Event; change any Visibility                                      | ✓     | ✓     | ✓         |       |
-| Create, edit, publish, and delete Rankings (ADR 0025)                                 | ✓     | ✓     | ✓         |       |
-| Create and edit Events and Tracks, publish, issue Grants, announce, connect a webhook | ✓     | ✓     | ✓         |       |
-| Record results; add, rename, remove Entries; run the Waitlist; check in               | ✓     | ✓     | ✓         | ✓     |
-| Create, move, release, and delete a child Community; name its owner (ADR 0028)        | ✓     | ✓     |           |       |
-| Create and delete Squads; edit their players and labels (ADR 0028)                    | ✓     | ✓     | ✓         |       |
-| Operate Squad-linked Entries: register, lineup, Offers, cancel (ADR 0028)             | ✓     | ✓     | ✓         | ✓     |
-| Remove a player from a descendant's Squad (ADR 0028)                                  | ✓     | ✓     |           |       |
+| Capability                                                                                              | owner | admin | organizer | staff |
+| ------------------------------------------------------------------------------------------------------- | ----- | ----- | --------- | ----- |
+| Delete, rename, or transfer the Community                                                               | ✓     |       |           |       |
+| Invite, remove, and re-role members                                                                     | ✓     | ✓     |           |       |
+| Hand an Event to another Community; ban a person or a Community (ADR 0028)                              | ✓     | ✓     |           |       |
+| Cancel or delete an Event; change any Visibility                                                        | ✓     | ✓     | ✓         |       |
+| Create, edit, publish, and delete Rankings (ADR 0025)                                                   | ✓     | ✓     | ✓         |       |
+| Create and edit Events and Tracks, publish, issue Grants, announce, connect a webhook                   | ✓     | ✓     | ✓         |       |
+| Record results; add, rename, remove Entries or Entrants (the lineup change); run the Waitlist; check in | ✓     | ✓     | ✓         | ✓     |
+| Create, move, release, and delete a child Community; name its owner (ADR 0028)                          | ✓     | ✓     |           |       |
+| Create and delete Squads; edit their players and labels (ADR 0028)                                      | ✓     | ✓     | ✓         |       |
+| Operate Squad-linked Entries: register, lineup, Offers, cancel (ADR 0028)                               | ✓     | ✓     | ✓         | ✓     |
+| Remove a player from a descendant's Squad (ADR 0028)                                                    | ✓     | ✓     |           |       |
 
 The owner is one person, so a co-owner can never remove the founder and delete the team's Community (Slack's primary owner and Discord's server owner guard the same thing; GitHub's peer owners do not). The owner transfers ownership to another member; on the owner's account deletion it passes to the member they designated, else to the longest-standing member, and a Community with no other member follows ADR 0022. An owner leaves only after transferring. A one-off helper — someone recording results at one tournament — is not a member: they hold an Access Grant with the action "record results on this tournament" (ADR 0018), which already has a scope, a window, and revocation, so a venue volunteer never sees the Community's other Events.
 
