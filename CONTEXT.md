@@ -112,7 +112,7 @@ _Avoid_: Player (that means the cross-tournament identity), competitor
 
 **Roster**:
 A tournament's Participants taken as a whole. For a Track's tournament it follows the confirmed Entries until the Organizer pins it; afterwards the difference is shown as pending changes the Organizer applies — membership only while the tournament is a draft (a confirmed Entry taken off the Roster stays as an alternate), and substitutions or restorations for withdrawn Participants even during play — except that an automatic publication applies the pending changes as of its time itself. Names are labels, not pending changes: a rename reaches the Participant at once.
-_Avoid_: Participant list, entrant list, squad (a Squad is a team's standing roster; a Lineup is who played)
+_Avoid_: Participant list, entrant list, squad (a Squad is a team's standing list of players; a Lineup is who played)
 
 **Player**:
 The persistent identity of a competitor across tournaments: a record holding no contact data (it still links one person's records, so it is personal data in law), created at a person's first Entry and kept after their account is deleted. Self-made Entrants link to a Player automatically; typed-name Entrants are claimed by their Player later. Merging two identities keeps both rows, one as an alias, so no stored standing loses its key. Rankings attach to Players or to chains of Entries, never to Participants.
@@ -149,7 +149,7 @@ The everyday word for a Community that carries a Squad, and, in a tournament, fo
 _Avoid_: Crew, clan, roster (as the team itself)
 
 **Squad**:
-A roster of Players a Community keeps for competition — several per Community if it fields more than one unit. Its players are called Squad members; a Community's people are members. Joining one needs an Account and is standing consent to be entered in tournaments by the Community's staff; it confers no permission; each Squad member may carry one display label (coach, sub, …). "Staff" means the Community's members acting for its Squads and Squad-linked Entries, whatever their role: every member (owner, admin, organizer, staff) may operate a Squad-linked Entry — register it, set its lineup, accept or decline an Offer, cancel it — while creating or deleting a Squad and editing its roster and labels take the owner, admin, or organizer, and removing a player from a descendant's Squad takes the ancestor's owner or admin. Named by the Community's name, plus its own where the Community has several.
+A standing list of Players a Community keeps for competition — several per Community if it fields more than one unit. Its players are called Squad members; a Community's people are members. Joining one needs an Account and is standing consent to be entered in tournaments by the Community's staff; it confers no permission; each Squad member may carry one display label (coach, sub, …). "Staff" means the Community's members acting for its Squads and Squad-linked Entries, whatever their role: every member (owner, admin, organizer, staff) may operate a Squad-linked Entry — register it, set its lineup, accept or decline an Offer, cancel it — while creating or deleting a Squad and editing its players and labels take the owner, admin, or organizer, and removing a player from a descendant's Squad takes the ancestor's owner or admin. Named by the Community's name, plus its own where the Community has several.
 _Avoid_: Roster (that is a tournament's Participants), lineup, team (a Squad is a team's roster, not the team)
 
 **Entrant**:
@@ -185,7 +185,7 @@ A Community's published reading of public tournament results: a standing of Play
 _Avoid_: Leaderboard, standings (that means placements within one tournament), power ranking
 
 **Method**:
-One of three fixed ways a Ranking turns results into standings — placement points (with named settings such as tiers, entrants multiplier, field strength, head-to-head, best-N), a rating updated per match, or a manual order over the Players in the counted tournaments. Settings are named knobs with defaults, never a formula.
+One of three fixed ways a Ranking turns results into standings — placement points (with named settings such as tiers, entrants multiplier, field strength, head-to-head, best-N), a rating updated per match, or a manual order over the Players — or, in a team Ranking, the chains of Entries — in the counted tournaments. Settings are named knobs with defaults, never a formula.
 _Avoid_: Algorithm, formula
 
 **Season**:
