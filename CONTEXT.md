@@ -53,7 +53,7 @@ A Track's setting saying who may be an Entrant — one ladder of three rungs: an
 _Avoid_: Reachable-only, verified-only, open
 
 **Entry**:
-The unit that takes one place on a Track's registration list — a team, or on a one-player Track a single person: active — forming while it has no seat yet, then confirmed, waitlisted, or holding an Offer —; cancelled, removed, or lapsed once it has ended (ended Entries are kept, visible to the Organizer only). The people on it are its Entrants. Made by its captain or a Squad's staff, or by the Organizer on someone's behalf by name alone. When the Track runs a tournament, confirmed Entries flow into its draft Roster until the Organizer pins it, and after that only as changes the Organizer applies.
+The unit that takes one place on a Track's registration list — a team, or on a one-player Track a single person: active (forming while it has no seat yet, then confirmed, waitlisted, or holding an Offer); cancelled, removed, or lapsed once it has ended (ended Entries are kept, visible to the Organizer only). The people on it are its Entrants. Made by its captain or a Squad's staff, or by the Organizer on someone's behalf by name alone. When the Track runs a tournament, confirmed Entries flow into its draft Roster until the Organizer pins it, and after that only as changes the Organizer applies.
 _Avoid_: Application, sign-up, registration (that is the act)
 
 **Withdrawal**:
@@ -77,7 +77,7 @@ Making an Event, or a tournament's bracket, visible to others; unpublishing take
 _Avoid_: Launch, release, go live (a tournament goes live on its first result)
 
 **Access Grant**:
-A secret link or code that lets its holder perform one action — register, claim a typed-name Entrant of an Entry, join a Community, join a Squad, take over an Event, move a Community under another, or record results on one tournament. A Track- or Event-scope register Grant works within its own time window and use limit, past its Track's invite-only or hidden setting (an Event-wide one passes invite-only Tracks only), and into a full Track only if it reserves its seats (a single-Track Grant with a use limit may, holding one seat per remaining use); one scoped to a single Entry is a team's join link, admitting Entrants onto that Entry through the activation function — it has no window or use limit and passes no Track setting. "Invite link" is its everyday name in the UI.
+A secret link or code that lets its holder perform one action — register, claim a typed-name Entrant of an Entry, join a Community, join a Squad, take over an Event, move a Community under another, or record results on one tournament. A Track- or Event-scope register Grant works within its own time window and use limit, past its Track's invite-only or hidden setting (an Event-wide one passes invite-only Tracks only), and into a full Track only if it reserves its seats (a single-Track Grant with a use limit may, holding one seat per remaining use); one scoped to a single Entry is a team's join link, admitting Entrants onto that Entry through the activation function — it has no window or use limit of its own (it ends with the Entry or the swap deadline and admits while the Entry's playing Entrants are below the maximum) and passes no Track setting. "Invite link" is its everyday name in the UI.
 _Avoid_: Token, password, coupon, unlock code
 
 **Visibility**:
