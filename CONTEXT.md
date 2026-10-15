@@ -77,7 +77,7 @@ Making an Event, or a tournament's bracket, visible to others; unpublishing take
 _Avoid_: Launch, release, go live (a tournament goes live on its first result)
 
 **Access Grant**:
-A secret link or code that lets its holder perform one action — register, claim a typed-name Entrant of an Entry, join a Community, take over an Event, move a Community under another, or record results on one tournament. A register Grant works within its own time window and use limit, past its Track's invite-only or hidden setting (an Event-wide one passes invite-only Tracks only), and into a full Track only if it reserves its seats (a single-Track Grant with a use limit may, holding one seat per remaining use); one scoped to a single Entry is a team's join link, admitting Entrants onto that Entry. "Invite link" is its everyday name in the UI.
+A secret link or code that lets its holder perform one action — register, claim a typed-name Entrant of an Entry, join a Community, join a Squad, take over an Event, move a Community under another, or record results on one tournament. A register Grant works within its own time window and use limit, past its Track's invite-only or hidden setting (an Event-wide one passes invite-only Tracks only), and into a full Track only if it reserves its seats (a single-Track Grant with a use limit may, holding one seat per remaining use); one scoped to a single Entry is a team's join link, admitting Entrants onto that Entry. "Invite link" is its everyday name in the UI.
 _Avoid_: Token, password, coupon, unlock code
 
 **Visibility**:
@@ -91,7 +91,7 @@ _Avoid_: Attendance, arrival
 ### People
 
 **Organizer**:
-A member of the Community that owns a tournament or Event, operating it end to end: managing participants, entering results, advancing the tournament. Always an Account. The role of a member — owner, admin, or organizer — says which capabilities they hold; "owner" names the one member who manages the Community itself, not an Organizer, and "admin" the members who govern it beside the owner.
+A member of the Community that owns a tournament or Event — or an owner or admin of one of that Community's ancestors (ADR 0028) — operating it end to end: managing participants, entering results, advancing the tournament. Always an Account. The role of a member — owner, admin, or organizer — says which capabilities they hold; "owner" names the one member who manages the Community itself, not an Organizer, and "admin" the members who govern it beside the owner.
 _Avoid_: Admin as a word for an Organizer (it is a member's role), host, co-organizer (an Organizer is one already)
 
 **Community**:
@@ -103,7 +103,7 @@ Said of a user cobracket can actually send a message to, through at least one ve
 _Avoid_: Verified, registered, logged in
 
 **Registrant**:
-A person with an Entrant row on an Entry of a Track — the one who registered, joined a team, or claimed a name the Organizer typed. The Event-side counterpart of a Participant, before any tournament exists; an Entrant entered by name and never claimed has no Registrant behind it. Being a Registrant is a relation to a Track, not a kind of user: the same person can organize one Event and register for another.
+A person with an active Entrant row on an Entry of a Track (or an ended one, for the withdrawn view) — the one who registered, joined a team, or claimed a name the Organizer typed; an invitation or request not yet accepted makes nobody a Registrant. The Event-side counterpart of a Participant, before any tournament exists; an Entrant entered by name and never claimed has no Registrant behind it. Being a Registrant is a relation to a Track, not a kind of user: the same person can organize one Event and register for another.
 _Avoid_: Applicant, attendee, member (that is a Community's)
 
 **Participant**:
@@ -145,12 +145,12 @@ _Avoid_: Block, blacklist
 ### Teams
 
 **Team**:
-The everyday word for a Community that carries a Squad, and, in a tournament, for an Entry with more than one playing Entrant. Not a kind of record: a persistent team is a Community, a team in a bracket is an Entry.
+The everyday word for a Community that carries a Squad, and, in a tournament, for an Entry with more than one playing Entrant. Not a kind of record: a persistent team is a Community, a team in a bracket is an Entry. An Entry without a Squad link is an _ad-hoc_ team, acting through its captain — the one playing Entrant carrying the captain flag; a Squad-linked Entry acts through the Squad's staff.
 _Avoid_: Crew, clan, roster (as the team itself)
 
 **Squad**:
 A standing list of Players a Community keeps for competition — several per Community if it fields more than one unit. Its players are called Squad members; a Community's people are members. Joining one needs an Account and is standing consent to be entered in tournaments by the Community's staff; it confers no permission; each Squad member may carry one display label (coach, sub, …). "Staff" means the Community's members acting for its Squads and Squad-linked Entries, whatever their role: every member (owner, admin, organizer, staff) may operate a Squad-linked Entry — register it, set its lineup, accept or decline an Offer, cancel it — while creating or deleting a Squad and editing its players and labels take the owner, admin, or organizer, and removing a player from a descendant's Squad takes the ancestor's owner or admin. Named by the Community's name, plus its own where the Community has several.
-_Avoid_: Roster (that is a tournament's Participants), lineup, team (a Squad is a team's roster, not the team)
+_Avoid_: Roster (that is a tournament's Participants), lineup, team (a Squad is a team's standing list of players, not the team)
 
 **Entrant**:
 A person on an Entry: invited or requested before consenting, active while on the team, then declined, left, or removed. Carries whether they play (a coach does not) and, on an ad-hoc team, whether they are its captain — the one playing Entrant who acts for the team; a Squad's Entry has no captain, its staff act for it. On a one-player Track the Entry's single Entrant.
