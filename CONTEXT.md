@@ -49,7 +49,7 @@ A registration unit within an Event that participants enter: one game's competit
 _Avoid_: Division, slot, sub-event
 
 **Registration requirement**:
-A Track's setting saying who may be an Entrant — one ladder of three rungs: anonymous allowed (anonymous identities, and a captain may type a name with a claim link) ⊂ account required (the default: every Entrant is an Account with a verified email, that is, Reachable; typed names only by the Organizer) ⊂ Squad-linked teams only (every Entry links a Squad). It applies to every Entrant of every Entry on the Track.
+A Track's setting saying who may be an Entrant — one ladder of three rungs: anonymous allowed (anonymous identities, and a captain may type a name with a claim link) ⊃ account required (the default: every Entrant is an Account with a verified email, that is, Reachable; typed names only by the Organizer) ⊃ Squad-linked teams only (every Entry links a Squad). It applies to every Entrant of every Entry on the Track.
 _Avoid_: Reachable-only, verified-only, open
 
 **Entry**:
@@ -77,7 +77,7 @@ Making an Event, or a tournament's bracket, visible to others; unpublishing take
 _Avoid_: Launch, release, go live (a tournament goes live on its first result)
 
 **Access Grant**:
-A secret link or code that lets its holder perform one action — register, claim a typed-name Entrant of an Entry, join a Community, join a Squad, take over an Event, move a Community under another, or record results on one tournament. A Track- or Event-scope register Grant works within its own time window and use limit, past its Track's invite-only or hidden setting (an Event-wide one passes invite-only Tracks only), and into a full Track only if it reserves its seats (a single-Track Grant with a use limit may, holding one seat per remaining use); one scoped to a single Entry is a team's join link, admitting Entrants onto that Entry through the activation function — it has no window or use limit of its own (it ends with the Entry or the swap deadline and admits while the Entry's playing Entrants are below the maximum) and passes no Track setting. "Invite link" is its everyday name in the UI.
+A secret link or code that lets its holder perform one action — register, claim a typed-name Entrant of an Entry, join a Community, join a Squad, take over an Event, move a Community under another, or record results on one tournament. A Track- or Event-scope register Grant works within its own time window and use limit, past its Track's invite-only or hidden setting (an Event-wide one passes invite-only Tracks only), and into a full Track only if it reserves its seats (a single-Track Grant with a use limit may, holding one seat per remaining use); one scoped to a single Entry is a team's join link, admitting Entrants onto that Entry through the activation function — it has no window of its own (it ends with the Entry or the swap deadline), admits while the Entry's playing Entrants and its own uses (the rows it admitted that are still active or were removed) are below the maximum, and passes no Track setting. "Invite link" is its everyday name in the UI.
 _Avoid_: Token, password, coupon, unlock code
 
 **Visibility**:
@@ -95,7 +95,7 @@ A member of the Community that owns a tournament or Event — or an owner or adm
 _Avoid_: Admin as a word for an Organizer (it is a member's role), host, co-organizer (an Organizer is one already)
 
 **Community**:
-The named group that owns Events, tournaments, bans, and participant codes, can publish its own Rankings, and may carry Squads of players; every Organizer acts as a member of one, and a Community with a Squad is what everyone calls a team. Each Account gets a first Community, named after the person, that is in no way special. It has exactly one owner, who manages members and the Community itself, any number of admins, who govern it beside the owner, and any number of organizers; people join through an Access Grant, an Event is handed to another Community through one, and a Community is deleted by its owner — a child also by the parent's owner or admin — while nothing published is pending. Communities nest under exactly one parent, three deep: the parent's owner and admin govern the children and the parent's bans apply to them.
+The named group that owns Events, tournaments, bans, and participant codes, can publish its own Rankings, and may carry Squads of players; every Organizer acts as a member of one, and a Community with a Squad is what everyone calls a team. Each Account gets a first Community, named after the person, that is in no way special. It has exactly one owner, who manages members and the Community itself, any number of admins, who govern it beside the owner, and any number of organizers; people join through an Access Grant, an Event is handed to another Community through one, and a Community is deleted by its owner — a child also by the parent's owner or admin — while nothing published is pending and it has no child Communities. Communities nest under exactly one parent, three deep: the parent's owner and admin govern the children and the parent's bans apply to them.
 _Avoid_: Organization, guild, group, club (all of these are Communities)
 
 **Reachable**:
@@ -115,7 +115,7 @@ A tournament's Participants taken as a whole. For a Track's tournament it follow
 _Avoid_: Participant list, entrant list, squad (a Squad is a team's standing list of players; a Lineup is who played)
 
 **Player**:
-The persistent identity of a competitor across tournaments: a record holding no contact data (it still links one person's records, so it is personal data in law), created at a person's first Entry and kept after their account is deleted. Self-made Entrants link to a Player automatically; typed-name Entrants are claimed by their Player later. Merging two identities keeps both rows, one as an alias, so no stored standing loses its key. Rankings attach to Players or to chains of Entries, never to Participants.
+The persistent identity of a competitor across tournaments: a record holding no contact data (it still links one person's records, so it is personal data in law), created at a person's first Entry or Squad membership and kept after their account is deleted. Self-made Entrants link to a Player automatically; typed-name Entrants are claimed by their Player later. Merging two identities keeps both rows, one as an alias, so no stored standing loses its key. Rankings attach to Players or to chains of Entries, never to Participants.
 _Avoid_: User, member
 
 **Spectator**:
