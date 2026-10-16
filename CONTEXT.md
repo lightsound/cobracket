@@ -53,7 +53,7 @@ A Track's setting saying who may be an Entrant — one ladder of three rungs: an
 _Avoid_: Reachable-only, verified-only, open
 
 **Entry**:
-The unit that takes one place on a Track's registration list — a team, or on a one-player Track a single person: active (forming while it has no seat yet, then confirmed, waitlisted, or holding an Offer); cancelled, removed, or lapsed once it has ended (ended Entries are kept, visible to the Organizer only). The people on it are its Entrants. Made by its captain or a Squad's staff, or by the Organizer on someone's behalf by name alone. When the Track runs a tournament, confirmed Entries flow into its draft Roster until the Organizer pins it, and after that only as changes the Organizer applies.
+The unit that takes one place on a Track's registration list — a team, or on a one-player Track a single person: active (forming until it registers, then confirmed, waitlisted, or holding an Offer); cancelled, removed, or lapsed once it has ended (ended Entries are kept, visible to the Organizer only). The people on it are its Entrants. Made by its captain or a Squad's staff, or by the Organizer on someone's behalf by name alone. When the Track runs a tournament, confirmed Entries flow into its draft Roster until the Organizer pins it, and after that only as changes the Organizer applies.
 _Avoid_: Application, sign-up, registration (that is the act)
 
 **Withdrawal**:
@@ -81,7 +81,7 @@ A secret link or code that lets its holder perform one action — register, clai
 _Avoid_: Token, password, coupon, unlock code
 
 **Visibility**:
-Who may open something that is published: unlisted (anyone holding its link, the default) or private (only its Organizer, people with an active Entry in it, people invited onto an Entry in it, holders of an Access Grant they can still act on, and — for their own bracket only — withdrawn Participants). It only narrows from Event to Track to tournament; a hidden Track is private within its Event. A Community page has a Visibility too (ADR 0028): private there means its members only. Public — findable without a link — is reserved for when cobracket has a directory.
+Who may open something that is published: unlisted (anyone holding its link, the default) or private (only its Organizer, people with an active Entry in it, people invited onto an Entry in it, the staff of a Squad-linked Entry in it, holders of an Access Grant they can still act on, and — for their own bracket only — withdrawn Participants and Entrants who left or were removed). It only narrows from Event to Track to tournament; a hidden Track is private within its Event. A Community page has a Visibility too (ADR 0028): private there means its members only. Public — findable without a link — is reserved for when cobracket has a directory.
 _Avoid_: Privacy, access level, audience
 
 **Check-in**:
@@ -107,7 +107,7 @@ A person with an active Entrant row on an Entry of a Track (or an ended one, for
 _Avoid_: Applicant, attendee, member (that is a Community's)
 
 **Participant**:
-A person or team competing in one tournament — a tournament-local record standing for one Entry on a Track's tournament (a standalone tournament's Participants stand for no Entry); once the tournament completes, it keeps the Players credited with its placement (the Lineup of at least one of its matches; the one Player on a one-player Track).
+A person or team competing in one tournament — a tournament-local record standing for one Entry on a Track's tournament (a standalone tournament's Participants stand for no Entry); once the tournament first completes, it keeps the Players credited with its placement (the Lineup of at least one of its matches; the one Player on a one-player Track).
 _Avoid_: Player (that means the cross-tournament identity), competitor
 
 **Roster**:
