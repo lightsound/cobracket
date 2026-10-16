@@ -70,7 +70,7 @@ _Avoid_: Queue, standby, reserve list
 
 **Offer**:
 A freed place held for a limited time for the next waitlisted Entry that chose to be asked first (by default a freed place confirms the next Entry at once), taken by the Entry's captain or by a Squad's staff; accepting it confirms the Entry, and declining it or letting it expire ends the Entry as lapsed; if the Track stops accepting registrations first, it returns to the Waitlist with the Entry's place kept.
-_Avoid_: Promotion, invitation (that is a separate, Organizer-initiated mechanism)
+_Avoid_: Promotion (that is making an ad-hoc team a Squad), invitation (an invite link is an Access Grant, the Organizer's register link or a team's join link, and a team invitation is an `invited` Entrant row that a captain or the staff sends)
 
 **Publish**:
 Making an Event, or a tournament's bracket, visible to others; unpublishing takes it back while nothing depends on it yet. A tournament keeps a record of its last publication, against which Registrants' status is read; while it is being revised, players and Spectators see by default only that it is being updated, or — the Organizer's choice — that publication under a banner; publishing a Track's tournament closes that Track's public registration. A published tournament's structure is fixed; a tournament inside an Event can be published only while its Event is (one published before a cancellation may be republished after it). Distinct from Visibility (who may open what is published) and from a Track being open for registration.
@@ -103,7 +103,7 @@ Said of a user cobracket can actually send a message to, through at least one ve
 _Avoid_: Verified, registered, logged in
 
 **Registrant**:
-A person with an active Entrant row on an Entry of a Track (or an ended one, for the withdrawn view) — the one who registered, joined a team, or claimed a name the Organizer typed; an invitation or request not yet accepted makes nobody a Registrant. The Event-side counterpart of a Participant, before any tournament exists; an Entrant entered by name and never claimed has no Registrant behind it. Being a Registrant is a relation to a Track, not a kind of user: the same person can organize one Event and register for another.
+A person with an active Entrant row on an Entry of a Track (or an ended one, for the withdrawn view) — the one who registered, joined a team, or claimed a typed name; an invitation or request not yet accepted makes nobody a Registrant. A Participant's Event-side counterpart, before any tournament exists, is the Entry, and a Registrant is one of that Entry's people (on a one-player Track, its one person); an Entrant entered by name and never claimed has no Registrant behind it. Being a Registrant is a relation to a Track, not a kind of user: the same person can organize one Event and register for another.
 _Avoid_: Applicant, attendee, member (that is a Community's)
 
 **Participant**:
@@ -123,7 +123,7 @@ Anyone following a tournament without competing in or operating it.
 _Avoid_: Viewer, audience
 
 **Account**:
-A user who has verified an email address by signing in with a one-time code, and so is Reachable. A Registrant may start as an anonymous identity tied to one browser; verifying an email upgrades it in place, or merges its Entries into the account that already holds that email. Everything on the Organizer side, joining a Waitlist, registering on an account-required Track, and using MCP need one. Deleting it removes the person's data and keeps the records they appear in.
+A user who has verified an email address by signing in with a one-time code, and so is Reachable. A Registrant may start as an anonymous identity tied to one browser; verifying an email upgrades it in place, or merges its Entrant rows into the account that already holds that email. Everything on the Organizer side, joining a Waitlist, registering on an account-required Track, and using MCP need one. Deleting it removes the person's data and keeps the records they appear in.
 _Avoid_: Profile, login, registered user
 
 **Share Link**:
@@ -145,7 +145,7 @@ _Avoid_: Block, blacklist
 ### Teams
 
 **Team**:
-The everyday word for a Community that carries a Squad, and, in a tournament, for an Entry with more than one playing Entrant. Not a kind of record: a persistent team is a Community, a team in a bracket is an Entry. An Entry without a Squad link is an _ad-hoc_ team, acting through its captain — the one playing Entrant carrying the captain flag; a Squad-linked Entry acts through the Squad's staff while its link is live.
+The everyday word for a Community that carries a Squad, and, in a tournament, for an Entry on any Track but a one-player one, however many playing Entrants it has at the moment. Not a kind of record: a persistent team is a Community, a team in a bracket is an Entry. Such an Entry without a Squad link is an _ad-hoc_ team, acting through its captain — the one playing Entrant carrying the captain flag; a Squad-linked Entry acts through the Squad's staff while its link is live.
 _Avoid_: Crew, clan, roster (as the team itself)
 
 **Squad**:
@@ -158,7 +158,7 @@ _Avoid_: Member (in the UI that is the Japanese word for it, but in English a me
 
 **Lineup**:
 The playing Entrants of an Entry at an instant: a match's Lineup is who was active and playing when its result was recorded, and a team's placement is credited to everyone on the Lineup of at least one of its matches. Part of the published result of a completed tournament. What Rankings compare to tell whether two Entries are the same team.
-_Avoid_: Roster, squad, starters
+_Avoid_: Roster, squad, starters, substitution (that re-points a withdrawn Participant to another Entry; changing who plays is a swap or the Organizer's lineup change)
 
 **Affiliation**:
 A mutual, permission-free link between two Communities shown on both pages — a team in a league, a club in a federation. Shares no bans, codes, or visibility; what should share them is a parent, not an affiliate.
