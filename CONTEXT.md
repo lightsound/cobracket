@@ -81,7 +81,7 @@ A secret link or code that lets its holder perform one action — register, clai
 _Avoid_: Token, password, coupon, unlock code
 
 **Visibility**:
-Who may open something that is published: unlisted (anyone holding its link, the default) or private (only its Organizer, people with an active Entry in it, people invited onto an Entry in it, the staff of a Squad-linked Entry in it whose Squad link is live, holders of an Access Grant they can still act on, and — for their own bracket only, unless a Track-scope Sanction ended their view — withdrawn Participants and Entrants who left or were removed). It only narrows from Event to Track to tournament; a hidden Track is private within its Event. A Community page has a Visibility too (ADR 0028): private there means its members only. Public — findable without a link — is reserved for when cobracket has a directory.
+Who may open something that is published: unlisted (anyone holding its link, the default) or private (only its Organizer, people with an active Entry in it, people invited onto an Entry in it, the staff of a Squad-linked Entry in it while that Entry's Squad link is live, holders of an Access Grant they can still act on, and — for their own bracket only, unless a Track-scope Sanction ended their view — withdrawn Participants and Entrants who left or were removed). It only narrows from Event to Track to tournament; a hidden Track is private within its Event. A Community page has a Visibility too (ADR 0028): private there means its members only. Public — findable without a link — is reserved for when cobracket has a directory.
 _Avoid_: Privacy, access level, audience
 
 **Check-in**:
@@ -175,7 +175,7 @@ A message an Organizer posts to an Event's audience; its own document, editable 
 _Avoid_: Post, broadcast, news
 
 **Follow**:
-A person's standing interest in a subject so its Activities reach them. Registrants and Organizers follow what they take part in implicitly; an Account follows a Community explicitly — its Entries confirmed on public Events, placements, Squad changes, and Ranking moves reach them, in the app and by email if they ask — and explicit Follows of Events, Tracks, and Players come later.
+A person's standing interest in a subject so its Activities reach them. Registrants and Organizers follow what they take part in implicitly; an Account follows a Community explicitly — its Entries confirmed on public Events, placements in public tournaments, Squad changes, and moves in public Rankings reach them, in the app and by email if they ask — and explicit Follows of Events, Tracks, and Players come later.
 _Avoid_: Subscription (the mechanism, not the domain term), watch
 
 ### Rankings
