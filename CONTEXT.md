@@ -53,7 +53,7 @@ A Track's setting saying who may be an Entrant — one ladder of three rungs: an
 _Avoid_: Reachable-only, verified-only, open
 
 **Entry**:
-The unit that takes one place on a Track's registration list — a team, or on a one-player Track a single person: active (forming until it registers, then confirmed, waitlisted, or holding an Offer); cancelled, removed, or lapsed once it has ended (ended Entries are kept, visible to the Organizer only). The people on it are its Entrants. Made by its captain or a Squad's staff, or by the Organizer on someone's behalf by name alone. When the Track runs a tournament, confirmed Entries flow into its draft Roster until the Organizer pins it, and after that only as changes the Organizer applies.
+The unit that takes one place on a Track's registration list — a team, or on a one-player Track a single person: active (forming until it registers, then confirmed, waitlisted, or holding an Offer); cancelled, removed, or lapsed once it has ended (ended Entries are kept, visible to the Organizer only). The people on it are its Entrants. Made by its captain or a Squad's staff, or by the Organizer — on someone's behalf by name alone, or as one of the teams "make teams from the recruiting list" forms. When the Track runs a tournament, confirmed Entries flow into its draft Roster until the Organizer pins it, and after that only as changes the Organizer applies.
 _Avoid_: Application, sign-up, registration (that is the act)
 
 **Withdrawal**:
