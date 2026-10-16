@@ -185,7 +185,7 @@ A Community's published reading of public tournament results: a standing of Play
 _Avoid_: Leaderboard, standings (that means placements within one tournament), power ranking
 
 **Method**:
-One of three fixed ways a Ranking turns results into standings — placement points (with named settings such as tiers, entrants multiplier, field strength, head-to-head, best-N), a rating updated per match, or a manual order over the Players — or, in a team Ranking, the chains of Entries — in the counted tournaments. Settings are named knobs with defaults, never a formula.
+One of three fixed ways a Ranking turns results into standings — placement points (with named settings such as tiers, entrants multiplier, field strength, head-to-head, best-N), a rating updated per match, or a manual order over the Players (or, in a team Ranking, the chains of Entries) in the counted tournaments. Settings are named knobs with defaults, never a formula.
 _Avoid_: Algorithm, formula
 
 **Season**:
