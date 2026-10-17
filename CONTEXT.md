@@ -49,7 +49,7 @@ A registration unit within an Event that participants enter: one game's competit
 _Avoid_: Division, slot, sub-event
 
 **Registration requirement**:
-A Track's setting saying who may be an Entrant — one ladder of three rungs: anonymous allowed (anonymous identities, and a captain may type a name with a claim link) ⊃ account required (the default: every Entrant is an Account with a verified email, that is, Reachable; typed names only by the Organizer) ⊃ Squad-linked teams only (every Entry links a Squad). It applies to every Entrant of every Entry on the Track.
+A Track's setting saying who may be an Entrant — one ladder of three rungs: anonymous allowed (anonymous identities, and a captain may type a name with a claim link unless the Track is invite-only or hidden or its Event private) ⊃ account required (the default: every Entrant is an Account with a verified email, that is, Reachable; typed names only by the Organizer) ⊃ Squad-linked teams only (every Entry links a Squad). It applies to every Entrant of every Entry on the Track.
 _Avoid_: Reachable-only, verified-only, open
 
 **Entry**:
