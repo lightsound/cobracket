@@ -76,7 +76,7 @@ Two production surfaces (ADR 0010): the Convex **production deployment** for `co
 - Deploy order inside `bun run deploy` is deliberate: `deploy:backend` builds the client first (so a broken build never reaches production) and only then pushes functions; `deploy:web` uploads `dist/client` afterwards. If the upload fails after the push, production serves the previous bundle against new functions — re-run the workflow, do not hand-patch
 - `bun run deploy:backend` sets `VITE_CONVEX_URL` for the build from the deploy key's deployment. It writes no files, so it never disturbs `.env.local`
 - Never point local development at production: local dev stays on the anonymous deployment (`CONVEX_AGENT_MODE=anonymous`, `## Cursor Cloud specific instructions`). Before any command that can touch production, know which deployment it targets (`convex-deploy-guard`) and name it in your report. Until the owner shares the URL, production changes need no consent (`## Agent Rules`, the first rule); this repo's rule overrides the skill's consent step
-- Anonymous tournament creation is unthrottled by design for now (see the PR for ADR 0010 and the vision's Spec-stage checklist). The operational cap is a **spending limit and usage alert on the production deployment** in the Convex dashboard; set it before sharing the URL widely
+- Tournament creation is anonymous and unthrottled in the current code: the account requirement (ADR 0024) lands with slice 1 of `docs/specs/events.md`, and the per-account creation and publish limits (ADR 0027) with slice 3. The operational cap is a **spending limit and usage alert on the production deployment** in the Convex dashboard (ADR 0027 adds a usage alert in Resend beside it); set it before sharing the URL widely
 
 ## Fallow
 
