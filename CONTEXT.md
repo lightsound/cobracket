@@ -175,13 +175,13 @@ A message an Organizer posts to an Event's audience; its own document, editable 
 _Avoid_: Post, broadcast, news
 
 **Follow**:
-A person's standing interest in a subject so its Activities reach them. Registrants and Organizers follow what they take part in implicitly; an Account follows a Community explicitly — its Entries confirmed on public Events, placements in public tournaments, Squad changes, and moves in public Rankings reach them, in the app and by email if they ask — and explicit Follows of Events, Tracks, and Players come later.
+A person's standing interest in a subject so its Activities reach them. Registrants and Organizers follow what they take part in implicitly; an Account follows a Community explicitly — its Entries confirmed on public Events, placements in public tournaments, Squad changes, and moves in the public Rankings its page shows reach them, in the app and by email if they ask — and explicit Follows of Events, Tracks, and Players come later.
 _Avoid_: Subscription (the mechanism, not the domain term), watch
 
 ### Rankings
 
 **Ranking**:
-A Community's published reading of tournament results: a standing of Players, or of teams, in one Discipline under one Method, over the tournaments its publisher chose, computed Season by Season. A team Ranking stands chains of Entries, linked tournament to tournament by the same Squad or by enough shared players, as the publisher chooses. Any Community publishes one (a person through their own first Community; cobracket official is the operator's Community), counting any non-private tournament it can view without the Organizer's consent, and never more visible than the narrowest tournament it counts.
+A Community's published reading of tournament results: a standing of Players, or of teams, in one Discipline under one Method, over the tournaments its publisher chose, computed Season by Season. A team Ranking stands chains of Entries, linked tournament to tournament by Squad — the same Squad by default whatever its lineup, two Squads only where the publisher joins them, an ad-hoc team by enough shared players — or by enough shared players alone, as the publisher chooses. Any Community publishes one (a person through their own first Community; cobracket official is the operator's Community), counting any non-private tournament it can view without the Organizer's consent, and never more visible than the narrowest tournament it counts.
 _Avoid_: Leaderboard, standings (that means placements within one tournament), power ranking
 
 **Method**:
