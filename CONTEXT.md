@@ -181,7 +181,7 @@ _Avoid_: Subscription (the mechanism, not the domain term), watch
 ### Rankings
 
 **Ranking**:
-A Community's published reading of public tournament results: a standing of Players, or of teams, in one Discipline under one Method, over the tournaments its publisher chose, computed Season by Season. A team Ranking stands chains of Entries, linked tournament to tournament by the same Squad or by enough shared players, as the publisher chooses. Any Community publishes one (a person through their own first Community; cobracket official is the operator's Community), counting any non-private tournament it can view without the Organizer's consent, and never more visible than the narrowest tournament it counts.
+A Community's published reading of tournament results: a standing of Players, or of teams, in one Discipline under one Method, over the tournaments its publisher chose, computed Season by Season. A team Ranking stands chains of Entries, linked tournament to tournament by the same Squad or by enough shared players, as the publisher chooses. Any Community publishes one (a person through their own first Community; cobracket official is the operator's Community), counting any non-private tournament it can view without the Organizer's consent, and never more visible than the narrowest tournament it counts.
 _Avoid_: Leaderboard, standings (that means placements within one tournament), power ranking
 
 **Method**:
