@@ -135,7 +135,7 @@ A signed-in account's notice to the operator that something on cobracket is abus
 _Avoid_: Flag, complaint
 
 **Suspension**:
-The operator's sanction on an account, a Community, or an Event. A suspended Event stops everything that reaches other people and is kept intact; a suspended person can only sign in to see why, reach the operator, read their own data, or delete the account. Distinct from a Sanction, which an Organizer or a Community sets.
+The operator's sanction on a person (an account or an anonymous identity), a Community, an Event, or a standalone tournament. A suspended Event or tournament stops everything that reaches other people and is kept intact; a suspended person can only sign in to see why, reach the operator, read their own data, or delete the account. Distinct from a Sanction, which an Organizer or a Community sets.
 _Avoid_: Ban, block (both are Sanctions), takedown
 
 **Sanction**:
