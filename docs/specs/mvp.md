@@ -1,6 +1,6 @@
 # MVP: Standalone Tournament
 
-Synthesized from the grill-with-docs sessions of 2026-08. Vocabulary per [`CONTEXT.md`](../../CONTEXT.md); constrained by [ADR 0001–0005](../adr/). The product frame lives in [`docs/vision.md`](../vision.md); this spec covers only the MVP slice. [`events.md`](./events.md) changes parts of it — structure edits (stories 4, 5, 6, 8, 10, 26) narrow to draft, unpublishing moves into scope, Participant renames widen to every status, random seeding keeps a stored salt, deletion becomes two-phase, Discipline suggestions narrow — and lists each change under "Changes to the MVP".
+Synthesized from the grill-with-docs sessions of 2026-08. Vocabulary per [`CONTEXT.md`](../../CONTEXT.md); constrained by [ADR 0001–0005](../adr/). The product frame lives in [`docs/vision.md`](../vision.md); this spec covers only the MVP slice. [`events.md`](./events.md) changes parts of it — the Organizer side signs in with an email account and its tournaments belong to a Community (stories 1 and 25, ADR 0023 and 0024), structure edits (stories 4, 5, 6, 8, 10, 26) narrow to draft, unpublishing moves into scope, Participant renames widen to every status, random seeding keeps a stored salt, deletion becomes two-phase, Discipline suggestions narrow — and lists each change under "Changes to the MVP".
 
 ## Problem Statement
 
@@ -12,7 +12,7 @@ A tournament in seconds, from the web or from chat: an Organizer opens cobracket
 
 ## User Stories
 
-1. As an Organizer, I want to create a Tournament without signing up, so that I can get started in seconds.
+1. As an Organizer, I want to create a Tournament with almost no sign-up — originally none, since 2026-10-14 one email code with no password or profile (ADR 0024: the Organizer side requires an email account) — so that I can get started in seconds.
 2. As an Organizer, I want to name the Tournament and set its Discipline (freeform with suggestions), so that the tournament is identifiable and its results are attributable to a discipline later.
 3. As an Organizer, I want to choose a Format — single elimination or double elimination — so that the bracket matches how we play.
 4. As an Organizer, I want to add Participants by typing names one by one, so that I can build the roster as people show up.
@@ -60,7 +60,7 @@ A tournament in seconds, from the web or from chat: an Organizer opens cobracket
 
 **Visibility of Organizer vs public surfaces.** The Share Link is the tournament's public URL (unlisted). Organizer capabilities exist only behind the Organizer's identity — there is no secret management link.
 
-**Settings and deletion (stories 26–27, ADR 0011; narrowed by ADR 0016 and 0017, per `events.md`).** Name and Discipline are labels: editable in every status, including completed. The Format is structure: editable in draft only (pre-live before ADR 0016; a published tournament is unpublished first), and a change drops the generated bracket exactly like a roster change. Deletion is physical and whole — the tournament with its roster, bracket, and results — allowed in every status, and two-phase in the operations API (ADR 0017); the Share Link reads as not found afterwards. Results are never deleted on their own (ADR 0005: corrections are the only way to change them). There is no `cancelled` status: a tournament called off before play is deleted, and one abandoned mid-play keeps its recorded results and simply stays live. The Organizer's read of a tournament by URL answers "not found" as a value (null), never as an error to retry, for malformed, missing, deleted, and foreign ids alike.
+**Settings and deletion (stories 26–27, ADR 0011; narrowed by ADR 0016, 0017, and 0027, per `events.md`).** Name and Discipline are labels: editable in every status, including completed. The Format is structure: editable in draft only (pre-live before ADR 0016; a published tournament is unpublished first), and a change drops the generated bracket exactly like a roster change. Deletion is physical and whole — the tournament with its roster, bracket, and results — allowed in every status, and two-phase in the operations API (ADR 0017); the Share Link reads as not found afterwards, and only the user-written content others could see, its name for one, stays with the operator alone for 30 days (ADR 0027). Results are never deleted on their own (ADR 0005: corrections are the only way to change them). There is no `cancelled` status: a tournament called off before play is deleted, and one abandoned mid-play keeps its recorded results and simply stays live. The Organizer's read of a tournament by URL answers "not found" as a value (null), never as an error to retry, for malformed, missing, deleted, and foreign ids alike.
 
 ## Testing Decisions
 
@@ -75,7 +75,7 @@ A tournament in seconds, from the web or from chat: an Organizer opens cobracket
 
 Events, Tracks, Entries, check-in, participant self-entry and self-reporting, Player accounts and claiming, Communities and co-organizing (specified in `events.md`, slice 2; ADR 0023), rankings/seasons/methods, round robin / Swiss / group stages, third-place matches, automated DQ cascades, late roster additions after the first result, table/station assignment, match-call notifications, Discord bot, in-app AI assistant, payments, ads, account upgrade from anonymous (now `events.md`, slice 1), public/private visibility behavior (field only; private becomes real in `events.md`), custom formats (ADR 0002 — permanently out).
 
-Deferred after the first operational pass (revisit when real use asks for them): a `cancelled` lifecycle status (deletion covers a tournament called off before play; an abandoned live tournament keeps its results — ADR 0011); unpublishing (now in scope, `events.md`); pagination of the Organizer's tournament list (`listMyTournaments` returns the newest 100, which no MVP Organizer approaches); recovery of tournaments whose anonymous session was lost (that is the account-upgrade problem).
+Deferred after the first operational pass (revisit when real use asks for them): a `cancelled` lifecycle status (deletion covers a tournament called off before play; an abandoned live tournament keeps its results — ADR 0011); unpublishing (now in scope, `events.md`); pagination of the Organizer's tournament list (`listMyTournaments` returns the newest 100, which no MVP Organizer approaches); recovery of tournaments whose anonymous session was lost (dissolved by ADR 0023 and 0024: tournaments belong to the Organizer's Community, reached by signing in with their email from any browser).
 
 ## Further Notes
 

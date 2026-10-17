@@ -131,11 +131,11 @@ A tournament's unlisted URL granting view-only, real-time access to its bracket 
 _Avoid_: Public link, invite link
 
 **Report**:
-A signed-in account's notice to the operator that something on cobracket is abusive — phishing, harassment, or other. It only queues the item for the operator: nothing happens automatically, except that a reported Community logo is hidden while the report is under review (ADR 0028), and the reported side is never told of it.
+A signed-in account's notice to the operator that something on cobracket is abusive — phishing, harassment, or other. It only queues the item for the operator: nothing is acted on automatically, except that a reported Community logo is hidden while the report is under review (ADR 0028), and the reported side is never told of it. The operator judges from the content's history: each version of user-written content others saw that an edit or a deletion replaced, names aside, is kept 30 days for the operator alone, with its Event, standalone tournament, Community, or Ranking rather than its author, and a report pins those versions while it is open, marking the one the reporter saw.
 _Avoid_: Flag, complaint
 
 **Suspension**:
-The operator's sanction on an account, a Community, or an Event. A suspended Event stops everything that reaches other people and is kept intact; a suspended person can only sign in to see why, reach the operator, read their own data, or delete the account. Distinct from a Sanction, which an Organizer or a Community sets.
+The operator's sanction on a person (an account or an anonymous identity), a Community, an Event, or a standalone tournament. A suspended Event or tournament stops everything that reaches other people and is kept intact; a suspended person can only sign in to see why, reach the operator, read their own data, or delete the account. Distinct from a Sanction, which an Organizer or a Community sets.
 _Avoid_: Ban, block (both are Sanctions), takedown
 
 **Sanction**:
@@ -181,7 +181,7 @@ _Avoid_: Subscription (the mechanism, not the domain term), watch
 ### Rankings
 
 **Ranking**:
-A Community's published reading of public tournament results: a standing of Players, or of teams, in one Discipline under one Method, over the tournaments its publisher chose, computed Season by Season. A team Ranking stands chains of Entries, linked tournament to tournament by the same Squad or by enough shared players, as the publisher chooses. Any Community publishes one (a person through their own first Community; cobracket official is the operator's Community), counting any non-private tournament it can view without the Organizer's consent, and never more visible than the narrowest tournament it counts.
+A Community's published reading of tournament results: a standing of Players, or of teams, in one Discipline under one Method, over the tournaments its publisher chose, computed Season by Season. A team Ranking stands chains of Entries, linked tournament to tournament by the same Squad or by enough shared players, as the publisher chooses. Any Community publishes one (a person through their own first Community; cobracket official is the operator's Community), counting any non-private tournament it can view without the Organizer's consent, and never more visible than the narrowest tournament it counts.
 _Avoid_: Leaderboard, standings (that means placements within one tournament), power ranking
 
 **Method**:
