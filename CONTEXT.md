@@ -81,7 +81,7 @@ A secret link or code that lets its holder perform one action — register, clai
 _Avoid_: Token, password, coupon, unlock code
 
 **Visibility**:
-Who may open something that is published: unlisted (anyone holding its link, the default) or private (only its Organizer, people with an active Entry in it, people invited onto an Entry in it, the staff of a Squad-linked Entry in it while that Entry's Squad link is live, holders of an Access Grant they can still act on, and — for their own bracket only, unless a Track-scope Sanction ended their view — withdrawn Participants and Entrants who left or were removed). It only narrows from Event to Track to tournament; a hidden Track is private within its Event. A Community page has a Visibility too (ADR 0028): private there means its members only. Public — findable without a link — is reserved for when cobracket has a directory.
+Who may open something that is published: unlisted (anyone holding its link, the default) or private (only its Organizer, people with an active Entry in it, people invited onto an Entry in it, the staff of a Squad-linked Entry in it while that Entry's Squad link is live, holders of an Access Grant they can still act on, and — for their own bracket only, unless a Track-scope Sanction ended their view — withdrawn Participants and Entrants who left or were removed). It only narrows from Event to Track to tournament; a hidden Track is private within its Event. A Community page has a Visibility too (ADR 0028), unlisted or public only: it is never private. Public — findable without a link — is reserved for when cobracket has a directory.
 _Avoid_: Privacy, access level, audience
 
 **Check-in**:
