@@ -131,7 +131,7 @@ A tournament's unlisted URL granting view-only, real-time access to its bracket 
 _Avoid_: Public link, invite link
 
 **Report**:
-A signed-in account's notice to the operator that something on cobracket is abusive — phishing, harassment, or other. It only queues the item for the operator: nothing happens automatically, except that a reported Community logo is hidden while the report is under review (ADR 0028), and the reported side is never told of it. The operator judges from the content's history: every version an edit or a deletion replaced is kept 30 days for the operator alone, with its Event, Community, or Ranking rather than its author, and a report pins those versions while it is open, marking the one the reporter saw.
+A signed-in account's notice to the operator that something on cobracket is abusive — phishing, harassment, or other. It only queues the item for the operator: nothing is acted on automatically, except that a reported Community logo is hidden while the report is under review (ADR 0028), and the reported side is never told of it. The operator judges from the content's history: every version an edit or a deletion replaced is kept 30 days for the operator alone, with its Event, Community, or Ranking rather than its author, and a report pins those versions while it is open, marking the one the reporter saw.
 _Avoid_: Flag, complaint
 
 **Suspension**:
