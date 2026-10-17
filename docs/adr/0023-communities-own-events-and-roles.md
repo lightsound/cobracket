@@ -21,6 +21,8 @@ Today a tournament is owned by one user (`tournaments.organizerId`), every permi
 | Create and delete Squads; edit their players and labels (ADR 0028)                                      | ✓     | ✓     | ✓         |       |
 | Operate Squad-linked Entries: register, lineup, Offers, cancel (ADR 0028)                               | ✓     | ✓     | ✓         | ✓     |
 | Remove a player from a descendant's Squad (ADR 0028)                                                    | ✓     | ✓     |           |       |
+| Edit the Community page's description, logo, and external links (ADR 0028)                              | ✓     | ✓     | ✓         |       |
+| Request, accept, decline, and end affiliations (ADR 0028)                                               | ✓     | ✓     |           |       |
 
 The owner is one person, so a co-owner can never remove the founder and delete the team's Community (Slack's primary owner and Discord's server owner guard the same thing; GitHub's peer owners do not). The owner transfers ownership to another member; on the owner's account deletion it passes to the member they designated, else to the longest-standing member, and a Community with no other member follows ADR 0022. An owner leaves only after transferring. A one-off helper — someone recording results at one tournament — is not a member: they hold an Access Grant with the action "record results on this tournament" (ADR 0018), which already has a scope, a window, and revocation, so a venue volunteer never sees the Community's other Events.
 
