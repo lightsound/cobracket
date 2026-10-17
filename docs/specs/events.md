@@ -58,7 +58,7 @@ An Organizer creates an Event, adds Tracks — one per competition or split — 
 31. As an Organizer, I want to see, before republishing, whose first match changes — and have exactly those players notified — so that a necessary change is communicated precisely.
 32. As an Organizer, I want to substitute a walk-in for a withdrawn player who has not played yet, even during play, and to restore a player who withdrew by mistake with their results intact, so that a no-show or a misclick does not force a walkover.
 33. As an Organizer, I want to detach a tournament from its Track while no result exists, so that a wrong start is recoverable.
-34. As an Organizer of a standalone tournament, I want to make it private (visible to me only) or unlisted, so that a test bracket stays out of sight.
+34. As an Organizer of a standalone tournament, I want to make it private (visible to its Organizers only) or unlisted, so that a test bracket stays out of sight.
 
 ### Registrant
 

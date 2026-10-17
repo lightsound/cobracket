@@ -112,7 +112,7 @@ Done: **production deployment** (ADR 0010), live for the owner's design review s
 
 ## Roadmap candidates after MVP
 
-Rough order: account sign-in and Communities (the owners of everything an Organizer runs — ADR 0023, 0024; moved ahead on 2026-10-14 because every later rule depends on who owns an Event) → luma-style Event hosting with Tracks, registration, and check-in (MCP-operable — the north-star loop starts here, and registration removes the name-typing pain) → Discord bot as the second chat surface, once the operations API covers Events → participant self-reporting → remaining format families → Player accounts with claiming of past results → Rankings and Seasons (ADR 0025, 0026: manual first, then placement points, then ratings; feeding seeding) → teams (ADR 0028–0030: Squads and the Community tree, team Entries, Follows, team Rankings) → spectator-page ads → paid-entry tournaments with fee collection.
+Rough order: account sign-in and Communities (the owners of everything an Organizer runs — ADR 0023, 0024; moved ahead on 2026-10-14 because every later rule depends on who owns an Event) → luma-style Event hosting with Tracks, registration, and check-in (MCP-operable — the north-star loop starts here, and registration removes the name-typing pain) → Discord bot as the second chat surface, once the operations API covers Events → participant self-reporting → remaining format families → claiming of past results by their Players → Rankings and Seasons (ADR 0025, 0026: manual first, then placement points, then ratings; feeding seeding) → teams (ADR 0028–0030: Squads and the Community tree, team Entries, Follows, team Rankings) → spectator-page ads → paid-entry tournaments with fee collection.
 
 ## Open questions
 
