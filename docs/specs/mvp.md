@@ -4,7 +4,7 @@ Synthesized from the grill-with-docs sessions of 2026-08. Vocabulary per [`CONTE
 
 ## Problem Statement
 
-An Organizer who wants to run a small community tournament (8–64 participants, typically in a game or esports community) has had no tool that is fast, pleasant, and simple: the incumbents (start.gg, Challonge; Tonamel in Japan) want an account from every participant, and setting up a bracket and keeping it updated during the event demands more attention than the event itself. When this spec was written (2026-08), participants and spectators had no live view of the bracket without accounts and friction; by 2026-10 OFTN.GG, parry.gg, and Whistle.day offer one, so an account-free live bracket is the floor cobracket must meet rather than a differentiator ([`docs/competitors.md`](../competitors.md)).
+An Organizer who wants to run a small community tournament (8–64 participants, typically in a game or esports community) has had no tool that is fast, pleasant, and simple: the incumbents (start.gg, Challonge; Tonamel in Japan) want an account from every participant who registers, checks in, or reports a result (an Organizer may add people without one, but then does everything for them), and setting up a bracket and keeping it updated during the event demands more attention than the event itself. When this spec was written (2026-08), participants and spectators had no live view of the bracket without accounts and friction; by 2026-10 OFTN.GG, parry.gg, and Whistle.day offer one, and Tonamel's bracket already updated live for spectators, so an account-free live bracket is the floor cobracket must meet rather than a differentiator ([`docs/competitors.md`](../competitors.md)).
 
 ## Solution
 

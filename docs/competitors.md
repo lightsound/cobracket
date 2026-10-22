@@ -44,6 +44,7 @@ Seven groups: global esports tournament platforms, Japanese tournament services,
 - **Matcherino**: crowdfunded prize pools and payouts, $5,330,852 paid over 15,022 tournaments as of 2026-10-18 ([matcherino.com](https://matcherino.com/)) — about $350 per tournament.
 - **FACEIT**: a matchmaking and anti-cheat platform; acquired with ESL by Savvy Games Group in 2022 for $1.5B ([Wikipedia](https://en.wikipedia.org/wiki/FACEIT)).
 - **Bracket HQ**: brackets only; free with ads up to 32 players, Pro at $8 a month ($4 billed annually) up to 64 ([pricing](https://brackethq.com/pricing/)).
+- **Tourney** (iPhone): a bracket app with no login and a live bracket; 95 ratings averaging 4.3 on the Japanese App Store on 2026-10-18 ([App Store](https://apps.apple.com/jp/app/id6450659011)).
 
 ## Japan
 
@@ -94,7 +95,7 @@ Seven groups: global esports tournament platforms, Japanese tournament services,
 - **Turnale**: racket-sport tournaments run from Claude, ChatGPT (developer mode), Le Chat, Perplexity, Grok, and a Gemini CLI extension; players get one link, "Nothing to install, nothing to log into"; 35 languages ([turnale.app](https://www.turnale.app/)).
 - **Turniermeister** (Austria): the AI sets a tournament up and hands it over by claim link (first seen 2026-09-06, [Glama](https://glama.ai/mcp/connectors/io.github.MartyMcFlyJr/turniermeister)).
 - **Wizzrobe**: self-hosted, built for SpeedGaming; an OAuth MCP server beside a Discord bot, with 57 read and 67 write tools claimed, though the same document elsewhere counts 21 write tools ([GitHub](https://github.com/tcprescott/wizzrobe), [MCP doc](https://raw.githubusercontent.com/tcprescott/wizzrobe/main/docs/features/mcp-server.md)).
-- Incumbents: no official MCP server found for start.gg, Challonge, Battlefy, Toornament, or Tonamel; community start.gg servers are read-only or report a winner only ([tomo789](https://github.com/tomo789/startgg-mcp-server), [magnusquest](https://github.com/magnusquest/startgg-mcp)); the official MCP registry returns nothing for "tournament" ([registry](https://registry.modelcontextprotocol.io/v0/servers?search=tournament&limit=100)). None of the newcomers publishes usage figures.
+- Incumbents: no official MCP server found for start.gg, Challonge, Battlefy, Toornament, or Tonamel; community start.gg servers are read-only or report a winner only ([tomo789](https://github.com/tomo789/startgg-mcp-server), [magnusquest](https://github.com/magnusquest/startgg-mcp)), and Make Bracket Online's is read-only too ([makebracket-mcp](https://github.com/rocnubie/makebracket-mcp)); the official MCP registry returns nothing for "tournament" ([registry](https://registry.modelcontextprotocol.io/v0/servers?search=tournament&limit=100)). None of the newcomers publishes usage figures.
 - Discord bots are the prehistory: Game.tv counted 1,600+ tournaments a day and about 100,000 servers across its whole service, Tourney bot included, in 2021 ([GameBusiness.jp](https://www.gamebusiness.jp/article/2021/02/13/18214.html)); the Challonge companion Lizard-BOT required Discord names to match Challonge names and was archived 2024-03-11 ([GitHub](https://github.com/lizardman301/Lizard-bot-rsf)).
 
 ## Registration tools and the do-it-yourself stack
@@ -131,20 +132,20 @@ Seven groups: global esports tournament platforms, Japanese tournament services,
 
 ## cobracket's statements about competitors, checked
 
-| Statement in cobracket's documents                                                | Verdict, 2026-10-18                                                                                                                  |
-| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Almost no existing tool offers chat operation                                     | No longer holds for the market (Whistle.day, Turnale, Turniermeister, Wizzrobe); still holds for every major platform                |
-| No existing app covers the whole loop                                             | Holds strictly; start.gg has most of it, sendou.ink closes it for one game                                                           |
-| Luma handles registration but knows nothing about brackets                        | Holds                                                                                                                                |
-| start.gg is heavy, dated, and account-first                                       | Account-first holds; "dated" is doubtful after the August 2026 app and 15 locales                                                    |
-| Participants and spectators have no live view of a bracket without accounts       | No longer holds (Tonamel for spectators, OFTN.GG, parry.gg, LeagueApps)                                                              |
-| Existing tools are slow, dated, and confusing                                     | Not verified either way; no neutral organizer reviews were collected                                                                 |
-| Every tournament tool compared asks for an account before creating anything       | Holds for the incumbents compared (Luma, start.gg, Challonge); not for Whistle.day, Turnale, Make Bracket Online, or the Tourney app |
-| Free hosting of free-entry tournaments moves people off existing tools            | Weak: free hosting is the industry floor                                                                                             |
-| Luma: name and email from every guest, host-approved waitlist, clones up to 30    | Holds                                                                                                                                |
-| Luma: cancelling deletes the page; no drafts                                      | Not verified                                                                                                                         |
-| start.gg rankings are manual; leagues have tiered points and reasoned adjustments | Holds; starting a league also needs support's approval                                                                               |
-| UltRank is an independent ranking by people who organize nothing                  | Holds, but it honours an organizer who declines and counts weeklies only on opt-in                                                   |
+| Statement in cobracket's documents                                                | Verdict, 2026-10-18                                                                                                                               |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Almost no existing tool offers chat operation                                     | No longer holds for the market (Whistle.day, Turnale, Turniermeister, Wizzrobe); still holds for every major platform                             |
+| No existing app covers the whole loop                                             | Holds strictly; start.gg has most of it, sendou.ink closes it for one game                                                                        |
+| Luma handles registration but knows nothing about brackets                        | Holds                                                                                                                                             |
+| start.gg is heavy, dated, and account-first                                       | Account-first holds; "dated" is doubtful after the August 2026 app and 15 locales                                                                 |
+| Participants and spectators have no live view of a bracket without accounts       | No longer holds (Tonamel for spectators, OFTN.GG, parry.gg, LeagueApps)                                                                           |
+| Existing tools are slow, dated, and confusing                                     | Not verified either way; no neutral organizer reviews were collected                                                                              |
+| Every tournament tool compared asks for an account before creating anything       | Holds for the incumbents compared (Luma, start.gg, Challonge); not for Whistle.day and Turniermeister (claim links) or the Tourney app (no login) |
+| Free hosting of free-entry tournaments moves people off existing tools            | Weak: free hosting is the industry floor                                                                                                          |
+| Luma: name and email from every guest, host-approved waitlist, clones up to 30    | Holds                                                                                                                                             |
+| Luma: cancelling deletes the page; no drafts                                      | Not verified                                                                                                                                      |
+| start.gg rankings are manual; leagues have tiered points and reasoned adjustments | Holds; starting a league also needs support's approval                                                                                            |
+| UltRank is an independent ranking by people who organize nothing                  | Holds, but it honours an organizer who declines and counts weeklies only on opt-in                                                                |
 
 The documents were brought in line with this table on 2026-10-22 (`docs/vision.md`, `docs/specs/mvp.md`, `docs/specs/events.md`, `CONTEXT.md`, and dated market notes in ADR 0001, 0024, and 0025).
 
