@@ -122,6 +122,7 @@ verify API names against the reference pages above.
 
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/reactivity/create-signal.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/reactivity/create-memo.md
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/reactivity/create-deferred.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/reactivity/create-effect.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/reactivity/create-optimistic.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/reactivity/flush.md
@@ -151,7 +152,11 @@ verify API names against the reference pages above.
 ## Reference: diagnostics, attribution, and observability
 
 `DEV` is dev builds only; `OBSERVE` and attribution exist on observe and dev builds;
-the error hooks fire on every build.
+the error hooks fire on every build. Every diagnostic code has a page of its own —
+`reference/solid-js/diagnostics/<code-in-kebab-case>.md` (for example
+`.../diagnostics/silent-hold.md`), the page the console footer links on a code's first report.
+
+- https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/diagnostics.md
 
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/advanced/diagnostics-dev-hooks/dev.md
 - https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/advanced/diagnostics-dev-hooks/observe.md

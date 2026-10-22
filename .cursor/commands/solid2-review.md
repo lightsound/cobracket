@@ -19,8 +19,9 @@ Steps:
    - effects that copy state instead of deriving it, or reading stores in the apply phase;
    - `<For>` over server/refetched rows without a stable-id key function;
    - core `action` bodies that are not generators (plain `async` functions) or that write
-     after a bare `await` without re-entering on `yield` (router `action` from
-     `@solidjs/router` is the one that takes `async (form) => ...`);
+     after a bare `await` without re-entering on `yield` (router `formAction` from
+     `@solidjs/router` is the one that takes `async (form) => ...`; its `action` alias
+     and `useAction` are deprecated <!-- upstream:router-action-deprecated -->);
    - `<Loading>`/`<Errored>` wrapping page chrome instead of the data slot, or
      `const u = user()` extracted then passed (a real parent-side read). Passing
      `user={user()}` is the colorless form — do not "fix" it into accessors or
@@ -36,18 +37,19 @@ Steps:
      `(v) => setX(v)`) — any return value but a cleanup halts reactivity; `onCleanup`
      inside `apply` (never runs) or inside `onSettled`, and memos/effects/`flush()`
      inside an `onSettled` callback (all throw);
-   - writes to a store outside its setter (`todos.push(x)`, `todo.done = ...` — silently
-     ignored) and `Map`/`Set`/`Date` fields mutated in a draft (not tracked);
+   - writes to a store outside its setter (`todos.push(x)`, `todo.done = ...` — ignored;
+     dev warns `[STORE_WRITE_OUTSIDE_SETTER]` <!-- upstream:store-write-outside-setter -->) and
+     `Map`/`Set`/`Date` fields mutated in a draft (not tracked);
    - app-wide state as a module-level signal/store instead of a provider at the root
      of `App` (shared across SSR requests);
    - value-form `createOptimisticStore([])` / `createOptimistic(v)` holding durable
      data (writes vanish on settle) <!-- upstream:optimistic-value-overlay --> instead of the function form refreshed after `yield`;
    - route `preload` returning data read as `props.data` (captured once per match)
      instead of `void getX(params.id)` + `createMemo(() => getX(props.params.id))`;
-   - `throw redirect()` / `return reload()` in server functions called without Solid
-     Router `action`/`query` (the caller gets a raw `Response` or `null`, never its
-     data), and POST forms built on a bare function's `.url` (TS2339) instead of a
-     router `action`;
+   - `throw redirect()` / `return reload()` in server functions of an app with no
+     mounted router (the caller gets a raw `Response`, never its data; under a router
+     the single-flight hook applies them on any call), and POST forms built on a bare
+     function's `.url` (TS2339) instead of a router `formAction`;
      error reporting done as a side effect inside `fallback` instead of
      `configureClientErrors` / `configureServerErrors` / `render(fn, root, undefined, { onError })`
      (options are `render`'s 4th argument — a 3rd-argument object is `init`);
@@ -74,6 +76,11 @@ Steps:
      `useSearchParams`; <!-- upstream:pending-links-opt-in --> route `preload`
      functions written to run on hover in a router without `preloadLinks: intentPreload()`
      (link preloading is opt-in; a boolean `preloadLinks` preloads nothing) <!-- upstream:preload-links-opt-in -->;
+   - `value` / `checked` bound to a committed value with no per-edit write
+     (`value={props.name} onChange={commit}`): the binding re-runs with its template and
+     overwrites uncommitted text (`[UNCOMMITTED_INPUT_OVERWRITTEN]`
+     <!-- upstream:uncommitted-input-overwritten -->) — a draft signal from `onInput`,
+     `defaultValue`, or an explicit write-back;
    - search inputs bound to a held value without `latest`, effect-based debounce, fully
      controlled forms without `name`s, `{ success: false }` result objects instead of
      thrown failures, or router forms without server-side validation (`throw respond(...)`)
