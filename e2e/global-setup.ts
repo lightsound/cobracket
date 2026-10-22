@@ -50,9 +50,10 @@
 import { type ChildProcess, spawn, spawnSync } from "node:child_process";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { chromium } from "playwright-core";
 import type { TestProject } from "vite-plus/test/node";
 
 declare module "vitest" {
@@ -63,6 +64,13 @@ declare module "vitest" {
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const ENV_LOCAL = join(ROOT, ".env.local");
+/**
+ * Where playwright-core keeps browsers when `PLAYWRIGHT_BROWSERS_PATH` is
+ * unset: its own default, named here so the gate can install into it and
+ * point the test workers at it when the variable names a store that lacks
+ * the pinned build.
+ */
+const BROWSER_CACHE = join(homedir(), ".cache", "ms-playwright");
 /** The deployment `CONVEX_AGENT_MODE=anonymous` runs: fixed by the CLI, named here once. */
 const DEPLOYMENT = "anonymous:anonymous-agent";
 /**
@@ -301,6 +309,53 @@ function generateAuthKeys(): void {
   }
 }
 
+/**
+ * Whether the headless Chromium the pinned playwright-core wants is where it
+ * looks. Launching is the one public way to ask: the registry resolves the
+ * store from `PLAYWRIGHT_BROWSERS_PATH` once, at module load, so there is no
+ * path to check that would also be the path the test workers use.
+ */
+async function chromiumLaunches(): Promise<boolean> {
+  try {
+    const browser = await chromium.launch();
+    await browser.close();
+    return true;
+  } catch (error) {
+    if (/Executable doesn't exist/.test(String(error))) return false;
+    throw error;
+  }
+}
+
+/**
+ * Make sure the browser the gate drives exists, like the Convex backend
+ * binary the CLI fetches on first use: `playwright-core` is pinned exactly
+ * and downloads nothing on install, so the build it wants is a download the
+ * gate owns. A store the environment points at that carries a different
+ * build — the hosted agent images preinstall one and set
+ * `PLAYWRIGHT_BROWSERS_PATH` to it — is left alone: the pinned headless
+ * shell goes to playwright's default cache and the workers are pointed
+ * there, which is why this runs before the servers start, in the process
+ * the workers inherit their environment from. The preinstalled build is not
+ * a substitute (measured: Chromium 141 through `executablePath` on this
+ * scenario tripped `[HOT_SCOPE_TIME]` twice at 8.1ms and 8.3ms, where the
+ * pinned 153 headless shell passes). The headless shell is all a headless
+ * launch needs; CI's `install chromium` carries it too.
+ */
+async function ensureChromium(): Promise<void> {
+  if (await chromiumLaunches()) return;
+  const install = spawnSync("bun", ["x", "playwright-core", "install", "chromium-headless-shell"], {
+    cwd: ROOT,
+    env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: BROWSER_CACHE },
+    encoding: "utf8",
+  });
+  if (install.status !== 0) {
+    throw new Error(
+      `playwright-core install failed (${install.status}):\n${install.stdout}\n${install.stderr}`,
+    );
+  }
+  process.env.PLAYWRIGHT_BROWSERS_PATH = BROWSER_CACHE;
+}
+
 /** What the gate brought up, or reused, and how to take it down. */
 interface Convex {
   url: string;
@@ -446,6 +501,7 @@ async function startServers(): Promise<{ baseUrl: string; teardown: () => Promis
 }
 
 export default async function setup(project: TestProject): Promise<() => Promise<void>> {
+  await ensureChromium();
   const external = process.env.E2E_BASE_URL?.replace(/\/$/, "");
   if (external) {
     project.provide("e2eBaseUrl", external);
