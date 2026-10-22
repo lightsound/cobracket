@@ -162,8 +162,9 @@ seed the shape through the `createStore` argument or a derivation.
 **The store itself is read-only; only the draft writes.** An assignment or mutating
 call on the store proxy outside a setter is *ignored* — no throw, the value does not
 change, and TypeScript accepts it (`Store<T>` is `T`). Since 2.0.0-rc.17 dev warns
-`[STORE_WRITE_OUTSIDE_SETTER]` once per store object and key (the property and whether
-it was a set, define or delete); production stays silent
+`[STORE_WRITE_OUTSIDE_SETTER]` once per store object and key (a later delete of a key
+already reported is not reported again; the operation is only in the event's `data`);
+production stays silent
 <!-- upstream:store-write-outside-setter -->. This is the
 MobX / Vue / Solid 1 `createMutable` reflex:
 
@@ -947,8 +948,9 @@ const [draft, setDraft] = createSignal(() => props.name);
 // 3. explicit write-back when the field must follow an external value exactly
 ```
 
-`equals: false` on the committed signal changes nothing — the binding re-runs, not the
-signal — and a `createEffect` that copies the prop into the field is rule 4 again.
+`equals: false` on the committed signal makes it worse, not better — a source firing with
+an equal value is one of the three causes the warning names, beside another binding in the
+same template changing and a spread re-running — and a `createEffect` that copies the prop into the field is rule 4 again.
 
 ### Context
 
@@ -1233,7 +1235,7 @@ committed value over uncommitted user input <!-- upstream:uncommitted-input-over
 `[ASYNC_OUTSIDE_LOADING_BOUNDARY]` when a tracked read has no boundary above it, and
 `[LOADING_ON_OUTSIDE_HOLD]` when a `<Loading on>` boundary's data is also read outside it.
 Each entry carries a stable `[CODE]`, what the runtime observed, an owner chain
-(`in <App> › <Cart> › <LineItem>`), and — since rc.17, under `vite dev` — an
+(`in <App> › <Cart> › <LineItem>`), and — since rc.16, under `vite dev` — an
 `at src/Cart.tsx:12:5` line naming where the scope was created (the compiler's
 `sourceNames.locations`; the same `loc` sits on every artifact event)
 <!-- upstream:source-names-locations -->; never silence a code before understanding it.
@@ -1291,7 +1293,7 @@ anonymous nodes print as `computed` / `effect` / `signal`; component labels
 (`<Checkout>`) are always present under `vite dev` and survive minification only with
 the compiler's `sourceNames` option (components, binding effects, primitives — the Vite
 plugin turns it on under `vite dev` and `observe: true`; `componentNames` was its rc.9 name
-and is rejected now) <!-- upstream:source-names-option -->. Its `locations` kind (rc.17)
+and is rejected now) <!-- upstream:source-names-option -->. Its `locations` kind (rc.16)
 adds `file:line:col` to every name — `createComponent(Home, props, "Home", "src/App.tsx:12:5")`,
 `{ name, loc }` on primitives — which is what the `at …` line in a diagnostic and
 `event.loc` in an artifact print; the plugin turns it on under `vite dev` only, and an
@@ -2179,7 +2181,7 @@ how to reuse. Prefer the form on the right.
 | `onClick={setCount}` | `onClick={() => setCount((c) => c + 1)}` |
 | `onclick={fn}` / `onmouseover={fn}` (lowercase handlers) | `onClick={fn}` — a lowercase `on*` name is a plain attribute (dev warns `[LOWERCASE_EVENT_ATTRIBUTE]`), not an event <!-- upstream:lowercase-event-attribute --> |
 | `on:click={fn}` / `use:tooltip` / `attr:title` / `classList={{ on: x() }}` on a native element | `onClick`, a ref callback from a directive factory, `title`, `class={["btn", { on: x() }]}` — the 1.x forms are compile errors since rc.17 (`prop:` remains) <!-- upstream:removed-attribute-compile-error --> |
-| `value={props.name} onChange={(e) => props.onCommit(e.currentTarget.value)}` (bound to the committed value, no per-edit write) | a draft signal `createSignal(() => props.name)` written from `onInput`, or `defaultValue={props.name}` — the binding re-applies the committed value over uncommitted typing (`[UNCOMMITTED_INPUT_OVERWRITTEN]`); `equals: false` does not help <!-- upstream:uncommitted-input-overwritten --> |
+| `value={props.name} onChange={(e) => props.onCommit(e.currentTarget.value)}` (bound to the committed value, no per-edit write) | a draft signal `createSignal(() => props.name)` written from `onInput`, or `defaultValue={props.name}` — the binding re-applies the committed value over uncommitted typing (`[UNCOMMITTED_INPUT_OVERWRITTEN]`); `equals: false` is one of its causes, not a fix <!-- upstream:uncommitted-input-overwritten --> |
 | `useDeferredValue(query())` / `startTransition(() => setQuery(q))` for an expensive derivation | `const rows = createDeferred(() => filter(all(), query()))` — an async memo that lags but never leads its inputs; `isPending(rows)` while it catches up. Unrelated to the 1.x `createDeferred(source, { timeoutMs })` <!-- upstream:create-deferred-export --> |
 | `event.target.value` | `event.currentTarget.value` |
 | `createContext(emptyStore)` for reactive state | `createContext<Todos>()` — dummy defaults silently no-op |

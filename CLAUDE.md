@@ -7,7 +7,7 @@ Project guidance for Claude Code.
 cobracket hosts and manages tournaments of any format, from the web or from chat (MCP). Direction: `docs/vision.md`. Domain glossary: `CONTEXT.md` — use its terms in code, docs, and commits. Decisions: `docs/adr/`. Current spec: `docs/specs/mvp.md`.
 
 <!-- solid2-agent-kit:solid-rules:start -->
-<!-- Managed by solid2-agent-kit v0.23.0. Do not edit inside this block; run `solid2-kit sync` to update. -->
+<!-- Managed by solid2-agent-kit v0.23.1. Do not edit inside this block; run `solid2-kit sync` to update. -->
 
 # Solid 2.0 — not React, not Solid 1.x
 
@@ -327,7 +327,8 @@ Claude Code) for full patterns, decision tables, and official documentation URLs
     <!-- upstream:uncommitted-input-overwritten -->. Bind a draft signal written from
     `onInput` (`createSignal(() => props.name)` resets it when the prop changes), use
     `defaultValue` for an uncontrolled field, or write the next value back explicitly;
-    `equals: false` on the signal does not help (the binding, not the signal, re-runs).
+    `equals: false` on the bound signal is no way to reject input — a source firing with an
+    equal value is one of the causes the warning names, so it only adds re-writes.
 22. Miscellaneous defaults: SSR-stable element ids come from `createUniqueId()` (never
     `Math.random()` or hardcoded duplicates); pass store data to `structuredClone` /
     `postMessage` / logs via `snapshot(store)` (proxies fail or leak reactivity) — a
