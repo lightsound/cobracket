@@ -18,7 +18,7 @@ Today a tournament is owned by one user (`tournaments.organizerId`), every permi
 | Create and edit Events and Tracks, publish, issue Grants, announce, connect a webhook                      | ✓     | ✓     | ✓         |       |
 | Record results; add, rename, remove Entries or Entrants (the lineup change); run the Waitlist; check in    | ✓     | ✓     | ✓         | ✓     |
 | Create a child Community; request, accept, decline, and end a parent link (ADR 0028)                       | ✓     | ✓     |           |       |
-| Create and delete Squads; edit their players and labels (ADR 0028)                                         | ✓     | ✓     | ✓         |       |
+| Create, rename, and delete Squads; edit their players and labels (ADR 0028)                                | ✓     | ✓     | ✓         |       |
 | Operate Squad-linked Entries: register, lineup, Offers, cancel (ADR 0028)                                  | ✓     | ✓     | ✓         | ✓     |
 | Edit the Community page's description, logo, and external links; pick the Rankings it shows (ADR 0028)     | ✓     | ✓     | ✓         |       |
 | Request, accept, decline, and end affiliations (ADR 0028)                                                  | ✓     | ✓     |           |       |
