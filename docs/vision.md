@@ -4,17 +4,19 @@ Settled in the grill-with-docs sessions of 2026-08. Vocabulary lives in [`CONTEX
 
 ## Problem
 
-Existing tournament tools are slow, dated in design, and confusing to operate. Hosting even a small community tournament demands more work from the Organizer than it should. Modern tech (realtime-first backend, fast UI) and AI (chat-driven operation) can replace them.
+Existing tournament tools ask more of a small community Organizer than the tournament does, and the incumbents want an account from every participant who registers, checks in, or reports a result. (That they are also slow, dated in design, and confusing to operate is the owner's impression and the motivation for cobracket; it was not checked against organizer reviews — see [`docs/competitors.md`](./competitors.md).) Modern tech (realtime-first backend, fast UI) and AI (chat-driven operation) can do better.
 
 ## Product
 
 **cobracket lets anyone easily host and manage a tournament of any format — from the web, or from chat.**
 
+**It serves the Organizer first** (owner, 2026-10-22). Participants and spectators use whatever platform the Organizer chose — they have no say in it — so winning the Organizer wins everyone else, and what matters most in building cobracket is lowering the burden of the people who run tournaments. Treating Organizers generously is the strategy, not a courtesy; what it means for money is under "Monetization hypothesis" below.
+
 Differentiators, in order:
 
-1. **Chat operations via MCP** (ADR 0001): an Organizer runs a tournament from their own AI client. Almost no existing tool offers this.
+1. **Chat operations via MCP** (ADR 0001): an Organizer runs a tournament from their own AI client. No major platform (start.gg, Challonge, Battlefy, Toornament, Tonamel) offers this as of 2026-10-18, but it is no longer rare: Whistle.day, Turnale, and Turniermeister shipped write-capable MCP servers in August–October 2026 ([`docs/competitors.md`](./competitors.md)). What stays distinctive is one operations API shared by the web UI, MCP, and the Discord bot, reaching Events and Rankings as well as brackets.
 2. **A tournament in a minute** (ADR 0003, amended by ADR 0024 on 2026-10-14): one email code, no password, no profile — then create a tournament in seconds. Registrants still need no account where the Organizer allows it.
-3. **Fast, modern, realtime UI**: spectators watch the bracket update live through the Share Link.
+3. **Fast, modern, realtime UI**: spectators watch the bracket update live through the Share Link, with no account. The account-free live view is the floor now rather than a difference — OFTN.GG (since 2025), parry.gg (since 2024), Whistle.day, and Tonamel all update a bracket live for anyone holding the link — so what this differentiator has to mean is the speed and finish of the page itself, measured against those four as much as against start.gg and Challonge.
 
 ## North star
 
@@ -22,7 +24,7 @@ The long-term shape of cobracket is a full competitive-season loop, for any comp
 
 > Host an Event → participants register → tournaments run → results are recorded → results feed Seeding within the discipline (winning a large tournament raises your seed) → a period's results aggregate into Rankings → the next season begins.
 
-Today communities assemble this by hand on top of start.gg-style APIs, with someone aggregating results into homemade rankings. cobracket automates the loop, supporting both community-run rankings (their own criteria) and official ones. No existing app covers the whole loop. Event hosting (luma-style, including registration) must be MCP-operable like everything else.
+Today communities assemble this by hand on top of start.gg-style APIs, with someone aggregating results into homemade rankings (JJPR and Japan Smash Ranking for Smash in Japan, Braacket imports elsewhere). cobracket automates the loop, supporting both community-run rankings (their own criteria) and official ones. No existing app covers the whole loop for any discipline: start.gg has most of the pieces (events inside a tournament, leagues, rankings, a seed generator fed by its rankings) but gates leagues behind support approval, keeps no ranking history, and cannot rank participants without accounts; sendou.ink closes the loop for one game, Splatoon ([`docs/competitors.md`](./competitors.md)). Event hosting (luma-style, including registration) must be MCP-operable like everything else.
 
 Events, registration, rankings, and seasons are direction, not MVP scope; the MVP stays a standalone tournament. Settled so far:
 
@@ -43,6 +45,7 @@ Events, registration, rankings, and seasons are direction, not MVP scope; the MV
 - First audience: **game and esports community tournaments** (Discord-centric culture).
 - Core scale: **8–64 participants** per tournament.
 - Market: **global from day one.** UI is English-first with Japanese also provided (i18n structure from the start). Source code, docs, and commits are English only, per the AGENTS.md language policy (which grandfathers one vendored Japanese reference).
+- Competitors: [`docs/competitors.md`](./competitors.md) — the landscape as of 2026-10-18 by group, with fee benchmarks and the Japanese legal limits on fees and prizes. It is dated; re-check its fast-moving parts before relying on them.
 
 ## Formats
 
@@ -79,8 +82,11 @@ Settled in the final audit rounds; each is nearly free on day one and expensive 
 
 ## Monetization hypothesis
 
-- **Hosting and running a free-entry tournament is free, forever.** That promise is what moves people off existing tools.
-- Revenue: (1) a cut of entry fees on paid-entry tournaments — post-MVP, built on a platform payment provider (Stripe Connect-style; in Japan this touches funds-settlement regulation, so it is a deliberate later investment); (2) ads on Spectator pages (Share Link views) only — never on Organizer screens, which would undercut the "pleasant to operate" positioning.
+Direction settled by the owner on 2026-10-22: **cobracket earns from the people who come to watch, never from the people who run tournaments.** The mechanisms below are the current plan.
+
+- **The Organizer side is free, forever, and cobracket takes no cut of an Organizer's money.** Free hosting of free-entry tournaments is the industry floor (start.gg, Challonge, Tonamel, and OFTN.GG up to 32 players all offer it), so cobracket goes further: no paid plans and no per-tournament pricing on the Organizer side, and when paid entry arrives (post-MVP) the fee on a ticket is the payment processor's own charge and nothing more — Stripe's fee when Stripe is used, no cobracket percentage on top — against start.gg's 6% and Tonamel's 5% + ¥100 per entry ([`docs/competitors.md`](./competitors.md)). The money goes from the participant to the Organizer's own payment account (Stripe Connect-style direct charges), so cobracket never holds it and the funds-settlement question falls on the processor rather than on cobracket (to be confirmed when payments are specified).
+- **Revenue comes from spectators.** Ads on Spectator pages (Share Link, Event, and Ranking pages) and never on Organizer screens; or, in place of ads, payments from spectators themselves (an ad-free or supporter tier). The owner's reasoning for ads: most watching happens on streams, but people come back to a tournament page many times over an event, so these pages carry real traffic.
+- **A share of what spectators bring in flows back to the discipline or Community it came from** — the owner's "funding pool", agreed in direction on 2026-10-22 with the structure not yet decided: ad revenue and spectator payments fund prizes or the running costs of tournaments in that discipline or Community. The constraints it is designed within: cobracket pays it out as its own sponsorship with a public ledger of where the money went, rather than holding users' money for payout (funds-settlement regulation); participants' money never funds prizes (JeSU's manual reads prizes paid from entry fees as a gambling risk under Penal Code article 185); and publisher rules differ by discipline — Nintendo and Capcom forbid sponsors and cash prizes at community tournaments while Riot sets no caps — so the pool is a per-discipline setting: off for a discipline whose publisher forbids sponsors, because a tournament's venue or stream paid from cobracket's own revenue is a sponsor's money by any reading of those guidelines (and a supporter payment tied to a tournament could read as the online spectator fee Nintendo also bans), which covers much of the first audience; open where the publisher sets no caps. Details and sources: [`docs/competitors.md`](./competitors.md).
 - An "entry fee" field may appear early to measure demand before payments exist.
 
 ## Project posture (current)
@@ -112,7 +118,7 @@ Done: **production deployment** (ADR 0010), live for the owner's design review s
 
 ## Roadmap candidates after MVP
 
-Rough order: account sign-in and Communities (the owners of everything an Organizer runs — ADR 0023, 0024; moved ahead on 2026-10-14 because every later rule depends on who owns an Event) → luma-style Event hosting with Tracks, registration, and check-in (MCP-operable — the north-star loop starts here, and registration removes the name-typing pain) → Discord bot as the second chat surface, once the operations API covers Events → participant self-reporting → remaining format families → claiming of past results by their Players → Rankings and Seasons (ADR 0025, 0026: manual first, then placement points, then ratings; feeding seeding) → teams (ADR 0028–0030: Squads and the Community tree, team Entries, Follows, team Rankings) → spectator-page ads → paid-entry tournaments with fee collection.
+Rough order: account sign-in and Communities (the owners of everything an Organizer runs — ADR 0023, 0024; moved ahead on 2026-10-14 because every later rule depends on who owns an Event) → luma-style Event hosting with Tracks, registration, and check-in (MCP-operable — the north-star loop starts here, and registration removes the name-typing pain) → Discord bot as the second chat surface, once the operations API covers Events → participant self-reporting → remaining format families → claiming of past results by their Players → Rankings and Seasons (ADR 0025, 0026: manual first, then placement points, then ratings; feeding seeding) → teams (ADR 0028–0030: Squads and the Community tree, team Entries, Follows, team Rankings) → spectator-page ads → paid entry, paid straight to the Organizer's own payment account.
 
 ## Open questions
 

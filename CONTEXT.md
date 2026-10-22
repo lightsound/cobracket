@@ -1,6 +1,6 @@
 # cobracket
 
-cobracket lets anyone easily host and manage a tournament of any format. It aims to replace existing tournament tools — slow, dated, confusing — with a fast modern UI and chat-based operation through AI (an MCP server first), and to grow into a monetizable service. The first audience is game and esports community tournaments.
+cobracket lets anyone easily host and manage a tournament of any format. It aims to replace the tournament tools communities use today with a fast modern UI and chat-based operation through AI (an MCP server first), and to grow into a monetizable service. The first audience is game and esports community tournaments.
 
 ## Language
 

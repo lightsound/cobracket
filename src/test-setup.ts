@@ -14,7 +14,7 @@
  * (`SILENT_HOLD`, `UNSTABLE_LIST_IDENTITY`, `IMMUTABLE_UPDATE_IN_STORE`,
  * `ASYNC_WATERFALL`, ...) in the first place; they reach the same diagnostics
  * channel as the core ones, so one `expectNoDiagnostics` covers every code
- * this gate can see — 61 of the engine's 63, since `[HOT_SCOPE_TIME]` and
+ * this gate can see — 65 of the engine's 67, since `[HOT_SCOPE_TIME]` and
  * `[FALLBACK_FLASH]` are switched off below for reasons that have nothing to
  * do with the app.
  * It is not the whole story either: the engine emits a hold's code only

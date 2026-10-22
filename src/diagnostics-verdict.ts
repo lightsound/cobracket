@@ -9,7 +9,7 @@
  * one fails on, the other fails on too.
  *
  * Two questions, because one is not enough. `expectNoDiagnostics` covers all
- * 63 codes at once (each capture decides which thresholds are armed; the
+ * 67 codes at once (each capture decides which thresholds are armed; the
  * verdict is the same whichever are): Solid grades most of them `warn` or
  * `info` and offers no switch to escalate, which is why enforcing them lives
  * in a test rather than a setting. `expectNoSilentHolds` covers what that
