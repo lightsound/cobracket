@@ -50,7 +50,7 @@ Five families, no custom formats (ADR 0002): single elimination, double eliminat
 
 ## Roles
 
-- **Organizer**: operates everything, as a member of the Community that owns the Event or tournament (ADR 0023), or an owner or admin of one of its ancestors (ADR 0028) — every person's first Community is created with their account, so a solo Organizer never sees the difference. An account with a verified email (ADR 0024).
+- **Organizer**: operates everything, as a member of the Community that owns the Event or tournament (ADR 0023) — every person's first Community is created with their account, so a solo Organizer never sees the difference. An account with a verified email (ADR 0024).
 - **Community**: the named group that owns Events and tournaments, publishes Rankings (ADR 0025: any Community may, over any non-private tournaments it can view), and may carry Squads of players — which is what a team is (ADR 0028). One owner, any number of admins and organizers; invitations are links (ADR 0023); Communities nest under one parent.
 - **Participant / Spectator**: view-only through the Share Link, realtime, no account.
 - **Registrant** (Events): registers for a Track from the Event's page, signed in with a verified email by default or anonymously where the Organizer allows it, and follows their own status (`docs/specs/events.md`).

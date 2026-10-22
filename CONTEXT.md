@@ -77,7 +77,7 @@ Making an Event, or a tournament's bracket, visible to others; unpublishing take
 _Avoid_: Launch, release, go live (a tournament goes live on its first result)
 
 **Access Grant**:
-A secret link or code that lets its holder perform one action — register, claim a typed-name Entrant of an Entry, join a Community, join a Squad, take over an Event, move a Community under another, or record results on one tournament. A Track- or Event-scope register Grant works within its own time window and use limit, past its Track's invite-only or hidden setting (an Event-wide one passes invite-only Tracks only), and into a full Track only if it reserves its seats (a single-Track Grant with a use limit may, holding one seat per remaining use); one scoped to a single Entry is a team's join link, admitting Entrants onto that Entry through the activation function — it has no window of its own (it ends with the Entry, the swap deadline, or a change that makes its Track invite-only or hidden or its Event private), admits while the Entry's playing Entrants and its own uses (the rows it admitted that are still active or were removed) are below the maximum, and passes no Track setting. "Invite link" is its everyday name in the UI.
+A secret link or code that lets its holder perform one action — register, claim a typed-name Entrant of an Entry, join a Community, join a Squad, take over an Event, or record results on one tournament. A Track- or Event-scope register Grant works within its own time window and use limit, past its Track's invite-only or hidden setting (an Event-wide one passes invite-only Tracks only), and into a full Track only if it reserves its seats (a single-Track Grant with a use limit may, holding one seat per remaining use); one scoped to a single Entry is a team's join link, admitting Entrants onto that Entry through the activation function — it has no window of its own (it ends with the Entry, the swap deadline, or a change that makes its Track invite-only or hidden or its Event private), admits while the Entry's playing Entrants and its own uses (the rows it admitted that are still active or were removed) are below the maximum, and passes no Track setting. "Invite link" is its everyday name in the UI.
 _Avoid_: Token, password, coupon, unlock code
 
 **Visibility**:
@@ -91,11 +91,11 @@ _Avoid_: Attendance, arrival
 ### People
 
 **Organizer**:
-A member of the Community that owns a tournament or Event — or an owner or admin of one of that Community's ancestors (ADR 0028) — operating it end to end: managing participants, entering results, advancing the tournament. Always an Account. The role of a member — owner, admin, organizer, or staff (defined, not yet built) — says which capabilities they hold; "owner" names the one member who manages the Community itself, not an Organizer, and "admin" the members who govern it beside the owner.
+A member of the Community that owns a tournament or Event, operating it end to end: managing participants, entering results, advancing the tournament. Always an Account. The role of a member — owner, admin, organizer, or staff (defined, not yet built) — says which capabilities they hold; "owner" names the one member who manages the Community itself, not an Organizer, and "admin" the members who govern it beside the owner.
 _Avoid_: Admin as a word for an Organizer (it is a member's role), host, co-organizer (an Organizer is one already)
 
 **Community**:
-The named group that owns Events, tournaments, bans, and participant codes, can publish its own Rankings, and may carry Squads of players; every Organizer acts as a member of one, and a Community with a Squad is what everyone calls a team. Each Account gets a first Community, named after the person, that is in no way special. It has exactly one owner, who manages members and the Community itself, any number of admins, who govern it beside the owner, and any number of organizers; people join through an Access Grant, an Event is handed to another Community through one, and a Community is deleted by its owner — a child also by the parent's owner or admin — while nothing published is pending and it has no child Communities. Communities nest under exactly one parent, three deep: the parent's owner and admin govern the children and the parent's bans apply to them.
+The named group that owns Events, tournaments, bans, and participant codes, can publish its own Rankings, and may carry Squads of players; every Organizer acts as a member of one, and a Community with a Squad is what everyone calls a team. Each Account gets a first Community, named after the person, that is in no way special. It has exactly one owner, who manages members and the Community itself, any number of admins, who govern it beside the owner, and any number of organizers; people join through an Access Grant, an Event is handed to another Community through one, and a Community is deleted by its owner while nothing published is pending. Communities nest under exactly one parent, three deep, and the link is display only: a child is shown as part of its parent, whose Rankings may count the child's tournaments, and each Community governs itself — no role, ban, or code reaches through the link (ADR 0028).
 _Avoid_: Organization, guild, group, club (all of these are Communities)
 
 **Reachable**:
@@ -115,7 +115,7 @@ A tournament's Participants taken as a whole. For a Track's tournament it follow
 _Avoid_: Participant list, entrant list, squad (a Squad is a team's standing list of players; a Lineup is who played)
 
 **Player**:
-The persistent identity of a competitor across tournaments: a record holding no contact data (it still links one person's records, so it is personal data in law), created at a person's first Entry or Squad membership and kept after their account is deleted. Self-made Entrants link to a Player automatically; typed-name Entrants are claimed by their Player later. Merging two identities keeps both rows, one as an alias, so no stored standing loses its key. Rankings attach to Players or to chains of Entries, never to Participants.
+The persistent identity of a competitor across tournaments: a record holding no contact data (it still links one person's records, so it is personal data in law), created at a person's first Entry or Squad membership and kept after their account is deleted. Self-made Entrants link to a Player automatically; typed-name Entrants are claimed by their Player later. Merging two identities — an anonymous one into an account, or a deleted account's history handed to another account of the person's — keeps both rows, one as an alias, so no stored standing loses its key. Rankings attach to Players or to chains of Entries, never to Participants.
 _Avoid_: User, member
 
 **Spectator**:
@@ -123,7 +123,7 @@ Anyone following a tournament without competing in or operating it.
 _Avoid_: Viewer, audience
 
 **Account**:
-A user who has verified an email address by signing in with a one-time code, and so is Reachable. A Registrant may start as an anonymous identity tied to one browser; verifying an email upgrades it in place, or merges its Entrant rows into the account that already holds that email. Everything on the Organizer side, joining a Waitlist, registering on an account-required Track, and using MCP need one. Deleting it removes the person's data and keeps the records they appear in.
+A user who has verified an email address by signing in with a one-time code, and so is Reachable. A Registrant may start as an anonymous identity tied to one browser; verifying an email upgrades it in place, or merges its Entrant rows into the account that already holds that email. Everything on the Organizer side, joining a Waitlist, registering on an account-required Track, and using MCP need one. Deleting it removes the person's data and keeps the records they appear in; at that moment the person may hand their competition history to another account of theirs (ADR 0022).
 _Avoid_: Profile, login, registered user
 
 **Share Link**:
@@ -131,7 +131,7 @@ A tournament's unlisted URL granting view-only, real-time access to its bracket 
 _Avoid_: Public link, invite link
 
 **Report**:
-A signed-in account's notice to the operator that something on cobracket is abusive — phishing, harassment, or other. It only queues the item for the operator: nothing is acted on automatically, except that a reported Community logo is hidden while the report is under review (ADR 0028), and the reported side is never told of it. The operator judges from the content's history: each version of user-written content others saw that an edit or a deletion replaced, names aside, is kept 30 days for the operator alone, with its Event, standalone tournament, Community, or Ranking rather than its author, and a report pins those versions while it is open, marking the one the reporter saw.
+A signed-in account's notice to the operator that something on cobracket is abusive — phishing, harassment, or other. It only queues the item for the operator: nothing is acted on automatically, and the reported side is never told of it. The operator judges from the content's history: each version of user-written content others saw that an edit or a deletion replaced, names aside, is kept 30 days for the operator alone, with its Event, standalone tournament, Community, or Ranking rather than its author, and a report pins those versions while it is open, marking the one the reporter saw.
 _Avoid_: Flag, complaint
 
 **Suspension**:
@@ -139,7 +139,7 @@ The operator's sanction on a person (an account or an anonymous identity), a Com
 _Avoid_: Ban, block (both are Sanctions), takedown
 
 **Sanction**:
-One row that replaces the Organizer's block and the Community's ban. Its scope is a Track or a Community — a Community-scope Sanction is a ban and reads along the tree, binding the Community's descendants — and its target a person or a Community. A person-target row is set from an Entrant row (or, from the ban preview, from a Squad member with none) — by the Organizer on a Track, by the banning Community's owner or admin at Community scope — and carries the person and, when one exists, that source Entrant; a Community-target row (a ban on a team, Community scope only) is set by the banning Community's owner or admin from the ban preview or the Community page and carries neither. Lifted by whoever may set it, which ends the row and reinstates nothing. A person-target row is stored per person and never shown to anyone else; a dormant row keeps the person's participant code.
+One row that replaces the Organizer's block and the Community's ban. Its scope is a Track or a Community — a Community-scope Sanction is a ban on that Community's own Events — and its target a person or a Community (a team: the row covers the target's Squads and its descendants'). A person-target row is set from an Entrant row (or, from the ban preview, from a Squad member with none) — by the Organizer on a Track, by the banning Community's owner or admin at Community scope — and carries the person and, when one exists, that source Entrant; a Community-target row (a ban on a team, Community scope only) is set by the banning Community's owner or admin from the ban preview or the Community page and carries neither. Lifted by whoever may set it, which ends the row and reinstates nothing. A person-target row is stored per person and never shown to anyone else; a dormant row keeps the person's participant code.
 _Avoid_: Block, blacklist
 
 ### Teams
@@ -149,7 +149,7 @@ The everyday word for a Community that carries a Squad, and, in a tournament, fo
 _Avoid_: Crew, clan, roster (as the team itself)
 
 **Squad**:
-A standing list of Players a Community keeps for competition — several per Community if it fields more than one unit. Its players are called Squad members; a Community's people are members. Joining one needs an Account and is standing consent to be entered in tournaments by the Community's staff; it confers no permission; each Squad member may carry one display label (coach, sub, …). "Staff" means the Community's members acting for its Squads and Squad-linked Entries, whatever their role: every member (owner, admin, organizer, staff) may operate a Squad-linked Entry — register it, set its lineup, accept or decline an Offer, cancel it — while creating or deleting a Squad and editing its players and labels take the owner, admin, or organizer, and removing a player from a descendant's Squad takes the ancestor's owner or admin. Named by the Community's name, plus its own where the Community has several.
+A standing list of Players a Community keeps for competition — several per Community if it fields more than one unit. Its players are called Squad members; a Community's people are members. Joining one needs an Account and is standing consent to be entered in tournaments by the Community's staff; it confers no permission; each Squad member may carry one display label (coach, sub, …). "Staff" means the Community's members acting for its Squads and Squad-linked Entries, whatever their role: every member (owner, admin, organizer, staff) may operate a Squad-linked Entry — register it, set its lineup, accept or decline an Offer, cancel it — while creating or deleting a Squad and editing its players and labels take the owner, admin, or organizer. Named by the Community's name, plus its own where the Community has several.
 _Avoid_: Roster (that is a tournament's Participants), lineup, team (a Squad is a team's standing list of players, not the team)
 
 **Entrant**:
@@ -161,7 +161,7 @@ The playing Entrants of an Entry at an instant: a match's Lineup is who was acti
 _Avoid_: Roster, squad, starters, substitution (that re-points a withdrawn Participant to another Entry; changing who plays is a swap or the Organizer's lineup change)
 
 **Affiliation**:
-A mutual, permission-free link between two Communities shown on both pages — a team in a league, a club in a federation. Shares no bans, codes, or visibility; what should share them is a parent, not an affiliate.
+A mutual, permission-free link between two Communities shown on both pages — a team in a league, a club in a federation. Shares no permission, ban, or code — nor does a parent link (ADR 0028); a parent differs in that the child is shown as part of it and the parent's Rankings may count the child's unlisted tournaments.
 _Avoid_: Partnership, membership (that is a person's), parent
 
 ### Communication
