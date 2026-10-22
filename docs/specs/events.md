@@ -6,7 +6,7 @@ Synthesized from the grilling session of 2026-09-27/28 with the owner, then hard
 
 ## Problem Statement
 
-An Organizer running a community event today collects entrants by hand — a Discord thread, a form, a spreadsheet — and then types every name into a bracket tool. Capacity, waitlists, late dropouts, invitations, and "is this bracket final?" are all managed in chat. Registrants cannot see where they stand, spectators cannot find the bracket, and every change is a message someone misses. Existing event tools (Luma) handle registration but know nothing about brackets; bracket tools (start.gg) handle both but are heavy, dated, and account-first.
+An Organizer running a community event today collects entrants by hand — a Discord thread, a form, a spreadsheet — and then types every name into a bracket tool. Capacity, waitlists, late dropouts, invitations, and "is this bracket final?" are all managed in chat. Registrants cannot see where they stand, spectators cannot find the bracket, and every change is a message someone misses. Existing event tools (Luma) handle registration but know nothing about brackets; bracket tools (start.gg) handle both but are heavy for a community event and account-first; Tonamel, the Japanese default, already joins registration (lottery, waitlist, QR check-in) to brackets, but wants a social-login account from every participant and has no cross-tournament rankings ([`docs/competitors.md`](../competitors.md)).
 
 ## Solution
 
