@@ -20,7 +20,7 @@ Events bring the first content that is not simply "anyone with the link": invita
 
 ## Consequences
 
-- Regenerating an Event's slug regenerates its attached Share Links too unless the Organizer keeps them, and Share Link pages never reveal the Event's slug otherwise; regeneration does not revoke Grants.
+- Regenerating an Event's slug regenerates its attached Share Links too unless the Organizer keeps them, and Share Link pages never reveal the Event's slug otherwise; regeneration does not revoke Grants, and a Ranking that names the tournament links it by the Share Link it had at its first completion and by none once that link is regenerated (ADR 0025).
 - On a private Event the UI calls invite links "people with an invite link", because an unlimited Grant differs from an unlisted link only in being revocable.
 - Removing someone's Entry may also block them on that Track (the Organizer's choice, off by default, stored as a flag on the ended Entry); a block ends every view of that Track that rests on a relation, on a Grant, or on the Track being hidden or its Event private (the rest of the Event is unaffected) — an unlisted bracket stays open to anyone holding its bearer link, as for any spectator — and the preview says exactly that. Anonymous identities were free to mint, so every per-user limit depended on a cost to minting one, which [ADR 0027](./0027-abuse-limits-where-things-reach-others.md)'s robot check provides.
 - Registration tells the person every place their display name will appear: the registrant list (as configured), the published bracket, and the Organizer's views.
