@@ -166,6 +166,7 @@ function Bad() {
 | `useMemo` | `createMemo` | キャッシュされた派生 state |
 | `useEffect` | `createEffect` | 命令的（imperative）な同期処理 |
 | `createContext` / `useContext` | `createContext` / `useContext` | サブツリーで共有する state |
+| `useDeferredValue` | `createDeferred` | 入力に**遅れて追従する**派生値（先行はしない）。追いつき中は `isPending` が報告する |
 | custom hook | **custom primitive** | Solid primitives を生成して返すただの関数 |
 
 > ⚠️ この対応表は「**関連する責務**」を示すもので、「**実装が交換可能**」という意味ではありません。必要な data flow から Solid primitive を選んでください。
@@ -194,7 +195,7 @@ setCount((value) => value + 1);
 ## 4. オブジェクト / コレクションの state（store）
 
 - **React**: オブジェクトを更新するとき、新しいオブジェクトを作る（イミュータブル更新）。
-- **Solid の store**: **読み取り専用のリアクティブな view** と、**draft を mutate する setter** を提供する。
+- **Solid の store**: **読み取り専用のリアクティブな view** と、**draft を mutate する setter** を提供する。view への直接の書き込み（`todos.push(x)`、`todo.done = true`）は**無視される**（TypeScript は通り、例外も出ない。dev では 2.0.0-rc.17 以降 `[STORE_WRITE_OUTSIDE_SETTER]` が store とキーごとに一度警告する）。
 
 **React**
 
@@ -245,7 +246,7 @@ function rename(name: string) {
 | 購読の単位 | **signal そのもの1個**（＝箱ごと） | **アクセスした各プロパティ** |
 | 更新の伝え方 | setter に**新しいオブジェクトを渡す**（参照が変わる） | setter で **draft を mutate する** |
 | `name` だけ変えたとき | その signal を読んでいる**すべて**の reader が再実行される | `name` を読んでいる reader **だけ**が再実行される |
-| 中身を直接書き換えたとき | **何も起きない**（setter を通っておらず、監視もされていない） | — |
+| 中身を直接書き換えたとき | **何も起きない**（setter を通っておらず、監視もされていない） | **無視される**（draft を通らない書き込みは捨てられる。dev では `[STORE_WRITE_OUTSIDE_SETTER]` の警告） |
 
 ```tsx
 // signal にオブジェクトを入れた場合
@@ -637,6 +638,7 @@ createEffect(
 - その**返り値が apply 関数の入力**になる。
 - **apply 関数**: 命令的な処理を行い、cleanup を返せる。
 - **apply 関数の中の読み取りは依存にならない。**
+- **effect は値を比較しない。** compute が再実行されれば、返り値が前回と等しくても apply は毎回走る。等しい結果で処理をスキップしたいなら、compute の中で `createMemo` を読む（memo が等値の境界になる）。
 
 ### すべての React effect が Solid effect になるわけではない
 
@@ -813,7 +815,7 @@ return (
 ```
 
 - **`onInput`** は、ブラウザの input イベントを**都度**観測する（React の `onChange` に相当する使い心地）。
-- **`onChange`** は、**native な change イベントのタイミングが意図した挙動である場合**に使う。
+- **`onChange`** は、**native な change イベントのタイミングが意図した挙動である場合**に使う。ただし **`value={props.name} onChange={commit}` のように「確定済みの値」を bind して逐次の書き込みを持たない形は危険**: その binding のテンプレートが読む何かが変わるたびに `props.name` が DOM へ書き戻され、ユーザーが打って未確定の文字が消える（dev では 2.0.0-rc.17 以降 `[UNCOMMITTED_INPUT_OVERWRITTEN]` が報告する）。`onInput` で書く draft signal（§6 の `createSignal(() => props.name)`）、非制御なら `defaultValue`、または明示的な書き戻しにする。
 - **イベントハンドラは reactive tracking の外で実行される。** → signal / store の現在値を、購読せずに読める。
 
 ### 9.1 「reactive tracking の外で実行される」とは
@@ -901,6 +903,8 @@ React では、ハンドラは render のたびに再生成されるため、メ
 React の controlled input は、**再レンダリングのたびに DOM の値を state の値へ強制的に戻します**。そのため、ハンドラで state を更新しなければ入力が弾かれます（入力制限の実装によく使われる挙動）。
 
 Solid の `value={query()}` は、**`query` が変化したときにその DOM プロパティを書くだけ**です。signal を更新しなければ書き込みも起きないので、**ユーザーが打った文字はそのまま残ります**。
+
+逆向きの落とし穴もあります。binding の**テンプレートが再実行されたとき**は書き込みが起きるので、`value` に確定済みの値を bind して逐次の書き込みを持たないフィールドでは、兄弟の binding が変わっただけで未確定の入力が消えます（§9 の `[UNCOMMITTED_INPUT_OVERWRITTEN]`）。
 
 ```tsx
 // React: 数字以外は入力できない（state が変わらず、DOM が巻き戻される）
@@ -1256,7 +1260,7 @@ function ThemeButton() {
 
 | | React | Solid |
 |---|---|---|
-| 作成 | `createContext(defaultValue)` | `createContext<T>()`（既定値は任意） |
+| 作成 | `createContext(defaultValue)` | `createContext<T>()`（既定値なし＝provider 必須。任意にするなら `createContext<T \| null>(null)`） |
 | provider | `<Ctx.Provider value={...}>` | **`<Ctx value={...}>`**（context 自体が provider） |
 | 読み取り | `useContext(Ctx)` | `useContext(Ctx)`（同じ） |
 
@@ -1335,7 +1339,7 @@ function useTheme() {
 
 **Solid**: `createContext<T>()` と**既定値なしで作れば、provider の外で読まれた時点で throw します。** 上のようなラッパーを書かなくても、**型の上でも `undefined` を含まない**ので `if (!ctx)` のガードが不要です。
 
-> 既定値を渡した場合は React と同様、provider がなければその既定値が返ります。**「provider 必須」を表明したいなら既定値を渡さない**、という設計判断になります。
+> 既定値を渡した場合は React と同様、provider がなければその既定値が返ります。**「provider 必須」を表明したいなら既定値を渡さない**、という設計判断になります。ただし **`undefined` は「未提供」の意味**です（2.0.0-rc.17 以降）: `createContext(undefined)` は既定値なしの形と同じで、`<Ctx value={undefined}>` も provider なし扱いになり読み取りは throw します。上の React 流 `createContext<T | undefined>(undefined)` をそのまま移さないこと。「値が無いこともある」context は `createContext<T | null>(null)` と `value={null}` で表します。
 
 ### 12.4 context に「何を」渡すか
 
@@ -1494,7 +1498,7 @@ function SearchField() {
 ```
 
 - React は commit された要素を ref オブジェクトの **`current`** に保存する。
-- Solid の callback は、**Solid が要素を作成した後にその要素を受け取り**、ローカル変数に代入する。
+- Solid の callback は、**Solid が要素を作成した後にその要素を受け取り**、ローカル変数に代入する。呼ばれるのは**要素が DOM に接続される前**（`el.isConnected` は `false`）で、**untracked かつ owner なし**。サイズ計測や focus は `onSettled` で行い、callback の中で effect や cleanup を登録しない（返り値は無視される）。
 - Solid の `ref` prop は、**代入可能な変数**または **callback の配列**も受け取れる。
 
 ### component をまたいで ref を渡す・合成する
@@ -1526,7 +1530,7 @@ function SearchField(props: SearchFieldProps) {
 
 ### ref directive を使うべき場面
 
-要素の挙動に、**再利用可能な setup / native なイベントオプション / owner に紐づくリアクティブな処理 / cleanup** が必要なとき。
+要素の挙動に、**再利用可能な setup / native なイベントオプション**が必要なとき。owner に紐づくリアクティブな処理や cleanup が要るなら、directive を**ファクトリ**にして、その中で owned な primitive（`onSettled` など）を作り、要素を受け取る callback だけを返す。ref callback 自体は owner を持たないので、その中で effect や `onCleanup` を作ってはいけない。
 
 ---
 
@@ -1893,6 +1897,8 @@ function selectUser(id: string) {
 - この **「UI を保持する挙動」が React の transition に最も近い類似物**。
 - 保持中の view に更新中インジケータが必要なら [`isPending`](https://v2.solidjs.com/reference/solid-js/reactivity/is-pending) を使う。**明示的な `startTransition` 呼び出しではなく自動。**
 
+transition 系で唯一そのまま対応物があるのは `useDeferredValue` です。`createDeferred(() => filter(rows(), query()))` は**入力に遅れて追従するが先行はしない** async memo で、重い派生が追いつくまで UI は操作可能なまま、`isPending(deferred)` が追いつき中を報告します（Solid 2.0 の API で、1.x の `createDeferred(source, { timeoutMs })` とは別物）。
+
 ### `action`
 
 Solid の [`action`](https://v2.solidjs.com/reference/solid-js/lifecycle-actions/action) は、**generator ベースの mutation、optimistic state、refresh 挙動**を協調させます。
@@ -1950,4 +1956,6 @@ Solid の [`action`](https://v2.solidjs.com/reference/solid-js/lifecycle-actions
 | `className` / `backgroundColor` | Solid は DOM/CSS 側の名前 | `class` / `"background-color"` |
 | `onChange` で逐次入力を取る | Solid の `onChange` は native な change | `onInput` |
 | `startTransition` を探す | Solid は自動で held update になる | 同期コールスタックにまとめる + `isPending` |
+| `useDeferredValue` を探す | 遅れて追従する派生値はある | `createDeferred(fn)` + `isPending(deferred)` |
+| context に `undefined` を既定値や `value` で渡す | Solid では `undefined` = 未提供（読み取りが throw） | 既定値なし、任意なら `createContext<T \| null>(null)` |
 | Suspense を component 単位で考える | Solid は**データ**単位で待つ | 読み取りの owner ancestor に `Loading` を置く |
