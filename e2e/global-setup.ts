@@ -65,10 +65,11 @@ declare module "vitest" {
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const ENV_LOCAL = join(ROOT, ".env.local");
 /**
- * Where playwright-core keeps browsers when `PLAYWRIGHT_BROWSERS_PATH` is
- * unset: its own default, named here so the gate can install into it and
- * point the test workers at it when the variable names a store that lacks
- * the pinned build.
+ * The store the gate falls back to when `PLAYWRIGHT_BROWSERS_PATH` names
+ * one that lacks the pinned build: a directory of its own, so that store
+ * is never written to. It is playwright's own default on Linux (macOS and
+ * Windows default elsewhere, which only matters when the variable is
+ * unset — then playwright chooses, and this constant is not used).
  */
 const BROWSER_CACHE = join(homedir(), ".cache", "ms-playwright");
 /** The deployment `CONVEX_AGENT_MODE=anonymous` runs: fixed by the CLI, named here once. */
@@ -330,22 +331,31 @@ async function chromiumLaunches(): Promise<boolean> {
  * Make sure the browser the gate drives exists, like the Convex backend
  * binary the CLI fetches on first use: `playwright-core` is pinned exactly
  * and downloads nothing on install, so the build it wants is a download the
- * gate owns. A store the environment points at that carries a different
- * build — the hosted agent images preinstall one and set
- * `PLAYWRIGHT_BROWSERS_PATH` to it — is left alone: the pinned headless
- * shell goes to playwright's default cache and the workers are pointed
- * there, which is why this runs before the servers start, in the process
- * the workers inherit their environment from. The preinstalled build is not
- * a substitute (measured: Chromium 141 through `executablePath` on this
- * scenario tripped `[HOT_SCOPE_TIME]` twice at 8.1ms and 8.3ms, where the
- * pinned 153 headless shell passes). The headless shell is all a headless
- * launch needs; CI's `install chromium` carries it too.
+ * gate owns. With `PLAYWRIGHT_BROWSERS_PATH` unset the headless shell goes
+ * where playwright puts browsers on this platform, the same place a
+ * `playwright-core install` by hand would. A store the variable points at
+ * that carries a different build — the hosted agent images preinstall one
+ * and set the variable to it — is left alone: the shell goes to
+ * `BROWSER_CACHE` and the workers are pointed there, which is why this runs
+ * before the servers start, in the process the workers inherit their
+ * environment from. The preinstalled build is not a substitute (measured:
+ * Chromium 141 through `executablePath` on this scenario tripped
+ * `[HOT_SCOPE_TIME]` twice at 8.1ms and 8.3ms, where the pinned 153
+ * headless shell passes). The headless shell is all a headless launch
+ * needs; CI's `install chromium` carries it too.
  */
 async function ensureChromium(): Promise<void> {
   if (await chromiumLaunches()) return;
+  const store = process.env.PLAYWRIGHT_BROWSERS_PATH === undefined ? undefined : BROWSER_CACHE;
+  installHeadlessShell(store);
+  if (store !== undefined) process.env.PLAYWRIGHT_BROWSERS_PATH = store;
+}
+
+/** `playwright-core install` of the headless shell, into `store` or playwright's own default. */
+function installHeadlessShell(store: string | undefined): void {
   const install = spawnSync("bun", ["x", "playwright-core", "install", "chromium-headless-shell"], {
     cwd: ROOT,
-    env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: BROWSER_CACHE },
+    env: store === undefined ? process.env : { ...process.env, PLAYWRIGHT_BROWSERS_PATH: store },
     encoding: "utf8",
   });
   if (install.status !== 0) {
@@ -353,7 +363,6 @@ async function ensureChromium(): Promise<void> {
       `playwright-core install failed (${install.status}):\n${install.stdout}\n${install.stderr}`,
     );
   }
-  process.env.PLAYWRIGHT_BROWSERS_PATH = BROWSER_CACHE;
 }
 
 /** What the gate brought up, or reused, and how to take it down. */
