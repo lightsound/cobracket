@@ -49,7 +49,7 @@ A registration unit within an Event that participants enter: one game's competit
 _Avoid_: Division, slot, sub-event
 
 **Registration requirement**:
-A Track's setting saying who may be an Entrant — one ladder of three rungs: anonymous allowed (anonymous identities, and a captain may type a name with a claim link unless the Track is invite-only or hidden or its Event private) ⊃ account required (the default: every Entrant is an Account with a verified email, that is, Reachable; typed names only by the Organizer) ⊃ Squad-linked teams only (every Entry links a Squad). It applies to every Entrant of every Entry on the Track.
+A Track's setting saying who may be an Entrant — one ladder of three rungs: anonymous allowed (anonymous identities; on a one-player Track only) ⊃ account required (the default, and a team Track's floor: every Entrant is an Account with a verified email, that is, Reachable; typed names only by the Organizer) ⊃ Squad-linked teams only (every Entry links a Squad). It applies to every Entrant row of every Entry on the Track, invitations and requests included, and to a claim on a team Track (a one-player Track's claim links stay exempt).
 _Avoid_: Reachable-only, verified-only, open
 
 **Entry**:
@@ -99,7 +99,7 @@ The named group that owns Events, tournaments, bans, and participant codes, can 
 _Avoid_: Organization, guild, group, club (all of these are Communities)
 
 **Reachable**:
-Said of a user cobracket can actually send a message to, through at least one verified channel such as a confirmed email address. Being signed in is not enough. Waiting states (the Waitlist) and account-required Tracks require it.
+Said of a user cobracket can actually send a message to, through at least one verified channel such as a confirmed email address. Being signed in is not enough. Waiting states (the Waitlist) and account-required Tracks, every team Track among them, require it.
 _Avoid_: Verified, registered, logged in
 
 **Registrant**:
