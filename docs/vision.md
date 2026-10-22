@@ -56,7 +56,7 @@ Five families, no custom formats (ADR 0002): single elimination, double eliminat
 - **Organizer**: operates everything, as a member of the Community that owns the Event or tournament (ADR 0023) — every person's first Community is created with their account, so a solo Organizer never sees the difference. An account with a verified email (ADR 0024).
 - **Community**: the named group that owns Events and tournaments, publishes Rankings (ADR 0025: any Community may, over any non-private tournaments it can view), and may carry Squads of players — which is what a team is (ADR 0028). One owner, any number of admins and organizers; invitations are links (ADR 0023); Communities nest under one parent.
 - **Participant / Spectator**: view-only through the Share Link, realtime, no account.
-- **Registrant** (Events): registers for a Track from the Event's page, signed in with a verified email by default or anonymously on a one-player Track where the Organizer allows it, and follows their own status (`docs/specs/events.md`).
+- **Registrant** (Events): registers for a Track from the Event's page, signed in with a verified email by default or anonymously on a one-player Track where the Organizer allows it (ADR 0029), and follows their own status (`docs/specs/events.md`).
 - Participant self-reporting of results is a post-MVP candidate; co-organizing is specified (`docs/specs/events.md`, slice 2).
 
 ## MVP scope (current plan)
@@ -118,7 +118,7 @@ Done: **production deployment** (ADR 0010), live for the owner's design review s
 
 ## Roadmap candidates after MVP
 
-Rough order: account sign-in and Communities (the owners of everything an Organizer runs — ADR 0023, 0024; moved ahead on 2026-10-14 because every later rule depends on who owns an Event) → luma-style Event hosting with Tracks, registration, and check-in (MCP-operable — the north-star loop starts here, and registration removes the name-typing pain) → Discord bot as the second chat surface, once the operations API covers Events → participant self-reporting → remaining format families → teams (ADR 0028–0030: Squads and the Community tree, team Entries, Follows — the Events line's last three slices in `docs/specs/events.md`) → claiming of past results by their Players → Rankings and Seasons (ADR 0025, 0026: manual first, then placement points, then ratings; feeding seeding; team Rankings, ADR 0030) → spectator-page ads → paid entry, paid straight to the Organizer's own payment account.
+Rough order: account sign-in and Communities (the owners of everything an Organizer runs — ADR 0023, 0024; moved ahead on 2026-10-14 because every later rule depends on who owns an Event) → luma-style Event hosting with Tracks, registration, and, after `docs/specs/events.md`'s twelve slices, check-in (MCP-operable — the north-star loop starts here, and registration removes the name-typing pain) → Discord bot as the second chat surface, once the operations API covers Events → participant self-reporting → remaining format families → teams (ADR 0028–0030: Squads and the Community tree, team Entries, Follows — the Events line's last three slices in `docs/specs/events.md`) → claiming of past results by their Players → Rankings and Seasons (ADR 0025, 0026: manual first, then placement points, then ratings; feeding seeding; team Rankings, ADR 0030) → spectator-page ads → paid entry, paid straight to the Organizer's own payment account.
 
 ## Open questions
 
