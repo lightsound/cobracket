@@ -4,7 +4,7 @@ Settled in the grill-with-docs sessions of 2026-08. Vocabulary lives in [`CONTEX
 
 ## Problem
 
-Existing tournament tools are slow, dated in design, and confusing to operate. Hosting even a small community tournament demands more work from the Organizer than it should. Modern tech (realtime-first backend, fast UI) and AI (chat-driven operation) can replace them.
+Existing tournament tools ask more of a small community Organizer than the tournament does, and the incumbents want an account from every participant who registers, checks in, or reports a result. (That they are also slow, dated in design, and confusing to operate is the owner's impression and the motivation for cobracket; it was not checked against organizer reviews — see [`docs/competitors.md`](./competitors.md).) Modern tech (realtime-first backend, fast UI) and AI (chat-driven operation) can do better.
 
 ## Product
 
@@ -12,9 +12,9 @@ Existing tournament tools are slow, dated in design, and confusing to operate. H
 
 Differentiators, in order:
 
-1. **Chat operations via MCP** (ADR 0001): an Organizer runs a tournament from their own AI client. Almost no existing tool offers this.
+1. **Chat operations via MCP** (ADR 0001): an Organizer runs a tournament from their own AI client. No major platform (start.gg, Challonge, Battlefy, Toornament, Tonamel) offers this as of 2026-10-18, but it is no longer rare: Whistle.day, Turnale, and Turniermeister shipped write-capable MCP servers in August–October 2026 ([`docs/competitors.md`](./competitors.md)). What stays distinctive is one operations API shared by the web UI, MCP, and the Discord bot, reaching Events and Rankings as well as brackets.
 2. **A tournament in a minute** (ADR 0003, amended by ADR 0024 on 2026-10-14): one email code, no password, no profile — then create a tournament in seconds. Registrants still need no account where the Organizer allows it.
-3. **Fast, modern, realtime UI**: spectators watch the bracket update live through the Share Link.
+3. **Fast, modern, realtime UI**: spectators watch the bracket update live through the Share Link, with no account. The account-free live view is the floor now rather than a difference — OFTN.GG (since 2025), parry.gg (since 2024), Whistle.day, and Tonamel all update a bracket live for anyone holding the link — so what this differentiator has to mean is the speed and finish of the page itself, measured against those four as much as against start.gg and Challonge.
 
 ## North star
 
@@ -22,7 +22,7 @@ The long-term shape of cobracket is a full competitive-season loop, for any comp
 
 > Host an Event → participants register → tournaments run → results are recorded → results feed Seeding within the discipline (winning a large tournament raises your seed) → a period's results aggregate into Rankings → the next season begins.
 
-Today communities assemble this by hand on top of start.gg-style APIs, with someone aggregating results into homemade rankings. cobracket automates the loop, supporting both community-run rankings (their own criteria) and official ones. No existing app covers the whole loop. Event hosting (luma-style, including registration) must be MCP-operable like everything else.
+Today communities assemble this by hand on top of start.gg-style APIs, with someone aggregating results into homemade rankings (JJPR and Japan Smash Ranking for Smash in Japan, Braacket imports elsewhere). cobracket automates the loop, supporting both community-run rankings (their own criteria) and official ones. No existing app covers the whole loop for any discipline: start.gg has most of the pieces (events inside a tournament, leagues, rankings, a seed generator fed by its rankings) but gates leagues behind support approval, keeps no ranking history, and cannot rank participants without accounts; sendou.ink closes the loop for one game, Splatoon ([`docs/competitors.md`](./competitors.md)). Event hosting (luma-style, including registration) must be MCP-operable like everything else.
 
 Events, registration, rankings, and seasons are direction, not MVP scope; the MVP stays a standalone tournament. Settled so far:
 
@@ -43,6 +43,7 @@ Events, registration, rankings, and seasons are direction, not MVP scope; the MV
 - First audience: **game and esports community tournaments** (Discord-centric culture).
 - Core scale: **8–64 participants** per tournament.
 - Market: **global from day one.** UI is English-first with Japanese also provided (i18n structure from the start). Source code, docs, and commits are English only, per the AGENTS.md language policy (which grandfathers one vendored Japanese reference).
+- Competitors: [`docs/competitors.md`](./competitors.md) — the landscape as of 2026-10-18 by group, with fee benchmarks and the Japanese legal limits on fees and prizes. It is dated; re-check its fast-moving parts before relying on them.
 
 ## Formats
 
@@ -79,8 +80,8 @@ Settled in the final audit rounds; each is nearly free on day one and expensive 
 
 ## Monetization hypothesis
 
-- **Hosting and running a free-entry tournament is free, forever.** That promise is what moves people off existing tools.
-- Revenue: (1) a cut of entry fees on paid-entry tournaments — post-MVP, built on a platform payment provider (Stripe Connect-style; in Japan this touches funds-settlement regulation, so it is a deliberate later investment); (2) ads on Spectator pages (Share Link views) only — never on Organizer screens, which would undercut the "pleasant to operate" positioning.
+- **Hosting and running a free-entry tournament is free, forever.** Free hosting is the floor, not the lever: start.gg, Challonge, Tonamel, and OFTN.GG (up to 32 players) host free-entry tournaments free as well, so the promise keeps cobracket in the comparison rather than winning it.
+- Revenue: (1) a cut of entry fees on paid-entry tournaments — post-MVP, built on a platform payment provider (Stripe Connect-style; in Japan this touches funds-settlement regulation, so it is a deliberate later investment); (2) ads on Spectator pages (Share Link views) only — never on Organizer screens, which would undercut the "pleasant to operate" positioning. Fee benchmarks (start.gg 6% since 2025-02-14, Tonamel 5% + ¥100 per entry, Toornament and Luma Plus 0%) and the Japanese limits on fees and prizes (gambling law; Nintendo's and Capcom's community-tournament guidelines) are in [`docs/competitors.md`](./competitors.md).
 - An "entry fee" field may appear early to measure demand before payments exist.
 
 ## Project posture (current)
