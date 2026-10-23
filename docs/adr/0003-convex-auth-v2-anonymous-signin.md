@@ -7,4 +7,4 @@ Organizers must be able to create a tournament with zero sign-up friction. We ad
 ## Consequences
 
 - Auth is isolated behind a single module (e.g. `src/lib/auth`) that exposes only "who is the current Organizer" — and, from ADR 0021 (amended 2026-10-14), sign-in, the merge, sign-out, email change, and account deletion, still through that one seam; ImportLint enforces the boundary. If Auth v2 stalls or changes shape, that one module is swapped (Convex Auth v1 or an external IdP) without touching the app.
-- MCP clients cannot reuse the browser session, so the MCP server authenticates with a token issued from the web UI instead — to an account with a verified email only (amended 2026-10-14, ADR 0021): an anonymous Organizer attaches an email first.
+- MCP clients cannot reuse the browser session, so the MCP server authenticates with a token issued from the web UI instead — to an account with a verified email only (amended 2026-10-14, ADR 0021 and 0024: every Organizer is an email account, so there is no anonymous Organizer to attach one first).

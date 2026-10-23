@@ -175,7 +175,7 @@ A message an Organizer posts to an Event's audience; its own document, editable 
 _Avoid_: Post, broadcast, news
 
 **Follow**:
-A person's standing interest in a subject so its Activities reach them. Registrants and Organizers follow what they take part in implicitly; an Account follows a Community explicitly — its Entries confirmed on public Events, placements in public tournaments, Squad changes, and moves in the public Rankings its page shows reach them, in the app and by email if they ask — and explicit Follows of Events, Tracks, and Players come later.
+A person's standing interest in a subject so its Activities reach them. Registrants and Organizers follow what they take part in implicitly; an Account follows a Community explicitly — its Entries confirmed on public Events, placements in public tournaments, Squad changes, and moves in the public Rankings its page shows reach them, in the app and, once the directory exists, by email if they ask (ADR 0028) — and explicit Follows of Events, Tracks, and Players come later.
 _Avoid_: Subscription (the mechanism, not the domain term), watch
 
 ### Rankings
