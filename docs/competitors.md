@@ -8,7 +8,7 @@ Seven groups: global esports tournament platforms, Japanese tournament services,
 
 - Closest to the whole roadmap: **Tonamel** (Japan) and **start.gg** (global). Both already run most of the vision's loop — registration, brackets, organizer groups; start.gg adds leagues, rankings, and ranking-fed seeding.
 - Closest to what cobracket has live (an account-free realtime bracket): **OFTN.GG**, **parry.gg**, **Whistle.day**. That part alone no longer differentiates.
-- Chat operation: **Whistle.day**, **Turnale**, and **Turniermeister** ship write-capable MCP servers (seen September–October 2026; Turnale undated). No major platform does.
+- Chat operation: **Whistle.day**, **Turnale**, and **Turniermeister** ship write-capable MCP servers (seen September–October 2026; Turnale undated), and the self-hosted **Wizzrobe** has one (below; undated). No major platform does.
 - Not found anywhere: Rankings that anyone may publish over other Organizers' public results, with every recalculation kept as a public Revision carrying a diff and a reason. Braacket's history features could not be verified (its site refuses automated reads).
 - Free hosting of free-entry tournaments is the industry floor (start.gg, Challonge, Tonamel, OFTN.GG up to 32 players, Whistle.day), not a lever.
 
