@@ -35,7 +35,7 @@ export default defineConfig({
         // `[solid-refresh]MatchCard`. Nothing of that exists in a production
         // build, and tests have no HMR to serve, so the transform is off here
         // and the gate measures the graph the app actually ships.
-        plugins: [solid({ refresh: { disabled: true } })],
+        plugins: [solid({ refresh: false })],
         test: {
           name: "src",
           // Both extensions, one environment, one setup: a reactive test

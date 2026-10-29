@@ -7,7 +7,7 @@ Project guidance for Claude Code.
 cobracket hosts and manages tournaments of any format, from the web or from chat (MCP). Direction: `docs/vision.md`. Domain glossary: `CONTEXT.md` — use its terms in code, docs, and commits. Decisions: `docs/adr/`. Current spec: `docs/specs/mvp.md`.
 
 <!-- solid2-agent-kit:solid-rules:start -->
-<!-- Managed by solid2-agent-kit v0.23.1. Do not edit inside this block; run `solid2-kit sync` to update. -->
+<!-- Managed by solid2-agent-kit v0.24.0. Do not edit inside this block; run `solid2-kit sync` to update. -->
 
 # Solid 2.0 — not React, not Solid 1.x
 
@@ -575,7 +575,7 @@ directory (default `src/`).
 | `createDeferred(source, { timeoutMs })` (1.x: a signal that lags by idle time) | `createDeferred(fn)` (2.0: an async memo that may lag its inputs but never leads them; `isPending(deferred)` while it catches up) <!-- upstream:create-deferred-export --> |
 | `startTransition`, `useTransition` | automatic held updates + `isPending` |
 | `onError` / `catchError` | `<Errored>` or effect bundle `{ effect, error }` |
-| `from(...)` / `observable(...)` (the solid-js helpers) | inbound: async iterable from a memo; outbound: split effect |
+| `from(...)` / `observable(...)` (the solid-js helpers) | inbound: `from(source)` — the same name in 2.0, but it returns an AsyncIterable for a computation (`createMemo(() => from(source))`), not a signal <!-- upstream:from-source-adapts -->; outbound: split effect |
 | `createDynamic(...)`, `<Dynamic component={...}>` (deprecated in 2.0) <!-- upstream:dynamic-deprecated --> | `dynamic(source)` from `@solidjs/web` — `dynamicComponent(source)` from `solid-js` when the source only answers with a component <!-- upstream:dynamic-component-export --> |
 | `renderToStringAsync(...)` | `await renderToStream(() => <App />)` (one consumer: `pipe` / `pipeTo` / `readable`) |
 | `clearDelegatedEvents` | delete — delegated listeners are scoped to each render root |
