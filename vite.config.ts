@@ -39,7 +39,7 @@ export default defineConfig(({ mode }) => ({
       // same reason (vitest.config.ts); here it stays on for `bun dev`, where
       // HMR is the point, and off for the gate, which measures the graph the
       // app ships.
-      refresh: mode === "e2e" ? { disabled: true } : undefined,
+      refresh: mode === "e2e" ? false : undefined,
       // Same reasoning, second dev-only transform. Since next.47 the dev
       // server injects `@solidjs/web/performance-tracks` ahead of the app
       // entry, which paints every record the engine emits — each re-run,
