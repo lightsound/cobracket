@@ -25,7 +25,7 @@
     "fallow:audit": "fallow audit",
     "fallow:ci": "bun scripts/fallow-ci.ts",
     "fallow:dead-code": "fallow dead-code",
-    "auth:keys": "bun x @convex-dev/auth",
+    "auth:keys": "auth",
     "typecheck": "tsc --noEmit && tsc --noEmit -p convex && tsc --noEmit -p scripts",
     "verify": "bun run check:bun && bun run typecheck && bun run test && bun x vp check && bun run lint:imports && bun run fallow:ci && bun run lint:solid && bun run lint:theme && bun run build"
   },
@@ -34,12 +34,12 @@
     "@fontsource-variable/space-grotesk": "^5.3.0",
     "@solidjs/router": "2.0.0-next.43",
     "@solidjs/web": "^2.0.0-rc.19",
-    "convex": "^1.46.0",
+    "convex": "^1.49.0",
     "solid-js": "^2.0.0-rc.19",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
-    "@convex-dev/eslint-plugin": "^5.0.0",
+    "@convex-dev/eslint-plugin": "^5.0.1",
     "@edge-runtime/vm": "^5.0.0",
     "@import-lint/cli": "^0.1.9",
     "@shadcn/lint": "^0.2.0",

@@ -423,7 +423,12 @@ function startConvex(envFile: string): Child {
  */
 async function awaitPushed(convex: Child, restart: () => Child): Promise<string> {
   const ready = /Convex functions ready/;
-  await convex.waitFor(/Convex functions ready|MissingEnvironmentVariables/, 180_000);
+  // The keyless push's failure, as the convex 1.49 CLI words it (1.46 said
+  // `MissingEnvironmentVariables: AUTH_JWKS, AUTH_PRIVATE_KEY`).
+  await convex.waitFor(
+    /Convex functions ready|declared as required in convex\.config\.ts/,
+    180_000,
+  );
   if (!convex.saw(ready)) {
     generateAuthKeys();
     await stop(convex);
