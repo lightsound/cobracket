@@ -19,7 +19,7 @@ CONVEX_AGENT_MODE=anonymous bun run convex:dev   # tty; leave running
 ```
 
 - bun is `~/.bun-pinned/bun` on PATH.
-- First run may fail the push with `MissingEnvironmentVariables: AUTH_JWKS, AUTH_PRIVATE_KEY`. Fix while that process is still up (the backend stays on :3210):
+- First run may fail the push with `Environment variables AUTH_JWKS, AUTH_PRIVATE_KEY are declared as required in convex.config.ts but their values were not set.` Fix while that process is still up (the backend stays on :3210):
   ```bash
   CONVEX_AGENT_MODE=anonymous CONVEX_DEPLOYMENT=anonymous:anonymous-agent bun run auth:keys
   ```
