@@ -307,7 +307,10 @@ returns the value it set. Dev throws `effect callback returned an invalid cleanu
 production throws a `TypeError` on the next run, and both halt the whole
 reactive system (`[REACTIVITY_HALTED]`). TypeScript reports it as TS2345; a JS project
 gets no warning. The cleanup of an effect is the `apply` return value — `onCleanup`
-inside `apply` has no owner and never runs (`[NO_OWNER_CLEANUP]`).
+inside `apply` has no owner and never runs (`[NO_OWNER_CLEANUP]`). The two-phase
+signature itself is enforced: `createEffect(compute)` with no apply function throws
+`[MISSING_EFFECT_FN]` in dev <!-- upstream:missing-effect-fn --> (prod dies on the same call with an uncoded
+`TypeError`).
 
 **Effects never compare.** `apply` runs on every re-run of `compute`, whether or not the
 computed value changed; there is no `equals` on an effect. When equal results should skip
@@ -329,6 +332,13 @@ and reading `user.name` there *runs once* and never retriggers. Compute-phase er
 intercepted with the bundle form `createEffect(compute, { effect, error })`. Skip the
 initial run with `{ defer: true }` — the `on(deps, fn, { defer: true })` replacement;
 the effect first runs on the next change.
+
+When the side effect should fire **once per arming** rather than on every change —
+"run this the first time the value crosses the threshold" — use `createReaction(fn)`
+from `solid-js`: it returns a tracker; `fn` runs once after a source read inside a
+`track(() => …)` call changes, then stays silent until the tracker is called again
+(re-arm from inside `fn` to keep listening). Nothing runs at creation, and changes
+made while unarmed are ignored. <!-- upstream:create-reaction -->
 
 A two-phase effect whose apply only calls a local signal setter is "state + effect" in
 disguise — formally legal Solid 2, still rule 4 (`solid2-kit check` flags it). The reset
@@ -452,7 +462,9 @@ return <StoryDetail story={story} />;
   `affects(item, "quantity")`) or `isPending(() => todos.length)` dims only what
   that read depends on. A hold with no feedback at all is `[SILENT_HOLD]` under
   attribution — always pair a held write with one of these questions, an
-  optimistic value, or `affects()`.
+  optimistic value, or `affects()`. `affects` keys address store leaves only:
+  `affects(accessor, "quantity")` throws `[INVALID_AFFECTS_TARGET]` in dev
+  <!-- upstream:invalid-affects-target --> — the keyed form needs a store (or store row); a bare accessor takes no key.
 - Default navigation **holds**. `selectedId()` and the old story stay put until
   the new answer lands, so the highlight never points at the wrong content.
   `latest(selectedId)` is the opt-in when the design wants the highlight to move
@@ -478,7 +490,9 @@ return <StoryDetail story={story} />;
   `fallback={(error, reset) => ...}`. The boundary **heals** when the source succeeds
   again (refresh, live reconnect, input change) — it is graph status, not a terminal
   React ErrorBoundary. `reset` retries the collected *data sources*, not a UI remount.
-- Refetch: `refresh(results)`. In-flight indicator: `isPending(results)` (or
+- Refetch: `refresh(results)`. `refresh` takes a source accessor or a refreshable
+  store only — anything else (a plain function included) throws `[INVALID_REFRESH_TARGET]`
+  in dev <!-- upstream:invalid-refresh-target -->, and prod silently accepts it. In-flight indicator: `isPending(results)` (or
   `isPending(() => results())`). Freshest in-flight value for a preview:
   `latest(results)`. `latest` is not a null-safe probe: before the source's first value
   it throws `NotReadyError` in every scope (since 2.0.0-rc.9 also in event handlers and
@@ -551,7 +565,7 @@ functions (middleware, request setup) reported via
 `renderToString` / `renderToStream`'s first pass is reported `render` / `failed`
 before rethrow. <!-- upstream:report-request-failure --> A monitoring SDK's `init()` that
 registers this hook must load before the server graph — put it in the plugin's
-`start: { instrument: "./src/instrument.ts" }`, not at the top of an entry (see
+`start: { serverSetup: "./src/instrument.ts" }`, not at the top of an entry (see
 [Production observability](#production-observability-the-observe-build)).
 
 `render` / `hydrate` accept a per-root `onError` that wins over the ambient hook —
@@ -755,7 +769,8 @@ list). An in-flight action does not freeze unrelated writes. Collecting failed
 actions to replay is a design choice, not something the runtime requires.
 
 Ordinary signal/store writes inside an action are held until it settles. Never call
-`flush()` inside an action. Invoke actions from handlers, not from component/computation bodies.
+`flush()` inside an action. Invoke actions from handlers, not from component/computation bodies (dev warns
+`[ACTION_CALLED_IN_OWNED_SCOPE]` <!-- upstream:action-in-owned-scope -->).
 Do not set a `submitted` signal and watch it from an effect — that work belongs in the
 handler or the `action`.
 
@@ -767,7 +782,9 @@ leaves an empty list once the action settles, with no warning. <!-- upstream:opt
 from the function form — `createOptimisticStore(() => api.list(), [])` refreshed
 after the `yield`, or `createOptimisticStore(() => base.todos, [])` over a separate
 `createStore` that the action writes the confirmed value into. Keep the value form for
-in-flight flags.
+in-flight flags. A write against a function-form source whose first answer has not
+landed yet is not guessed at all — dev warns `[OPTIMISTIC_WRITE_BEFORE_LOAD]`
+<!-- upstream:optimistic-write-before-load -->; let the first answer land before writing.
 
 `createOptimistic` / `createOptimisticStore` are for a tentative value during an
 active mutation, not a local editing session (use a writable derivation or a plain
@@ -1092,7 +1109,11 @@ do not `return () => cleanup`. Put owned setup in a **directive factory** (like
 `onCleanup` throws there (`[CLEANUP_IN_FORBIDDEN_SCOPE]`), creating a memo or effect
 throws (`[PRIMITIVE_IN_FORBIDDEN_SCOPE]`), and so does `flush()` — each halts the
 reactive system in dev. Return the cleanup; create effects and memos in the component
-body, next to the `onSettled` call, not inside it.
+body, next to the `onSettled` call, not inside it. A pending async read inside the
+callback warns `[PENDING_ASYNC_FORBIDDEN_SCOPE]` <!-- upstream:pending-async-forbidden-scope --> — the callback is not a
+computation, so nothing re-runs it when the answer lands. Register `onSettled` in the
+body, not out-of-band after an `await`: a cleanup returned from an unowned registration
+warns `[SETTLED_CLEANUP_UNOWNED]` <!-- upstream:settled-cleanup-unowned --> and never runs.
 
 ```tsx
 // WRONG — the mechanical 1.x port of onMount + onCleanup
@@ -1116,6 +1137,12 @@ dispose them; `runWithOwner(null, …)` does not lift it): create them in the
 component body or the compute phase, or attach them to an owner captured with
 `getOwner()` in the body via `runWithOwner(owner, …)`.
 <!-- upstream:primitive-in-effect-callback -->
+
+`createOwner` is not public API: since rc.21 it is typed only through
+`solid-js/internal`, as a runtime export kept for the renderers
+<!-- upstream:create-owner-internal -->. Host a scope with `createRoot()` and pass its `dispose` argument
+around as a plain function (a detached `owner.dispose` is a method and throws unbound
+<!-- upstream:ownerless-and-disposed -->); re-enter the scope with `runWithOwner(owner, …)`.
 
 ### Per-value SSR policy: `ssrSource`
 
@@ -1246,13 +1273,23 @@ Always-on dev checks include misplaced reads
 for a first read made after an `await` in an async compute — V8 engines only), misplaced writes
 (`[REACTIVE_WRITE_IN_OWNED_SCOPE]` — since rc.9 also for store setters called in a
 component or root body <!-- upstream:store-write-owned-scope -->, `[ASYNC_STORE_SETTER]` for a store setter callback that returns
-a promise <!-- upstream:async-store-setter-throws -->, `[FLUSH_IN_ACTION]`, `[SERVER_WRITE]`,
+a promise <!-- upstream:async-store-setter-throws -->, `[FLUSH_IN_ACTION]`,
+`[ACTION_CALLED_IN_OWNED_SCOPE]` for an `action()` invoked from a component body or
+computation <!-- upstream:action-in-owned-scope -->, `[SERVER_WRITE]`,
 and since rc.17 `[STORE_WRITE_OUTSIDE_SETTER]` for a write to the store proxy itself
 <!-- upstream:store-write-outside-setter -->), misplaced bindings
 (`[UNCOMMITTED_INPUT_OVERWRITTEN]` — a `value` / `checked` binding re-applied its
 committed value over uncommitted user input <!-- upstream:uncommitted-input-overwritten -->),
-`[ASYNC_OUTSIDE_LOADING_BOUNDARY]` when a tracked read has no boundary above it, and
-`[LOADING_ON_OUTSIDE_HOLD]` when a `<Loading on>` boundary's data is also read outside it.
+`[ASYNC_OUTSIDE_LOADING_BOUNDARY]` when a tracked read has no boundary above it,
+`[LOADING_ON_OUTSIDE_HOLD]` when a `<Loading on>` boundary's data is also read outside it,
+`[LOADING_ON_ACCESSOR]` when a `<Loading on>` receives a function instead of the value
+(the boundary never calls it, so it never re-arms; since rc.20) <!-- upstream:loading-on-accessor -->, and
+since rc.21 `[CAUGHT_REACTIVE_READ]` when a computation catches a reactive read's throw
+itself and completes with a value — the catch masks the load or hides the error from the
+boundaries <!-- upstream:caught-reactive-read -->. Ownerless creation warns rather than throws: `[NO_OWNER_EFFECT]`
+for an effect created outside any root or component, `[NO_OWNER_BOUNDARY]` for a
+boundary invoked outside a reactive context, and `[RUN_WITH_DISPOSED_OWNER]` for
+`runWithOwner` on a disposed owner <!-- upstream:ownerless-and-disposed --> — none of them is ever disposed.
 Each entry carries a stable `[CODE]`, what the runtime observed, an owner chain
 (`in <App> › <Cart> › <LineItem>`), and — since rc.16, under `vite dev` — an
 `at src/Cart.tsx:12:5` line naming where the scope was created (the compiler's
@@ -1344,7 +1381,8 @@ first), `[ABANDONED_FLIGHTS]` (a source re-asked on every keystroke, answers thr
 — debounce at the handler), `[STACKED_HOLDS]` (repeated clicks piling into one hold),
 `[FALLBACK_FLASH]` (a fallback shown under 150ms), `[WASTED_RECOMPUTE]` (a scope whose
 runs mostly compared equal — narrow its reads upstream), `[GRAPH_GROWTH]` (the graph grows
-on every visit to a route — an undisposed root or subscription), and `[OPTIMISTIC_REVERTED]`
+on every visit to a route — an undisposed root or subscription), `[HOT_SCOPE_FANOUT]`
+(many scopes hot from one root cause), and `[OPTIMISTIC_REVERTED]`
 (info: a guess the screen showed was replaced). `costs()` and `feedback()` (named imports)
 rank the session worst-first; `attribution.history("hold")` / `("waterfall")` /
 `("navigation")` / `("interaction")` hold the fact tables behind the verdicts (each hold
@@ -1565,10 +1603,15 @@ production too (observe build; a no-op on the prod build).
 - **Instrumentation order.** A monitoring SDK's `init()` (and `configureServerErrors`)
   must run before the modules it patches load. `import "./instrument"` at the top of an
   entry does not achieve that in ESM (static imports are hoisted in dependency order);
-  the plugin's `start: { instrument: "./src/instrument.ts" }` awaits that server-only
-  module before anything else in the server graph — since vite-plugin 3.0.0-next.51 the
-  `node` entry too: `dist/server/node.js` awaits `./server.js` (which awaits the
-  instrument module) and then loads `node-runtime.js`, so deploy both files. Failures the
+  the plugin's `start: { serverSetup: "./src/instrument.ts" }` awaits that server-only
+  module before anything else in the server graph — the `node` entry too:
+  `dist/server/node.js` awaits `./server.js` (which awaits the
+  setup module) and then loads `node-runtime.js`, so deploy both files. The option was
+  renamed from `start.instrument` between vite-plugin next.52 and next.57 — the plugin
+  throws on the old key <!-- upstream:start-server-setup -->. The sibling seam
+  `start: { serverRenderSetup: "./src/render-setup.ts" }` runs per request immediately
+  before SSR — `(event, App) => Component | void` — for integrations that must prepare
+  a per-request app instance before the render. Failures the
   handler contains itself reach the hook as `{ kind: "request", handling: "failed" }`.
   The client-side counterpart is `start: { clientSetup: "./src/client-setup.ts" }`: a
   browser module run (and awaited, top-level `await` allowed) before `hydrate` / `render`,
@@ -1700,7 +1743,10 @@ plain `<a href={Router.paths.about}>` (or `useNavigate`); there is no `<A>` /
 `<Navigate>` / `<HashRouter>` / `<FileRoutes />`. Do not assign
 `window.location.href` or call `history.pushState` for in-app navigation.
 Session location is `useLocation` / `useParams`,
-not `Router.paths`.
+not `Router.paths`. `useMatch(() => "/docs/:page")` tests a pattern against the
+current pathname without a route existing for it — the memo answers the match (params
+typed from the pattern) or nothing; that is the breadcrumb / section-highlight read
+<!-- upstream:router-use-match -->.
 
 **Route `preload` starts reads; the page reads them in a memo.** `preload` runs when
 the route matches (and ahead of a click under a `preloadLinks` strategy <!-- upstream:preload-links-opt-in -->), so it should kick off the query and return
@@ -2052,9 +2098,13 @@ every POST call as one). `live(GET(fn))` is the same declaration spelled out —
 component rendered into a document that reads an *undeclared* async iterable still
 producing after 5s is `[SSR_UNDECLARED_LIVE_SOURCE]` in dev — declare it `live()` (the
 document takes the first value and closes it; the client connects after hydration) or
-bound the source. `broadcast(fn)` (experimental) is `live()` for one answer shared across
+bound the source. `broadcast(fn)` is `live()` for one answer shared across
 every viewer — the server runs the generator once per argument set instead of once per
-connection.
+connection. In a router app, `liveQuery(fn, "key")` from `@solidjs/router` declares
+the `live()` server function itself and keeps one connection per key, shared by every
+consumer — when several components need the same stream, declare it once with
+`liveQuery` instead of hoisting a hand-rolled `live()` declaration and sharing code
+<!-- upstream:router-live-query -->.
 
 ```ts
 // src/data/auction.ts
@@ -2190,7 +2240,7 @@ how to reuse. Prefer the form on the right.
 | `createEffect(() => user, (u) => { log(u.name); })` | `createEffect(() => user.name, (name) => { log(name); })` |
 | `createEffect(() => title(), (t) => (document.title = t))` / `(v) => setX(v)` | `(t) => { document.title = t; }` — apply returns a cleanup or nothing; any other return value halts reactivity. An apply that only calls a local setter is rule 4 even with braces (`solid2-kit check` flags it): use a (writable) derivation |
 | `<Loading fallback={<PageSkeleton />}>{/* header + data */}</Loading>` | wrap only the data slot; chrome stays outside |
-| `<Loading on={id} fallback={...}>` (the accessor), or `` on={`${a()}/${b()}`} `` to key several inputs | `on={id()}` / `on={[a(), b()]}` — `on` is a tracked dependency list, not a compared key: a bare accessor is never read (`solid2-kit check` flags it), and an array is the several-inputs form <!-- upstream:loading-on-dependency-list --> |
+| `<Loading on={id} fallback={...}>` (the accessor), or `` on={`${a()}/${b()}`} `` to key several inputs | `on={id()}` / `on={[a(), b()]}` — `on` is a tracked dependency list, not a compared key: a bare accessor is never read (`solid2-kit check` flags it; dev warns `[LOADING_ON_ACCESSOR]` since rc.20 <!-- upstream:loading-on-accessor -->), and an array is the several-inputs form <!-- upstream:loading-on-dependency-list --> |
 | `setCount(count() + 1)` when writes can batch | `setCount((c) => c + 1)` |
 | `setHandler(fn)` to store a function | `setHandler(() => fn)` (otherwise `fn` is an updater) |
 | `{user() ? <P user={user()!} /> : <SignIn />}` | `<Show when={user()}>{(u) => <P user={u()} />}</Show>` |
@@ -2298,7 +2348,7 @@ how to reuse. Prefer the form on the right.
 | `attribution.enable()` unguarded in app code, or `enable()` with the default `log: true` left on | `if (isDev) attribution.enable({ log: false })` — on the observe build an unguarded `enable()` records in production; prefer the `/__solid/diagnostics` session (`begin` enables, `end` disables) so app code carries nothing |
 | `solid({ observe: true })` added "to see diagnostics in dev" | `vite dev` is always the dev build; `observe: true` is the production-observability opt-in (observe condition + `sourceNames` for `vite build`/preview <!-- upstream:source-names-option -->) |
 | `configureServerErrors({ onError: (e) => { report(e); return e; } })` | return nothing or a reference (`new Error(\`ref ${id}\`)`) — the return value replaces the sanitized wire value; the error itself leaks message/stack/secrets |
-| `import "./instrument"` at the top of the server entry for a monitoring SDK | `start: { instrument: "./src/instrument.ts" }` — ESM hoists static imports in dependency order, so the entry's own deps load first (next.51 wraps the `node` entry too: deploy `node.js` with `server.js`). Browser-side init before `hydrate` / `render` is `start: { clientSetup: "./src/client-setup.ts" }` |
+| `import "./instrument"` at the top of the server entry for a monitoring SDK | `start: { serverSetup: "./src/instrument.ts" }` — ESM hoists static imports in dependency order, so the entry's own deps load first (the `node` entry wraps it too: deploy `node.js` with `server.js`; the pre-rename spelling `start.instrument` throws in the plugin). Browser-side init before `hydrate` / `render` is `start: { clientSetup: "./src/client-setup.ts" }` |
 | Express/middleware injecting `traceparent` / trace headers into responses | the runtime carries a sampled or provided trace on `Server-Timing` + `<meta>`; forward downstream with `getTraceContext()?.entries`; SDKs use `OBSERVE?.server.trace.provide` |
 | `OBSERVE.records.subscribe("call", (e) => setStats(...))` | listeners run synchronously inside the runtime and must not write signals; collect into a plain buffer and drain from outside |
 | `import { storePath } from "solid-js"` | gone from `solid-js` (rc.9); write draft setters `setState((d) => { d.user.name = "Grace"; })` <!-- upstream:store-path-removed --> |
