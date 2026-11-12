@@ -51,7 +51,9 @@ test("renders the head the app needs, and the children in the body", () => {
   const html = shell();
 
   expect(html).toContain('<html lang="en">');
-  expect(html).toContain("<title>🐍 cobracket</title>");
+  // Since Solid 2.0.0-rc.21 the SSR serializer escapes non-ASCII text inside
+  // <title> as numeric character references; the parsed title is unchanged.
+  expect(html).toContain("<title>&#128013; cobracket</title>");
   expect(html).toContain('<meta name="viewport" content="width=device-width, initial-scale=1">');
   expect(html).toContain('<link rel="icon" href="/favicon.ico" sizes="32x32">');
   expect(html).toContain('<link rel="icon" href="/favicon.svg" type="image/svg+xml">');
