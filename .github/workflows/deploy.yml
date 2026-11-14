@@ -67,16 +67,17 @@ jobs:
           bun-version-file: package.json
       - run: bun run check:bun -- --strict
       - run: bun install --frozen-lockfile
-      # Same cache contract as ci.yml: playwright-core is pinned exactly,
-      # so the lockfile keys both the browser store and the Convex CLI's
-      # backend binary store.
+      # Same cache contract as ci.yml: the lockfile keys the browser
+      # store; the pinned SpacetimeDB release keys the standalone store.
       - uses: actions/cache@v4
         with:
-          path: |
-            ~/.cache/ms-playwright
-            ~/.cache/convex/binaries
+          path: ~/.cache/ms-playwright
           key: e2e-${{ runner.os }}-${{ hashFiles('bun.lock') }}
           restore-keys: e2e-${{ runner.os }}-
+      - uses: actions/cache@v4
+        with:
+          path: spacetimedb/.e2e-build/bin
+          key: e2e-${{ runner.os }}-spacetimedb-2.15.0
       - run: bun x playwright-core install chromium
       - run: bun run test:e2e
 

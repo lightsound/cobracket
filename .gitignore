@@ -18,6 +18,7 @@ app.config.timestamp_*.js
 spacetimedb/.spike-build/
 spacetimedb/.connection-build/
 spacetimedb/.live-build/
+spacetimedb/.e2e-build/
 
 # Fallow cache
 .fallow/
