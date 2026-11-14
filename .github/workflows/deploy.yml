@@ -46,6 +46,40 @@ jobs:
       # package.json, so the three cannot drift apart.
       - run: bun run verify
 
+  # The browser gate (ci.yml's `e2e` job, same steps), promoted from
+  # pull-request-only to a deploy precondition: it ran green on every pull
+  # request from the Solid rc.21 baseline move through the 2026-11-14
+  # toolchain series, which is the stability the recorded "let it prove
+  # itself first" choice asked for (AGENTS.md, Browser gate). The deploy
+  # job waits on it, so a red browser gate on main stops the deploy
+  # instead of only failing a pull request — the consequence that argued
+  # for the probation, now accepted deliberately.
+  #
+  # Named `e2e-gate`, not `e2e`, for the same reason the job above is
+  # `gates`, not `verify`: check runs are identified by job name, and
+  # ci.yml's `e2e` is the pull-request one.
+  e2e-gate:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - run: bun run check:bun -- --strict
+      - run: bun install --frozen-lockfile
+      # Same cache contract as ci.yml: playwright-core is pinned exactly,
+      # so the lockfile keys both the browser store and the Convex CLI's
+      # backend binary store.
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/.cache/convex/binaries
+          key: e2e-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: e2e-${{ runner.os }}-
+      - run: bun x playwright-core install chromium
+      - run: bun run test:e2e
+
   # Production needs three repository secrets (ADR 0010). They are unset by
   # decision — production is deliberately not live (AGENTS.md
   # "## Production deployment") — so `deploy` is skipped rather than failed:
@@ -78,7 +112,7 @@ jobs:
           fi
 
   deploy:
-    needs: [gates, preflight]
+    needs: [gates, preflight, e2e-gate]
     if: needs.preflight.outputs.configured == 'true'
     runs-on: ubuntu-26.04
     steps:
