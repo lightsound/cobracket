@@ -1,5 +1,7 @@
 # The Organizer side requires an email account; anonymity is for Registrants only
 
+Amended by [ADR 0031](./0031-adopt-spacetimedb-as-the-backend.md) (2026-11-15): the decision stands. `getOrganizer`'s home, named in Consequences, is now the SpacetimeDB module's binding module, and the ADR 0021 sign-in this ADR relies on is restated in ADR 0031. This ADR's recorded side effect — the anonymous production tournaments cleared with the schema change — is absorbed by the migration's data disposition: no data is migrated, and the Convex deployment is abandoned at the cutover.
+
 Amended by [ADR 0028](./0028-teams-are-communities-with-squads.md) and [ADR 0029](./0029-entries-and-entrants-how-teams-register.md) (2026-10-15): participant-number rows no longer exist — the number is a derived code (ADR 0028) — and the holdings cap counts Entry and Entrant rows (ADR 0029).
 
 Market note (2026-10-22): the claim below that every tournament tool compared during the grilling asks for an account before creating anything (the comparison was Claude's, 2026-10-14) holds for the incumbents compared (Luma, start.gg, Challonge); some 2025–2026 newcomers do not: Whistle.day and Turniermeister let an Organizer start without an account and hand the tournament over to a person by a claim link, and the Tourney iPhone app needs no login at all ([`docs/competitors.md`](../competitors.md)). The decision rests on the permission model below, not on that expectation.
@@ -23,6 +25,6 @@ What it reverses: ADR 0003's zero-friction start and the second differentiator i
 ## Consequences
 
 - `docs/specs/events.md`: account sign-in (ADR 0021, 0022) becomes slice 1 and Communities (ADR 0023) slice 2, ahead of Events; the former slice numbers shift. Resend's sending domain must be verified before slice 1 — the owner's own step.
-- `getOrganizer` in `convex/auth.ts` answers an Organizer capability only for an account with a verified email; an anonymous identity is a Registrant identity. The MVP's web UI starts with sign-in, on the production design-review URL too, and the anonymous tournaments in production are cleared with the schema change (AGENTS.md: no users, no migrations).
+- The module's identity seam answers an Organizer capability only for an account with a verified email; an anonymous identity is a Registrant identity. The MVP's web UI starts with sign-in, on the production design-review URL too, and the anonymous tournaments in production are cleared with the schema change (AGENTS.md: no users, no migrations).
 - `docs/vision.md`'s second differentiator becomes "a tournament in a minute: one email code, no password, no profile"; ADR 0003's anonymous sign-in remains the Registrant-side identity and the seam it describes stands.
 - ADR 0021's publish gate and reachable-Organizer rules, ADR 0022's Organizer side, the holdings cap, the merge preview, and the MCP token rule are amended in place.
