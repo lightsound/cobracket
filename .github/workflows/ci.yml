@@ -76,3 +76,31 @@ jobs:
       # shared libraries the browser needs.
       - run: bun x playwright-core install chromium
       - run: bun run test:e2e
+
+  # The connection-level suite (spacetimedb/connection/): a real
+  # SpacetimeDB standalone booted by the project's global setup, the
+  # committed module published to a suite-only local database, and
+  # wire-level gating proofs through the committed bindings. Its own
+  # job for the same reason as e2e's: it downloads a server binary
+  # (~100MB, cached below) and boots a server — time that does not
+  # belong in every `bun run verify`. The suite asserts its target is
+  # loopback before publishing, so this job cannot touch a named
+  # deployment.
+  connection:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+      - run: bun run check:bun -- --strict
+      - run: bun install --frozen-lockfile
+      # The standalone + CLI are pinned (2.15.0) by the suite itself,
+      # so the build dir's bin cache is keyed on the release rather
+      # than the lockfile; the version is in the key so a pin change
+      # cannot restore a stale binary.
+      - uses: actions/cache@v4
+        with:
+          path: spacetimedb/.connection-build/bin
+          key: connection-${{ runner.os }}-spacetimedb-2.15.0
+      - run: bun run test:connection
