@@ -340,7 +340,7 @@ async function chromiumLaunches(): Promise<boolean> {
  * before the servers start, in the process the workers inherit their
  * environment from. The preinstalled build is not a substitute (measured:
  * Chromium 141 through `executablePath` on this scenario tripped
- * `[HOT_SCOPE_TIME]` twice at 8.1ms and 8.3ms, where the pinned 153
+ * `[HOT_SCOPE_TIME]` twice at 8.1ms and 8.3ms, where the pinned
  * headless shell passes). The headless shell is all a headless launch
  * needs; CI's `install chromium` carries it too.
  */
