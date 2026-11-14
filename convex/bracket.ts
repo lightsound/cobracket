@@ -1,7 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { mutation } from "./_generated/server";
-import type { BracketStructure } from "./format";
-import { generateBracket as generateBracketStructure } from "./format";
+import type { BracketStructure } from "../spacetimedb/format";
+import { generateBracket as generateBracketStructure } from "../spacetimedb/format";
 import type { ResultSide, TournamentStatus } from "./model";
 import {
   MAX_RESULTS,

@@ -26,7 +26,11 @@
     "fallow:ci": "bun scripts/fallow-ci.ts",
     "fallow:dead-code": "fallow dead-code",
     "auth:keys": "auth",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p convex && tsc --noEmit -p scripts",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p convex && tsc --noEmit -p scripts && tsc --noEmit -p spacetimedb",
+    "spacetime:build": "spacetime build",
+    "spacetime:codegen": "spacetime generate --lang typescript --out-dir spacetimedb/bindings",
+    "spacetime:publish:local": "spacetime publish cobracket --server local",
+    "spacetime:spike": "bun spacetimedb/spike/verify-read-surfaces.ts",
     "verify": "bun run check:bun && bun run typecheck && bun run test && bun x vp check && bun run lint:imports && bun run fallow:ci && bun run lint:solid && bun run lint:theme && bun run build"
   },
   "dependencies": {
@@ -53,6 +57,7 @@
     "happy-dom": "^21.0.4",
     "playwright-core": "1.65.1",
     "solid2-agent-kit": "0.26.0",
+    "spacetimedb": "2.15.0",
     "typescript": "7.0.2",
     "vite": "npm:@voidzero-dev/vite-plus-core@1.6.0",
     "vite-plus": "1.6.0",

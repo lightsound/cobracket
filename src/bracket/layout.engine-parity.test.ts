@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vite-plus/test";
 // import-lint-disable-next-line -- parity test only: layout reconstructs the engine's slot wiring from coordinates (the derived view exposes no slots), and this test is what keeps the two in lockstep; app code must not cross this boundary
-import { generateBracket } from "../../convex/format";
+import { generateBracket } from "../../spacetimedb/format";
 // import-lint-disable-next-line -- see above; type-only companion of the parity import
-import type { BracketStructure } from "../../convex/format";
+import type { BracketStructure } from "../../spacetimedb/format";
 import { layoutBracket } from "./layout";
 import type { LayoutMatch } from "./layout";
 

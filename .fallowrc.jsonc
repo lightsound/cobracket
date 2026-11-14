@@ -4,14 +4,28 @@
   // cloudflare.config.ts and wrangler.config.ts are read by the cf and
   // wrangler CLIs, never imported: the worker config and the build-time
   // fields cf delegates to wrangler. They are entry points, not dead code.
+  // The SpacetimeDB module entry (spacetimedb/src/index.ts) needs no
+  // entry listing: fallow detects it as an entry point on its own and
+  // reports a manual pattern for it as redundant. The two spike files
+  // do need one — they are entry points of the M1 wire-level spike:
+  // the driver is run by `bun run spacetime:spike`, and the fixture
+  // seed is copied into the spike's assembled module; neither is
+  // imported by committed code.
   "entry": [
     "src/App.tsx",
     "src/Document.tsx",
     "scripts/lint-theme.ts",
     "cloudflare.config.ts",
     "wrangler.config.ts",
+    "spacetimedb/spike/verify-read-surfaces.ts",
+    "spacetimedb/spike/fixture/seed.ts",
   ],
-  "ignorePatterns": ["convex/_generated/**", "src/vite-env.d.ts"],
+  // The `spacetime` CLI is installed out of band (the SpacetimeDB
+  // installer), never through npm — the `spacetimedb` package ships
+  // the client/module SDK and no CLI binary. The module scripts in
+  // package.json (`spacetime:*`) call that system binary.
+  "ignoreBinaries": ["spacetime"],
+  "ignorePatterns": ["convex/_generated/**", "spacetimedb/bindings/**", "src/vite-env.d.ts"],
   // Vitest resolves the edge-runtime test environment by name from the
   // convex project in vitest.config.ts (convex-test files); it is never
   // imported directly, so static analysis cannot see the use.

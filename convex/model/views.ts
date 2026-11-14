@@ -2,8 +2,13 @@ import type { Infer } from "convex/values";
 import { ConvexError } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
-import type { BracketStructure, Occupant, Progression, RecordedResult } from "../format";
-import { deriveProgression, FormatEngineError } from "../format";
+import type {
+  BracketStructure,
+  Occupant,
+  Progression,
+  RecordedResult,
+} from "../../spacetimedb/format";
+import { deriveProgression, FormatEngineError } from "../../spacetimedb/format";
 import { MAX_MATCHES, MAX_RESULTS, MAX_ROSTER_SIZE, takeAll } from "./limits";
 import type { OrganizerProgressionView, ProgressionView, TournamentView } from "./validators";
 import { occupantValidator } from "./validators";

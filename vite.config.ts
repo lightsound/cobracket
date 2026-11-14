@@ -77,6 +77,7 @@ export default defineConfig(({ mode }) => ({
   fmt: {
     ignorePatterns: [
       "convex/_generated/**",
+      "spacetimedb/bindings/**",
       ".github/workflows/**",
       "docs/solid2-migration-from-react-ja.md",
       ".claude/**",
@@ -88,7 +89,7 @@ export default defineConfig(({ mode }) => ({
     ],
   },
   lint: {
-    ignorePatterns: ["convex/_generated/**"],
+    ignorePatterns: ["convex/_generated/**", "spacetimedb/bindings/**"],
     // Tailwind vocabulary (ADR 0012): reads src/theme.css and fails on any
     // class the theme does not define, with a "Did you mean" repair in the
     // message. Not officially Solid-aware — it reads `class` the way it reads

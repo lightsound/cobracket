@@ -4,7 +4,7 @@ import { v } from "convex/values";
 // Domain schema for the MVP standalone tournament (docs/specs/mvp.md).
 // Recorded results are the source of truth (ADR 0005): bracket progression,
 // current/next matches, and standings are derived by the format engine
-// (convex/format/) inside queries, never stored.
+// (spacetimedb/format/) inside queries, never stored.
 
 // Where a participant slot's occupant comes from. Fixed at bracket
 // generation; only results move the bracket after that. Slot references use

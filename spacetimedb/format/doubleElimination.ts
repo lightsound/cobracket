@@ -3,8 +3,8 @@ import { nextPowerOfTwo } from "./seeding";
 import { buildWinnersBracket } from "./singleElimination";
 import type { BracketStructure, SlotSource, StructureMatch } from "./types";
 
-export const GRAND_FINAL_KEY = "gf";
-export const GRAND_FINAL_RESET_KEY = "gfr";
+const GRAND_FINAL_KEY = "gf";
+const GRAND_FINAL_RESET_KEY = "gfr";
 
 // Losers bracket for a winners bracket of `size` seats (size >= 4):
 // 2 * (log2(size) - 1) rounds. Odd rounds pair losers-bracket survivors;

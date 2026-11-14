@@ -1,5 +1,6 @@
 import { configDefaults, defineConfig } from "vite-plus";
 import solid from "@solidjs/vite-plugin";
+import { spacetimedbModuleTestPlugin } from "spacetimedb/server/test-utils/vitest";
 
 export default defineConfig({
   test: {
@@ -15,7 +16,7 @@ export default defineConfig({
       {
         test: {
           name: "format",
-          include: ["convex/format/**/*.test.ts"],
+          include: ["spacetimedb/format/**/*.test.ts"],
           environment: "node",
         },
       },
@@ -103,8 +104,23 @@ export default defineConfig({
           include: ["convex/**/*.test.ts"],
           // Extend the defaults (node_modules, dist, ...) — a bare exclude
           // would replace them.
-          exclude: [...configDefaults.exclude, "convex/format/**"],
+          exclude: [...configDefaults.exclude],
           environment: "edge-runtime",
+        },
+      },
+      {
+        // The SpacetimeDB module (spacetimedb/): its official test
+        // harness runs the real module against a portable in-process
+        // datastore. The plugin makes `spacetimedb/server` importable
+        // under Vitest — the real entry loads the host-only
+        // `spacetime:sys` module — and backs it with that datastore.
+        // Sender identities in tests derive from test-auth JWT
+        // payloads (see spacetimedb/test/harness.ts).
+        plugins: [spacetimedbModuleTestPlugin()],
+        test: {
+          name: "spacetimedb",
+          include: ["spacetimedb/test/**/*.test.ts"],
+          environment: "node",
         },
       },
     ],
