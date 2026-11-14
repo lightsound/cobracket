@@ -169,9 +169,16 @@ export default defineConfig(({ mode }) => ({
     },
     // Full type-aware path: `vp check` also runs TypeScript type checks
     // (tsgolint), alongside the project's `bun x tsc --noEmit`.
+    // `denyWarnings`: the project-owned plugin rules above (Convex, shadcn)
+    // are all `error`, but Oxlint's built-in rules sit at `warn` in the
+    // effective config, and a warning otherwise exits 0 — measured: a
+    // `debugger` statement (warn) passed `vp check` before this option and
+    // fails it (exit 1) with it, for both `vp check` and `vp lint`. A clean
+    // run therefore means zero warnings, not merely zero errors.
     options: {
       typeAware: true,
       typeCheck: true,
+      denyWarnings: true,
     },
   },
 }));
