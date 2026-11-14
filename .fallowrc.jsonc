@@ -111,9 +111,10 @@
     "misplaced-directive": "error",
     "route-collision": "error",
     "dynamic-segment-name-conflict": "error",
-    // On since src/bracket/*.test.ts gave the graph a path into src/. Since
-    // fallow 3.43 the default run gates on it too (before that, only
-    // `fallow health --coverage-gaps` consulted it), so the listing is now
+    // On since src/bracket/*.test.ts gave the graph a path into src/. The
+    // default run gates on it too in the current fallow line (3.33, when
+    // this rule was adopted, consulted it only in
+    // `fallow health --coverage-gaps`), so the listing is now
     // empty and any new untested runtime file fails the gate. Read the
     // listing, not the percentage: it is a static test-dependency graph, so
     // src/router.ts lazy-importing every page made it count Tournament.tsx
