@@ -8,7 +8,7 @@
  * of that, and the `src` tests now render above the thresholds — but their
  * data seam is a fake, their DOM is emulated, and their time budget is
  * loosened for it. This gate closes the rest of the gap: a scripted Chromium
- * session against the dev server, the anonymous Convex deployment behind it,
+ * session against the dev server, the local SpacetimeDB standalone behind it,
  * captured through the same `@solidjs/diagnostics` bridge the plugin injects
  * for the curl loop in AGENTS.md, judged by the same `assertGate` the
  * happy-dom tests use. Engine thresholds stay at their defaults here — a real

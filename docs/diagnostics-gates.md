@@ -23,7 +23,8 @@ Both gates judge a `@solidjs/diagnostics` capture with the same verdict,
   fast and runs on every `bun run test`.
 - The **browser gate** (`e2e/share-link.test.ts`, Vitest project `e2e`,
   `bun run test:e2e`) drives real Chromium through `playwright-core` against
-  the dev server in `--mode e2e` and the anonymous local Convex deployment —
+  the dev server in `--mode e2e` and a local SpacetimeDB standalone with
+  the real module published —
   nothing faked — over the whole Organizer path. It exists because the
   happy-dom gate cannot see everything: the per-row `<Show>` defect in
   `BracketView` was found by a human in `bun dev` while 236 tests passed.
@@ -119,10 +120,11 @@ force when each was taken.
   the app stood down in `--mode e2e` — the hold-combination behaviour
   described above (engine 2.0.0-rc.10 on; before that, a second `enable()`
   replaced the options and cleared the tables outright).
-- Convex 1.46 does not re-push after a missing-env failure in the way the
-  auth-key retry needs; the header of `e2e/global-setup.ts` is the
-  canonical account of the two-call `auth:keys` behaviour and the restart
-  it forces.
+- Convex 1.46 did not re-push after a missing-env failure in the way the
+  auth-key retry needed; the two-call `auth:keys` behaviour and the
+  restart it forced belonged to the browser gate's Convex boot, whose
+  canonical account was the header of `e2e/global-setup.ts` until
+  migration slice M4 replaced that boot with the SpacetimeDB one.
 - A per-row `<Show>` in `BracketView` made every row a source of the
   list's insert effect and reported in the browser at 15 matches while
   all four bracket tests passed — the measurement behind the 31-match
@@ -137,19 +139,21 @@ force when each was taken.
 
 `e2e/global-setup.ts` boots what the browser gate needs, three ways in
 order of preference: nothing, when `E2E_BASE_URL` is set; only the dev
-server, when a _local_ `convex:dev` already answers (a cloud URL is never
-reused); otherwise `convex dev` as well, on the anonymous deployment named
-by a private `--env-file`, restarted once after `auth:keys` when the first
-push reports the auth keys missing.
+server, when `.env.local` selects the SpacetimeDB backend and a _local_
+standalone already answers (a cloud host is never reused) — the current module is published to the reused standalone first, since it republishes nothing itself; otherwise a
+standalone as well, on the gate's own port, with the module published to
+a database that exists only for the gate.
 
-Safety invariants: the target is asserted local before the app starts, so
-the gate cannot write tournaments to a cloud deployment; `.env.local` is
-snapshotted first and restored on teardown (the anonymous CLI saves its
-deployment there); the dev server receives `VITE_CONVEX_URL` in its
+Safety invariants: the target is asserted local before the app starts —
+the mode-3 publish host is built from a loopback literal and the gate's
+own port, asserted free before the server starts, the database name is a
+constant of the setup, and the publish names `--server` explicitly — so
+the gate cannot publish to Maincloud or write tournaments to a cloud
+deployment; the dev server receives its backend configuration in its
 environment, which Vite ranks above `.env.local`; children die with the
 run as a whole process group, waited on until every member is gone,
-because the backend binary outlived a teardown that only waited for the
-leader. Mechanics: the header of `e2e/global-setup.ts`.
+because a server outlives a teardown that only waits for the leader.
+Mechanics: the header of `e2e/global-setup.ts`.
 
 ## Re-proving the browser gate by hand
 
