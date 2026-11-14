@@ -34,15 +34,18 @@ import {
 } from "spacetimedb";
 
 // Import all reducer arg schemas
+import BindIdentityReducer from "./bind_identity_reducer";
 
 // Import all procedure arg schemas
 
 // Import all table schema definitions
+import CurrentOrganizerRow from "./current_organizer_table";
 import MyTournamentsRow from "./my_tournaments_table";
 import OrganizerMatchesRow from "./organizer_matches_table";
 import OrganizerParticipantsRow from "./organizer_participants_table";
 import OrganizerResultsRow from "./organizer_results_table";
 import OrganizerTournamentRow from "./organizer_tournament_table";
+import SessionStateRow from "./session_state_table";
 import SharedMatchesRow from "./shared_matches_table";
 import SharedParticipantsRow from "./shared_participants_table";
 import SharedResultsRow from "./shared_results_table";
@@ -52,6 +55,13 @@ import SharedTournamentRow from "./shared_tournament_table";
 
 /** The schema information for all tables in this module. This is defined the same was as the tables would have been defined in the server. */
 const tablesSchema = __schema({
+  currentOrganizer: __table({
+    name: 'current_organizer',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, CurrentOrganizerRow),
   myTournaments: __table({
     name: 'my_tournaments',
     indexes: [
@@ -87,6 +97,13 @@ const tablesSchema = __schema({
     constraints: [
     ],
   }, OrganizerTournamentRow),
+  sessionState: __table({
+    name: 'session_state',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, SessionStateRow),
   sharedMatches: __table({
     name: 'shared_matches',
     indexes: [
@@ -119,6 +136,7 @@ const tablesSchema = __schema({
 
 /** The schema information for all reducers in this module. This is defined the same way as the reducers would have been defined in the server, except the body of the reducer is omitted in code generation. */
 const reducersSchema = __reducers(
+  __reducerSchema("bind_identity", BindIdentityReducer),
 );
 
 /** The schema information for all procedures in this module. This is defined the same way as the procedures would have been defined in the server. */

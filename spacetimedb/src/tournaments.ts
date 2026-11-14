@@ -4,10 +4,10 @@ import {
   compareByIdDesc,
   compareBySeed,
   matchRow,
+  organizerIdFor,
   ownedTournament,
   participantRow,
   sortedRows,
-  userIdFor,
 } from "./lib";
 import {
   BracketSection,
@@ -51,7 +51,7 @@ export const myTournaments = spacetimedb.view(
   { name: "my_tournaments", public: true },
   t.array(MyTournamentRow),
   (ctx) => {
-    const userId = userIdFor(ctx.db, ctx.sender);
+    const userId = organizerIdFor(ctx.db, ctx.sender);
     if (userId === undefined) {
       return [];
     }

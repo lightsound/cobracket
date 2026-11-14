@@ -1,6 +1,6 @@
 import type { Identity } from "spacetimedb";
 import type { Db } from "./binding";
-import { userIdFor } from "./binding";
+import { organizerIdFor } from "./binding";
 
 // Shared read helpers behind the views in share.ts and
 // tournaments.ts. Both surfaces resolve their tournament through one
@@ -39,7 +39,7 @@ export function sharedTournamentBySlug(db: Db, slug: string) {
 // organizers resolve to undefined — routes addressed by id are not
 // capabilities (ADR 0019).
 export function ownedTournament(db: Db, sender: Identity, tournamentId: bigint) {
-  const userId = userIdFor(db, sender);
+  const userId = organizerIdFor(db, sender);
   if (userId === undefined) {
     return undefined;
   }
