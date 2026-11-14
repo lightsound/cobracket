@@ -11,6 +11,19 @@ export type Db = ReadonlyDbView<InferSchema<typeof spacetimedb>>;
 // The writable handle, for the helpers that write the binding itself.
 export type WritableDb = DbView<InferSchema<typeof spacetimedb>>;
 
+// The tables' row shapes, derived from the handle itself so the
+// library's signatures track the schema without naming generated
+// types.
+export type TournamentRow = NonNullable<ReturnType<Db["tournament"]["id"]["find"]>>;
+export type ParticipantRow = NonNullable<ReturnType<Db["participant"]["id"]["find"]>>;
+export type MatchRow = NonNullable<ReturnType<Db["match"]["id"]["find"]>>;
+export type ResultRow = NonNullable<ReturnType<Db["result"]["id"]["find"]>>;
+
+// A tournament's lifecycle state as a plain tag — the form
+// requireStatus's messages interpolate, exactly as Convex interpolated
+// the stored string.
+export type TournamentStatusTag = TournamentRow["status"]["tag"];
+
 // The binding row for a connection identity, or null when the
 // identity has never been bound to an app_user. This is the module's
 // one identity seam (ADR 0031): sender-gated views resolve the caller

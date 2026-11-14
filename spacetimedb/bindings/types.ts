@@ -45,10 +45,20 @@ export const Discipline = __t.object("Discipline", {
 });
 export type Discipline = __Infer<typeof Discipline>;
 
+export const DisciplineSuggestionRow = __t.object("DisciplineSuggestionRow", {
+  name: __t.string(),
+});
+export type DisciplineSuggestionRow = __Infer<typeof DisciplineSuggestionRow>;
+
 export const DoubleEliminationFormat = __t.object("DoubleEliminationFormat", {
   grandFinalReset: __t.bool(),
 });
 export type DoubleEliminationFormat = __Infer<typeof DoubleEliminationFormat>;
+
+export const DoubleEliminationFormatArg = __t.object("DoubleEliminationFormatArg", {
+  grandFinalReset: __t.option(__t.bool()),
+});
+export type DoubleEliminationFormatArg = __Infer<typeof DoubleEliminationFormatArg>;
 
 export const IdentityUser = __t.object("IdentityUser", {
   identity: __t.identity(),
@@ -315,6 +325,11 @@ export const SlotSource = __t.enum("SlotSource", {
 });
 export type SlotSource = __Infer<typeof SlotSource>;
 
+export const SuggestDisciplines = __t.object("SuggestDisciplines", {
+  prefix: __t.string(),
+});
+export type SuggestDisciplines = __Infer<typeof SuggestDisciplines>;
+
 export const Tournament = __t.object("Tournament", {
   id: __t.u64(),
   name: __t.string(),
@@ -345,6 +360,15 @@ export const TournamentFormat = __t.enum("TournamentFormat", {
   },
 });
 export type TournamentFormat = __Infer<typeof TournamentFormat>;
+
+// The tagged union or sum type for the algebraic type `TournamentFormatArg`.
+export const TournamentFormatArg = __t.enum("TournamentFormatArg", {
+  SingleElimination: __t.unit(),
+  get DoubleElimination() {
+    return DoubleEliminationFormatArg;
+  },
+});
+export type TournamentFormatArg = __Infer<typeof TournamentFormatArg>;
 
 // The tagged union or sum type for the algebraic type `TournamentStatus`.
 export const TournamentStatus = __t.enum("TournamentStatus", {

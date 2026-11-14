@@ -7,5 +7,8 @@ import { spacetimedb } from "./schema";
 // register, lib/ and format/ are libraries.
 export default spacetimedb;
 export * from "./auth";
+export * from "./bracket";
+export * from "./disciplines";
+export * from "./roster";
 export * from "./share";
 export * from "./tournaments";
