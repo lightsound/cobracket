@@ -51,7 +51,7 @@
     "convex-test": "^0.0.71",
     "fallow": "3.42.0",
     "happy-dom": "^21.0.4",
-    "playwright-core": "1.63.0",
+    "playwright-core": "1.65.1",
     "solid2-agent-kit": "0.25.0",
     "typescript": "7.0.2",
     "vite": "npm:@voidzero-dev/vite-plus-core@1.6.0",
