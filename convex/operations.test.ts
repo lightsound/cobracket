@@ -1,4 +1,3 @@
-// fallow-ignore-file circular-dependency -- the module map below excludes *.test.ts at runtime, so no test-to-test import exists; the analyzer cannot see the negative glob pattern
 /// <reference types="vite/client" />
 import { convexTest } from "convex-test";
 import type { FunctionReturnType } from "convex/server";

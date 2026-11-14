@@ -111,17 +111,21 @@
     "misplaced-directive": "error",
     "route-collision": "error",
     "dynamic-segment-name-conflict": "error",
-    // On since src/bracket/*.test.ts gave the graph a path into src/. It gates
-    // `fallow health --coverage-gaps` only (exit 1 instead of a listing) — the
-    // default run and `fallow audit` do not consult it, so CI stays green.
-    // Read the listing, not the percentage: it is a static test-dependency
-    // graph, so src/router.ts lazy-importing every page made it count
-    // Tournament.tsx as covered the moment any page had a test, while nothing
-    // exercised a line of it. The listing today is one file,
-    // scripts/lint-theme.ts, and it will not clear: its tests drive it as a
-    // subprocess (the only way to run a Bun script with its own Glob and
-    // cwd), and a subprocess is not an import edge. So this rule's floor is 1
-    // — keep it error for the listing, not for a green exit.
+    // On since src/bracket/*.test.ts gave the graph a path into src/. The
+    // default run gates on it too in the current fallow line (3.33, when
+    // this rule was adopted, consulted it only in
+    // `fallow health --coverage-gaps`), so the listing is now
+    // empty and any new untested runtime file fails the gate. Read the
+    // listing, not the percentage: it is a static test-dependency graph, so
+    // src/router.ts lazy-importing every page made it count Tournament.tsx
+    // as covered the moment any page had a test, while nothing exercised a
+    // line of it. Three files are structural and carry a reasoned
+    // `fallow-ignore-file coverage-gaps` at their top instead: the two CLI
+    // config entry points (cloudflare.config.ts, wrangler.config.ts — read
+    // by the cf/wrangler CLIs, never imported) and scripts/lint-theme.ts,
+    // whose tests drive it as a subprocess (the only way to run a Bun
+    // script with its own Glob and cwd), and a subprocess is not an import
+    // edge.
     "coverage-gaps": "error",
   },
 }
