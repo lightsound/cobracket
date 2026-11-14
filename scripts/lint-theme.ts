@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+// fallow-ignore-file coverage-gaps -- its tests drive it as a subprocess (the only way to run a Bun script with its own Glob and cwd), and a subprocess is not an import edge (see .fallowrc.jsonc)
 /**
  * Theme guard: the bans that follow from this repo's own design decisions.
  * Whether a class exists and uses a theme token is @shadcn/lint's job

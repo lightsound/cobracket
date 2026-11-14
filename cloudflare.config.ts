@@ -1,4 +1,5 @@
 import { defineConfig } from "cf/config";
+// fallow-ignore-file coverage-gaps -- read by the cf CLI, never imported, so no test dependency path exists; it is an entry point (see .fallowrc.jsonc)
 
 // Static hosting for the client-only build (ADR 0010). There is no `main`:
 // the Worker serves assets and nothing else, so every request is a free
