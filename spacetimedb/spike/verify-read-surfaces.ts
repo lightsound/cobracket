@@ -160,13 +160,33 @@ function jwtKeyPaths(): { pub: string; priv: string } {
   // A fresh standalone data dir needs explicit key paths (the
   // generated config.toml leaves the CA paths commented out). When
   // the CLI's own key pair is absent, mint an equivalent ES256 pair
-  // under the build dir.
+  // under the build dir. The private key must be PKCS#8 — the form
+  // the CLI itself writes; a SEC1 EC key (openssl ecparam's output)
+  // is rejected with InvalidKeyFormat (measured 2026-11-15 on a
+  // fresh-HOME run, the connection suite's CI case).
   const keyDir = join(BUILD_DIR, "keys");
   mkdirSync(keyDir, { recursive: true });
   const generated = join(keyDir, "id_ecdsa");
+  // A cached key in the rejected SEC1 form (minted before the form
+  // was pinned) is regenerated, not reused.
+  if (
+    existsSync(generated) &&
+    !readFileSync(generated, "utf8").startsWith("-----BEGIN PRIVATE KEY-----")
+  ) {
+    rmSync(generated, { force: true });
+    rmSync(`${generated}.pub`, { force: true });
+  }
   if (!existsSync(generated)) {
-    run("openssl", ["ecparam", "-genkey", "-name", "prime256v1", "-noout", "-out", generated]);
-    run("openssl", ["ec", "-in", generated, "-pubout", "-out", `${generated}.pub`]);
+    run("openssl", [
+      "genpkey",
+      "-algorithm",
+      "EC",
+      "-pkeyopt",
+      "ec_paramgen_curve:prime256v1",
+      "-out",
+      generated,
+    ]);
+    run("openssl", ["pkey", "-in", generated, "-pubout", "-out", `${generated}.pub`]);
   }
   return { pub: `${generated}.pub`, priv: generated };
 }

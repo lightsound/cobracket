@@ -17,5 +17,12 @@
     "isolatedModules": true,
     "noEmit": true
   },
-  "include": ["src/**/*", "test/**/*", "format/**/*", "spike/**/*", "bindings/**/*"]
+  "include": [
+    "src/**/*",
+    "test/**/*",
+    "connection/**/*",
+    "format/**/*",
+    "spike/**/*",
+    "bindings/**/*"
+  ]
 }

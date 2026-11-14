@@ -123,6 +123,27 @@ export default defineConfig({
           environment: "node",
         },
       },
+      {
+        // The connection-level suite (spacetimedb/connection/): a real
+        // standalone booted by the global setup, the committed module
+        // published to it, and wire-level gating proofs through the
+        // committed bindings — the half of the migration's parity
+        // claim the in-process harness cannot make. It boots a server
+        // binary, so like `e2e` it is not part of `bun run test`;
+        // `bun run test:connection` selects it, and CI gives it its
+        // own job.
+        test: {
+          name: "connection",
+          include: ["spacetimedb/connection/**/*.test.ts"],
+          environment: "node",
+          globalSetup: ["./spacetimedb/connection/global-setup.ts"],
+          // Whole connection rounds against a local server: seconds,
+          // not milliseconds; the setup publishes a module and can
+          // download the server binary on a cold cache.
+          testTimeout: 120_000,
+          hookTimeout: 300_000,
+        },
+      },
     ],
   },
 });
