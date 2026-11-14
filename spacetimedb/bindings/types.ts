@@ -30,6 +30,14 @@ export const BracketSection = __t.enum("BracketSection", {
 });
 export type BracketSection = __Infer<typeof BracketSection>;
 
+export const CurrentOrganizer = __t.object("CurrentOrganizer", {});
+export type CurrentOrganizer = __Infer<typeof CurrentOrganizer>;
+
+export const CurrentOrganizerRow = __t.object("CurrentOrganizerRow", {
+  userId: __t.u64(),
+});
+export type CurrentOrganizerRow = __Infer<typeof CurrentOrganizerRow>;
+
 export const Discipline = __t.object("Discipline", {
   id: __t.u64(),
   name: __t.string(),
@@ -205,6 +213,31 @@ export const SeedingMode = __t.enum("SeedingMode", {
   Manual: __t.unit(),
 });
 export type SeedingMode = __Infer<typeof SeedingMode>;
+
+export const SessionOrganizer = __t.object("SessionOrganizer", {
+  userId: __t.u64(),
+});
+export type SessionOrganizer = __Infer<typeof SessionOrganizer>;
+
+export const SessionState = __t.object("SessionState", {});
+export type SessionState = __Infer<typeof SessionState>;
+
+// The tagged union or sum type for the algebraic type `SessionStateKind`.
+export const SessionStateKind = __t.enum("SessionStateKind", {
+  Unauthenticated: __t.unit(),
+  UserMissing: __t.unit(),
+  get Organizer() {
+    return SessionOrganizer;
+  },
+});
+export type SessionStateKind = __Infer<typeof SessionStateKind>;
+
+export const SessionStateRow = __t.object("SessionStateRow", {
+  get state() {
+    return SessionStateKind;
+  },
+});
+export type SessionStateRow = __Infer<typeof SessionStateRow>;
 
 export const SharedMatchRow = __t.object("SharedMatchRow", {
   key: __t.string(),

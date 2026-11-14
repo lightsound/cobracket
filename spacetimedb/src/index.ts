@@ -6,5 +6,6 @@ import { spacetimedb } from "./schema";
 // layout rule, translated from ADR 0020): top-level files of src/
 // register, lib/ and format/ are libraries.
 export default spacetimedb;
+export * from "./auth";
 export * from "./share";
 export * from "./tournaments";

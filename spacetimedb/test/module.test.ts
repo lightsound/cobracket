@@ -276,4 +276,25 @@ describe("module foundation", () => {
       }),
     ).toBeUndefined();
   });
+
+  test("a deleted organizer's tournaments close on the Organizer surface", () => {
+    const harness = makeHarness();
+    const seeded = seed(harness);
+    // The binding row outlives the app_user row (a deleted user):
+    // caller resolution goes through the live-user check, so the
+    // seeded tournaments must not reappear for the still-live
+    // identity — the dangling case of the getOrganizer contract.
+    asModule(harness, (ctx) => {
+      const owner = ctx.db.tournament.id.find(seeded.publishedId)!.userId;
+      ctx.db.appUser.id.delete(owner);
+    });
+    const ownerCtx = harness.viewContext(authFor(ORGANIZER));
+    expect(moduleExports.myTournaments(ownerCtx)).toEqual([]);
+    expect(
+      moduleExports.organizerTournament(ownerCtx, { tournamentId: seeded.publishedId }),
+    ).toBeUndefined();
+    expect(
+      moduleExports.organizerParticipants(ownerCtx, { tournamentId: seeded.publishedId }),
+    ).toEqual([]);
+  });
 });

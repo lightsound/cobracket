@@ -6,5 +6,7 @@
 import { type Infer as __Infer } from "spacetimedb";
 
 // Import all reducer arg schemas
+import BindIdentityReducer from "../bind_identity_reducer";
 
+export type BindIdentityParams = __Infer<typeof BindIdentityReducer>;
 
