@@ -2,11 +2,10 @@ import {
   bindSpacetimeIdentity,
   getSpacetimeConfig,
   getSpacetimeConnection,
-  onSpacetimeSession,
   resetSpacetimeIdentity,
+  waitForSpacetimeSession,
   whenSpacetimeSessionReady,
 } from "../spacetimedb";
-import type { SessionState } from "../spacetimedb-model";
 
 // The SpacetimeDB implementation behind the auth boundary
 // (`./index`): native Identity plus the module's binding table —
@@ -64,23 +63,8 @@ async function establish(): Promise<void> {
 
 /** Resolve once the session feed reports a live binding; bounded, as a stuck feed is a broken backend. */
 async function waitForOrganizer(): Promise<void> {
-  const deadline = Date.now() + 10_000;
-  await new Promise<void>((resolve, reject) => {
-    const stop = onSpacetimeSession((state: SessionState) => {
-      if (state.kind === "organizer") {
-        cleanup();
-        resolve();
-      }
-    });
-    const timer = setInterval(() => {
-      if (Date.now() > deadline) {
-        cleanup();
-        reject(new Error("Signed in, but the new session's user could not be resolved."));
-      }
-    }, 100);
-    function cleanup(): void {
-      clearInterval(timer);
-      stop();
-    }
-  });
+  await waitForSpacetimeSession(
+    (state) => state.kind === "organizer",
+    "Signed in, but the new session's user could not be resolved.",
+  );
 }

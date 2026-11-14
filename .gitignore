@@ -17,6 +17,7 @@ app.config.timestamp_*.js
 # SpacetimeDB spike scratch (binaries, throwaway server data, bindings)
 spacetimedb/.spike-build/
 spacetimedb/.connection-build/
+spacetimedb/.live-build/
 
 # Fallow cache
 .fallow/

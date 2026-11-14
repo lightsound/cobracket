@@ -1,6 +1,4 @@
 import { isServer } from "@solidjs/web";
-import { createSignal } from "solid-js";
-import { createStore } from "solid-js";
 import { DbConnection } from "../../spacetimedb/bindings";
 import type {
   CurrentOrganizerRow,
@@ -34,6 +32,7 @@ import {
 } from "./spacetimedb-model";
 import type {
   KnownState,
+  OrganizerComposition,
   ReportResultArgs,
   SessionState,
   TournamentKnowledge,
@@ -61,10 +60,12 @@ import type {
 //   key, so their rows arrive as delete+insert pairs and a view's
 //   cached row set is replaced on change, never updated in place.
 //   The adapter therefore reconciles each view's rows from the
-//   client cache on every event batch, and writes the contract rows
-//   it hands pages into Solid stores field by field — never a
-//   wholesale row replacement, which is what the diagnostics gate
-//   flags (the trial's one failure, IMMUTABLE_UPDATE_IN_STORE).
+//   client cache on every event batch, and hands pages their
+//   contract rows through an identity cache (see "Contract row
+//   identity" below): a row whose fields are unchanged keeps its
+//   object across deliveries, as the Convex client's cache hands
+//   back — the delivery shape the seam's consumers are written
+//   against.
 // - A view's client cache merges the rows of every live subscription
 //   of that view on the connection, and the rows carry no
 //   tournamentId to sort them by. So tournament-scoped views are
@@ -210,17 +211,21 @@ export function getSpacetimeConnection(): Promise<DbConnection> {
  * no lock is taken.
  */
 async function buildConnectionLocked(config: SpacetimeConfig): Promise<LiveConnection> {
+  // The lock manager is absent outside secure contexts — and some
+  // DOM implementations expose it as null rather than omitting it,
+  // so presence is not enough; it must be a usable object.
+  const locks: LockManager | undefined =
+    isServer || typeof navigator === "undefined"
+      ? undefined
+      : ((navigator.locks as LockManager | null) ?? undefined);
   if (
     readStoredToken(config) !== undefined ||
-    isServer ||
-    typeof navigator === "undefined" ||
-    !("locks" in navigator)
+    locks === undefined ||
+    typeof locks.request !== "function"
   ) {
     return buildConnection(config);
   }
-  return await navigator.locks.request(`${tokenKey(config)}:connect`, () =>
-    buildConnection(config),
-  );
+  return await locks.request(`${tokenKey(config)}:connect`, () => buildConnection(config));
 }
 
 function getLive(): Promise<LiveConnection> {
@@ -248,7 +253,7 @@ function getLive(): Promise<LiveConnection> {
 }
 
 // ---------------------------------------------------------------------------
-// View state: reconciled snapshots plus the contract row stores
+// View state: reconciled snapshots of every view's rows
 // ---------------------------------------------------------------------------
 
 type ViewName =
@@ -423,62 +428,65 @@ const ALL_VIEWS: readonly ViewName[] = [
 ];
 
 // ---------------------------------------------------------------------------
-// Contract row stores: what pages are handed, kept field-stable
+// Contract row identity: what pages are handed, kept stable per row
 // ---------------------------------------------------------------------------
 
 /**
- * A store of contract rows keyed by id, with an order signal. Sync
- * writes the fresh rows in field by field: a row whose key already
- * exists keeps its object (and its place in the page's lists) and
- * only the fields that actually changed are written — the trial's
- * rule, since replacing a store node wholesale is both a gate
- * finding (IMMUTABLE_UPDATE_IN_STORE) and a list-identity break.
+ * An identity cache for contract rows, keyed by id. Reconciling a fresh
+ * row set returns the rows in order, reusing the previous object for a
+ * row whose fields are all unchanged and adopting the fresh object for
+ * a row that changed — the delivery shape of the Convex client, whose
+ * cache hands back the same object for an unchanged row and a new one
+ * for a changed row, with plain (untracked) field reads throughout.
+ *
+ * The trial's adapter kept these rows in Solid stores instead, and the
+ * live gate at app scale (PR-C) showed why that cannot stand: a store
+ * row's field reads are reactive sources, so a consumer memo that maps
+ * over the rows (the bracket's participant-name join) tracks one source
+ * per field per row and crosses the gate's scope-width threshold at
+ * sixteen participants, where the Convex client's plain rows track
+ * only the array. Field-stable store nodes were the trial's answer to
+ * wholesale replacement tripping IMMUTABLE_UPDATE_IN_STORE; identity
+ * caching gets the same list stability — an unchanged row keeps its
+ * object, so keyed lists do not churn — without putting a store
+ * between the pages and the data.
  */
-interface RowStore<Row extends object> {
-  byId: Record<string, Row>;
-  order: () => string[];
-  sync(rows: readonly Row[], keyOf: (row: Row) => string): void;
+interface IdentityCache<Row extends object> {
+  reconcile(rows: readonly Row[], keyOf: (row: Row) => string): Row[];
+  clear(): void;
 }
 
-function createRowStore<Row extends object>(
-  equalField?: (a: Row, b: Row) => boolean,
-): RowStore<Row> {
-  const [byId, setById] = createStore<Record<string, Row>>({});
-  const [order, setOrder] = createSignal<string[]>([]);
+function shallowEqualRow<Row extends object>(a: Row, b: Row): boolean {
+  const aKeys = Object.keys(a) as (keyof Row)[];
+  if (aKeys.length !== Object.keys(b).length) return false;
+  return aKeys.every((key) => Object.is(a[key], b[key]));
+}
+
+function createIdentityCache<Row extends object>(
+  equalRow: (a: Row, b: Row) => boolean = shallowEqualRow,
+): IdentityCache<Row> {
+  let cached = new Map<string, Row>();
   return {
-    byId,
-    order,
-    sync(rows, keyOf) {
-      const nextKeys = rows.map(keyOf);
-      setById((draft) => {
-        const keep = new Set(nextKeys);
-        for (const key of Object.keys(draft)) {
-          if (!keep.has(key)) delete draft[key];
-        }
-        for (const row of rows) {
-          const key = keyOf(row);
-          const current = draft[key];
-          if (current === undefined) {
-            draft[key] = row;
-          } else if (equalField === undefined || !equalField(current, row)) {
-            for (const field of Object.keys(row) as (keyof Row)[]) {
-              if (!Object.is(current[field], row[field])) {
-                draft[key]![field] = row[field];
-              }
-            }
-          }
-        }
+    reconcile(rows, keyOf) {
+      const next = new Map<string, Row>();
+      const delivered = rows.map((row) => {
+        const key = keyOf(row);
+        const previous = cached.get(key);
+        const kept = previous !== undefined && equalRow(previous, row) ? previous : row;
+        next.set(key, kept);
+        return kept;
       });
-      const current = order();
-      if (current.length !== nextKeys.length || current.some((key, i) => key !== nextKeys[i])) {
-        setOrder(nextKeys);
-      }
+      cached = next;
+      return delivered;
+    },
+    clear() {
+      cached = new Map();
     },
   };
 }
 
-/** The my_tournaments summaries, in the store the list is rendered from. */
-const summaryStore = createRowStore<TournamentSummary>(
+/** The my_tournaments summaries, in the cache the list is rendered from. */
+const summaryCache = createIdentityCache<TournamentSummary>(
   (a, b) =>
     a.name === b.name &&
     a.status === b.status &&
@@ -491,9 +499,9 @@ const summaryStore = createRowStore<TournamentSummary>(
 );
 
 /** The current organizer scope's participant rows, keyed by participant id. */
-const organizerParticipantStore = createRowStore<ParticipantView>();
+const organizerParticipantCache = createIdentityCache<ParticipantView>();
 /** The current shared scope's participant rows, keyed by participant id. */
-const sharedParticipantStore = createRowStore<ParticipantView>();
+const sharedParticipantCache = createIdentityCache<ParticipantView>();
 
 // ---------------------------------------------------------------------------
 // Channels: one per (operation, arguments) the seam subscribes
@@ -798,10 +806,10 @@ function releaseScope(scope: Scope): void {
     viewRows[view].clear();
   }
   if (scope.kind === "organizer") {
-    organizerParticipantStore.sync([], (row) => row.participantId);
+    organizerParticipantCache.clear();
     evictKnowledge(scope.key);
   } else {
-    sharedParticipantStore.sync([], (row) => row.participantId);
+    sharedParticipantCache.clear();
   }
 }
 
@@ -825,7 +833,57 @@ function evictKnowledge(tournamentId: string): void {
   }
 }
 
+/** Record a composed knowledge as the tournament's current one, rebuilding its participant/match home indexes (stale homes go first: a removed row must not keep pointing here). */
+function registerKnowledge(tournamentId: string, knowledge: TournamentKnowledge): void {
+  knowledgeByTournament.set(tournamentId, knowledge);
+  for (const [id, home] of participantHome) {
+    if (home === tournamentId) participantHome.delete(id);
+  }
+  for (const participant of knowledge.participants) {
+    participantHome.set(participant.participantId, tournamentId);
+  }
+  for (const [id, home] of matchHome) {
+    if (home === tournamentId) matchHome.delete(id);
+  }
+  for (const id of knowledge.matchKeyById.keys()) {
+    matchHome.set(id, tournamentId);
+  }
+}
+
+/** The organizer composition over the tier-1 rows as they stand. */
+function composeHeldOrganizer(): OrganizerComposition {
+  return composeOrganizerTournament({
+    header: viewRows.organizerTournament.get("header"),
+    participants: [...viewRows.organizerParticipants.values()],
+    matches: [...viewRows.organizerMatches.values()],
+    results: [...viewRows.organizerResults.values()],
+  });
+}
+
+/**
+ * One tournament's knowledge, composed on demand from the tier-1
+ * rows when its scope is the held one — write pre-validation and
+ * result synthesis read knowledge through here, never only from
+ * the organizer channel's last delivery: the channel computes (and
+ * so refreshes the maps) only while it has listeners, and a write
+ * must not depend on a read subscription staying alive beside it.
+ * Falls back to the last composed knowledge when the scope is not
+ * held (or its rows have not applied yet).
+ */
+function currentKnowledge(tournamentId: string): TournamentKnowledge | undefined {
+  const scope = scopes.organizer;
+  if (scope === undefined || scope.key !== tournamentId || !scope.applied) {
+    return knowledgeByTournament.get(tournamentId);
+  }
+  const { knowledge } = composeHeldOrganizer();
+  if (knowledge === null) return knowledgeByTournament.get(tournamentId);
+  registerKnowledge(tournamentId, knowledge);
+  return knowledge;
+}
+
 function knownState(): KnownState {
+  const scope = scopes.organizer;
+  if (scope !== undefined) currentKnowledge(scope.key);
   const sessionRow = viewRows.sessionState.get("state");
   return {
     session: !systemApplied
@@ -839,94 +897,78 @@ function knownState(): KnownState {
   };
 }
 
-function organizerChannel(tournamentId: string): Channel {
-  const key = `organizerTournament:${tournamentId}`;
+/**
+ * A channel backed by one of the exclusive scopes (organizer or
+ * shared): the scope is rebound on every subscribe, since another
+ * page may have taken the family's scope (and drained this one's
+ * rows) while this channel was idle.
+ */
+function scopedChannel(
+  kind: "organizer" | "shared",
+  key: string,
+  scopeKey: string,
+  inputs: readonly ViewName[],
+  compute: () => unknown,
+): Channel {
   const existing = channels.get(key);
   if (existing !== undefined) return existing;
-  // The scope this channel reads; rebound on every subscribe, since
-  // another tournament's page may have taken the family's scope (and
-  // drained this one's rows) while this channel was idle.
-  let scope = ensureScope("organizer", tournamentId);
+  let scope = ensureScope(kind, scopeKey);
   const channel: Channel = {
     key,
     listeners: new Set(),
     hasValue: false,
     value: undefined,
     fingerprint: "",
-    inputs: ORGANIZER_VIEWS,
-    scopeKind: "organizer",
-    scopeKey: tournamentId,
+    inputs,
+    scopeKind: kind,
+    scopeKey,
     ensure: () => {
-      scope = ensureScope("organizer", tournamentId);
+      scope = ensureScope(kind, scopeKey);
       scope.channels.add(channel);
     },
     ready: () => scopeReady(scope),
-    compute: () => {
-      const { view, knowledge } = composeOrganizerTournament({
-        header: viewRows.organizerTournament.get("header"),
-        participants: [...viewRows.organizerParticipants.values()],
-        matches: [...viewRows.organizerMatches.values()],
-        results: [...viewRows.organizerResults.values()],
-      });
-      if (knowledge !== null) {
-        knowledgeByTournament.set(tournamentId, knowledge);
-        for (const participant of knowledge.participants) {
-          participantHome.set(participant.participantId, tournamentId);
-        }
-        for (const matchId of knowledge.matchKeyById.keys()) {
-          matchHome.set(matchId, tournamentId);
-        }
-      }
-      organizerParticipantStore.sync(knowledge?.participants ?? [], (row) => row.participantId);
-      if (view === null) return null;
-      return { ...view, participants: orderedRows(organizerParticipantStore) };
-    },
+    compute,
     release: () => releaseScope(scope),
   };
   scope.channels.add(channel);
   channels.set(key, channel);
   return channel;
+}
+
+function organizerChannel(tournamentId: string): Channel {
+  return scopedChannel(
+    "organizer",
+    `organizerTournament:${tournamentId}`,
+    tournamentId,
+    ORGANIZER_VIEWS,
+    () => {
+      const { view, knowledge } = composeHeldOrganizer();
+      if (knowledge !== null) registerKnowledge(tournamentId, knowledge);
+      const participants = organizerParticipantCache.reconcile(
+        knowledge?.participants ?? [],
+        (row) => row.participantId,
+      );
+      if (view === null) return null;
+      return { ...view, participants };
+    },
+  );
 }
 
 function sharedChannel(slug: string): Channel {
-  const key = `sharedTournament:${slug}`;
-  const existing = channels.get(key);
-  if (existing !== undefined) return existing;
-  let scope = ensureScope("shared", slug);
-  const channel: Channel = {
-    key,
-    listeners: new Set(),
-    hasValue: false,
-    value: undefined,
-    fingerprint: "",
-    inputs: SHARED_VIEWS,
-    scopeKind: "shared",
-    scopeKey: slug,
-    ensure: () => {
-      scope = ensureScope("shared", slug);
-      scope.channels.add(channel);
-    },
-    ready: () => scopeReady(scope),
-    compute: () => {
-      const view = composeSharedTournament({
-        header: viewRows.sharedTournament.get("header"),
-        participants: [...viewRows.sharedParticipants.values()],
-        matches: [...viewRows.sharedMatches.values()],
-        results: [...viewRows.sharedResults.values()],
-      });
-      sharedParticipantStore.sync(view?.participants ?? [], (row) => row.participantId);
-      if (view === null) return null;
-      return { ...view, participants: orderedRows(sharedParticipantStore) };
-    },
-    release: () => releaseScope(scope),
-  };
-  scope.channels.add(channel);
-  channels.set(key, channel);
-  return channel;
-}
-
-function orderedRows<Row extends object>(store: RowStore<Row>): Row[] {
-  return store.order().map((key) => store.byId[key]!);
+  return scopedChannel("shared", `sharedTournament:${slug}`, slug, SHARED_VIEWS, () => {
+    const view = composeSharedTournament({
+      header: viewRows.sharedTournament.get("header"),
+      participants: [...viewRows.sharedParticipants.values()],
+      matches: [...viewRows.sharedMatches.values()],
+      results: [...viewRows.sharedResults.values()],
+    });
+    const participants = sharedParticipantCache.reconcile(
+      view?.participants ?? [],
+      (row) => row.participantId,
+    );
+    if (view === null) return null;
+    return { ...view, participants };
+  });
 }
 
 function systemChannel(key: string, inputs: readonly ViewName[], compute: () => unknown): Channel {
@@ -949,10 +991,10 @@ function systemChannel(key: string, inputs: readonly ViewName[], compute: () => 
 
 function myTournamentsChannel(): Channel {
   return systemChannel("myTournaments", ["myTournaments"], () => {
-    summaryStore.sync(composeMyTournaments([...viewRows.myTournaments.values()]), (row) =>
-      String(row.tournamentId),
+    return summaryCache.reconcile(
+      composeMyTournaments([...viewRows.myTournaments.values()]),
+      (row) => String(row.tournamentId),
     );
-    return orderedRows(summaryStore);
   });
 }
 
@@ -1241,8 +1283,7 @@ interface WriteSnapshots {
 
 function snapshotWrite(record: Record<string, unknown>): WriteSnapshots {
   const tournamentId = typeof record.tournamentId === "string" ? record.tournamentId : undefined;
-  const beforeKnowledge =
-    tournamentId !== undefined ? knowledgeByTournament.get(tournamentId) : undefined;
+  const beforeKnowledge = tournamentId !== undefined ? currentKnowledge(tournamentId) : undefined;
   // reportResult's arguments carry no tournamentId: its home is
   // resolved through the match, and its before-knowledge must be
   // snapshotted here too — after the call, the subscription may
@@ -1257,7 +1298,7 @@ function snapshotWrite(record: Record<string, unknown>): WriteSnapshots {
       (beforeKnowledge?.participants ?? []).map((p) => p.participantId),
     ),
     reportHome,
-    beforeReport: reportHome !== undefined ? knowledgeByTournament.get(reportHome) : undefined,
+    beforeReport: reportHome !== undefined ? currentKnowledge(reportHome) : undefined,
   };
 }
 
@@ -1287,7 +1328,7 @@ async function synthesizeWriteResult<Result>(
       const id = await waitForSynthesis(() => {
         const knowledge =
           snapshots.tournamentId !== undefined
-            ? knowledgeByTournament.get(snapshots.tournamentId)
+            ? currentKnowledge(snapshots.tournamentId)
             : undefined;
         if (knowledge === undefined) return undefined;
         const ids = synthesizeAddedParticipants(
@@ -1304,7 +1345,7 @@ async function synthesizeWriteResult<Result>(
       const ids = await waitForSynthesis(() => {
         const knowledge =
           snapshots.tournamentId !== undefined
-            ? knowledgeByTournament.get(snapshots.tournamentId)
+            ? currentKnowledge(snapshots.tournamentId)
             : undefined;
         if (knowledge === undefined) return undefined;
         const ids = synthesizeAddedParticipants(
@@ -1324,7 +1365,7 @@ async function synthesizeWriteResult<Result>(
         throw new Error(GENERIC_WRITE_ERROR);
       }
       const report = await waitForSynthesis(() => {
-        const after = knowledgeByTournament.get(home);
+        const after = currentKnowledge(home);
         // At least this call's record: a concurrent report from
         // another tab may have landed in the same window (the
         // voided diff is by result id against the before-snapshot,
@@ -1412,32 +1453,60 @@ export function onSpacetimeSession(listener: (state: SessionState) => void): () 
 }
 
 /**
- * A promise for the first applied session state, bounded: a feed
- * that never applies (a wrong database name, a missing module) is
- * a broken backend, and the caller must hear about it rather than
- * wait forever.
+ * A promise for the first session state matching the predicate,
+ * bounded at ten seconds: a feed that never applies (a wrong
+ * database name, a missing module) is a broken backend, and the
+ * caller must hear about it rather than wait forever.
+ *
+ * @public
+ */
+export function waitForSpacetimeSession(
+  predicate: (state: SessionState) => boolean,
+  timeoutMessage: string,
+): Promise<SessionState> {
+  const deadline = Date.now() + 10_000;
+  return new Promise((resolve, reject) => {
+    // The listener can fire synchronously out of onSpacetimeSession
+    // (the feed already applied) — before the unsubscribe handle
+    // and the interval exist. The finish gate tolerates both: it
+    // runs at most once, and a registration-time firing is
+    // unsubscribed right after registration returns the handle.
+    let timer: ReturnType<typeof setInterval> | undefined;
+    let stop: (() => void) | undefined;
+    let done = false;
+    const finish = (settle: () => void): void => {
+      if (done) return;
+      done = true;
+      if (timer !== undefined) clearInterval(timer);
+      stop?.();
+      settle();
+    };
+    stop = onSpacetimeSession((state) => {
+      if (predicate(state)) finish(() => resolve(state));
+    });
+    if (done) {
+      stop();
+      return;
+    }
+    timer = setInterval(() => {
+      if (Date.now() > deadline) {
+        finish(() => reject(new Error(timeoutMessage)));
+      }
+    }, 100);
+  });
+}
+
+/**
+ * A promise for the first applied session state, whatever it is.
  *
  * @public
  */
 export async function whenSpacetimeSessionReady(): Promise<SessionState> {
   if (systemApplied) return currentSessionState();
-  const deadline = Date.now() + 10_000;
-  return new Promise((resolve, reject) => {
-    const stop = onSpacetimeSession((state) => {
-      cleanup();
-      resolve(state);
-    });
-    const timer = setInterval(() => {
-      if (Date.now() > deadline) {
-        cleanup();
-        reject(new Error("The session could not be established. Please try again."));
-      }
-    }, 100);
-    function cleanup(): void {
-      clearInterval(timer);
-      stop();
-    }
-  });
+  return waitForSpacetimeSession(
+    () => true,
+    "The session could not be established. Please try again.",
+  );
 }
 
 /**
