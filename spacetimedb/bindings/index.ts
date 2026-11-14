@@ -34,7 +34,18 @@ import {
 } from "spacetimedb";
 
 // Import all reducer arg schemas
+import AddParticipantReducer from "./add_participant_reducer";
+import AddParticipantsReducer from "./add_participants_reducer";
 import BindIdentityReducer from "./bind_identity_reducer";
+import CreateTournamentReducer from "./create_tournament_reducer";
+import DeleteTournamentReducer from "./delete_tournament_reducer";
+import GenerateBracketReducer from "./generate_bracket_reducer";
+import PublishTournamentReducer from "./publish_tournament_reducer";
+import RemoveParticipantReducer from "./remove_participant_reducer";
+import RenameParticipantReducer from "./rename_participant_reducer";
+import ReorderSeedingReducer from "./reorder_seeding_reducer";
+import ReportResultReducer from "./report_result_reducer";
+import UpdateTournamentReducer from "./update_tournament_reducer";
 
 // Import all procedure arg schemas
 
@@ -50,6 +61,7 @@ import SharedMatchesRow from "./shared_matches_table";
 import SharedParticipantsRow from "./shared_participants_table";
 import SharedResultsRow from "./shared_results_table";
 import SharedTournamentRow from "./shared_tournament_table";
+import SuggestDisciplinesRow from "./suggest_disciplines_table";
 
 /** Type-only namespace exports for generated type groups. */
 
@@ -132,11 +144,29 @@ const tablesSchema = __schema({
     constraints: [
     ],
   }, SharedTournamentRow),
+  suggestDisciplines: __table({
+    name: 'suggest_disciplines',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, SuggestDisciplinesRow),
 });
 
 /** The schema information for all reducers in this module. This is defined the same way as the reducers would have been defined in the server, except the body of the reducer is omitted in code generation. */
 const reducersSchema = __reducers(
+  __reducerSchema("add_participant", AddParticipantReducer),
+  __reducerSchema("add_participants", AddParticipantsReducer),
   __reducerSchema("bind_identity", BindIdentityReducer),
+  __reducerSchema("create_tournament", CreateTournamentReducer),
+  __reducerSchema("delete_tournament", DeleteTournamentReducer),
+  __reducerSchema("generate_bracket", GenerateBracketReducer),
+  __reducerSchema("publish_tournament", PublishTournamentReducer),
+  __reducerSchema("remove_participant", RemoveParticipantReducer),
+  __reducerSchema("rename_participant", RenameParticipantReducer),
+  __reducerSchema("reorder_seeding", ReorderSeedingReducer),
+  __reducerSchema("report_result", ReportResultReducer),
+  __reducerSchema("update_tournament", UpdateTournamentReducer),
 );
 
 /** The schema information for all procedures in this module. This is defined the same way as the procedures would have been defined in the server. */
@@ -149,7 +179,7 @@ const REMOTE_MODULE = {
     cliVersion: "2.15.0" as const,
   },
   tables: tablesSchema.schemaType.tables,
-  viewsWithArgs: ["organizer_matches", "organizer_participants", "organizer_results", "organizer_tournament", "shared_matches", "shared_participants", "shared_results", "shared_tournament"],
+  viewsWithArgs: ["organizer_matches", "organizer_participants", "organizer_results", "organizer_tournament", "shared_matches", "shared_participants", "shared_results", "shared_tournament", "suggest_disciplines"],
   reducers: reducersSchema.reducersType.reducers,
   ...proceduresSchema,
 } satisfies __RemoteModule<

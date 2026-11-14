@@ -111,6 +111,10 @@ function assembleModule(): string {
   cpSync(join(MODULE_DIR, "package.json"), join(dir, "package.json"));
   cpSync(join(MODULE_DIR, "tsconfig.json"), join(dir, "tsconfig.json"));
   cpSync(join(MODULE_DIR, "src"), join(dir, "src"), { recursive: true });
+  // The format engine joins the assembly too (M2): the module's
+  // library imports it from src/lib as ../../format, so the assembled
+  // layout must keep it beside src/, exactly as in the repo.
+  cpSync(join(MODULE_DIR, "format"), join(dir, "format"), { recursive: true });
   // The fixture seed joins the module only here: copied in with its
   // one import rewritten to the assembled layout, and the entry gains
   // its re-export.
@@ -126,6 +130,15 @@ function assembleModule(): string {
       'import { spacetimedb } from "./schema";',
       "",
       "export default spacetimedb;",
+      // Every registration file, as the real entry exports them — so
+      // publishing the assembled module also proves the host accepts
+      // each registration (M2 added the reducers and the scanning
+      // suggestion view to M1's read surfaces) — plus the fixture
+      // seed, which only exists in this assembly.
+      'export * from "./auth";',
+      'export * from "./bracket";',
+      'export * from "./disciplines";',
+      'export * from "./roster";',
       'export * from "./share";',
       'export * from "./tournaments";',
       'export * from "./seed";',

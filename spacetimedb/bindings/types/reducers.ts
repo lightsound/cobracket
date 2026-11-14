@@ -6,7 +6,29 @@
 import { type Infer as __Infer } from "spacetimedb";
 
 // Import all reducer arg schemas
+import AddParticipantReducer from "../add_participant_reducer";
+import AddParticipantsReducer from "../add_participants_reducer";
 import BindIdentityReducer from "../bind_identity_reducer";
+import CreateTournamentReducer from "../create_tournament_reducer";
+import DeleteTournamentReducer from "../delete_tournament_reducer";
+import GenerateBracketReducer from "../generate_bracket_reducer";
+import PublishTournamentReducer from "../publish_tournament_reducer";
+import RemoveParticipantReducer from "../remove_participant_reducer";
+import RenameParticipantReducer from "../rename_participant_reducer";
+import ReorderSeedingReducer from "../reorder_seeding_reducer";
+import ReportResultReducer from "../report_result_reducer";
+import UpdateTournamentReducer from "../update_tournament_reducer";
 
+export type AddParticipantParams = __Infer<typeof AddParticipantReducer>;
+export type AddParticipantsParams = __Infer<typeof AddParticipantsReducer>;
 export type BindIdentityParams = __Infer<typeof BindIdentityReducer>;
+export type CreateTournamentParams = __Infer<typeof CreateTournamentReducer>;
+export type DeleteTournamentParams = __Infer<typeof DeleteTournamentReducer>;
+export type GenerateBracketParams = __Infer<typeof GenerateBracketReducer>;
+export type PublishTournamentParams = __Infer<typeof PublishTournamentReducer>;
+export type RemoveParticipantParams = __Infer<typeof RemoveParticipantReducer>;
+export type RenameParticipantParams = __Infer<typeof RenameParticipantReducer>;
+export type ReorderSeedingParams = __Infer<typeof ReorderSeedingReducer>;
+export type ReportResultParams = __Infer<typeof ReportResultReducer>;
+export type UpdateTournamentParams = __Infer<typeof UpdateTournamentReducer>;
 
