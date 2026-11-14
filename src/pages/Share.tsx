@@ -1,23 +1,23 @@
 import { useParams } from "@solidjs/router";
 import { Errored, Loading, Show } from "solid-js";
-import type { FunctionReturnType } from "convex/server";
-import { api } from "../../convex/_generated/api";
+import { api } from "../lib/operations";
+import type { TournamentView } from "../lib/operations";
 import { errorFallback } from "../ErrorFallback";
 import { SetupNotice } from "../SetupNotice";
 import { TournamentBoard } from "../TournamentBoard";
 import { TournamentHeader } from "../TournamentHeader";
 import { useI18n } from "../i18n";
-import { createConvexQuery, getConvexUrl } from "../lib/convex";
+import { createBackendQuery, getBackendUrl } from "../lib/backend";
 // fallow-ignore-next-line circular-dependency -- the official Solid Router 2 shape: the router lazy-imports pages (deferred dynamic import), pages link back through Router.paths; no init-order hazard
 import { Router } from "../router";
 
-type SharedView = NonNullable<FunctionReturnType<typeof api.share.getSharedTournament>>;
+type SharedView = TournamentView;
 
 export default function SharePage() {
   const { t } = useI18n();
-  if (!getConvexUrl()) return <SetupNotice />;
+  if (!getBackendUrl()) return <SetupNotice />;
   const params = useParams(Router.paths.s);
-  const shared = createConvexQuery(api.share.getSharedTournament, () => ({
+  const shared = createBackendQuery(api.share.getSharedTournament, () => ({
     shareSlug: params.shareSlug,
   }));
 

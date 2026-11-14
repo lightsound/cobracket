@@ -1,9 +1,14 @@
 import { isServer } from "@solidjs/web";
 import { ConvexClient } from "convex/browser";
-import { getFunctionName } from "convex/server";
 import type { FunctionArgs, FunctionReference, FunctionReturnType } from "convex/server";
-import { createMemo, onCleanup } from "solid-js";
-import type { Accessor } from "solid-js";
+
+// The Convex implementation behind the data seam (`./backend`): the
+// client singleton, and the subscription / mutation / prefetch
+// primitives the seam's dispatch calls. Pages never import this
+// module directly — the seam is the only caller, plus `./auth`,
+// whose Convex session machinery is wired to this client. When the
+// migration's M6 removes Convex, this file goes with it and the seam
+// loses nothing but a dispatch branch.
 
 /**
  * @public
@@ -27,14 +32,39 @@ export function getConvexClient(): ConvexClient | undefined {
 }
 
 /**
- * Run a Convex mutation on the shared client. Callers sit behind the
- * `getConvexUrl()` render gate, so a missing client here is a programming
- * error, not a state to branch on — it throws into the caller's error
- * handling like any other mutation failure.
+ * Subscribe to a query on the shared client, delivering each result
+ * and any failure to the callbacks; the returned function ends the
+ * subscription. Without a configured client the subscription never
+ * delivers — the seam's accessor stays pending, exactly as it did
+ * when this bridging lived in the seam itself.
  *
  * @public
  */
-export async function runMutation<Mutation extends FunctionReference<"mutation">>(
+export function subscribeConvexQuery(
+  query: FunctionReference<"query">,
+  args: Record<string, unknown>,
+  onValue: (value: unknown) => void,
+  deliverError: (error: unknown) => void,
+): () => void {
+  const convex = getConvexClient();
+  if (!convex) return () => {};
+  return convex.onUpdate(
+    query,
+    args as FunctionArgs<typeof query>,
+    (result) => onValue(result),
+    (error) => deliverError(error),
+  );
+}
+
+/**
+ * Run a Convex mutation on the shared client. Callers sit behind the
+ * `getConvexUrl()` render gate, so a missing client here is a
+ * programming error, not a state to branch on — it throws into the
+ * caller's error handling like any other mutation failure.
+ *
+ * @public
+ */
+export async function runConvexMutation<Mutation extends FunctionReference<"mutation">>(
   mutation: Mutation,
   args: FunctionArgs<Mutation>,
 ): Promise<FunctionReturnType<Mutation>> {
@@ -53,7 +83,7 @@ const PREFETCH_HOLD_MS = 10_000;
 
 /**
  * Start a query's subscription ahead of the page that will read it, so that
- * page's `createConvexQuery` finds the answer already in the client.
+ * page's seam accessor finds the answer already in the client.
  *
  * The Convex client keeps one subscription per query-and-args and delivers
  * its current value to every new subscriber, so "preloading" here is simply
@@ -86,95 +116,4 @@ export function prefetchConvexQuery<Query extends FunctionReference<"query">>(
     () => release(),
   );
   const timer = setTimeout(release, PREFETCH_HOLD_MS);
-}
-
-/**
- * Bridges a Convex subscription into Solid's async model.
- *
- * - Reads suspend to the nearest `<Loading>` until the first result arrives;
- *   subscription errors are thrown into the reactive graph for `<Errored>`.
- * - `args` may be an accessor: changing args re-subscribes (the committed
- *   view stays visible and `isPending` reports the in-flight change).
- * - `<Errored>`'s `reset()` and `refresh(query)` re-run the computation: a
- *   fresh subscription starts with a cleared failure and Convex re-emits the
- *   current result, so retries actually recover.
- * - Results are snapshots, so pending deliveries are conflated to the latest.
- *
- * The subscription lives inside the computation: it is disposed when args
- * change, on retry, and when the owning component unmounts. Without a
- * configured client (missing `VITE_CONVEX_URL`, or SSR) the accessor stays
- * pending forever; callers gate on `getConvexUrl()` before rendering reads.
- *
- * @public
- */
-export function createConvexQuery<Query extends FunctionReference<"query">>(
-  query: Query,
-  args: FunctionArgs<Query> | Accessor<FunctionArgs<Query>>,
-): Accessor<FunctionReturnType<Query>> {
-  type Result = FunctionReturnType<Query>;
-  const readArgs =
-    typeof args === "function" ? (args as Accessor<FunctionArgs<Query>>) : () => args;
-
-  // Named by the Convex function it subscribes to, so attribution's cost and
-  // hold tables identify which query a row belongs to. Every subscription
-  // would otherwise share the anonymous `computed` label.
-  return createMemo(
-    () => {
-      // Inside the computation, not at module scope. A memo's computation
-      // runs when the memo is created, not on first read, so a query created
-      // by a provider subscribes at once whether or not anything reads it.
-      // What keeps a test that mounts `AppProviders` around a component that
-      // never touches the backend from opening a websocket is this call
-      // returning no client when `VITE_CONVEX_URL` is unset. The client
-      // itself is created once and shared, so resolving it per run costs
-      // nothing.
-      const convex = getConvexClient();
-      // Reading reactive args here makes them a dependency of the computation.
-      const resolvedArgs = readArgs();
-
-      let current: Result | undefined;
-      let version = 0;
-      let failure: unknown;
-      let disposed = false;
-      let wake = () => {};
-
-      if (convex) {
-        const unsubscribe = convex.onUpdate(
-          query,
-          resolvedArgs,
-          (result) => {
-            current = result;
-            version += 1;
-            failure = undefined;
-            wake();
-          },
-          (error) => {
-            failure = error;
-            wake();
-          },
-        );
-        onCleanup(() => {
-          disposed = true;
-          unsubscribe();
-          wake();
-        });
-      }
-
-      return (async function* () {
-        let seen = 0;
-        while (!disposed) {
-          if (failure !== undefined) throw failure;
-          if (version > seen) {
-            seen = version;
-            yield current as Result;
-            continue;
-          }
-          await new Promise<void>((resolve) => {
-            wake = resolve;
-          });
-        }
-      })();
-    },
-    { name: `query:${getFunctionName(query)}` },
-  );
 }

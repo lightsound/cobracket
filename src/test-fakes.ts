@@ -1,25 +1,25 @@
 /**
  * A stand-in for the app's data seam, so a page can be mounted under the
- * diagnostics gate without a Convex deployment.
+ * diagnostics gate without a backend.
  *
- * Pages reach the backend through exactly two modules — `src/lib/convex.ts`
- * (`getConvexUrl`, `createConvexQuery`, `getConvexClient`, `runMutation`) and
- * `src/lib/auth` — which is what makes this cheap: the narrow module ADR 0004
- * asks for is also the narrow module a test can replace. Everything else in a
- * page runs for real.
+ * Pages reach the backend through exactly two modules — `src/lib/backend.ts`
+ * (`getBackendUrl`, `createBackendQuery`, `runMutation`,
+ * `prefetchBackendQuery`) and `src/lib/auth` — which is what makes this
+ * cheap: the narrow module ADR 0004 asks for is also the narrow module a
+ * test can replace. Everything else in a page runs for real.
  *
  * The fake reproduces the shape that matters to the gate, not just the values.
  * A read whose args it has not seen starts as a promise — including the very
  * first one — so `<Loading>` boundaries engage as they do in production and a
  * re-subscribing read forms a real hold; a later push to a live subscription
- * is a plain value, the way Convex delivers one. Both halves matter: a page
- * tested against synchronous data never forms a hold, and the gate's
+ * is a plain value, the way the backends deliver one. Both halves matter: a
+ * page tested against synchronous data never forms a hold, and the gate's
  * responsiveness question then has nothing to judge.
  *
  * Wire it from a page test with vitest's module mocks:
  *
  * ```ts
- * vi.mock("../lib/convex", async () => (await import("../test-fakes")).convexModule());
+ * vi.mock("../lib/backend", async () => (await import("../test-fakes")).backendModule());
  * vi.mock("../lib/auth", async () => (await import("../test-fakes")).authModule());
  * ```
  *
@@ -28,24 +28,10 @@
  */
 import { beforeEach } from "vite-plus/test";
 import { type Accessor, createMemo, createSignal } from "solid-js";
-import { getFunctionName } from "convex/server";
-import type { FunctionArgs, FunctionReference, FunctionReturnType } from "convex/server";
-import { api } from "../convex/_generated/api";
-import type { Id, TableNames } from "../convex/_generated/dataModel";
+import type { ReadOp, WriteOp } from "./lib/operations";
+import { api } from "./lib/operations";
 
-const FAKE_URL = "https://fake.convex.cloud";
-
-/**
- * A readable stand-in for a Convex id. `publishQuery` is typed against the
- * real `FunctionReturnType`, so a fixture cannot drift from the backend
- * contract — which is the point — and the branded id types are the one part
- * of that contract a test cannot honestly produce.
- *
- * @public
- */
-export function fakeId<Table extends TableNames>(value: string): Id<Table> {
-  return value as Id<Table>;
-}
+const FAKE_URL = "https://fake.backend.invalid";
 
 interface Flight {
   read: Accessor<unknown>;
@@ -98,24 +84,25 @@ function createFlight(): Flight {
   };
 }
 
-/** The latest value published per Convex function. */
+/** The latest value published per operation. */
 let published = new Map<string, unknown>();
-/** Live subscriptions, by function and then by the args they subscribed with. */
+/** Live subscriptions, by operation and then by the args they subscribed with. */
 let flights = new Map<string, Map<string, Flight>>();
 let mutationHandlers = new Map<string, (args: unknown) => unknown>();
 let calls: { name: string; args: unknown }[] = [];
 let routes: string[] = [];
 
 /**
- * Subscriptions are keyed by args, not just by function, because that is what
- * `convex.onUpdate` does: changing args tears the subscription down and opens
- * a new one, and the read is pending again until the new answer lands. A fake
- * keyed by function alone would hand an args change an already-settled value,
- * and every hold a page forms by re-subscribing — the shape `latest()` and
- * `isPending()` exist for — would disappear from the test.
+ * Subscriptions are keyed by args, not just by operation, because that is
+ * what a real subscription does: changing args tears the subscription down
+ * and opens a new one, and the read is pending again until the new answer
+ * lands. A fake keyed by operation alone would hand an args change an
+ * already-settled value, and every hold a page forms by re-subscribing —
+ * the shape `latest()` and `isPending()` exist for — would disappear from
+ * the test.
  *
- * So a flight for args never seen before starts pending even when the answer
- * is already known, and the value arrives in a later turn.
+ * So a flight for args never seen before starts pending even when the
+ * answer is already known, and the value arrives in a later turn.
  */
 function flightFor(name: string, argsKey: string): Flight {
   let byArgs = flights.get(name);
@@ -140,36 +127,35 @@ function flightFor(name: string, argsKey: string): Flight {
 }
 
 /**
- * Publish a query result, as a subscription push would. Before the first call
- * the query stays pending, which is the state a page's `<Loading>` fallback
+ * Publish a query result, as a subscription push would. `publishQuery` is
+ * typed against the operation descriptor (whose Args/Result are derived
+ * from the generated backend reference at compile time), so a fixture
+ * cannot drift from the backend contract — which is the point. Before the first call the
+ * query stays pending, which is the state a page's `<Loading>` fallback
  * is for — a legitimate thing to assert, not a setup step to rush past.
  *
  * @public
  */
-export function publishQuery<Query extends FunctionReference<"query">>(
-  query: Query,
-  value: FunctionReturnType<Query>,
-): void {
-  const name = getFunctionName(query);
-  published.set(name, value);
-  for (const flight of flights.get(name)?.values() ?? []) flight.deliver(value);
+export function publishQuery<Args, Result>(op: ReadOp<Args, Result>, value: NoInfer<Result>): void {
+  published.set(op.name, value);
+  for (const flight of flights.get(op.name)?.values() ?? []) flight.deliver(value);
 }
 
 /**
- * Answer a mutation. The handler may throw, which is how a page's error path
- * is exercised.
+ * Answer a mutation. The handler may throw, which is how a page's error
+ * path is exercised.
  *
  * @public
  */
-export function answerMutation<Mutation extends FunctionReference<"mutation">>(
-  mutation: Mutation,
-  handler: (args: FunctionArgs<Mutation>) => FunctionReturnType<Mutation>,
+export function answerMutation<Args, Result>(
+  op: WriteOp<Args, Result>,
+  handler: (args: NoInfer<Args>) => NoInfer<Result>,
 ): void {
-  mutationHandlers.set(getFunctionName(mutation), handler as (args: unknown) => unknown);
+  mutationHandlers.set(op.name, handler as (args: unknown) => unknown);
 }
 
 /**
- * Every mutation the page has run, oldest first, by Convex function name.
+ * Every mutation the page has run, oldest first, by operation name.
  *
  * @public
  */
@@ -182,11 +168,10 @@ export function navigations(): string[] {
   return routes;
 }
 
-function fakeCreateConvexQuery<Query extends FunctionReference<"query">>(
-  query: Query,
-  args: FunctionArgs<Query> | Accessor<FunctionArgs<Query>>,
-): Accessor<FunctionReturnType<Query>> {
-  const name = getFunctionName(query);
+function fakeCreateBackendQuery<Args, Result>(
+  op: ReadOp<Args, Result>,
+  args: Args | Accessor<Args>,
+): Accessor<Result> {
   const readArgs = typeof args === "function" ? (args as Accessor<unknown>) : () => args;
   return createMemo(
     () => {
@@ -194,37 +179,35 @@ function fakeCreateConvexQuery<Query extends FunctionReference<"query">>(
       // the same thing a real re-subscription does, and the reason a page can
       // form a hold here at all.
       const argsKey = JSON.stringify(readArgs() ?? null);
-      return flightFor(name, argsKey).read() as FunctionReturnType<Query>;
+      return flightFor(op.name, argsKey).read() as Result;
     },
-    { name: `fake:${name}` },
+    { name: `fake:${op.name}` },
   );
 }
 
-async function fakeRunMutation<Mutation extends FunctionReference<"mutation">>(
-  mutation: Mutation,
-  args: FunctionArgs<Mutation>,
-): Promise<FunctionReturnType<Mutation>> {
-  const name = getFunctionName(mutation);
-  calls.push({ name, args });
-  const handler = mutationHandlers.get(name);
-  if (!handler) throw new Error(`No fake answer for mutation ${name}`);
-  return handler(args) as FunctionReturnType<Mutation>;
+async function fakeRunMutation<Args, Result>(
+  op: WriteOp<Args, Result>,
+  args: Args,
+): Promise<Result> {
+  calls.push({ name: op.name, args });
+  const handler = mutationHandlers.get(op.name);
+  if (!handler) throw new Error(`No fake answer for mutation ${op.name}`);
+  return handler(args) as Result;
 }
 
 /**
- * The replacement for `src/lib/convex.ts`.
+ * The replacement for `src/lib/backend.ts`.
  *
  * @public
  */
-export function convexModule(): Record<string, unknown> {
+export function backendModule(): Record<string, unknown> {
   return {
-    getConvexUrl: () => FAKE_URL,
-    getConvexClient: () => ({ mutation: fakeRunMutation }),
-    createConvexQuery: fakeCreateConvexQuery,
-    // A preload is an early subscription the page then finds in the client;
+    getBackendUrl: () => FAKE_URL,
+    createBackendQuery: fakeCreateBackendQuery,
+    // A preload is an early subscription the page then finds already held;
     // the fake's flights are keyed per read already, so there is nothing to
     // warm and nothing to assert — the router's preloads are a no-op here.
-    prefetchConvexQuery: () => {},
+    prefetchBackendQuery: () => {},
     runMutation: fakeRunMutation,
   };
 }
@@ -232,8 +215,8 @@ export function convexModule(): Record<string, unknown> {
 /**
  * The replacement for `src/lib/auth`. `createOrganizer` stays a query so the
  * page's session boundary is exercised rather than stubbed away; the two
- * imperative halves become no-ops, since a real `ensureOrganizer` builds an
- * HTTP client and talks to a server.
+ * imperative halves become no-ops, since a real `ensureOrganizer` talks to
+ * a server.
  *
  * @public
  */
@@ -241,7 +224,7 @@ export function authModule(): Record<string, unknown> {
   return {
     initAuth: () => {},
     ensureOrganizer: async () => {},
-    createOrganizer: () => fakeCreateConvexQuery(api.auth.currentOrganizer, {}),
+    createOrganizer: () => fakeCreateBackendQuery(api.auth.currentOrganizer, {}),
   };
 }
 

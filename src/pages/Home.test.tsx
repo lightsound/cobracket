@@ -6,20 +6,19 @@
  */
 import { expect, test, vi } from "vite-plus/test";
 import { flush } from "solid-js";
-import { api } from "../../convex/_generated/api";
+import { api } from "../lib/operations";
+import type { TournamentSummary } from "../lib/operations";
 import { AppProviders } from "../providers";
 import { mount } from "../test-setup";
-import type { FunctionReturnType } from "convex/server";
 import {
   answerMutation,
-  fakeId,
   mutationCalls,
   navigations,
   publishQuery,
   routerHooks,
 } from "../test-fakes";
 
-vi.mock("../lib/convex", async () => (await import("../test-fakes")).convexModule());
+vi.mock("../lib/backend", async () => (await import("../test-fakes")).backendModule());
 vi.mock("../lib/auth", async () => (await import("../test-fakes")).authModule());
 vi.mock("@solidjs/router", async (importOriginal) => ({
   ...(await importOriginal<Record<string, unknown>>()),
@@ -48,10 +47,10 @@ async function ready(): Promise<HTMLElement> {
 }
 
 /** Rebuilt on every call — the way each subscription push delivers it. */
-function tournaments(): FunctionReturnType<typeof api.tournaments.listMyTournaments> {
+function tournaments(): TournamentSummary[] {
   return [
     {
-      tournamentId: fakeId<"tournaments">("t1"),
+      tournamentId: "t1",
       name: "Friday Night Bracket",
       discipline: "Street Fighter 6",
       format: { family: "single_elimination" },
@@ -59,7 +58,7 @@ function tournaments(): FunctionReturnType<typeof api.tournaments.listMyTourname
       shareSlug: "friday-night",
     },
     {
-      tournamentId: fakeId<"tournaments">("t2"),
+      tournamentId: "t2",
       name: "Sunday Cup",
       discipline: "Chess",
       format: { family: "double_elimination", grandFinalReset: true },
@@ -69,7 +68,7 @@ function tournaments(): FunctionReturnType<typeof api.tournaments.listMyTourname
   ];
 }
 
-const ORGANIZER = fakeId<"users">("user1");
+const ORGANIZER = "user1";
 
 function field(host: HTMLElement, label: string): HTMLInputElement {
   const wrapper = [...host.querySelectorAll("label")].find((node) =>
@@ -161,7 +160,7 @@ test("creates a tournament and navigates to it", async () => {
   publishQuery(api.disciplines.suggestDisciplines, []);
   await settled();
   answerMutation(api.tournaments.createTournament, () => ({
-    tournamentId: fakeId<"tournaments">("t9"),
+    tournamentId: "t9",
     shareSlug: "t9-share",
   }));
 
@@ -234,7 +233,7 @@ test("shows each keystroke while the suggestions query is still held", async () 
 test("submits what was typed even with the suggestions still in flight", async () => {
   const host = await ready();
   answerMutation(api.tournaments.createTournament, () => ({
-    tournamentId: fakeId<"tournaments">("t9"),
+    tournamentId: "t9",
     shareSlug: "t9-share",
   }));
 
@@ -257,7 +256,7 @@ test("submits what was typed even with the suggestions still in flight", async (
 test("submits an edited discipline, not the one it replaced", async () => {
   const host = await ready();
   answerMutation(api.tournaments.createTournament, () => ({
-    tournamentId: fakeId<"tournaments">("t9"),
+    tournamentId: "t9",
     shareSlug: "t9-share",
   }));
 
@@ -317,9 +316,9 @@ test("clears the completions while a new prefix is in flight", async () => {
  * hold a component (`StatusBadge`), which is the other shape worth measuring
  * rather than reasoning about.
  */
-function manyTournaments(): FunctionReturnType<typeof api.tournaments.listMyTournaments> {
+function manyTournaments(): TournamentSummary[] {
   return Array.from({ length: 32 }, (_, index) => ({
-    tournamentId: fakeId<"tournaments">(`t${index + 1}`),
+    tournamentId: `t${index + 1}`,
     name: `Tournament ${index + 1}`,
     discipline: "Chess",
     format: { family: "single_elimination" as const },

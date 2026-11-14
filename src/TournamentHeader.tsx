@@ -1,5 +1,6 @@
 import type { Element } from "solid-js";
-import { StatusBadge, type TournamentStatus } from "./StatusBadge";
+import type { TournamentStatus } from "./lib/operations";
+import { StatusBadge } from "./StatusBadge";
 import { useI18n } from "./i18n";
 
 export function TournamentHeader(props: {

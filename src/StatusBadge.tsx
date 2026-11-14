@@ -1,6 +1,5 @@
 import { useI18n } from "./i18n";
-
-export type TournamentStatus = "draft" | "published" | "live" | "completed";
+import type { TournamentStatus } from "./lib/operations";
 
 const STATUS_KEYS = {
   draft: "status.draft",

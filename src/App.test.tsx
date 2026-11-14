@@ -8,18 +8,18 @@
  * and the auth module are faked, as everywhere else — `src/test-fakes.ts`.
  */
 import { expect, test, vi } from "vite-plus/test";
-import { api } from "../convex/_generated/api";
+import { api } from "./lib/operations";
 import { mount } from "./test-setup";
-import { fakeId, publishQuery } from "./test-fakes";
+import { publishQuery } from "./test-fakes";
 
-vi.mock("./lib/convex", async () => (await import("./test-fakes")).convexModule());
+vi.mock("./lib/backend", async () => (await import("./test-fakes")).backendModule());
 vi.mock("./lib/auth", async () => (await import("./test-fakes")).authModule());
 
 const { default: App } = await import("./App");
 
 localStorage.setItem("cobracket:locale", "en");
 
-const ORGANIZER = fakeId<"users">("user1");
+const ORGANIZER = "user1";
 
 /** Let the async memos settle. */
 const settled = () => new Promise((resolve) => setTimeout(resolve, 0));

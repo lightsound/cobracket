@@ -1,6 +1,6 @@
 import { useNavigate } from "@solidjs/router";
 import { Errored, For, Loading, Show, createSignal } from "solid-js";
-import { api } from "../../convex/_generated/api";
+import { api } from "../lib/operations";
 import { DisciplineField } from "../DisciplineField";
 import { NameField } from "../NameField";
 import { ErrorNotice, errorFallback, errorMessage } from "../ErrorFallback";
@@ -9,14 +9,14 @@ import { SetupNotice } from "../SetupNotice";
 import { StatusBadge } from "../StatusBadge";
 import { useI18n } from "../i18n";
 import { ensureOrganizer } from "../lib/auth";
-import { createConvexQuery, getConvexClient, getConvexUrl } from "../lib/convex";
+import { createBackendQuery, getBackendUrl, runMutation } from "../lib/backend";
 import { useOrganizer } from "../organizer";
 // fallow-ignore-next-line circular-dependency -- the official Solid Router 2 shape: the router lazy-imports pages (deferred dynamic import), pages link back through Router.paths; no init-order hazard
 import { Router } from "../router";
 
 export default function Home() {
   const { t } = useI18n();
-  if (!getConvexUrl()) return <SetupNotice />;
+  if (!getBackendUrl()) return <SetupNotice />;
   const organizer = useOrganizer();
 
   return (
@@ -41,7 +41,7 @@ export default function Home() {
 
 function TournamentList() {
   const { t } = useI18n();
-  const tournaments = createConvexQuery(api.tournaments.listMyTournaments, {});
+  const tournaments = createBackendQuery(api.tournaments.listMyTournaments, {});
 
   return (
     <Loading fallback={<p class="text-sm text-ink-muted">{t("app.loading")}</p>}>
@@ -82,12 +82,15 @@ function CreateForm() {
 
   async function submit(event: SubmitEvent) {
     event.preventDefault();
-    const convex = getConvexClient();
-    if (!convex) return;
+    // Unconfigured (no backend URL, or SSR): the pre-seam submit
+    // silently did nothing here; the form only mounts under the
+    // configured gate, so this is defence, not a state to surface.
+    const configured = getBackendUrl();
+    if (configured === undefined) return;
     setCreateError(null);
     try {
       await ensureOrganizer();
-      const created = await convex.mutation(api.tournaments.createTournament, {
+      const created = await runMutation(api.tournaments.createTournament, {
         name: name(),
         discipline: discipline(),
         format: { family: family() },
