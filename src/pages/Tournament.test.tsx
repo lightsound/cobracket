@@ -7,20 +7,19 @@
  */
 import { expect, test, vi } from "vite-plus/test";
 import { flush } from "solid-js";
-import type { FunctionReturnType } from "convex/server";
-import { api } from "../../convex/_generated/api";
+import { api } from "../lib/operations";
+import type { OrganizerTournamentView } from "../lib/operations";
 import { AppProviders } from "../providers";
 import { mount } from "../test-setup";
 import {
   answerMutation,
-  fakeId,
   mutationCalls,
   navigations,
   publishQuery,
   routerHooks,
 } from "../test-fakes";
 
-vi.mock("../lib/convex", async () => (await import("../test-fakes")).convexModule());
+vi.mock("../lib/backend", async () => (await import("../test-fakes")).backendModule());
 vi.mock("../lib/auth", async () => (await import("../test-fakes")).authModule());
 vi.mock("@solidjs/router", async (importOriginal) => ({
   ...(await importOriginal<Record<string, unknown>>()),
@@ -31,13 +30,13 @@ const { default: TournamentPage } = await import("./Tournament");
 
 localStorage.setItem("cobracket:locale", "en");
 
-type OrganizerView = NonNullable<FunctionReturnType<typeof api.tournaments.getTournament>>;
+type OrganizerView = OrganizerTournamentView;
 
-const ORGANIZER = fakeId<"users">("user1");
-const TOURNAMENT = fakeId<"tournaments">("t1");
+const ORGANIZER = "user1";
+const TOURNAMENT = "t1";
 const P = {
-  ada: fakeId<"participants">("p1"),
-  grace: fakeId<"participants">("p2"),
+  ada: "p1",
+  grace: "p2",
 };
 
 /** Rebuilt on every call — the way each subscription push delivers it. */
@@ -151,7 +150,7 @@ test("keeps the roster's rows across a subscription re-delivery", async () => {
 
 test("adds a participant and clears the field", async () => {
   const host = await open();
-  answerMutation(api.roster.addParticipant, () => fakeId<"participants">("p3"));
+  answerMutation(api.roster.addParticipant, () => "p3");
 
   const input = host.querySelector<HTMLInputElement>("input[placeholder='Participant name']");
   if (!input) throw new Error("no roster input");
@@ -268,7 +267,7 @@ test("reports a result from the dialog the bracket opens", async () => {
       completed: false,
       matches: [
         {
-          matchId: fakeId<"matches">("m1"),
+          matchId: "m1",
           key: "w1m1",
           bracket: "winners",
           round: 1,
@@ -356,7 +355,7 @@ test("saves an edited discipline even with the suggestions still in flight", asy
  */
 function bigRoster(): OrganizerView["participants"] {
   return Array.from({ length: 32 }, (_, index) => ({
-    participantId: fakeId<"participants">(`p${index + 1}`),
+    participantId: `p${index + 1}`,
     name: `Player ${index + 1}`,
     seed: index + 1,
   }));

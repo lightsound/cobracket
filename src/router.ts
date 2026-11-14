@@ -1,17 +1,17 @@
 import { createRouter, defineRoute, intentPreload, pendingLinks } from "@solidjs/router";
 import { lazy } from "solid-js";
-import { api } from "../convex/_generated/api";
-import { prefetchConvexQuery } from "./lib/convex";
+import { api } from "./lib/operations";
+import { prefetchBackendQuery } from "./lib/backend";
 
 // Each page's data starts loading on link intent — hover, focus, touch — a
-// round trip before the click, so the page finds its answer in the Convex
+// round trip before the click, so the page finds its answer in the backend
 // client and shows no fallback. Measured in Chromium against a local
 // deployment with 100ms of one-way latency: every page boundary showed its
 // fallback for one round trip (200ms) after navigation, and under 150ms of
 // latency the same wait reads as a flicker (`[FALLBACK_FLASH]`). A preload
 // on `"initial"` intent would gain nothing — the page subscribes on mount
 // anyway — and for the two Organizer-gated reads it would run before the
-// session is restored, so it is skipped. `prefetchConvexQuery` holds the
+// session is restored, so it is skipped. `prefetchBackendQuery` holds the
 // subscription open briefly and releases it at once on failure, so a hover
 // while signed out leaves nothing for the page to inherit. Since router
 // 2.0.0-next.38 link preloading is opt-in and none is the default:
@@ -24,7 +24,7 @@ import { prefetchConvexQuery } from "./lib/convex";
 // write. Router 2.0.0-next.37 made `data-pending` opt-in, and with it the
 // claims sweep's `isPending` read of the in-flight navigation: without the
 // plugin nothing reads that state, so every navigation that waits on a
-// lazy page or its first Convex value is an unacknowledged hold. Measured on
+// lazy page or its first backend value is an unacknowledged hold. Measured on
 // the browser gate: the create-then-open and the Share Link navigations
 // reported two silent holds (43ms and 16ms) after the upgrade, and none
 // before it, when the sweep read pending state unconditionally.
@@ -36,7 +36,7 @@ export const Router = createRouter({
       path: "/",
       component: lazy(() => import("./pages/Home")),
       preload: ({ intent }) => {
-        if (intent !== "initial") prefetchConvexQuery(api.tournaments.listMyTournaments, {});
+        if (intent !== "initial") prefetchBackendQuery(api.tournaments.listMyTournaments, {});
       },
     }),
     defineRoute({
@@ -44,7 +44,7 @@ export const Router = createRouter({
       component: lazy(() => import("./pages/Tournament")),
       preload: ({ params, intent }) => {
         if (intent !== "initial") {
-          prefetchConvexQuery(api.tournaments.getTournament, {
+          prefetchBackendQuery(api.tournaments.getTournament, {
             tournamentId: params.tournamentId,
           });
         }
@@ -55,7 +55,7 @@ export const Router = createRouter({
       component: lazy(() => import("./pages/Share")),
       preload: ({ params, intent }) => {
         if (intent !== "initial") {
-          prefetchConvexQuery(api.share.getSharedTournament, { shareSlug: params.shareSlug });
+          prefetchBackendQuery(api.share.getSharedTournament, { shareSlug: params.shareSlug });
         }
       },
     }),

@@ -1,5 +1,4 @@
 import { createContext, useContext, type Accessor, type ParentProps } from "solid-js";
-import type { Id } from "../convex/_generated/dataModel";
 import { createOrganizer } from "./lib/auth";
 
 /**
@@ -23,12 +22,12 @@ import { createOrganizer } from "./lib/auth";
  * subscription alive for the app's lifetime, so a page reads an answer the
  * client already holds. A memo's computation runs when the memo is created,
  * not on first read, so the subscription opens with the provider, before any
- * page reads it. A provider mounted without a configured client (no
- * `VITE_CONVEX_URL`, as in tests of components that never touch the backend)
- * opens nothing, because `createConvexQuery` resolves the client inside that
- * computation and finds none.
+ * page reads it. A provider mounted without a configured backend (as in
+ * tests of components that never touch the backend) opens nothing, because
+ * `createBackendQuery` resolves the client inside that computation and
+ * finds none.
  */
-const OrganizerContext = createContext<Accessor<Id<"users"> | null>>();
+const OrganizerContext = createContext<Accessor<string | null>>();
 
 /**
  * @public
@@ -40,10 +39,10 @@ export function OrganizerProvider(props: ParentProps) {
 /**
  * The current Organizer's user id, or null when signed out. An async read:
  * take it under `<Loading>` / `<Errored>` boundaries, gated on
- * `getConvexUrl()` like every other Convex read.
+ * `getBackendUrl()` like every other backend read.
  *
  * @public
  */
-export function useOrganizer(): Accessor<Id<"users"> | null> {
+export function useOrganizer(): Accessor<string | null> {
   return useContext(OrganizerContext);
 }

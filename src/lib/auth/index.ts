@@ -2,8 +2,9 @@ import { AuthClient, defaultStorage, runWithMutex } from "@convex-dev/auth/brows
 import { ConvexHttpClient } from "convex/browser";
 import type { Accessor } from "solid-js";
 import { api } from "../../../convex/_generated/api";
-import type { Id } from "../../../convex/_generated/dataModel";
-import { createConvexQuery, getConvexClient, getConvexUrl } from "../convex";
+import { createBackendQuery } from "../backend";
+import { api as seamApi } from "../operations";
+import { getConvexClient, getConvexUrl } from "../convex";
 
 // The auth boundary (ADR 0003): Convex Auth v2 (preview) Anonymous Sign-In,
 // isolated behind this module. The rest of the app knows only the @public
@@ -188,13 +189,14 @@ async function fetchSessionState(
  * The current Organizer's user id, or null when signed out — as the backend
  * sees it (derived from the verified access token, never from client state).
  *
- * A reactive Convex subscription, created once for the whole app by
- * `src/organizer.tsx` and read through `useOrganizer()` under `<Loading>` /
- * `<Errored>` boundaries, gated on `getConvexUrl()` like every other Convex
- * read. Flips from null to the id once the session is live.
+ * A reactive subscription through the data seam (`src/lib/backend`),
+ * created once for the whole app by `src/organizer.tsx` and read through
+ * `useOrganizer()` under `<Loading>` / `<Errored>` boundaries, gated on
+ * `getBackendUrl()` like every other backend read. Flips from null to
+ * the id once the session is live.
  *
  * @public
  */
-export function createOrganizer(): Accessor<Id<"users"> | null> {
-  return createConvexQuery(api.auth.currentOrganizer, {});
+export function createOrganizer(): Accessor<string | null> {
+  return createBackendQuery(seamApi.auth.currentOrganizer, {});
 }

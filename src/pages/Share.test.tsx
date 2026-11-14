@@ -5,13 +5,13 @@
  * bracket render for real, which is what puts them under the gate.
  */
 import { expect, test, vi } from "vite-plus/test";
-import { api } from "../../convex/_generated/api";
+import { api } from "../lib/operations";
+import type { TournamentView } from "../lib/operations";
 import { AppProviders } from "../providers";
 import { mount } from "../test-setup";
-import type { FunctionReturnType } from "convex/server";
-import { fakeId, publishQuery, routerHooks } from "../test-fakes";
+import { publishQuery, routerHooks } from "../test-fakes";
 
-vi.mock("../lib/convex", async () => (await import("../test-fakes")).convexModule());
+vi.mock("../lib/backend", async () => (await import("../test-fakes")).backendModule());
 vi.mock("@solidjs/router", async (importOriginal) => ({
   ...(await importOriginal<Record<string, unknown>>()),
   ...routerHooks({ shareSlug: "sunday-cup" }),
@@ -21,13 +21,13 @@ const { default: SharePage } = await import("./Share");
 
 localStorage.setItem("cobracket:locale", "en");
 
-type SharedView = NonNullable<FunctionReturnType<typeof api.share.getSharedTournament>>;
+type SharedView = TournamentView;
 
 const P = {
-  ada: fakeId<"participants">("p1"),
-  grace: fakeId<"participants">("p2"),
-  alan: fakeId<"participants">("p3"),
-  edsger: fakeId<"participants">("p4"),
+  ada: "p1",
+  grace: "p2",
+  alan: "p3",
+  edsger: "p4",
 };
 
 /** Rebuilt on every call — the way each subscription push delivers it. */

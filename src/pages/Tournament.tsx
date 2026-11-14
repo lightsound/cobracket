@@ -1,9 +1,8 @@
 import { useNavigate, useParams } from "@solidjs/router";
 import { Portal } from "@solidjs/web";
 import { Errored, For, Loading, Show, createSignal } from "solid-js";
-import type { FunctionArgs, FunctionReturnType } from "convex/server";
-import { api } from "../../convex/_generated/api";
-import type { Id } from "../../convex/_generated/dataModel";
+import { api } from "../lib/operations";
+import type { OrganizerTournamentView, UpdateTournamentArgs } from "../lib/operations";
 import { DisciplineField } from "../DisciplineField";
 import { NameField } from "../NameField";
 import { ErrorNotice, errorFallback, errorMessage } from "../ErrorFallback";
@@ -12,17 +11,17 @@ import { SetupNotice } from "../SetupNotice";
 import { TournamentBoard } from "../TournamentBoard";
 import { TournamentHeader } from "../TournamentHeader";
 import { useI18n, type I18n } from "../i18n";
-import { createConvexQuery, getConvexUrl, runMutation } from "../lib/convex";
+import { createBackendQuery, getBackendUrl, runMutation } from "../lib/backend";
 import { useOrganizer } from "../organizer";
 // fallow-ignore-next-line circular-dependency -- the official Solid Router 2 shape: the router lazy-imports pages (deferred dynamic import), pages link back through Router.paths; no init-order hazard
 import { Router } from "../router";
 
-type OrganizerView = NonNullable<FunctionReturnType<typeof api.tournaments.getTournament>>;
+type OrganizerView = OrganizerTournamentView;
 type OrganizerMatch = NonNullable<OrganizerView["bracket"]>["matches"][number];
 
 export default function TournamentPage() {
   const { t } = useI18n();
-  if (!getConvexUrl()) return <SetupNotice />;
+  if (!getBackendUrl()) return <SetupNotice />;
   const params = useParams(Router.paths.t);
   // getTournament rejects unauthenticated callers, so the subscription must
   // wait for the restored session — otherwise a direct open or reload of
@@ -60,7 +59,7 @@ function OwnedTournament(props: { tournamentId: string }) {
   const { t } = useI18n();
   // The raw URL segment goes to the server as-is: getTournament answers null
   // for malformed, missing, deleted, and foreign ids alike.
-  const view = createConvexQuery(api.tournaments.getTournament, () => ({
+  const view = createBackendQuery(api.tournaments.getTournament, () => ({
     tournamentId: props.tournamentId,
   }));
 
@@ -276,7 +275,7 @@ function RosterSection(props: {
   const { t } = useI18n();
   const [singleName, setSingleName] = createSignal("");
   const [bulkText, setBulkText] = createSignal("");
-  const [editingId, setEditingId] = createSignal<Id<"participants"> | null>(null);
+  const [editingId, setEditingId] = createSignal<string | null>(null);
   const [draftName, setDraftName] = createSignal("");
 
   async function run(mutate: () => Promise<unknown>): Promise<boolean> {
@@ -311,7 +310,7 @@ function RosterSection(props: {
     if (ok) setBulkText("");
   }
 
-  function move(participantId: Id<"participants">, delta: -1 | 1) {
+  function move(participantId: string, delta: -1 | 1) {
     const order = props.view.participants.map((participant) => participant.participantId);
     const index = order.indexOf(participantId);
     const target = index + delta;
@@ -476,7 +475,7 @@ function RosterSection(props: {
 }
 
 type SettingsDraft = { name: string; discipline: string; family: FormatFamily };
-type SettingsChanges = Omit<FunctionArgs<typeof api.tournaments.updateTournament>, "tournamentId">;
+type SettingsChanges = Omit<UpdateTournamentArgs, "tournamentId">;
 
 // Only what changed is sent. The format in particular is a structural
 // change, so an unchanged family must not be re-submitted (its options would
@@ -629,7 +628,7 @@ function resultSide(
   score: number | undefined,
 ) {
   return {
-    participantId: participantId as Id<"participants">,
+    participantId,
     outcome,
     ...(score !== undefined && { score }),
   };
@@ -638,7 +637,7 @@ function resultSide(
 function ReportDialog(props: {
   match: OrganizerMatch;
   reportKey: string;
-  participants: { participantId: Id<"participants">; name: string }[];
+  participants: { participantId: string; name: string }[];
   onClose: () => void;
   onReported: (voidedCount: number) => void;
 }) {

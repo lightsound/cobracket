@@ -1,7 +1,7 @@
 import { For, Loading, createUniqueId } from "solid-js";
-import { api } from "../convex/_generated/api";
+import { api } from "./lib/operations";
 import { useI18n } from "./i18n";
-import { createConvexQuery } from "./lib/convex";
+import { createBackendQuery } from "./lib/backend";
 import { TextInput } from "./TextInput";
 
 // The freeform Discipline field with suggestions (story 2), shared by the
@@ -11,7 +11,7 @@ import { TextInput } from "./TextInput";
 export function DisciplineField(props: { value: string; onInput: (value: string) => void }) {
   const { t } = useI18n();
   const listId = createUniqueId();
-  const suggestions = createConvexQuery(api.disciplines.suggestDisciplines, () => ({
+  const suggestions = createBackendQuery(api.disciplines.suggestDisciplines, () => ({
     prefix: props.value,
   }));
 
