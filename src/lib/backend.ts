@@ -12,13 +12,13 @@ import {
 // (plan §2.5): pages reach the backend only through this module —
 // `createBackendQuery`, `runMutation`, `prefetchBackendQuery`, and
 // `getBackendUrl`, driven by the operation descriptors in
-// `./operations`. Two implementations will sit behind it: `./convex`
-// (today's, the production default) and the SpacetimeDB adapter (the
-// migration's target), selected by a build-time env var —
-// `VITE_BACKEND=spacetimedb` will pick the adapter; anything else,
-// including unset, keeps Convex. Until the adapter lands, the
-// dispatch below returns the Convex implementation unconditionally.
-// Both remain runnable until the M5 cutover.
+// `./operations`. Two implementations sit behind it: `./convex`
+// (today's, the production default) and the SpacetimeDB adapter
+// (`./spacetimedb`, the migration's target), selected by a build-time
+// env var — `VITE_BACKEND=spacetimedb` picks the adapter; anything
+// else, including unset, keeps Convex. The adapter module is loaded
+// lazily, so a Convex build never bundles the SpacetimeDB SDK or the
+// generated bindings. Both remain runnable until the M5 cutover.
 
 // ---------------------------------------------------------------------------
 // The implementations behind the seam
@@ -61,22 +61,64 @@ const convexImpl: BackendImpl = {
   },
 };
 
+let spacetimeModule: Promise<typeof import("./spacetimedb")> | undefined;
+
+function loadSpacetime(): Promise<typeof import("./spacetimedb")> {
+  spacetimeModule ??= import("./spacetimedb");
+  return spacetimeModule;
+}
+
+const spacetimeImpl: BackendImpl = {
+  async subscribe(op, args, onValue, onError) {
+    const adapter = await loadSpacetime();
+    return adapter.spacetimeImpl.subscribe(op, args, onValue, onError);
+  },
+  async write(op, args) {
+    const adapter = await loadSpacetime();
+    return await adapter.spacetimeImpl.write(op, args);
+  },
+  prefetch(op, args) {
+    void loadSpacetime().then((adapter) => adapter.spacetimeImpl.prefetch(op, args));
+  },
+};
+
+/**
+ * Which backend this build talks to, from the build-time env:
+ * `VITE_BACKEND=spacetimedb` selects the adapter; anything else,
+ * including unset, is Convex (the production default until the M5
+ * cutover).
+ *
+ * @public
+ */
+export function backendSelection(): "convex" | "spacetimedb" {
+  return import.meta.env.VITE_BACKEND === "spacetimedb" ? "spacetimedb" : "convex";
+}
+
 function getImpl(): BackendImpl {
-  // The SpacetimeDB adapter joins this dispatch in the migration's
-  // M3 adapter PR; until then the Convex implementation is the only
-  // one registered, whatever a build's env says.
-  return convexImpl;
+  return backendSelection() === "spacetimedb" ? spacetimeImpl : convexImpl;
 }
 
 /**
  * The configured backend's URL, or undefined when this build has no
- * backend to talk to (no `VITE_CONVEX_URL` on the Convex side). Pages
- * gate their reads on it and render the setup notice instead — the
- * same contract `getConvexUrl` has always carried.
+ * backend to talk to (no `VITE_CONVEX_URL` on the Convex side; on
+ * the adapter side, a missing `VITE_SPACETIMEDB_HOST` or
+ * `VITE_SPACETIMEDB_DB`). Pages gate their
+ * reads on it and render the setup notice instead — the same
+ * contract `getConvexUrl` has always carried.
  *
  * @public
  */
 export function getBackendUrl(): string | undefined {
+  if (backendSelection() === "spacetimedb") {
+    const host = import.meta.env.VITE_SPACETIMEDB_HOST;
+    const db = import.meta.env.VITE_SPACETIMEDB_DB;
+    // Both halves of the configuration, as the adapter requires
+    // them: a half-configured build has no backend to talk to, and
+    // the pages' setup notice is the honest answer for it.
+    return typeof host === "string" && host.length > 0 && typeof db === "string" && db.length > 0
+      ? host
+      : undefined;
+  }
   return getConvexUrl();
 }
 
