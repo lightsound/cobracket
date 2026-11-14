@@ -52,7 +52,7 @@
     "fallow": "3.42.0",
     "happy-dom": "^21.0.4",
     "playwright-core": "1.65.1",
-    "solid2-agent-kit": "0.25.0",
+    "solid2-agent-kit": "0.26.0",
     "typescript": "7.0.2",
     "vite": "npm:@voidzero-dev/vite-plus-core@1.6.0",
     "vite-plus": "1.6.0",
