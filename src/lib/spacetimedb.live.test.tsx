@@ -26,6 +26,7 @@
  * fixture work, not app behavior, and the gate captures per test body.
  */
 import { execFileSync, spawn, type ChildProcess } from "node:child_process";
+import { randomBytes } from "node:crypto";
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { connect as tcpConnect } from "node:net";
 import { homedir } from "node:os";
@@ -215,6 +216,17 @@ async function boot(): Promise<void> {
       "--module-path",
       MODULE_DIR,
       DB_NAME,
+    ]);
+    // Seed the module secret (ADR 0032) immediately after publishing,
+    // before the app connects: a host-CSPRNG key for this run's
+    // throwaway database.
+    run(join(binDir, "spacetime"), [
+      "call",
+      DB_NAME,
+      "seed_module_secret",
+      randomBytes(32).toString("hex"),
+      "--server",
+      HOST,
     ]);
   } catch (error) {
     // The child is detached: a failed boot must not leave it running

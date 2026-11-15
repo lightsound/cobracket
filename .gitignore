@@ -14,6 +14,9 @@ app.config.timestamp_*.js
 # Convex local backend
 .convex/
 
+# The local module secret (ADR 0032), created by spacetime:seed:local
+.spacetime-secret
+
 # SpacetimeDB spike scratch (binaries, throwaway server data, bindings)
 spacetimedb/.spike-build/
 spacetimedb/.connection-build/

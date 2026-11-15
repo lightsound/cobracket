@@ -17,6 +17,7 @@ import RemoveParticipantReducer from "../remove_participant_reducer";
 import RenameParticipantReducer from "../rename_participant_reducer";
 import ReorderSeedingReducer from "../reorder_seeding_reducer";
 import ReportResultReducer from "../report_result_reducer";
+import SeedModuleSecretReducer from "../seed_module_secret_reducer";
 import UpdateTournamentReducer from "../update_tournament_reducer";
 
 export type AddParticipantParams = __Infer<typeof AddParticipantReducer>;
@@ -30,5 +31,6 @@ export type RemoveParticipantParams = __Infer<typeof RemoveParticipantReducer>;
 export type RenameParticipantParams = __Infer<typeof RenameParticipantReducer>;
 export type ReorderSeedingParams = __Infer<typeof ReorderSeedingReducer>;
 export type ReportResultParams = __Infer<typeof ReportResultReducer>;
+export type SeedModuleSecretParams = __Infer<typeof SeedModuleSecretReducer>;
 export type UpdateTournamentParams = __Infer<typeof UpdateTournamentReducer>;
 

@@ -30,7 +30,8 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p convex && tsc --noEmit -p scripts && tsc --noEmit -p spacetimedb",
     "spacetime:build": "spacetime build",
     "spacetime:codegen": "spacetime generate --lang typescript --out-dir spacetimedb/bindings",
-    "spacetime:publish:local": "spacetime publish cobracket --server local",
+    "spacetime:publish:local": "spacetime publish cobracket --server local && bun run spacetime:seed:local",
+    "spacetime:seed:local": "bun spacetimedb/seed-local.ts",
     "spacetime:spike": "bun spacetimedb/spike/verify-read-surfaces.ts",
     "verify": "bun run check:bun && bun run typecheck && bun run test && bun x vp check && bun run lint:imports && bun run fallow:ci && bun run lint:solid && bun run lint:theme && bun run build"
   },
@@ -39,6 +40,7 @@
     "@fontsource-variable/space-grotesk": "^5.3.0",
     "@solidjs/router": "2.0.0-next.44",
     "@solidjs/web": "^2.0.0-rc.21",
+    "@spacetimedb/crypto": "0.1.0",
     "convex": "^1.50.0",
     "solid-js": "^2.0.0-rc.21",
     "spacetimedb": "2.15.0",

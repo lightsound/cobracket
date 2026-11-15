@@ -25,6 +25,7 @@
  */
 
 import { spawn, spawnSync } from "node:child_process";
+import { randomBytes } from "node:crypto";
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { connect as tcpConnect } from "node:net";
 import { homedir } from "node:os";
@@ -258,6 +259,18 @@ export default async function setup(): Promise<() => Promise<void>> {
       "--module-path",
       moduleDir,
       DB_NAME,
+    ]);
+    // Seed the module secret (ADR 0032) immediately after publishing,
+    // before anything else can bind an identity: a host-CSPRNG key for
+    // this run's throwaway database, called with the same CLI idiom as
+    // the publish (explicit --server, suite-local target).
+    run(join(binDir, "spacetime"), [
+      "call",
+      DB_NAME,
+      "seed_module_secret",
+      randomBytes(32).toString("hex"),
+      "--server",
+      HOST,
     ]);
   } catch (error) {
     await stopServer(server);

@@ -45,6 +45,7 @@ import RemoveParticipantReducer from "./remove_participant_reducer";
 import RenameParticipantReducer from "./rename_participant_reducer";
 import ReorderSeedingReducer from "./reorder_seeding_reducer";
 import ReportResultReducer from "./report_result_reducer";
+import SeedModuleSecretReducer from "./seed_module_secret_reducer";
 import UpdateTournamentReducer from "./update_tournament_reducer";
 
 // Import all procedure arg schemas
@@ -166,6 +167,7 @@ const reducersSchema = __reducers(
   __reducerSchema("rename_participant", RenameParticipantReducer),
   __reducerSchema("reorder_seeding", ReorderSeedingReducer),
   __reducerSchema("report_result", ReportResultReducer),
+  __reducerSchema("seed_module_secret", SeedModuleSecretReducer),
   __reducerSchema("update_tournament", UpdateTournamentReducer),
 );
 

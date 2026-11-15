@@ -64,6 +64,22 @@ export function as<T>(harness: Harness, sub: string, body: (ctx: Ctx) => T): T {
   return harness.withReducerTx(authFor(sub), body);
 }
 
+/** The fixed test key for the module secret: bytes 0x00 through 0x1f, hex. */
+export const TEST_SECRET_HEX = "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f";
+
+/**
+ * Seed a fresh harness's module secret (ADR 0032) with `keyHex` — the
+ * provisioning act every tournament-creating test needs first, since
+ * createTournament mints its share slug from the secret. Runs as the
+ * module itself: seeding binds no identity, so the harness stays
+ * unbound afterwards.
+ */
+export function seedTestSecret(harness: Harness, keyHex: string = TEST_SECRET_HEX): void {
+  asModule(harness, (ctx) => {
+    moduleExports.seedModuleSecret(ctx, { keyHex });
+  });
+}
+
 /** Runs `body` as the module itself (seeding and cross-user reads). */
 export function asModule<T>(harness: Harness, body: (ctx: Ctx) => T): T {
   return harness.withReducerTx(TestAuth.internal(), body);

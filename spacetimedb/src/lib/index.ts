@@ -48,6 +48,7 @@ export {
   toRecordedResults,
 } from "./loaders";
 export { ownedTournament, sharedTournamentBySlug } from "./reads";
+export { mintShareSlug, seedModuleSecret } from "./secret";
 export {
   compareById,
   compareByIdDesc,
