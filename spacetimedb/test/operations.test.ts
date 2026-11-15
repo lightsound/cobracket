@@ -1007,6 +1007,64 @@ describe("operations parity", () => {
     expect(() => report(harness, ALICE, matchId, sides)).toThrow(/at most 1024 results/);
   });
 
+  test("names refuse control and invisible characters, while ordinary names pass", () => {
+    const harness = makeHarness();
+    const spoofed = /must not contain control or invisible characters/;
+    const createNamed = (name: string) => () =>
+      as(harness, ALICE, (ctx) => {
+        moduleExports.createTournament(ctx, {
+          name,
+          discipline: "Chess",
+          format: { tag: "single_elimination" },
+        });
+      });
+
+    // A bidi override (U+202E) in a tournament name.
+    expect(createNamed("Final\u202E Cup")).toThrow(spoofed);
+    // An embedded newline (a C0 control).
+    expect(createNamed("Line\nBreak")).toThrow(spoofed);
+    // A C1 control (U+0085).
+    expect(createNamed("Next\u0085Line")).toThrow(spoofed);
+    // DEL (U+007F), embedded between letters.
+    expect(createNamed("A\u007FB")).toThrow(spoofed);
+    // A zero-width no-break space / BOM (U+FEFF), embedded mid-name so
+    // trim() cannot strip it from an edge.
+    expect(createNamed("A\uFEFFB")).toThrow(spoofed);
+    // A zero-width space (U+200B).
+    expect(createNamed("A\u200BB")).toThrow(spoofed);
+    // A zero-width non-joiner (U+200C), embedded between letters.
+    expect(createNamed("A\u200CB")).toThrow(spoofed);
+    // A zero-width joiner (U+200D), embedded between letters.
+    expect(createNamed("A\u200DB")).toThrow(spoofed);
+    // A bidi isolate (U+2066), embedded between letters.
+    expect(createNamed("A\u2066B")).toThrow(spoofed);
+
+    // Ordinary names \u2014 Japanese text and emoji included \u2014 pass, on
+    // creation and on the roster alike.
+    const { tournamentId } = create(harness, ALICE, {
+      name: "\u5bae\u5d0e\u30ab\u30c3\u30d7 U0001F3C6",
+      discipline: "\u5c06\u68cb",
+      format: { tag: "single_elimination" },
+    });
+    // A zero-width space (U+200B) in a participant name.
+    expect(() =>
+      as(harness, ALICE, (ctx) => {
+        moduleExports.addParticipant(ctx, { tournamentId, name: "Alice\u200B" });
+      }),
+    ).toThrow(spoofed);
+    as(harness, ALICE, (ctx) => {
+      moduleExports.addParticipant(ctx, {
+        tournamentId,
+        name: "\u5c71\u7530\u592a\u90ce U0001F3AE",
+      });
+    });
+    const view = ownedView(harness, ALICE, tournamentId);
+    expect(view.name).toBe("\u5bae\u5d0e\u30ab\u30c3\u30d7 U0001F3C6");
+    expect(view.participants.map((participant) => participant.name)).toEqual([
+      "\u5c71\u7530\u592a\u90ce U0001F3AE",
+    ]);
+  });
+
   // -------------------------------------------------------------------------
   // Disciplines (story 2)
   // -------------------------------------------------------------------------
@@ -1040,6 +1098,112 @@ describe("operations parity", () => {
     expect(suggest("STREET f")).toEqual(["Street Fighter 6"]);
     expect(suggest("str")).toEqual(["Street Fighter 6", "Strive"]);
     expect(suggest("  ")).toEqual([]);
+  });
+
+  test("the global discipline list is capped, but existing disciplines stay reusable", () => {
+    const harness = makeHarness();
+    // MAX_DISCIPLINES: the global list holds at most 1000 rows. Seeded
+    // directly through a reducer transaction \u2014 a thousand tournament
+    // creations would only slow the test.
+    asModule(harness, (ctx) => {
+      for (let i = 0; i < 1000; i++) {
+        ctx.db.discipline.insert({
+          id: 0n,
+          name: `Seeded ${i}`,
+          normalizedName: `seeded ${i}`,
+        });
+      }
+    });
+
+    // A brand-new discipline would be row 1001: refused.
+    expect(() =>
+      create(harness, ALICE, {
+        name: "One Too Many",
+        discipline: "Brand New Discipline",
+        format: { tag: "single_elimination" },
+      }),
+    ).toThrow(/Cannot add a new discipline: the list is limited to 1000/);
+
+    // Reusing an existing discipline inserts no row, so it stays allowed
+    // at the cap.
+    create(harness, ALICE, {
+      name: "Still Fine",
+      discipline: "Seeded 42",
+      format: { tag: "single_elimination" },
+    });
+    const disciplines = asModule(harness, (ctx) => [...ctx.db.discipline.iter()]);
+    expect(disciplines).toHaveLength(1000);
+  });
+
+  test("the 1000th discipline is admitted, and the cap refuses only the 1001st", () => {
+    const harness = makeHarness();
+    // Seed 999 directly, so the next brand-new discipline is exactly row
+    // 1000: the cap must admit it, not refuse one row early.
+    asModule(harness, (ctx) => {
+      for (let i = 0; i < 999; i++) {
+        ctx.db.discipline.insert({
+          id: 0n,
+          name: `Seeded ${i}`,
+          normalizedName: `seeded ${i}`,
+        });
+      }
+    });
+
+    // The 1000th row is admitted and the table reaches exactly 1000.
+    create(harness, ALICE, {
+      name: "At The Cap",
+      discipline: "Thousandth Discipline",
+      format: { tag: "single_elimination" },
+    });
+    let disciplines = asModule(harness, (ctx) => [...ctx.db.discipline.iter()]);
+    expect(disciplines).toHaveLength(1000);
+
+    // A brand-new discipline would be row 1001: refused.
+    expect(() =>
+      create(harness, ALICE, {
+        name: "One Too Many",
+        discipline: "Brand New Discipline",
+        format: { tag: "single_elimination" },
+      }),
+    ).toThrow(/Cannot add a new discipline: the list is limited to 1000/);
+
+    // Reusing an existing discipline inserts no row, so it stays allowed
+    // at the cap.
+    create(harness, ALICE, {
+      name: "Still Fine",
+      discipline: "Seeded 42",
+      format: { tag: "single_elimination" },
+    });
+    disciplines = asModule(harness, (ctx) => [...ctx.db.discipline.iter()]);
+    expect(disciplines).toHaveLength(1000);
+  });
+
+  test("canonically equivalent discipline spellings deduplicate onto one row", () => {
+    const harness = makeHarness();
+    // Precomposed \u00e9 (U+00E9) vs. e + combining acute (U+0301): the same
+    // name under canonical equivalence, so NFC must land both on one row.
+    create(harness, ALICE, {
+      name: "First",
+      discipline: "Caf\u00e9",
+      format: { tag: "single_elimination" },
+    });
+    create(harness, ALICE, {
+      name: "Second",
+      discipline: "Cafe\u0301",
+      format: { tag: "single_elimination" },
+    });
+
+    const disciplines = asModule(harness, (ctx) => [...ctx.db.discipline.iter()]);
+    expect(disciplines).toHaveLength(1);
+    expect(disciplines[0]!.name).toBe("Caf\u00e9");
+
+    // Suggestions find the row under either spelling.
+    const suggest = (prefix: string) =>
+      moduleExports
+        .suggestDisciplines(harness.anonymousViewContext(), { prefix })
+        .map((row) => row.name);
+    expect(suggest("caf\u00e9")).toEqual(["Caf\u00e9"]);
+    expect(suggest("cafe\u0301")).toEqual(["Caf\u00e9"]);
   });
 
   // -------------------------------------------------------------------------

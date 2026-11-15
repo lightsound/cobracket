@@ -19,9 +19,10 @@ const DisciplineSuggestionRow = t.row("DisciplineSuggestionRow", { name: t.strin
 // runtime's instanceof check (the harness bundles its own SDK copy)
 // and is serialized as a point value instead, on single- and
 // multi-column indexes alike (measured, 2026-11-15). Discipline rows
-// are few and organizer-created, so filtering and sorting the table
-// in the view is bounded in practice; the behavior mirrors Convex's
-// range scan exactly (normalized order, first ten).
+// are few and organizer-created, and the catalogue itself is capped
+// (MAX_DISCIPLINES in lib/limits.ts), so filtering and sorting the
+// table in the view is bounded by that cap; the behavior mirrors
+// Convex's range scan exactly (normalized order, first ten).
 export const suggestDisciplines = spacetimedb.anonymousView(
   { name: "suggest_disciplines", public: true },
   { prefix: t.string() },
