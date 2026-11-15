@@ -1060,7 +1060,7 @@ describe("operations parity", () => {
     // Ordinary names \u2014 Japanese text and emoji included \u2014 pass, on
     // creation and on the roster alike.
     const { tournamentId } = create(harness, ALICE, {
-      name: "\u5bae\u5d0e\u30ab\u30c3\u30d7 U0001F3C6",
+      name: "\u5bae\u5d0e\u30ab\u30c3\u30d7 🏆",
       discipline: "\u5c06\u68cb",
       format: { tag: "single_elimination" },
     });
@@ -1073,13 +1073,13 @@ describe("operations parity", () => {
     as(harness, ALICE, (ctx) => {
       moduleExports.addParticipant(ctx, {
         tournamentId,
-        name: "\u5c71\u7530\u592a\u90ce U0001F3AE",
+        name: "\u5c71\u7530\u592a\u90ce 🎮",
       });
     });
     const view = ownedView(harness, ALICE, tournamentId);
-    expect(view.name).toBe("\u5bae\u5d0e\u30ab\u30c3\u30d7 U0001F3C6");
+    expect(view.name).toBe("\u5bae\u5d0e\u30ab\u30c3\u30d7 🏆");
     expect(view.participants.map((participant) => participant.name)).toEqual([
-      "\u5c71\u7530\u592a\u90ce U0001F3AE",
+      "\u5c71\u7530\u592a\u90ce 🎮",
     ]);
   });
 
@@ -1594,6 +1594,17 @@ describe("module secret and share slugs", () => {
         format: { tag: "single_elimination" },
       }),
     ).toThrow(/Module secret is not seeded/);
+    // The failed create is one reducer transaction, so its rollback
+    // takes the identity binding it began with it: the database is
+    // still completely fresh, seeding still succeeds, and creation
+    // works from then on.
+    seedTestSecret(harness);
+    const { shareSlug } = create(harness, ALICE, {
+      name: "Seeded Late",
+      discipline: "Chess",
+      format: { tag: "single_elimination" },
+    });
+    expect(shareSlug).toMatch(/^[a-z0-9]{12}$/);
   });
 
   test("one organizer's slugs are unique and well-formed across many mints", () => {
@@ -1621,6 +1632,21 @@ describe("module secret and share slugs", () => {
       slugs.add(shareSlug);
     }
     expect(slugs.size).toBe(15);
+  });
+
+  test("the first slug with the fixed test key is the golden vector", () => {
+    const harness = makeHarness();
+    // The byte layout ADR 0032 documents, pinned end to end: the
+    // fixed test key (bytes 0x00-0x1f), keyVersion 1, the first
+    // organizer (app_user id 1), counter 0. Any drift in the layout —
+    // label, separator, field widths, endianness, alphabet, or the
+    // rejection bound — moves this value.
+    const { shareSlug } = create(harness, ALICE, {
+      name: "Golden",
+      discipline: "Chess",
+      format: { tag: "single_elimination" },
+    });
+    expect(shareSlug).toBe("vy0biguyup26");
   });
 
   test("the first slug is a function of the key: same key, same slug; different key, different slug", () => {

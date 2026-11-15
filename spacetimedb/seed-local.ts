@@ -70,7 +70,7 @@ if (result.status === 0) {
         "Restore the original .spacetime-secret, or delete the local database and publish + seed again",
     );
   }
-  console.log("spacetime:seed:local: module secret already seeded with this key — nothing to do");
+  console.log("spacetime:seed:local: module secret already seeded — nothing to do");
 } else {
   fail(`spacetime call seed_module_secret failed (${result.status}):\n${output.trim()}`);
 }

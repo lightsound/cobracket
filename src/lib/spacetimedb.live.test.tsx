@@ -25,7 +25,7 @@
  * The boot happens in `beforeAll`, outside any test body: server startup is
  * fixture work, not app behavior, and the gate captures per test body.
  */
-import { execFileSync, spawn, type ChildProcess } from "node:child_process";
+import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { connect as tcpConnect } from "node:net";
@@ -60,6 +60,28 @@ function log(message: string): void {
 
 function run(command: string, args: string[]): string {
   return execFileSync(command, args, { encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] });
+}
+
+/**
+ * Seed the module secret (ADR 0032) on the database just published,
+ * with a fresh host-CSPRNG key. This deliberately bypasses `run`: an
+ * `execFileSync` failure embeds the full command line in its error,
+ * which here would print the key itself into the failure log. The
+ * error below carries the database, the status, and the CLI's
+ * output — never the key — the same shape as the browser gate's
+ * seedModule (e2e/global-setup.ts).
+ */
+function seedModuleSecret(cli: string): void {
+  const key = randomBytes(32).toString("hex");
+  const result = spawnSync(cli, ["call", DB_NAME, "seed_module_secret", key, "--server", HOST], {
+    encoding: "utf8",
+  });
+  if (result.status === 0) {
+    return;
+  }
+  throw new Error(
+    `seeding the module secret on ${DB_NAME} failed (${result.status}):\n${result.stdout ?? ""}\n${result.stderr ?? ""}`,
+  );
 }
 
 function ensureBinaries(): string {
@@ -220,14 +242,7 @@ async function boot(): Promise<void> {
     // Seed the module secret (ADR 0032) immediately after publishing,
     // before the app connects: a host-CSPRNG key for this run's
     // throwaway database.
-    run(join(binDir, "spacetime"), [
-      "call",
-      DB_NAME,
-      "seed_module_secret",
-      randomBytes(32).toString("hex"),
-      "--server",
-      HOST,
-    ]);
+    seedModuleSecret(join(binDir, "spacetime"));
   } catch (error) {
     // The child is detached: a failed boot must not leave it running
     // behind the suite's back.
