@@ -61,7 +61,9 @@
  * it is trusted with the publish; the module is assembled as
  * package.json + tsconfig.json + src/ + format/ in the repo's own
  * layout — the real entry, nothing rewritten; the data directory is
- * fresh per run, so the gate's database starts empty.
+ * fresh per run, so the gate's database starts empty. After every
+ * publish the module secret is seeded (ADR 0032) with a fresh
+ * host-CSPRNG key, before the app starts (see seedModule below).
  *
  * The signing keys: a fresh standalone data directory needs explicit key
  * paths (its generated config leaves the CA paths commented out), so the
@@ -80,6 +82,7 @@
  * over.
  */
 import { type ChildProcess, spawn, spawnSync } from "node:child_process";
+import { randomBytes } from "node:crypto";
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { connect as tcpConnect, createServer } from "node:net";
 import { homedir } from "node:os";
@@ -413,6 +416,31 @@ function publishModule(binDir: string, host: string, db: string): void {
   run(join(binDir, "spacetime"), ["publish", "--server", host, "--module-path", MODULE_DIR, db]);
 }
 
+/**
+ * Seed the module secret (ADR 0032) on a database this gate just
+ * published to, with a fresh host-CSPRNG key — tournament creation
+ * mints share slugs from the secret, so an unseeded database would
+ * refuse the scenario's first write. Mode 3's database is fresh, so
+ * the seed always lands there. Mode 2 republishes to a developer's
+ * long-running standalone, whose database the local flow may already
+ * have seeded: that one refusal ("already seeded") is the state the
+ * gate needs anyway, so it is accepted; any other failure is real.
+ */
+function seedModule(binDir: string, host: string, db: string): void {
+  const key = randomBytes(32).toString("hex");
+  const result = spawnSync(
+    join(binDir, "spacetime"),
+    ["call", db, "seed_module_secret", key, "--server", host],
+    { encoding: "utf8" },
+  );
+  if (result.status === 0) return;
+  const output = `${result.stdout}
+${result.stderr}`;
+  if (output.includes("already seeded")) return;
+  throw new Error(`seeding the module secret on ${db} failed (${result.status}):
+${output}`);
+}
+
 // --- the browser ------------------------------------------------------------
 
 /**
@@ -505,6 +533,7 @@ async function runningSpacetime(): Promise<Backend | undefined> {
   assertBinaryVersions(binDir);
   assembleModule();
   publishModule(binDir, selected.host, selected.db);
+  seedModule(binDir, selected.host, selected.db);
   return { ...selected, teardown: async () => {} };
 }
 
@@ -556,6 +585,7 @@ async function startSpacetime(): Promise<Backend> {
   try {
     await waitForPort(PORT, 60_000);
     publishModule(binDir, HOST, DB_NAME);
+    seedModule(binDir, HOST, DB_NAME);
   } catch (error) {
     // The caller only learns of the child on success, so a boot that
     // gives up has to take the process group down here — otherwise the

@@ -1,7 +1,4 @@
-import type { Identity } from "spacetimedb";
-import type { Random } from "spacetimedb/server";
 import { t } from "spacetimedb/server";
-import type { WritableDb } from "./lib";
 import {
   MAX_MATCHES,
   MAX_RESULTS,
@@ -21,6 +18,7 @@ import {
   requireBoundUser,
   requireName,
   requireOwnedTournament,
+  mintShareSlug,
   requireStatus,
   sameFormat,
   sortedRows,
@@ -211,47 +209,11 @@ export const organizerResults = spacetimedb.view(
 // my_tournaments).
 // ---------------------------------------------------------------------------
 
-const SLUG_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
-const SLUG_LENGTH = 12;
-
 // The Share Link identifier: an unlisted tournament's URL is its only
-// guard, so the slug is minted from randomness (~62 bits) instead of
-// reusing the row id, whose format is an implementation detail and
-// not designed to be a capability. Convex drew the bytes from
-// crypto.getRandomValues; the module has no CSPRNG — ctx.random is
-// seeded from the transaction timestamp alone, which anyone can
-// guess. XOR-ing the stream with the sender's Identity bytes removes
-// that cross-organizer predictability (the Identity is server-minted,
-// and XOR with a fixed value keeps a uniform stream uniform) — with
-// a stated limit: the mask is fixed per organizer, so one organizer's
-// slugs are correlated given known creation timestamps (an observed
-// slug plus its timestamp constrains each mask byte to a handful of
-// values), where Convex's independent draws were not. Accepted here:
-// a slug is a bearer capability only in the unlisted sense —
-// publication is what exposes it, and private visibility is enforced
-// by the share views' gate, not by slug entropy. The probe-then-
-// insert retry loop below disambiguates the residual collisions
-// (same sender, same timestamp) by advancing the stream.
-function randomSlug(ctx: { random: Random; sender: Identity }): string {
-  const bytes = ctx.random.fill(new Uint8Array(SLUG_LENGTH));
-  const identity = ctx.sender.toUint8Array();
-  return [...bytes]
-    .map(
-      (byte, index) =>
-        SLUG_ALPHABET[(byte ^ identity[index % identity.length]!) % SLUG_ALPHABET.length],
-    )
-    .join("");
-}
-
-function mintShareSlug(ctx: { db: WritableDb; random: Random; sender: Identity }): string {
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const slug = randomSlug(ctx);
-    if (ctx.db.tournament.shareSlug.find(slug) === null) {
-      return slug;
-    }
-  }
-  throw new Error("could not allocate a share slug");
-}
+// guard, so the slug is a keyed derivation (HMAC-SHA256 over the module
+// secret, the organizer, and a per-organizer counter), minted in
+// lib/secret.ts — ADR 0032 carries the design and why the module has
+// no other randomness fit for a capability token.
 
 export const createTournament = spacetimedb.reducer(
   { name: t.string(), discipline: t.string(), format: formatArg },
@@ -260,7 +222,7 @@ export const createTournament = spacetimedb.reducer(
     const name = requireName(args.name, "Tournament name");
     const disciplineId = getOrCreateDiscipline(ctx.db, args.discipline);
     const format = formatToStored(args.format);
-    const shareSlug = mintShareSlug(ctx);
+    const shareSlug = mintShareSlug(ctx.db, userId);
     ctx.db.tournament.insert({
       id: 0n,
       name,

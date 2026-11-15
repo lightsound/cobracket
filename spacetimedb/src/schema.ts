@@ -116,6 +116,35 @@ const discipline = table(
   },
 );
 
+// The module's server secret (ADR 0032): a singleton row holding the
+// key every module derivation is keyed by — the share slug today,
+// and Events slice 1's email-code HMAC, the participant code, and
+// ADR 0022's sanction tags as they land. Seeded once, at provisioning,
+// by the seed_module_secret reducer, before any identity binds; the
+// table is private and exposed through no view, so the key never
+// leaves the module. keyVersion rides from ADR 0031's design: rows
+// that store a derivation carry it, so rotation can dual-read.
+const moduleSecret = table(
+  { name: "module_secret" },
+  {
+    id: t.u64().primaryKey().autoInc(),
+    key: t.byteArray(),
+    keyVersion: t.u32(),
+  },
+);
+
+// Per-organizer slug counters (ADR 0032): the uniqueness input of the
+// share-slug derivation. One row per app_user that has minted a slug;
+// `next` is the counter value the next mint consumes. Private, like
+// every base table, and exposed through no view.
+const slugCounter = table(
+  { name: "slug_counter" },
+  {
+    userId: t.u64().primaryKey(),
+    next: t.u64(),
+  },
+);
+
 const tournament = table(
   { name: "tournament" },
   {
@@ -214,6 +243,8 @@ const result = table(
 export const spacetimedb = schema({
   appUser,
   identityUser,
+  moduleSecret,
+  slugCounter,
   discipline,
   tournament,
   participant,

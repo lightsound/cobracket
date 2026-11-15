@@ -8,7 +8,15 @@ import {
   type ComposedMatch,
   type OrganizerView,
 } from "./compose";
-import { as, asModule, authFor, makeHarness, type Harness } from "./harness";
+import {
+  as,
+  asModule,
+  authFor,
+  makeHarness as makeUnseededHarness,
+  seedTestSecret,
+  TEST_SECRET_HEX,
+  type Harness,
+} from "./harness";
 
 // The operations parity suite (migration slice M2): the port of
 // convex/operations.test.ts (1,112 lines) onto the SpacetimeDB module
@@ -45,6 +53,16 @@ import { as, asModule, authFor, makeHarness, type Harness } from "./harness";
 //   malform. Nonexistent and foreign ids answer undefined and carry
 //   the property (ids are per-table sequences, so "an id from
 //   another table" is not a distinct value class here).
+
+// Every harness in this suite is seeded with the fixed test key
+// (ADR 0032): createTournament mints share slugs from the module
+// secret, so an unseeded harness refuses creation. The seed-rule and
+// slug tests at the bottom build theirs from makeUnseededHarness.
+function makeHarness(): Harness {
+  const harness = makeUnseededHarness();
+  seedTestSecret(harness);
+  return harness;
+}
 
 const ALICE = "alice@example.com";
 const BOB = "bob@example.com";
@@ -1007,6 +1025,64 @@ describe("operations parity", () => {
     expect(() => report(harness, ALICE, matchId, sides)).toThrow(/at most 1024 results/);
   });
 
+  test("names refuse control and invisible characters, while ordinary names pass", () => {
+    const harness = makeHarness();
+    const spoofed = /must not contain control or invisible characters/;
+    const createNamed = (name: string) => () =>
+      as(harness, ALICE, (ctx) => {
+        moduleExports.createTournament(ctx, {
+          name,
+          discipline: "Chess",
+          format: { tag: "single_elimination" },
+        });
+      });
+
+    // A bidi override (U+202E) in a tournament name.
+    expect(createNamed("Final\u202E Cup")).toThrow(spoofed);
+    // An embedded newline (a C0 control).
+    expect(createNamed("Line\nBreak")).toThrow(spoofed);
+    // A C1 control (U+0085).
+    expect(createNamed("Next\u0085Line")).toThrow(spoofed);
+    // DEL (U+007F), embedded between letters.
+    expect(createNamed("A\u007FB")).toThrow(spoofed);
+    // A zero-width no-break space / BOM (U+FEFF), embedded mid-name so
+    // trim() cannot strip it from an edge.
+    expect(createNamed("A\uFEFFB")).toThrow(spoofed);
+    // A zero-width space (U+200B).
+    expect(createNamed("A\u200BB")).toThrow(spoofed);
+    // A zero-width non-joiner (U+200C), embedded between letters.
+    expect(createNamed("A\u200CB")).toThrow(spoofed);
+    // A zero-width joiner (U+200D), embedded between letters.
+    expect(createNamed("A\u200DB")).toThrow(spoofed);
+    // A bidi isolate (U+2066), embedded between letters.
+    expect(createNamed("A\u2066B")).toThrow(spoofed);
+
+    // Ordinary names \u2014 Japanese text and emoji included \u2014 pass, on
+    // creation and on the roster alike.
+    const { tournamentId } = create(harness, ALICE, {
+      name: "\u5bae\u5d0e\u30ab\u30c3\u30d7 🏆",
+      discipline: "\u5c06\u68cb",
+      format: { tag: "single_elimination" },
+    });
+    // A zero-width space (U+200B) in a participant name.
+    expect(() =>
+      as(harness, ALICE, (ctx) => {
+        moduleExports.addParticipant(ctx, { tournamentId, name: "Alice\u200B" });
+      }),
+    ).toThrow(spoofed);
+    as(harness, ALICE, (ctx) => {
+      moduleExports.addParticipant(ctx, {
+        tournamentId,
+        name: "\u5c71\u7530\u592a\u90ce 🎮",
+      });
+    });
+    const view = ownedView(harness, ALICE, tournamentId);
+    expect(view.name).toBe("\u5bae\u5d0e\u30ab\u30c3\u30d7 🏆");
+    expect(view.participants.map((participant) => participant.name)).toEqual([
+      "\u5c71\u7530\u592a\u90ce 🎮",
+    ]);
+  });
+
   // -------------------------------------------------------------------------
   // Disciplines (story 2)
   // -------------------------------------------------------------------------
@@ -1040,6 +1116,112 @@ describe("operations parity", () => {
     expect(suggest("STREET f")).toEqual(["Street Fighter 6"]);
     expect(suggest("str")).toEqual(["Street Fighter 6", "Strive"]);
     expect(suggest("  ")).toEqual([]);
+  });
+
+  test("the global discipline list is capped, but existing disciplines stay reusable", () => {
+    const harness = makeHarness();
+    // MAX_DISCIPLINES: the global list holds at most 1000 rows. Seeded
+    // directly through a reducer transaction \u2014 a thousand tournament
+    // creations would only slow the test.
+    asModule(harness, (ctx) => {
+      for (let i = 0; i < 1000; i++) {
+        ctx.db.discipline.insert({
+          id: 0n,
+          name: `Seeded ${i}`,
+          normalizedName: `seeded ${i}`,
+        });
+      }
+    });
+
+    // A brand-new discipline would be row 1001: refused.
+    expect(() =>
+      create(harness, ALICE, {
+        name: "One Too Many",
+        discipline: "Brand New Discipline",
+        format: { tag: "single_elimination" },
+      }),
+    ).toThrow(/Cannot add a new discipline: the list is limited to 1000/);
+
+    // Reusing an existing discipline inserts no row, so it stays allowed
+    // at the cap.
+    create(harness, ALICE, {
+      name: "Still Fine",
+      discipline: "Seeded 42",
+      format: { tag: "single_elimination" },
+    });
+    const disciplines = asModule(harness, (ctx) => [...ctx.db.discipline.iter()]);
+    expect(disciplines).toHaveLength(1000);
+  });
+
+  test("the 1000th discipline is admitted, and the cap refuses only the 1001st", () => {
+    const harness = makeHarness();
+    // Seed 999 directly, so the next brand-new discipline is exactly row
+    // 1000: the cap must admit it, not refuse one row early.
+    asModule(harness, (ctx) => {
+      for (let i = 0; i < 999; i++) {
+        ctx.db.discipline.insert({
+          id: 0n,
+          name: `Seeded ${i}`,
+          normalizedName: `seeded ${i}`,
+        });
+      }
+    });
+
+    // The 1000th row is admitted and the table reaches exactly 1000.
+    create(harness, ALICE, {
+      name: "At The Cap",
+      discipline: "Thousandth Discipline",
+      format: { tag: "single_elimination" },
+    });
+    let disciplines = asModule(harness, (ctx) => [...ctx.db.discipline.iter()]);
+    expect(disciplines).toHaveLength(1000);
+
+    // A brand-new discipline would be row 1001: refused.
+    expect(() =>
+      create(harness, ALICE, {
+        name: "One Too Many",
+        discipline: "Brand New Discipline",
+        format: { tag: "single_elimination" },
+      }),
+    ).toThrow(/Cannot add a new discipline: the list is limited to 1000/);
+
+    // Reusing an existing discipline inserts no row, so it stays allowed
+    // at the cap.
+    create(harness, ALICE, {
+      name: "Still Fine",
+      discipline: "Seeded 42",
+      format: { tag: "single_elimination" },
+    });
+    disciplines = asModule(harness, (ctx) => [...ctx.db.discipline.iter()]);
+    expect(disciplines).toHaveLength(1000);
+  });
+
+  test("canonically equivalent discipline spellings deduplicate onto one row", () => {
+    const harness = makeHarness();
+    // Precomposed \u00e9 (U+00E9) vs. e + combining acute (U+0301): the same
+    // name under canonical equivalence, so NFC must land both on one row.
+    create(harness, ALICE, {
+      name: "First",
+      discipline: "Caf\u00e9",
+      format: { tag: "single_elimination" },
+    });
+    create(harness, ALICE, {
+      name: "Second",
+      discipline: "Cafe\u0301",
+      format: { tag: "single_elimination" },
+    });
+
+    const disciplines = asModule(harness, (ctx) => [...ctx.db.discipline.iter()]);
+    expect(disciplines).toHaveLength(1);
+    expect(disciplines[0]!.name).toBe("Caf\u00e9");
+
+    // Suggestions find the row under either spelling.
+    const suggest = (prefix: string) =>
+      moduleExports
+        .suggestDisciplines(harness.anonymousViewContext(), { prefix })
+        .map((row) => row.name);
+    expect(suggest("caf\u00e9")).toEqual(["Caf\u00e9"]);
+    expect(suggest("cafe\u0301")).toEqual(["Caf\u00e9"]);
   });
 
   // -------------------------------------------------------------------------
@@ -1326,5 +1508,163 @@ describe("operations parity", () => {
       shareSlug: second.shareSlug,
     });
     expect(mine[1]!.tournamentId).toBe(first.tournamentId);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The module secret and share slugs (ADR 0032)
+// ---------------------------------------------------------------------------
+
+describe("module secret and share slugs", () => {
+  const OTHER_SECRET_HEX = "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f";
+
+  function seed(harness: Harness, keyHex: string): void {
+    asModule(harness, (ctx) => {
+      moduleExports.seedModuleSecret(ctx, { keyHex });
+    });
+  }
+
+  test("seeding creates no binding and no user", () => {
+    const harness = makeUnseededHarness();
+    seed(harness, TEST_SECRET_HEX);
+    const state = asModule(harness, (ctx) => ({
+      secrets: [...ctx.db.moduleSecret.iter()],
+      users: [...ctx.db.appUser.iter()].length,
+      bindings: [...ctx.db.identityUser.iter()].length,
+    }));
+    expect(state.secrets).toHaveLength(1);
+    expect(state.secrets[0]!.keyVersion).toBe(1);
+    expect(state.secrets[0]!.key).toHaveLength(32);
+    expect(state.users).toBe(0);
+    expect(state.bindings).toBe(0);
+    // Nobody is signed in by the seed: a fresh identity still reads
+    // unauthenticated.
+    expect(moduleExports.sessionState(harness.viewContext(authFor(ALICE)))).toEqual([
+      { state: { tag: "unauthenticated" } },
+    ]);
+  });
+
+  test("a second seed is refused, whatever key it carries", () => {
+    const harness = makeUnseededHarness();
+    seed(harness, TEST_SECRET_HEX);
+    expect(() => seed(harness, TEST_SECRET_HEX)).toThrow(/already seeded/);
+    expect(() => seed(harness, OTHER_SECRET_HEX)).toThrow(/already seeded/);
+  });
+
+  test("seeding after an identity has bound is refused", () => {
+    const harness = makeUnseededHarness();
+    // A first act binds the identity to a fresh app_user.
+    as(harness, ALICE, (ctx) => {
+      moduleExports.bindIdentity(ctx, {});
+    });
+    expect(() => seed(harness, TEST_SECRET_HEX)).toThrow(
+      /can only be seeded before any identity binds/,
+    );
+    // And nothing was seeded: tournament creation still refuses as
+    // unseeded (below).
+    expect(() =>
+      create(harness, ALICE, {
+        name: "Too Late",
+        discipline: "Chess",
+        format: { tag: "single_elimination" },
+      }),
+    ).toThrow(/Module secret is not seeded/);
+  });
+
+  test("malformed and short keys are refused", () => {
+    const harness = makeUnseededHarness();
+    // Not hex at all.
+    expect(() => seed(harness, "not-a-hex-key")).toThrow(/hex/);
+    // Odd-length hex cannot decode to whole bytes.
+    expect(() => seed(harness, "abc")).toThrow(/hex/);
+    // Valid hex, wrong size: 2 bytes and 33 bytes.
+    expect(() => seed(harness, "abcd")).toThrow(/exactly 32 bytes, got 2/);
+    expect(() => seed(harness, `${TEST_SECRET_HEX}00`)).toThrow(/exactly 32 bytes, got 33/);
+    // None of the refusals seeded anything.
+    const secrets = asModule(harness, (ctx) => [...ctx.db.moduleSecret.iter()]);
+    expect(secrets).toEqual([]);
+  });
+
+  test("creating a tournament on an unseeded database is an operational fault", () => {
+    const harness = makeUnseededHarness();
+    expect(() =>
+      create(harness, ALICE, {
+        name: "Unseeded",
+        discipline: "Chess",
+        format: { tag: "single_elimination" },
+      }),
+    ).toThrow(/Module secret is not seeded/);
+    // The failed create is one reducer transaction, so its rollback
+    // takes the identity binding it began with it: the database is
+    // still completely fresh, seeding still succeeds, and creation
+    // works from then on.
+    seedTestSecret(harness);
+    const { shareSlug } = create(harness, ALICE, {
+      name: "Seeded Late",
+      discipline: "Chess",
+      format: { tag: "single_elimination" },
+    });
+    expect(shareSlug).toMatch(/^[a-z0-9]{12}$/);
+  });
+
+  test("one organizer's slugs are unique and well-formed across many mints", () => {
+    const harness = makeHarness();
+    const slugs = new Set<string>();
+    for (let i = 0; i < 12; i++) {
+      const { shareSlug } = create(harness, ALICE, {
+        name: `Cup ${i}`,
+        discipline: "Chess",
+        format: { tag: "single_elimination" },
+      });
+      expect(shareSlug).toMatch(/^[a-z0-9]{12}$/);
+      slugs.add(shareSlug);
+    }
+    expect(slugs.size).toBe(12);
+    // A second organizer's mints land in the same slug space without
+    // colliding with the first organizer's.
+    for (let i = 0; i < 3; i++) {
+      const { shareSlug } = create(harness, BOB, {
+        name: `Bob Cup ${i}`,
+        discipline: "Chess",
+        format: { tag: "single_elimination" },
+      });
+      expect(shareSlug).toMatch(/^[a-z0-9]{12}$/);
+      slugs.add(shareSlug);
+    }
+    expect(slugs.size).toBe(15);
+  });
+
+  test("the first slug with the fixed test key is the golden vector", () => {
+    const harness = makeHarness();
+    // The byte layout ADR 0032 documents, pinned end to end: the
+    // fixed test key (bytes 0x00-0x1f), keyVersion 1, the first
+    // organizer (app_user id 1), counter 0. Any drift in the layout —
+    // label, separator, field widths, endianness, alphabet, or the
+    // rejection bound — moves this value.
+    const { shareSlug } = create(harness, ALICE, {
+      name: "Golden",
+      discipline: "Chess",
+      format: { tag: "single_elimination" },
+    });
+    expect(shareSlug).toBe("vy0biguyup26");
+  });
+
+  test("the first slug is a function of the key: same key, same slug; different key, different slug", () => {
+    const firstSlugWith = (keyHex: string): string => {
+      const harness = makeUnseededHarness();
+      seedTestSecret(harness, keyHex);
+      return create(harness, ALICE, {
+        name: "First",
+        discipline: "Chess",
+        format: { tag: "single_elimination" },
+      }).shareSlug;
+    };
+    // The derivation is deterministic — key, organizer, and counter
+    // are all it reads — so the same provisioning reproduces it.
+    expect(firstSlugWith(TEST_SECRET_HEX)).toBe(firstSlugWith(TEST_SECRET_HEX));
+    // A database provisioned with another key mints a different first
+    // slug for the identical organizer journey: the key, not the
+    // journey, is what makes slugs unguessable.
+    expect(firstSlugWith(OTHER_SECRET_HEX)).not.toBe(firstSlugWith(TEST_SECRET_HEX));
   });
 });

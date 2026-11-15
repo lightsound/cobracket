@@ -264,8 +264,11 @@ describe("connection-level gating", () => {
   });
 
   test("every private base table rejects a subscription outright", async () => {
-    // All seven base tables are private in the schema; a
-    // subscription to any of them must error, never apply.
+    // All nine base tables are private in the schema; a
+    // subscription to any of them must error, never apply. The last
+    // two are ADR 0032's: the module secret's table above all must
+    // never be subscribable, and the slug counters are organizer
+    // bookkeeping, not a read surface.
     for (const table of [
       "app_user",
       "identity_user",
@@ -274,10 +277,26 @@ describe("connection-level gating", () => {
       "participant",
       "match",
       "result",
+      "module_secret",
+      "slug_counter",
     ]) {
       const error = await subscribeError(connAnon, [`SELECT * FROM ${table}`]);
       expect(error.message).toContain(table);
     }
+  });
+
+  test("a second seed over the wire is refused", async () => {
+    // The driver seeded this database once during setup (ADR 0032),
+    // so any further seed call — from any connection — is refused as
+    // a SenderError, and the refusal text names why.
+    const refusal: unknown = await connA.reducers
+      .seedModuleSecret({ keyHex: "ab".repeat(32) })
+      .then(
+        () => null,
+        (error: unknown) => error,
+      );
+    expect(refusal).toBeInstanceOf(SenderError);
+    expect((refusal as Error).message).toBe("Module secret is already seeded");
   });
 
   test("the share views deliver exactly the published surface, live", async () => {

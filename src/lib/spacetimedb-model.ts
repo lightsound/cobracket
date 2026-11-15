@@ -67,9 +67,15 @@ import type {
 // ---------------------------------------------------------------------------
 
 /** The trimmed, collapsed display form (spacetimedb/src/lib/disciplines.ts). */
+// fallow-ignore-next-line code-duplication -- intentionally mirrors the module's normalization (spacetimedb/src/lib/disciplines.ts); the client copy exists so suggestions can be filtered from cached rows without a round trip
 export function normalizeDisciplineName(raw: string): { name: string; normalizedName: string } {
-  const name = raw.trim().replace(/\s+/g, " ");
-  return { name, normalizedName: name.toLowerCase() };
+  // Canonical equivalence only: NFC folds canonically identical spellings
+  // onto one row; compatibility folding (NFKC) is deliberately NOT applied
+  // (the module copy in spacetimedb/src/lib/disciplines.ts carries the full
+  // rationale).
+  const name = raw.trim().replace(/\s+/g, " ").normalize("NFC");
+  // Lowercasing can decompose (e.g. İ), so normalize again after it.
+  return { name, normalizedName: name.toLowerCase().normalize("NFC") };
 }
 
 // ---------------------------------------------------------------------------

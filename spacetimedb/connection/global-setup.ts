@@ -25,6 +25,7 @@
  */
 
 import { spawn, spawnSync } from "node:child_process";
+import { randomBytes } from "node:crypto";
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { connect as tcpConnect } from "node:net";
 import { homedir } from "node:os";
@@ -49,6 +50,28 @@ function run(command: string, args: string[], cwd?: string): string {
     );
   }
   return result.stdout;
+}
+
+/**
+ * Seed the module secret (ADR 0032) on the database just published,
+ * with a fresh host-CSPRNG key. This deliberately bypasses `run`:
+ * `run`'s error interpolates the full argument list, which here would
+ * print the key itself into the failure log. The error below carries
+ * the database, the status, and the CLI's output — never the key —
+ * the same shape as the browser gate's seedModule
+ * (e2e/global-setup.ts).
+ */
+function seedModuleSecret(cli: string): void {
+  const key = randomBytes(32).toString("hex");
+  const result = spawnSync(cli, ["call", DB_NAME, "seed_module_secret", key, "--server", HOST], {
+    encoding: "utf8",
+  });
+  if (result.status === 0) {
+    return;
+  }
+  throw new Error(
+    `seeding the module secret on ${DB_NAME} failed (${result.status}):\n${result.stdout}\n${result.stderr}`,
+  );
 }
 
 // --- binaries ---------------------------------------------------------------
@@ -259,6 +282,11 @@ export default async function setup(): Promise<() => Promise<void>> {
       moduleDir,
       DB_NAME,
     ]);
+    // Seed the module secret (ADR 0032) immediately after publishing,
+    // before anything else can bind an identity: a host-CSPRNG key for
+    // this run's throwaway database, called with the same CLI idiom as
+    // the publish (explicit --server, suite-local target).
+    seedModuleSecret(join(binDir, "spacetime"));
   } catch (error) {
     await stopServer(server);
     throw error;

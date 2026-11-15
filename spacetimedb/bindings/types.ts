@@ -89,6 +89,13 @@ export const Match = __t.object("Match", {
 });
 export type Match = __Infer<typeof Match>;
 
+export const ModuleSecret = __t.object("ModuleSecret", {
+  id: __t.u64(),
+  key: __t.byteArray(),
+  keyVersion: __t.u32(),
+});
+export type ModuleSecret = __Infer<typeof ModuleSecret>;
+
 export const MyTournamentRow = __t.object("MyTournamentRow", {
   tournamentId: __t.u64(),
   name: __t.string(),
@@ -324,6 +331,12 @@ export const SlotSource = __t.enum("SlotSource", {
   },
 });
 export type SlotSource = __Infer<typeof SlotSource>;
+
+export const SlugCounter = __t.object("SlugCounter", {
+  userId: __t.u64(),
+  next: __t.u64(),
+});
+export type SlugCounter = __Infer<typeof SlugCounter>;
 
 export const SuggestDisciplines = __t.object("SuggestDisciplines", {
   prefix: __t.string(),

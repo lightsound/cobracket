@@ -43,12 +43,19 @@
   // (spacetimedb/bindings/**), which `ignorePatterns` excludes as
   // generated code: the app's adapter (src/lib/spacetimedb.ts) loads
   // the SDK through them, a production use the graph cannot see.
+  // @spacetimedb/crypto is the same shape inside the module: its only
+  // import is the module's secret library
+  // (spacetimedb/src/lib/secret.ts), the HMAC-SHA256 provider for ADR
+  // 0032's derivations, and like `spacetimedb` it is a dependency of
+  // the module package (spacetimedb/package.json) mirrored in the root
+  // package so tsc, the harness, and CI resolve it.
   "ignoreDependencies": [
     "@convex-dev/eslint-plugin",
     "@edge-runtime/vm",
     "@import-lint/cli",
     "@shadcn/lint",
     "solid2-agent-kit",
+    "@spacetimedb/crypto",
     "spacetimedb",
   ],
   // Architecture zones. Deliberately narrow: ImportLint already enforces
