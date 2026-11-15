@@ -1,5 +1,6 @@
 import type { Identity } from "spacetimedb";
 import type { DbView, InferSchema, ReadonlyDbView } from "spacetimedb/server";
+import { SenderError } from "spacetimedb/server";
 import type { spacetimedb } from "../schema";
 
 // The read-side database handle the library helpers are written
@@ -82,7 +83,7 @@ export function requireBoundUser(db: WritableDb, sender: Identity): bigint {
   const binding = bindingFor(db, sender);
   if (binding !== null) {
     if (db.appUser.id.find(binding.userId) === null) {
-      throw new Error("Not signed in");
+      throw new SenderError("Not signed in");
     }
     return binding.userId;
   }

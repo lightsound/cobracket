@@ -1,4 +1,4 @@
-import { t } from "spacetimedb/server";
+import { SenderError, t } from "spacetimedb/server";
 import type { DbSide, TournamentStatusTag } from "./lib";
 import {
   MAX_RESULTS,
@@ -41,7 +41,7 @@ export const generateBracket = spacetimedb.reducer({ tournamentId: t.u64() }, (c
   );
   let roster = loadRoster(ctx.db, args.tournamentId);
   if (roster.length < 2) {
-    throw new Error("At least two participants are required to generate a bracket");
+    throw new SenderError("At least two participants are required to generate a bracket");
   }
   if ((tournament.seeding?.tag ?? "random") === "random") {
     roster = ctx.random.shuffle(roster);
@@ -81,7 +81,7 @@ export const publishTournament = spacetimedb.reducer({ tournamentId: t.u64() }, 
   if (bracket.matchDocs.length === 0) {
     // Published means the bracket is visible on the Share Link; there
     // must be one to show.
-    throw new Error("Generate the bracket before publishing");
+    throw new SenderError("Generate the bracket before publishing");
   }
   ctx.db.tournament.id.update({ ...tournament, status: { tag: "published" } });
 });
@@ -93,12 +93,12 @@ export const publishTournament = spacetimedb.reducer({ tournamentId: t.u64() }, 
 function requireTwoSides(sides: readonly DbSide[]): [DbSide, DbSide] {
   const [sideA, sideB] = sides;
   if (sides.length !== 2 || sideA === undefined || sideB === undefined) {
-    throw new Error("A result must have exactly two sides");
+    throw new SenderError("A result must have exactly two sides");
   }
   for (const side of sides) {
     // The wire admits every IEEE-754 double, including NaN and Infinity.
     if (side.score !== undefined && !Number.isFinite(side.score)) {
-      throw new Error("A score must be a finite number");
+      throw new SenderError("A score must be a finite number");
     }
   }
   return [sideA, sideB];
@@ -140,7 +140,7 @@ export const reportResult = spacetimedb.reducer(
     const bracket = loadBracket(ctx.db, tournament);
     const resultDocs = loadResults(ctx.db, tournament.id);
     if (resultDocs.length >= MAX_RESULTS) {
-      throw new Error(`A tournament can record at most ${MAX_RESULTS} results`);
+      throw new SenderError(`A tournament can record at most ${MAX_RESULTS} results`);
     }
     const recorded = toRecordedResults(resultDocs, bracket);
     // The candidate is validated by the same derivation that computes
@@ -154,10 +154,10 @@ export const reportResult = spacetimedb.reducer(
     if (progression.voidedResultIndices.includes(recorded.length - 1)) {
       // The candidate did not decide its match: wrong participants, a
       // bye-resolved match, or a cancelled one.
-      throw new Error("This result does not apply to the match's current participants");
+      throw new SenderError("This result does not apply to the match's current participants");
     }
     if (tournament.status.tag === "completed" && !progression.completed) {
-      throw new Error("Cannot correct: this would reopen a completed tournament");
+      throw new SenderError("Cannot correct: this would reopen a completed tournament");
     }
     ctx.db.result.insert({
       id: 0n,

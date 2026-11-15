@@ -1,4 +1,5 @@
 import { isServer } from "@solidjs/web";
+import { SenderError } from "spacetimedb";
 import { DbConnection } from "../../spacetimedb/bindings";
 import type {
   CurrentOrganizerRow,
@@ -28,10 +29,8 @@ import {
   synthesizeAddedParticipants,
   synthesizeCreated,
   synthesizeReport,
-  validateWrite,
 } from "./spacetimedb-model";
 import type {
-  KnownState,
   OrganizerComposition,
   ReportResultArgs,
   SessionState,
@@ -51,7 +50,7 @@ import type {
 // to — the counterpart of `./convex`, selected when a build sets
 // VITE_BACKEND=spacetimedb (see `./backend`). Plan §2.5 is the design;
 // `./spacetimedb-model` holds the pure half (row mapping, composition,
-// pre-validation, result synthesis) and this module the live half.
+// write-argument mapping, result synthesis) and this module the live half.
 //
 // Three platform facts shape everything below, all measured during
 // the migration (the M1 spike, the M2 connection suite):
@@ -72,11 +71,14 @@ import type {
 //   subscribed one scope at a time (see "Scopes" below): the cache
 //   of an organizer view only ever holds the current tournament's
 //   rows, and composition keys from the subscription's arguments.
-// - A reducer's refusal does not cross the wire (an opaque
-//   InternalError does), so writes are pre-validated against the
-//   state the subscriptions already hold (the model layer mirrors
-//   the module's guards), and a refusal that still gets through —
-//   a race, or state the client does not hold — surfaces as the one
+// - A reducer's deliberate refusal crosses the wire as a
+//   SenderError carrying the module guard's own text (2.15's
+//   documented failure channel — the module's guards throw
+//   SenderError, never a plain Error for a refusal), and the write
+//   path surfaces that text as the write's failure: the failure
+//   contract the pages print. Anything else that rejects a call —
+//   an InternalError (a host fault, which is what a plain throw
+//   arrives as) or a transport failure — surfaces as the one
 //   generic message below.
 
 // ---------------------------------------------------------------------------
@@ -107,13 +109,6 @@ export function getSpacetimeConfig(): SpacetimeConfig | undefined {
 // ---------------------------------------------------------------------------
 
 const GENERIC_WRITE_ERROR = "The operation could not be completed. Please try again.";
-
-/** The opaque text every reducer refusal arrives as on 2.15 (measured in the connection suite). */
-const OPAQUE_WIRE_ERROR = "The instance encountered a fatal error.";
-
-function isOpaqueRefusal(error: unknown): boolean {
-  return error instanceof Error && error.message.includes(OPAQUE_WIRE_ERROR);
-}
 
 // ---------------------------------------------------------------------------
 // Connection singleton and its token
@@ -817,31 +812,21 @@ function releaseScope(scope: Scope): void {
 // Read channels per operation
 // ---------------------------------------------------------------------------
 
-/** Latest composed knowledge per tournament, for write pre-validation and synthesis. */
+/** Latest composed knowledge per tournament, for write-result synthesis. */
 const knowledgeByTournament = new Map<string, TournamentKnowledge>();
-const participantHome = new Map<string, string>();
 const matchHome = new Map<string, string>();
 
-/** The released tournament's knowledge goes with its scope: pre-validation must not keep deciding from a surface the client no longer holds. */
+/** The released tournament's knowledge goes with its scope: synthesis must not keep reading from a surface the client no longer holds. */
 function evictKnowledge(tournamentId: string): void {
   knowledgeByTournament.delete(tournamentId);
-  for (const [id, home] of participantHome) {
-    if (home === tournamentId) participantHome.delete(id);
-  }
   for (const [id, home] of matchHome) {
     if (home === tournamentId) matchHome.delete(id);
   }
 }
 
-/** Record a composed knowledge as the tournament's current one, rebuilding its participant/match home indexes (stale homes go first: a removed row must not keep pointing here). */
+/** Record a composed knowledge as the tournament's current one, rebuilding its match home index (stale homes go first: a removed row must not keep pointing here). */
 function registerKnowledge(tournamentId: string, knowledge: TournamentKnowledge): void {
   knowledgeByTournament.set(tournamentId, knowledge);
-  for (const [id, home] of participantHome) {
-    if (home === tournamentId) participantHome.delete(id);
-  }
-  for (const participant of knowledge.participants) {
-    participantHome.set(participant.participantId, tournamentId);
-  }
   for (const [id, home] of matchHome) {
     if (home === tournamentId) matchHome.delete(id);
   }
@@ -862,8 +847,8 @@ function composeHeldOrganizer(): OrganizerComposition {
 
 /**
  * One tournament's knowledge, composed on demand from the tier-1
- * rows when its scope is the held one — write pre-validation and
- * result synthesis read knowledge through here, never only from
+ * rows when its scope is the held one — result synthesis reads
+ * knowledge through here, never only from
  * the organizer channel's last delivery: the channel computes (and
  * so refreshes the maps) only while it has listeners, and a write
  * must not depend on a read subscription staying alive beside it.
@@ -881,20 +866,16 @@ function currentKnowledge(tournamentId: string): TournamentKnowledge | undefined
   return knowledge;
 }
 
-function knownState(): KnownState {
+/**
+ * Compose the held scope's knowledge afresh, so the home index and
+ * the before-state a write's snapshots read are current: the
+ * organizer channel maintains them only while it has listeners,
+ * and a write must not depend on a read subscription staying alive
+ * beside it.
+ */
+function refreshHeldKnowledge(): void {
   const scope = scopes.organizer;
   if (scope !== undefined) currentKnowledge(scope.key);
-  const sessionRow = viewRows.sessionState.get("state");
-  return {
-    session: !systemApplied
-      ? "unknown"
-      : sessionRow === undefined
-        ? "unknown"
-        : composeSessionState(sessionRow),
-    tournaments: knowledgeByTournament,
-    participantHome,
-    matchHome,
-  };
 }
 
 /**
@@ -1168,7 +1149,7 @@ function prefetchScope(channel: Channel): void {
 }
 
 // ---------------------------------------------------------------------------
-// Writes: pre-validate, call the reducer, synthesize the return
+// Writes: call the reducer, surface its refusal, synthesize the return
 // ---------------------------------------------------------------------------
 
 const SYNTHESIS_TIMEOUT_MS = 2_000;
@@ -1388,14 +1369,17 @@ async function writeSpacetime<Args, Result>(
 ): Promise<Result> {
   const { conn } = await getLive();
   const record = args as Record<string, unknown>;
-  const refusal = validateWrite(op.spacetime, record, knownState());
-  if (refusal !== null) throw new Error(refusal);
+  refreshHeldKnowledge();
   const snapshots = snapshotWrite(record);
   try {
     await callReducer(conn, op.spacetime, record);
   } catch (error) {
-    if (isOpaqueRefusal(error)) throw new Error(GENERIC_WRITE_ERROR);
-    throw error;
+    // The module's deliberate refusals arrive as a SenderError
+    // carrying the guard's own text — that text is the failure the
+    // page prints. Anything else (an InternalError host fault, a
+    // transport failure) is the one generic message.
+    if (error instanceof SenderError) throw new Error(error.message);
+    throw new Error(GENERIC_WRITE_ERROR);
   }
   return synthesizeWriteResult(op.spacetime, record, snapshots);
 }
@@ -1544,7 +1528,6 @@ export async function resetSpacetimeIdentity(): Promise<void> {
   old?.conn.disconnect();
   for (const view of ALL_VIEWS) viewRows[view].clear();
   knowledgeByTournament.clear();
-  participantHome.clear();
   matchHome.clear();
   suggestHandles.clear();
   suggestApplied.clear();

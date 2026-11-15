@@ -413,9 +413,10 @@ test("surfaces the module's refusal text when a write is refused", async () => {
   host
     .querySelector("form")
     ?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-  // The adapter's pre-validation mirrors the module's guard, so the text
-  // the module would have thrown is what the form shows — the failure
-  // contract Convex's error texts used to provide (PR-B's error channel).
+  // The module's guard refuses with a SenderError carrying this text,
+  // and the adapter surfaces it as the write's failure — the failure
+  // contract Convex's error texts used to provide, now carried by the
+  // module itself across the wire.
   await waitFor("the refusal text", () =>
     (host.querySelector("main")?.textContent ?? "").includes("Discipline must not be empty"),
   );

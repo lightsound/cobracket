@@ -6,6 +6,7 @@ import type {
   TournamentStatusTag,
   WritableDb,
 } from "./binding";
+import { SenderError } from "spacetimedb/server";
 import { requireBoundUser } from "./binding";
 
 // Identity, ownership, and lifecycle guards — the successor of
@@ -24,7 +25,7 @@ export function requireStatus(
   operation: string,
 ): void {
   if (!allowed.includes(tournament.status.tag)) {
-    throw new Error(`Cannot ${operation}: the tournament is ${tournament.status.tag}`);
+    throw new SenderError(`Cannot ${operation}: the tournament is ${tournament.status.tag}`);
   }
 }
 
@@ -38,7 +39,7 @@ export function requireOwnedTournament(
   const userId = requireBoundUser(db, sender);
   const tournament = db.tournament.id.find(tournamentId);
   if (tournament === null || tournament.userId !== userId) {
-    throw new Error("Tournament not found");
+    throw new SenderError("Tournament not found");
   }
   return tournament;
 }
@@ -64,7 +65,7 @@ export function requireOwnedParticipant(
   const participant = db.participant.id.find(participantId);
   const tournament = participant === null ? null : db.tournament.id.find(participant.tournamentId);
   if (participant === null || tournament === null || tournament.userId !== userId) {
-    throw new Error("Participant not found");
+    throw new SenderError("Participant not found");
   }
   return { participant, tournament };
 }
@@ -78,7 +79,7 @@ export function requireOwnedMatch(
   const match = db.match.id.find(matchId);
   const tournament = match === null ? null : db.tournament.id.find(match.tournamentId);
   if (match === null || tournament === null || tournament.userId !== userId) {
-    throw new Error("Match not found");
+    throw new SenderError("Match not found");
   }
   return { match, tournament };
 }

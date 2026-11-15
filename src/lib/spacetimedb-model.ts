@@ -37,57 +37,34 @@ import type {
   ResultSideInput,
   TournamentSummary,
   TournamentView,
-  UpdateTournamentArgs,
 } from "./operations";
 
 // The SpacetimeDB adapter's pure layer: everything that turns the
 // generated bindings' rows into the seam's contract shapes
 // (`./operations`), turns contract write arguments into reducer
-// arguments, and — the migration's error channel — decides, before a
-// write is sent, whether the module would refuse it and with what
-// message. No connection, no reactivity: the adapter (`./spacetimedb`)
+// arguments, and synthesizes the write results reducers do not
+// return. No connection, no reactivity: the adapter (`./spacetimedb`)
 // feeds this layer snapshots of what its subscriptions currently
 // hold, and the unit tests feed it fixtures.
 //
-// Why pre-validation exists: on Convex a refused mutation delivers
-// the guard's own text ("Tournament not found", "Cannot publish: …")
-// and the pages print it — that text is the failure contract. On
-// SpacetimeDB 2.15 a reducer's throw does not cross the wire: every
-// refusal arrives as an opaque InternalError ("The instance
-// encountered a fatal error."), measured in the connection suite
-// (spacetimedb/connection/gating.test.ts). The module's guards are
-// functions of state the client already holds through its
-// subscriptions (the tournament's status and format, the roster, the
-// bracket, the recorded results) plus the write's own arguments, so
-// the adapter mirrors the guards here — same checks, same order,
-// same texts (the module's lib/guards.ts, lib/limits.ts and the
-// reducers are the source; M2 ported the texts verbatim from Convex,
-// and this layer is their third copy by necessity, pinned by the
-// tests in ./spacetimedb.test.ts). The reducer stays the authority:
-// it re-checks everything server-side, and anything this layer
-// cannot decide (a tournament the client holds no state for, a race
-// against another tab) goes to the reducer, whose refusal then
-// surfaces as the one generic message in `./spacetimedb`.
+// Write failures need no mirror here: on Convex a refused mutation
+// delivers the guard's own text ("Tournament not found", "Cannot
+// publish: …") and the pages print it — that text is the failure
+// contract. SpacetimeDB 2.15 carries the same contract natively: a
+// reducer that throws SenderError (from spacetimedb/server) fails
+// gracefully, and the calling client's promise rejects with a
+// SenderError carrying the message — so the module's guards throw
+// SenderError, and the adapter surfaces its message as the write's
+// failure (see `./spacetimedb`). A plain throw is the host-fault
+// category (InternalError) and surfaces as the one generic message
+// there. (An earlier design mirrored the guards in this layer,
+// after measuring only plain throws; the SenderError channel
+// supersedes it — the module is again the single source of the
+// texts.)
 
 // ---------------------------------------------------------------------------
-// Bounds and texts, mirrored from spacetimedb/src/lib/limits.ts
+// Discipline name normalization (spacetimedb/src/lib/disciplines.ts)
 // ---------------------------------------------------------------------------
-
-const MAX_NAME_LENGTH = 120;
-const MAX_ROSTER_SIZE = 128;
-const MAX_RESULTS = 4 * (2 * MAX_ROSTER_SIZE);
-
-/** The write refusal a pre-validation decided, worded as the module words it. */
-export type Refusal = string;
-
-function requireName(raw: string, label: string): Refusal | null {
-  const name = raw.trim();
-  if (name === "") return `${label} must not be empty`;
-  if (name.length > MAX_NAME_LENGTH) {
-    return `${label} must be at most ${MAX_NAME_LENGTH} characters`;
-  }
-  return null;
-}
 
 /** The trimmed, collapsed display form (spacetimedb/src/lib/disciplines.ts). */
 export function normalizeDisciplineName(raw: string): { name: string; normalizedName: string } {
@@ -246,7 +223,7 @@ interface BracketInputs<MatchRow extends { round: number; indexInRound: number }
 
 function progressionOf<MatchRow extends { round: number; indexInRound: number }>(
   inputs: BracketInputs<MatchRow>,
-): { progression: Progression; structure: BracketStructure } {
+): Progression {
   const structure: BracketStructure = {
     format: inputs.format,
     matches: inputs.matches.map((match) => ({
@@ -257,7 +234,7 @@ function progressionOf<MatchRow extends { round: number; indexInRound: number }>
       slots: [slotToEngine(inputs.slotsOf(match)[0]!), slotToEngine(inputs.slotsOf(match)[1]!)],
     })),
   };
-  return { progression: deriveProgression(structure, inputs.recorded), structure };
+  return deriveProgression(structure, inputs.recorded);
 }
 
 function bracketView<Match extends MatchView>(
@@ -302,8 +279,8 @@ function bracketSectionOf(
 
 /**
  * Structure + recorded results in, the contract bracket out, with
- * the engine's own outputs alongside (the Organizer surface's
- * knowledge is built from them).
+ * the engine's progression alongside (the Organizer surface's
+ * knowledge is built from it).
  */
 function composeBracket<
   MatchRow extends { key: string; round: number; indexInRound: number },
@@ -318,9 +295,8 @@ function composeBracket<
 ): {
   bracket: ProgressionView<Match> | null;
   progression: Progression;
-  structure: BracketStructure;
 } {
-  const { progression, structure } = progressionOf({
+  const progression = progressionOf({
     format,
     matches,
     matchKeyOf: (match) => match.key,
@@ -331,7 +307,6 @@ function composeBracket<
   return {
     bracket: bracketView(matches.length > 0, progression, recorded, matchView),
     progression,
-    structure,
   };
 }
 
@@ -367,18 +342,15 @@ export interface OrganizerRows {
 
 /**
  * Everything the write paths need to know about one tournament, kept
- * beside the composition: the engine inputs (so reportResult's
- * candidate can be derived locally, exactly as the reducer derives
- * it) and the per-record voided set (so a later write's return can
- * name what it voided).
+ * beside the composition: the composed facts a write's synthesized
+ * return is read from — the roster (an add's inserted ids), the
+ * recorded set with its per-record voided set (a report's return),
+ * the match home index, and the header's status.
  */
 export interface TournamentKnowledge {
   status: TournamentSummary["status"];
-  format: Format;
   participants: ParticipantView[];
-  matchCount: number;
   resultCount: number;
-  structure: BracketStructure;
   recorded: RecordedResult[];
   /** Parallel to `recorded`: the Organizer surface's match row ids, as strings. */
   recordedMatchIds: string[];
@@ -412,7 +384,7 @@ export function composeOrganizerTournament(rows: OrganizerRows): OrganizerCompos
     sides: [sideToEngine(result.sides[0]!), sideToEngine(result.sides[1]!)],
   }));
   const matchIdByKey = new Map(matches.map((match) => [match.key, String(match.matchId)]));
-  const { bracket, progression, structure } = composeBracket(
+  const { bracket, progression } = composeBracket(
     format,
     matches,
     (match) => match.slots,
@@ -436,11 +408,8 @@ export function composeOrganizerTournament(rows: OrganizerRows): OrganizerCompos
   };
   const knowledge: TournamentKnowledge = {
     status: view.status,
-    format,
     participants,
-    matchCount: matches.length,
     resultCount: results.length,
-    structure,
     recorded,
     recordedMatchIds: results.map((result) => String(result.matchId)),
     matchKeyById,
@@ -528,286 +497,6 @@ function sameFormat(a: Format, b: Format): boolean {
 export interface ReportResultArgs {
   matchId: string;
   sides: ResultSideInput[];
-}
-
-// ---------------------------------------------------------------------------
-// Pre-validation: the module's guards, mirrored (see the header)
-// ---------------------------------------------------------------------------
-
-/**
- * What the adapter currently knows, in the model's terms: the
- * session resolution (from its always-held session_state feed) and
- * the latest composed knowledge per tournament it holds a scope for.
- * Checks that need state the adapter does not hold are skipped — the
- * reducer decides those — except the pure argument checks, which
- * always run. Within what is checked, the order is the module's.
- */
-export interface KnownState {
-  session: SessionState | "unknown";
-  tournaments: ReadonlyMap<string, TournamentKnowledge>;
-  /** participantId (string) -> tournamentId (string), over held scopes. */
-  participantHome: ReadonlyMap<string, string>;
-  /** matchId (string) -> tournamentId (string), over held scopes. */
-  matchHome: ReadonlyMap<string, string>;
-}
-
-const PRE_LIVE: readonly string[] = ["draft", "published"];
-
-function statusRefusal(
-  knowledge: TournamentKnowledge,
-  allowed: readonly string[],
-  operation: string,
-): Refusal | null {
-  return allowed.includes(knowledge.status)
-    ? null
-    : `Cannot ${operation}: the tournament is ${knowledge.status}`;
-}
-
-function sessionRefusal(state: KnownState): Refusal | null {
-  // requireBoundUser binds an unbound identity on first use, so an
-  // unauthenticated caller is never refused; a binding whose user
-  // row is gone is refused with this text and nothing else is.
-  return state.session !== "unknown" && state.session.kind === "user_missing"
-    ? "Not signed in"
-    : null;
-}
-
-function rosterRefusal(knowledge: TournamentKnowledge, operation: string): Refusal | null {
-  return statusRefusal(knowledge, PRE_LIVE, operation);
-}
-
-/**
- * Decide a write's refusal before it is sent, or null to send it.
- * `op` is the descriptor's SpacetimeDB write key; `args` are the
- * contract arguments (ids as strings). Mirrors, per operation, the
- * guard sequence of spacetimedb/src/{tournaments,roster,bracket}.ts.
- */
-export function validateWrite(
-  op: string,
-  args: Record<string, unknown>,
-  state: KnownState,
-): Refusal | null {
-  const session = sessionRefusal(state);
-  if (session !== null) return session;
-  switch (op) {
-    case "createTournament":
-      return validateCreate(args);
-    case "updateTournament":
-      return validateUpdate(args, state);
-    case "deleteTournament":
-      // Ownership and existence are the reducer's to decide (see the
-      // header on what is not decidable client-side).
-      return null;
-    case "addParticipant":
-      return validateAddParticipant(args, state);
-    case "addParticipants":
-      return validateAddParticipants(args, state);
-    case "renameParticipant":
-      return validateRenameParticipant(args, state);
-    case "removeParticipant":
-      return validateRemoveParticipant(args, state);
-    case "reorderSeeding":
-      return validateReorderSeeding(args, state);
-    case "generateBracket":
-      return validateGenerateBracket(args, state);
-    case "publishTournament":
-      return validatePublishTournament(args, state);
-    case "reportResult":
-      return validateReportResult(args, state);
-    default:
-      return null;
-  }
-}
-
-function tournamentOf(state: KnownState, id: unknown): TournamentKnowledge | undefined {
-  return typeof id === "string" ? state.tournaments.get(id) : undefined;
-}
-
-function homeKnowledge(
-  state: KnownState,
-  home: ReadonlyMap<string, string>,
-  id: string,
-): TournamentKnowledge | undefined {
-  const tournamentId = home.get(id);
-  return tournamentId !== undefined ? state.tournaments.get(tournamentId) : undefined;
-}
-
-function validateCreate(args: Record<string, unknown>): Refusal | null {
-  const a = args as unknown as CreateTournamentArgs;
-  return (
-    requireName(a.name, "Tournament name") ??
-    requireName(normalizeDisciplineName(a.discipline).name, "Discipline")
-  );
-}
-
-function validateUpdate(args: Record<string, unknown>, state: KnownState): Refusal | null {
-  const a = args as unknown as UpdateTournamentArgs;
-  if (a.name !== undefined) {
-    const refusal = requireName(a.name, "Tournament name");
-    if (refusal !== null) return refusal;
-  }
-  if (a.discipline !== undefined) {
-    const refusal = requireName(normalizeDisciplineName(a.discipline).name, "Discipline");
-    if (refusal !== null) return refusal;
-  }
-  if (a.format !== undefined) {
-    const knowledge = tournamentOf(state, a.tournamentId);
-    if (knowledge !== undefined && !sameFormat(formatArgEffective(a.format), knowledge.format)) {
-      return statusRefusal(knowledge, PRE_LIVE, "change the format");
-    }
-  }
-  return null;
-}
-
-function validateAddParticipant(args: Record<string, unknown>, state: KnownState): Refusal | null {
-  const a = args as { tournamentId: string; name: string };
-  const knowledge = tournamentOf(state, a.tournamentId);
-  if (knowledge !== undefined) {
-    const refusal = rosterRefusal(knowledge, "edit the roster");
-    if (refusal !== null) return refusal;
-    if (knowledge.participants.length + 1 > MAX_ROSTER_SIZE) {
-      return `A tournament can have at most ${MAX_ROSTER_SIZE} participants`;
-    }
-  }
-  return requireName(a.name, "Participant name");
-}
-
-function validateAddParticipants(args: Record<string, unknown>, state: KnownState): Refusal | null {
-  const a = args as { tournamentId: string; text: string };
-  const knowledge = tournamentOf(state, a.tournamentId);
-  if (knowledge !== undefined) {
-    const refusal = rosterRefusal(knowledge, "edit the roster");
-    if (refusal !== null) return refusal;
-  }
-  const names = parseBulkNames(a.text);
-  if (names.length === 0) return "No participant names given";
-  if (knowledge !== undefined && knowledge.participants.length + names.length > MAX_ROSTER_SIZE) {
-    return `A tournament can have at most ${MAX_ROSTER_SIZE} participants`;
-  }
-  for (const name of names) {
-    const refusal = requireName(name, "Participant name");
-    if (refusal !== null) return refusal;
-  }
-  return null;
-}
-
-function validateRenameParticipant(
-  args: Record<string, unknown>,
-  state: KnownState,
-): Refusal | null {
-  const a = args as { participantId: string; name: string };
-  const knowledge = homeKnowledge(state, state.participantHome, a.participantId);
-  if (knowledge !== undefined) {
-    const refusal = rosterRefusal(knowledge, "edit the roster");
-    if (refusal !== null) return refusal;
-  }
-  return requireName(a.name, "Participant name");
-}
-
-function validateRemoveParticipant(
-  args: Record<string, unknown>,
-  state: KnownState,
-): Refusal | null {
-  const a = args as { participantId: string };
-  const knowledge = homeKnowledge(state, state.participantHome, a.participantId);
-  if (knowledge !== undefined) {
-    return rosterRefusal(knowledge, "edit the roster");
-  }
-  return null;
-}
-
-function validateReorderSeeding(args: Record<string, unknown>, state: KnownState): Refusal | null {
-  const a = args as { tournamentId: string; orderedParticipantIds: string[] };
-  const knowledge = tournamentOf(state, a.tournamentId);
-  if (knowledge === undefined) return null;
-  const refusal = statusRefusal(knowledge, PRE_LIVE, "reorder the seeding");
-  if (refusal !== null) return refusal;
-  const rosterIds = new Set(knowledge.participants.map((p) => p.participantId));
-  const orderedIds = new Set(a.orderedParticipantIds);
-  if (
-    a.orderedParticipantIds.length !== knowledge.participants.length ||
-    orderedIds.size !== rosterIds.size ||
-    [...orderedIds].some((id) => !rosterIds.has(id))
-  ) {
-    return "The new order must contain every participant exactly once";
-  }
-  return null;
-}
-
-function validateGenerateBracket(args: Record<string, unknown>, state: KnownState): Refusal | null {
-  const a = args as { tournamentId: string };
-  const knowledge = tournamentOf(state, a.tournamentId);
-  if (knowledge === undefined) return null;
-  const refusal = statusRefusal(knowledge, PRE_LIVE, "generate the bracket");
-  if (refusal !== null) return refusal;
-  return knowledge.participants.length < 2
-    ? "At least two participants are required to generate a bracket"
-    : null;
-}
-
-function validatePublishTournament(
-  args: Record<string, unknown>,
-  state: KnownState,
-): Refusal | null {
-  const a = args as { tournamentId: string };
-  const knowledge = tournamentOf(state, a.tournamentId);
-  if (knowledge === undefined) return null;
-  const refusal = statusRefusal(knowledge, ["draft"], "publish");
-  if (refusal !== null) return refusal;
-  return knowledge.matchCount === 0 ? "Generate the bracket before publishing" : null;
-}
-
-function validateReportResult(args: Record<string, unknown>, state: KnownState): Refusal | null {
-  const a = args as unknown as ReportResultArgs;
-  const knowledge = homeKnowledge(state, state.matchHome, a.matchId);
-  if (knowledge !== undefined) {
-    const refusal = statusRefusal(knowledge, ["published", "live", "completed"], "report a result");
-    if (refusal !== null) return refusal;
-  }
-  if (a.sides.length !== 2) return "A result must have exactly two sides";
-  for (const side of a.sides) {
-    if (side.score !== undefined && !Number.isFinite(side.score)) {
-      return "A score must be a finite number";
-    }
-  }
-  if (knowledge === undefined) return null;
-  return deriveCandidateRefusal(knowledge, a);
-}
-
-function candidateResult(matchKey: string, a: ReportResultArgs): RecordedResult {
-  const side = (input: ResultSideInput): RecordedResult["sides"][number] => ({
-    participantId: input.participantId,
-    outcome: input.outcome,
-    ...(input.score !== undefined && { score: input.score }),
-  });
-  return { matchKey, sides: [side(a.sides[0]!), side(a.sides[1]!)] };
-}
-
-function deriveCandidateRefusal(
-  knowledge: TournamentKnowledge,
-  a: ReportResultArgs,
-): Refusal | null {
-  if (knowledge.resultCount >= MAX_RESULTS) {
-    return `A tournament can record at most ${MAX_RESULTS} results`;
-  }
-  const matchKey = knowledge.matchKeyById.get(a.matchId);
-  if (matchKey === undefined) return null;
-  const recorded = [...knowledge.recorded, candidateResult(matchKey, a)];
-  let progression: Progression;
-  try {
-    progression = deriveProgression(knowledge.structure, recorded);
-  } catch (error) {
-    // The module surfaces the engine's own message for a
-    // derivation refusal (its loaders rethrow it), as did Convex.
-    return error instanceof Error ? error.message : String(error);
-  }
-  if (progression.voidedResultIndices.includes(recorded.length - 1)) {
-    return "This result does not apply to the match's current participants";
-  }
-  if (knowledge.status === "completed" && !progression.completed) {
-    return "Cannot correct: this would reopen a completed tournament";
-  }
-  return null;
 }
 
 /** The bulk-entry parse, mirrored from the roster reducer (and Convex before it). */
