@@ -821,6 +821,53 @@ test("results are bounded: append-only corrections cannot grow a tournament fore
   );
 });
 
+test("names refuse control and invisible characters, while ordinary names pass", async () => {
+  const t = convexTest(schema, modules);
+  const { as } = await newOrganizer(t);
+  const spoofed = /must not contain control or invisible characters/;
+
+  // A bidi override (U+202E) in a tournament name.
+  await expect(
+    as.mutation(api.tournaments.createTournament, {
+      name: "Final\u202E Cup",
+      discipline: "Chess",
+      format: { family: "single_elimination" },
+    }),
+  ).rejects.toThrow(spoofed);
+  // An embedded newline (a C0 control).
+  await expect(
+    as.mutation(api.tournaments.createTournament, {
+      name: "Line\nBreak",
+      discipline: "Chess",
+      format: { family: "single_elimination" },
+    }),
+  ).rejects.toThrow(spoofed);
+  // A C1 control (U+0085).
+  await expect(
+    as.mutation(api.tournaments.createTournament, {
+      name: "Next\u0085Line",
+      discipline: "Chess",
+      format: { family: "single_elimination" },
+    }),
+  ).rejects.toThrow(spoofed);
+
+  // Ordinary names — Japanese text and emoji included — pass, on creation
+  // and on the roster alike.
+  const { tournamentId } = await as.mutation(api.tournaments.createTournament, {
+    name: "宮崎カップ 🏆",
+    discipline: "将棋",
+    format: { family: "single_elimination" },
+  });
+  // A zero-width space (U+200B) in a participant name.
+  await expect(
+    as.mutation(api.roster.addParticipant, { tournamentId, name: "Alice\u200B" }),
+  ).rejects.toThrow(spoofed);
+  await as.mutation(api.roster.addParticipant, { tournamentId, name: "山田太郎 🎮" });
+  const view = await ownedView(as, tournamentId);
+  expect(view.name).toBe("宮崎カップ 🏆");
+  expect(view.participants.map((participant) => participant.name)).toEqual(["山田太郎 🎮"]);
+});
+
 // ---------------------------------------------------------------------------
 // Disciplines (story 2)
 // ---------------------------------------------------------------------------
@@ -856,6 +903,66 @@ test("disciplines deduplicate on their normalized form and feed suggestions", as
     "Strive",
   ]);
   expect(await t.query(api.disciplines.suggestDisciplines, { prefix: "  " })).toEqual([]);
+});
+
+test("the global discipline list is capped, but existing disciplines stay reusable", async () => {
+  const t = convexTest(schema, modules);
+  const { as } = await newOrganizer(t);
+  // MAX_DISCIPLINES: the global list holds at most 1000 rows. Seeded
+  // directly — a thousand tournament creations would only slow the test.
+  await t.run(async (ctx) => {
+    for (let i = 0; i < 1000; i++) {
+      await ctx.db.insert("disciplines", { name: `Seeded ${i}`, normalizedName: `seeded ${i}` });
+    }
+  });
+
+  // A brand-new discipline would be row 1001: refused.
+  await expect(
+    as.mutation(api.tournaments.createTournament, {
+      name: "One Too Many",
+      discipline: "Brand New Discipline",
+      format: { family: "single_elimination" },
+    }),
+  ).rejects.toThrow(/Cannot add a new discipline: the list is limited to 1000/);
+
+  // Reusing an existing discipline inserts no row, so it stays allowed at
+  // the cap.
+  await as.mutation(api.tournaments.createTournament, {
+    name: "Still Fine",
+    discipline: "Seeded 42",
+    format: { family: "single_elimination" },
+  });
+  const disciplines = await t.run(async (ctx) => await ctx.db.query("disciplines").take(1001));
+  expect(disciplines).toHaveLength(1000);
+});
+
+test("canonically equivalent discipline spellings deduplicate onto one row", async () => {
+  const t = convexTest(schema, modules);
+  const { as } = await newOrganizer(t);
+  // Precomposed é (U+00E9) vs. e + combining acute (U+0301): the same name
+  // under canonical equivalence, so NFC must land both on one row.
+  await as.mutation(api.tournaments.createTournament, {
+    name: "First",
+    discipline: "Caf\u00e9",
+    format: { family: "single_elimination" },
+  });
+  await as.mutation(api.tournaments.createTournament, {
+    name: "Second",
+    discipline: "Cafe\u0301",
+    format: { family: "single_elimination" },
+  });
+
+  const disciplines = await t.run(async (ctx) => await ctx.db.query("disciplines").take(10));
+  expect(disciplines).toHaveLength(1);
+  expect(disciplines[0]!.name).toBe("Caf\u00e9");
+
+  // Suggestions find the row under either spelling.
+  expect(await t.query(api.disciplines.suggestDisciplines, { prefix: "caf\u00e9" })).toEqual([
+    "Caf\u00e9",
+  ]);
+  expect(await t.query(api.disciplines.suggestDisciplines, { prefix: "cafe\u0301" })).toEqual([
+    "Caf\u00e9",
+  ]);
 });
 
 // ---------------------------------------------------------------------------
