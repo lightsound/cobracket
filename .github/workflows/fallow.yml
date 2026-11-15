@@ -14,10 +14,10 @@ jobs:
   fallow:
     runs-on: ubuntu-26.04
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
-      - uses: fallow-rs/fallow@v3
+      - uses: fallow-rs/fallow@8cc305d74aeb77b7ab316388f8ab41cce20a394f # v3
         with:
           auto-changed-since: false
           fail-on-issues: true
