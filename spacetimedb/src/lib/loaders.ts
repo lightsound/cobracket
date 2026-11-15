@@ -2,6 +2,7 @@ import type { BracketStructure, FormatOptions, Progression, RecordedResult } fro
 import { deriveProgression, FormatEngineError, generateBracket } from "../../format";
 import type { MatchRow, ParticipantRow, ResultRow, TournamentRow, WritableDb } from "./binding";
 import { formatToEngine, sideToEngine, slotToEngine } from "./convert";
+import { SenderError } from "spacetimedb/server";
 import { MAX_MATCHES, MAX_RESULTS, MAX_ROSTER_SIZE, takeAll } from "./limits";
 import { compareById, compareBySeed, sortedRows } from "./rows";
 
@@ -84,12 +85,13 @@ export function toRecordedResults(
 }
 
 // Engine errors carry client-actionable messages (invalid outcome
-// combos, draws under elimination, ...); surface them unchanged — the
-// message is the contract the Convex API returned as a ConvexError.
+// combos, draws under elimination, ...); surface them unchanged, as a
+// SenderError — the message is the contract the Convex API returned
+// as a ConvexError, and SenderError is what carries it to the caller.
 function rethrowEngineError(error: unknown): never {
   if (error instanceof FormatEngineError) {
     // fallow-ignore-next-line code-duplication -- intentionally mirrors the Convex original during the migration window (both backends live until M6 deletes the Convex side; this module copy is the survivor)
-    throw new Error(error.message);
+    throw new SenderError(error.message);
   }
   throw error;
 }

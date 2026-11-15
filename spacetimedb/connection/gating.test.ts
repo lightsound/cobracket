@@ -18,16 +18,17 @@
  *      shared-audience fields only — and live updates flow; draft and
  *      unknown slugs deliver nothing.
  *   6. A reducer call across the ownership boundary is refused on
- *      the wire with no effect on the owner's data, and a reducer
- *      that fails after writing rolls the whole transaction back
- *      (the wire does not carry the module's error message — see
- *      those tests).
+ *      the wire — the refusal arrives as a SenderError carrying the
+ *      module's message — with no effect on the owner's data, and a
+ *      reducer that fails after writing rolls the whole transaction
+ *      back.
  */
 
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { SenderError } from "spacetimedb";
 import { DbConnection } from "../bindings";
 
 const { port, database } = JSON.parse(
@@ -371,18 +372,24 @@ describe("connection-level gating", () => {
   });
 
   test("a reducer call across the boundary is refused on the wire", async () => {
-    // The wire does not deliver the reducer's message to the caller:
-    // on 2.15 every throw form (Error, string, renamed Error —
-    // measured 2026-11-15) arrives as an opaque InternalError, "The
-    // instance encountered a fatal error.", so "Tournament not found"
-    // is a server-log fact on this surface; the harness suite pins
-    // the message itself. What the wire proves is the refusal, with
-    // no effect on the owner's data — and that the same call succeeds
-    // for the owner of another tournament, so the refusal is the
-    // ownership guard, not a transport or encoding failure.
-    await expect(
-      connB.reducers.addParticipant({ tournamentId: wireId, name: "Intruder" }),
-    ).rejects.toThrow();
+    // The refusal crosses the wire with its reason: the module's
+    // guards throw SenderError (2.15's documented channel for a
+    // deliberate refusal), so the caller's promise rejects with a
+    // SenderError carrying "Tournament not found" — the same text
+    // the harness suite pins server-side. (A plain throw arrives as
+    // an opaque InternalError instead — the host-fault category —
+    // and no guard uses one.) The refusal has no effect on the
+    // owner's data, and the same call succeeds for the owner of
+    // another tournament, so the refusal is the ownership guard,
+    // not a transport or encoding failure.
+    const refusal: unknown = await connB.reducers
+      .addParticipant({ tournamentId: wireId, name: "Intruder" })
+      .then(
+        () => null,
+        (error: unknown) => error,
+      );
+    expect(refusal).toBeInstanceOf(SenderError);
+    expect((refusal as Error).message).toBe("Tournament not found");
     await sleep(300);
     expect(rowsOf(connA.db.organizerParticipants.iter()).length).toBe(4);
     // B's identical call on its own tournament goes through.

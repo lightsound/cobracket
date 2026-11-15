@@ -9,8 +9,6 @@ import type {
   SharedResultRow,
   SharedTournamentRow,
 } from "../../spacetimedb/bindings/types";
-import type { Outcome } from "./operations";
-import type { TournamentKnowledge } from "./spacetimedb-model";
 import {
   composeCurrentOrganizer,
   composeMyTournaments,
@@ -26,15 +24,15 @@ import {
   synthesizeAddedParticipants,
   synthesizeCreated,
   synthesizeReport,
-  validateWrite,
 } from "./spacetimedb-model";
-import type { KnownState } from "./spacetimedb-model";
 
 // The adapter's pure layer, pinned: compositions turn binding rows
-// into the seam's contract shapes, and the pre-validator mirrors the
-// module's guard texts exactly (the error channel — see
-// spacetimedb-model.ts's header). Fixtures are binding rows as the
-// generated types define them.
+// into the seam's contract shapes, and the write-result syntheses
+// read the returns reducers do not have from before/after
+// compositions. (Write refusals are not pinned here: they are the
+// module's SenderError texts, pinned by the module harness suite
+// and the connection suite's wire proof.) Fixtures are binding rows
+// as the generated types define them.
 
 const SINGLE = { tag: "SingleElimination" } as const;
 const PUBLISHED = { tag: "Published" } as const;
@@ -105,35 +103,6 @@ function resultRow(matchId: bigint, resultId: bigint, a: bigint, b: bigint): Org
     ],
   };
 }
-
-function knowledgeOf(overrides: Partial<TournamentKnowledge> = {}): TournamentKnowledge {
-  const composed = composeOrganizerTournament({
-    header: HEADER,
-    participants: ROSTER,
-    matches: MATCHES,
-    results: [],
-  });
-  return { ...composed.knowledge!, ...overrides };
-}
-
-function stateWith(
-  knowledge: TournamentKnowledge,
-  session: KnownState["session"] = { kind: "organizer", userId: "5" },
-): KnownState {
-  return {
-    session,
-    tournaments: new Map([["7", knowledge]]),
-    participantHome: new Map(knowledge.participants.map((p) => [p.participantId, "7"])),
-    matchHome: new Map([...knowledge.matchKeyById].map(([id]) => [id, "7"])),
-  };
-}
-
-const EMPTY_STATE: KnownState = {
-  session: { kind: "unauthenticated" },
-  tournaments: new Map(),
-  participantHome: new Map(),
-  matchHome: new Map(),
-};
 
 describe("row mappings", () => {
   it("maps statuses and formats between binding and contract shapes", () => {
@@ -295,232 +264,12 @@ describe("tournament composition", () => {
   });
 });
 
-describe("pre-validation", () => {
-  it("refuses every write for a dead session, with the module's text", () => {
-    const state = stateWith(knowledgeOf(), { kind: "user_missing" });
-    expect(
-      validateWrite(
-        "createTournament",
-        { name: "X", discipline: "Y", format: { family: "single_elimination" } },
-        state,
-      ),
-    ).toBe("Not signed in");
-    expect(validateWrite("deleteTournament", { tournamentId: "7" }, state)).toBe("Not signed in");
-  });
-
-  it("checks create's names in the module's order", () => {
-    const base = { discipline: "Chess", format: { family: "single_elimination" } as const };
-    expect(validateWrite("createTournament", { ...base, name: "  " }, EMPTY_STATE)).toBe(
-      "Tournament name must not be empty",
-    );
-    expect(validateWrite("createTournament", { ...base, name: "x".repeat(121) }, EMPTY_STATE)).toBe(
-      "Tournament name must be at most 120 characters",
-    );
-    expect(
-      validateWrite(
-        "createTournament",
-        { name: "Cup", discipline: " ", format: base.format },
-        EMPTY_STATE,
-      ),
-    ).toBe("Discipline must not be empty");
-    expect(
-      validateWrite(
-        "createTournament",
-        { name: "Cup", discipline: "Chess", format: base.format },
-        EMPTY_STATE,
-      ),
-    ).toBeNull();
-  });
-
-  it("refuses roster edits on a live tournament before checking names", () => {
-    const live = knowledgeOf({ status: "live" });
-    const state = stateWith(live);
-    expect(validateWrite("addParticipant", { tournamentId: "7", name: "" }, state)).toBe(
-      "Cannot edit the roster: the tournament is live",
-    );
-    expect(validateWrite("renameParticipant", { participantId: "11", name: "Zed" }, state)).toBe(
-      "Cannot edit the roster: the tournament is live",
-    );
-  });
-
-  it("checks capacity before the participant name, as the reducer does", () => {
-    const full = knowledgeOf({
-      participants: Array.from({ length: 128 }, (_, i) => ({
-        participantId: String(100 + i),
-        name: `P${i}`,
-        seed: i + 1,
-      })),
-    });
-    expect(validateWrite("addParticipant", { tournamentId: "7", name: "" }, stateWith(full))).toBe(
-      "A tournament can have at most 128 participants",
-    );
-  });
-
-  it("parses bulk names and refuses an empty batch", () => {
-    expect(parseBulkNames(" A \n\nB\r\n C ")).toEqual(["A", "B", "C"]);
-    const state = stateWith(knowledgeOf());
-    expect(validateWrite("addParticipants", { tournamentId: "7", text: " \n " }, state)).toBe(
-      "No participant names given",
-    );
-    expect(
-      validateWrite(
-        "addParticipants",
-        { tournamentId: "7", text: `Ok\n${"x".repeat(121)}` },
-        state,
-      ),
-    ).toBe("Participant name must be at most 120 characters");
-    expect(
-      validateWrite("addParticipants", { tournamentId: "7", text: "Eve\nFrank" }, state),
-    ).toBeNull();
-  });
-
-  it("validates the seeding set equality", () => {
-    const state = stateWith(knowledgeOf());
-    expect(
-      validateWrite(
-        "reorderSeeding",
-        { tournamentId: "7", orderedParticipantIds: ["11", "12", "13"] },
-        state,
-      ),
-    ).toBe("The new order must contain every participant exactly once");
-    expect(
-      validateWrite(
-        "reorderSeeding",
-        { tournamentId: "7", orderedParticipantIds: ["14", "13", "12", "11"] },
-        state,
-      ),
-    ).toBeNull();
-  });
-
-  it("guards bracket generation and publishing", () => {
-    const one = knowledgeOf({
-      participants: [{ participantId: "11", name: "Alice", seed: 1 }],
-    });
-    expect(validateWrite("generateBracket", { tournamentId: "7" }, stateWith(one))).toBe(
-      "At least two participants are required to generate a bracket",
-    );
-    const noMatches = knowledgeOf({ matchCount: 0 });
-    expect(validateWrite("publishTournament", { tournamentId: "7" }, stateWith(noMatches))).toBe(
-      "Cannot publish: the tournament is published",
-    );
-    const draft = knowledgeOf({ status: "draft", matchCount: 0 });
-    expect(validateWrite("publishTournament", { tournamentId: "7" }, stateWith(draft))).toBe(
-      "Generate the bracket before publishing",
-    );
-    const ready = knowledgeOf({ status: "draft" });
-    expect(validateWrite("publishTournament", { tournamentId: "7" }, stateWith(ready))).toBeNull();
-  });
-
-  it("refuses a format change once live, allows it while draft", () => {
-    const live = stateWith(knowledgeOf({ status: "live" }));
-    expect(
-      validateWrite(
-        "updateTournament",
-        { tournamentId: "7", format: { family: "double_elimination" } },
-        live,
-      ),
-    ).toBe("Cannot change the format: the tournament is live");
-    const draft = stateWith(knowledgeOf({ status: "draft" }));
-    expect(
-      validateWrite(
-        "updateTournament",
-        { tournamentId: "7", format: { family: "double_elimination" } },
-        draft,
-      ),
-    ).toBeNull();
-    // The same format is not a change, even live.
-    expect(
-      validateWrite(
-        "updateTournament",
-        { tournamentId: "7", format: { family: "single_elimination" } },
-        live,
-      ),
-    ).toBeNull();
-  });
-
-  it("checks an update's discipline before its format, as the reducer does", () => {
-    const live = stateWith(knowledgeOf({ status: "live" }));
-    expect(validateWrite("updateTournament", { tournamentId: "7", discipline: "   " }, live)).toBe(
-      "Discipline must not be empty",
-    );
-    expect(
-      validateWrite(
-        "updateTournament",
-        { tournamentId: "7", discipline: "", format: { family: "double_elimination" } },
-        live,
-      ),
-    ).toBe("Discipline must not be empty");
-    expect(
-      validateWrite("updateTournament", { tournamentId: "7", discipline: " Go " }, live),
-    ).toBeNull();
-  });
-
-  it("decides nothing for tournaments it holds no state for", () => {
-    expect(validateWrite("publishTournament", { tournamentId: "999" }, EMPTY_STATE)).toBeNull();
-    expect(validateWrite("deleteTournament", { tournamentId: "999" }, EMPTY_STATE)).toBeNull();
-  });
-});
-
-describe("report pre-validation", () => {
-  const sides = (a: string, b: string, outcomeA: Outcome = "win", outcomeB: Outcome = "loss") => [
-    { participantId: a, outcome: outcomeA },
-    { participantId: b, outcome: outcomeB },
-  ];
-
-  it("refuses reports on a draft tournament", () => {
-    const state = stateWith(knowledgeOf({ status: "draft" }));
-    expect(validateWrite("reportResult", { matchId: "21", sides: sides("11", "14") }, state)).toBe(
-      "Cannot report a result: the tournament is draft",
-    );
-  });
-
-  it("checks side count and finite scores before deriving", () => {
-    const state = stateWith(knowledgeOf());
-    expect(
-      validateWrite("reportResult", { matchId: "21", sides: [sides("11", "14")[0]] }, state),
-    ).toBe("A result must have exactly two sides");
-    expect(
-      validateWrite(
-        "reportResult",
-        {
-          matchId: "21",
-          sides: [
-            { participantId: "11", outcome: "win", score: Number.NaN },
-            { participantId: "14", outcome: "loss" },
-          ],
-        },
-        state,
-      ),
-    ).toBe("A score must be a finite number");
-  });
-
-  it("accepts a valid report and refuses one for the wrong participants", () => {
-    const state = stateWith(knowledgeOf());
-    expect(
-      validateWrite("reportResult", { matchId: "21", sides: sides("11", "14") }, state),
-    ).toBeNull();
-    // Carol is not in match 21: the candidate derives as voided.
-    expect(validateWrite("reportResult", { matchId: "21", sides: sides("13", "14") }, state)).toBe(
-      "This result does not apply to the match's current participants",
-    );
-  });
-
-  it("surfaces the engine's own message for a derivation refusal", () => {
-    const state = stateWith(knowledgeOf());
-    expect(validateWrite("reportResult", { matchId: "21", sides: sides("11", "11") }, state)).toBe(
-      "result 0 lists the same participant on both sides",
-    );
-    expect(
-      validateWrite(
-        "reportResult",
-        { matchId: "21", sides: sides("11", "14", "draw", "draw") },
-        state,
-      ),
-    ).toBe("result 0 is a draw, which this format does not allow");
-  });
-});
-
 describe("write-result synthesis", () => {
+  it("parses bulk names the roster reducer's way", () => {
+    expect(parseBulkNames(" A \n\nB\r\n C ")).toEqual(["A", "B", "C"]);
+    expect(parseBulkNames(" \n ")).toEqual([]);
+  });
+
   it("finds the created tournament among the new summaries", () => {
     const before = new Set(["3"]);
     const after = composeMyTournaments([

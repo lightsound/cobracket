@@ -1,3 +1,5 @@
+import { SenderError } from "spacetimedb/server";
+
 // Write bounds, the successor of convex/model/limits.ts. Anonymous
 // binding is zero-friction (ADR 0031), so every write is bounded:
 // generous for the spec's 8–64 participant target, tight enough that
@@ -16,17 +18,17 @@ export const MAX_RESULTS = 4 * MAX_MATCHES;
 export function requireName(raw: string, label: string): string {
   const name = raw.trim();
   if (name === "") {
-    throw new Error(`${label} must not be empty`);
+    throw new SenderError(`${label} must not be empty`);
   }
   if (name.length > MAX_NAME_LENGTH) {
-    throw new Error(`${label} must be at most ${MAX_NAME_LENGTH} characters`);
+    throw new SenderError(`${label} must be at most ${MAX_NAME_LENGTH} characters`);
   }
   return name;
 }
 
 export function requireRosterCapacity(currentSize: number, adding: number): void {
   if (currentSize + adding > MAX_ROSTER_SIZE) {
-    throw new Error(`A tournament can have at most ${MAX_ROSTER_SIZE} participants`);
+    throw new SenderError(`A tournament can have at most ${MAX_ROSTER_SIZE} participants`);
   }
 }
 

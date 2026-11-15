@@ -1,4 +1,4 @@
-import { t } from "spacetimedb/server";
+import { SenderError, t } from "spacetimedb/server";
 import type { WritableDb } from "./lib";
 import {
   PRE_LIVE,
@@ -49,7 +49,7 @@ export const addParticipants = spacetimedb.reducer(
       .map((line) => line.trim())
       .filter((line) => line !== "");
     if (names.length === 0) {
-      throw new Error("No participant names given");
+      throw new SenderError("No participant names given");
     }
     const roster = loadRoster(ctx.db, args.tournamentId);
     requireRosterCapacity(roster.length, names.length);
@@ -116,7 +116,7 @@ export const reorderSeeding = spacetimedb.reducer(
       orderedIds.size !== rosterIds.size ||
       [...orderedIds].some((id) => !rosterIds.has(id))
     ) {
-      throw new Error("The new order must contain every participant exactly once");
+      throw new SenderError("The new order must contain every participant exactly once");
     }
     const byId = new Map(roster.map((participant) => [participant.id, participant]));
     for (const [index, participantId] of args.orderedParticipantIds.entries()) {
