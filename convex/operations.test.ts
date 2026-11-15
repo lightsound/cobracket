@@ -851,6 +851,48 @@ test("names refuse control and invisible characters, while ordinary names pass",
     }),
   ).rejects.toThrow(spoofed);
 
+  // DEL (U+007F), embedded between letters.
+  await expect(
+    as.mutation(api.tournaments.createTournament, {
+      name: "A\u007FB",
+      discipline: "Chess",
+      format: { family: "single_elimination" },
+    }),
+  ).rejects.toThrow(spoofed);
+  // A zero-width no-break space / BOM (U+FEFF), embedded mid-name so
+  // trim() cannot strip it from an edge.
+  await expect(
+    as.mutation(api.tournaments.createTournament, {
+      name: "A\uFEFFB",
+      discipline: "Chess",
+      format: { family: "single_elimination" },
+    }),
+  ).rejects.toThrow(spoofed);
+  // A zero-width non-joiner (U+200C), embedded between letters.
+  await expect(
+    as.mutation(api.tournaments.createTournament, {
+      name: "A\u200CB",
+      discipline: "Chess",
+      format: { family: "single_elimination" },
+    }),
+  ).rejects.toThrow(spoofed);
+  // A zero-width joiner (U+200D), embedded between letters.
+  await expect(
+    as.mutation(api.tournaments.createTournament, {
+      name: "A\u200DB",
+      discipline: "Chess",
+      format: { family: "single_elimination" },
+    }),
+  ).rejects.toThrow(spoofed);
+  // A bidi isolate (U+2066), embedded between letters.
+  await expect(
+    as.mutation(api.tournaments.createTournament, {
+      name: "A\u2066B",
+      discipline: "Chess",
+      format: { family: "single_elimination" },
+    }),
+  ).rejects.toThrow(spoofed);
+
   // Ordinary names — Japanese text and emoji included — pass, on creation
   // and on the roster alike.
   const { tournamentId } = await as.mutation(api.tournaments.createTournament, {
@@ -934,6 +976,46 @@ test("the global discipline list is capped, but existing disciplines stay reusab
   });
   const disciplines = await t.run(async (ctx) => await ctx.db.query("disciplines").take(1001));
   expect(disciplines).toHaveLength(1000);
+});
+
+test("the 1000th discipline is admitted, and the cap refuses only the 1001st", async () => {
+  const t = convexTest(schema, modules);
+  const { as } = await newOrganizer(t);
+  // Seed 999 directly, so the next brand-new discipline is exactly row
+  // 1000: the cap must admit it, not refuse one row early.
+  await t.run(async (ctx) => {
+    for (let i = 0; i < 999; i++) {
+      await ctx.db.insert("disciplines", { name: `Seeded ${i}`, normalizedName: `seeded ${i}` });
+    }
+  });
+
+  // The 1000th row is admitted and the table reaches exactly 1000.
+  await as.mutation(api.tournaments.createTournament, {
+    name: "At The Cap",
+    discipline: "Thousandth Discipline",
+    format: { family: "single_elimination" },
+  });
+  const atCap = await t.run(async (ctx) => await ctx.db.query("disciplines").take(1001));
+  expect(atCap).toHaveLength(1000);
+
+  // A brand-new discipline would be row 1001: refused.
+  await expect(
+    as.mutation(api.tournaments.createTournament, {
+      name: "One Too Many",
+      discipline: "Brand New Discipline",
+      format: { family: "single_elimination" },
+    }),
+  ).rejects.toThrow(/Cannot add a new discipline: the list is limited to 1000/);
+
+  // Reusing an existing discipline inserts no row, so it stays allowed at
+  // the cap.
+  await as.mutation(api.tournaments.createTournament, {
+    name: "Still Fine",
+    discipline: "Seeded 42",
+    format: { family: "single_elimination" },
+  });
+  const afterReuse = await t.run(async (ctx) => await ctx.db.query("disciplines").take(1001));
+  expect(afterReuse).toHaveLength(1000);
 });
 
 test("canonically equivalent discipline spellings deduplicate onto one row", async () => {
