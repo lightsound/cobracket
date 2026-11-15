@@ -26,7 +26,7 @@
  * fixture work, not app behavior, and the gate captures per test body.
  */
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { connect as tcpConnect } from "node:net";
 import { homedir } from "node:os";
@@ -51,6 +51,13 @@ const PORT = Number(process.env["LIVE_PORT"] ?? 3124);
 const HOST = `http://127.0.0.1:${PORT}`;
 const DB_NAME = "cobracket-live";
 const SERVER_VERSION = "2.15.0";
+/**
+ * The SHA-256 of the SpacetimeDB 2.15.0 release tarball from the
+ * official GitHub release. Verification happens before extraction, so
+ * a substituted asset never executes. Refresh this hash together with
+ * SERVER_VERSION on every version bump.
+ */
+const SERVER_TARBALL_SHA256 = "30ee1d0ad345eb479bc269423f1c0f2f21fc564cd634fcb115c248465358b062";
 
 let server: ChildProcess | undefined;
 
@@ -98,6 +105,16 @@ function ensureBinaries(): string {
   return downloadBinaries(binDir);
 }
 
+/** Fail closed unless the downloaded tarball matches the pinned hash. */
+function verifyTarball(tarball: string): void {
+  const actual = createHash("sha256").update(readFileSync(tarball)).digest("hex");
+  if (actual !== SERVER_TARBALL_SHA256) {
+    throw new Error(
+      `SpacetimeDB release tarball SHA-256 mismatch: expected ${SERVER_TARBALL_SHA256}, got ${actual} — refusing to extract ${tarball}`,
+    );
+  }
+}
+
 function downloadBinaries(binDir: string): string {
   if (process.platform !== "linux" || process.arch !== "x64") {
     throw new Error(
@@ -110,6 +127,7 @@ function downloadBinaries(binDir: string): string {
   const tarball = join(BUILD_DIR, asset);
   log(`downloading ${url}`);
   run("curl", ["-fSL", "-o", tarball, url]);
+  verifyTarball(tarball);
   run("tar", ["xzf", tarball, "-C", binDir, "--no-same-owner"]);
   // The tarball ships the CLI as `spacetimedb-cli`; `spacetime` is the
   // name the install script gives it.
