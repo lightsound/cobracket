@@ -223,7 +223,7 @@ interface BracketInputs<MatchRow extends { round: number; indexInRound: number }
 
 function progressionOf<MatchRow extends { round: number; indexInRound: number }>(
   inputs: BracketInputs<MatchRow>,
-): { progression: Progression; structure: BracketStructure } {
+): Progression {
   const structure: BracketStructure = {
     format: inputs.format,
     matches: inputs.matches.map((match) => ({
@@ -234,7 +234,7 @@ function progressionOf<MatchRow extends { round: number; indexInRound: number }>
       slots: [slotToEngine(inputs.slotsOf(match)[0]!), slotToEngine(inputs.slotsOf(match)[1]!)],
     })),
   };
-  return { progression: deriveProgression(structure, inputs.recorded), structure };
+  return deriveProgression(structure, inputs.recorded);
 }
 
 function bracketView<Match extends MatchView>(
@@ -279,8 +279,8 @@ function bracketSectionOf(
 
 /**
  * Structure + recorded results in, the contract bracket out, with
- * the engine's own outputs alongside (the Organizer surface's
- * knowledge is built from them).
+ * the engine's progression alongside (the Organizer surface's
+ * knowledge is built from it).
  */
 function composeBracket<
   MatchRow extends { key: string; round: number; indexInRound: number },
@@ -295,9 +295,8 @@ function composeBracket<
 ): {
   bracket: ProgressionView<Match> | null;
   progression: Progression;
-  structure: BracketStructure;
 } {
-  const { progression, structure } = progressionOf({
+  const progression = progressionOf({
     format,
     matches,
     matchKeyOf: (match) => match.key,
@@ -308,7 +307,6 @@ function composeBracket<
   return {
     bracket: bracketView(matches.length > 0, progression, recorded, matchView),
     progression,
-    structure,
   };
 }
 

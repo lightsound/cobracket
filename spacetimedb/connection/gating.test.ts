@@ -418,9 +418,7 @@ describe("connection-level gating", () => {
       connB.reducers.publishTournament({ tournamentId: bId }),
     );
     expect(republishRefusal).toBeInstanceOf(SenderError);
-    expect((republishRefusal as Error).message).toBe(
-      "Cannot publish: the tournament is published",
-    );
+    expect((republishRefusal as Error).message).toBe("Cannot publish: the tournament is published");
   });
 
   test("a reducer that fails after writing rolls the whole transaction back", async () => {
