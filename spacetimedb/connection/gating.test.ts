@@ -382,12 +382,14 @@ describe("connection-level gating", () => {
     // owner's data, and the same call succeeds for the owner of
     // another tournament, so the refusal is the ownership guard,
     // not a transport or encoding failure.
-    const refusal: unknown = await connB.reducers
-      .addParticipant({ tournamentId: wireId, name: "Intruder" })
-      .then(
+    const refusalOf = (call: Promise<void>): Promise<unknown> =>
+      call.then(
         () => null,
         (error: unknown) => error,
       );
+    const refusal: unknown = await refusalOf(
+      connB.reducers.addParticipant({ tournamentId: wireId, name: "Intruder" }),
+    );
     expect(refusal).toBeInstanceOf(SenderError);
     expect((refusal as Error).message).toBe("Tournament not found");
     await sleep(300);
@@ -399,6 +401,25 @@ describe("connection-level gating", () => {
     await waitFor(
       "B's own roster delivered",
       () => rowsOf(connB.db.organizerParticipants.iter()).length === 1,
+    );
+    // The same channel carries the other guard families, each with
+    // its own text: a direct reducer refusal (publishing before a
+    // bracket exists), and a lifecycle refusal (requireStatus, via
+    // a second publish once B's cup has left draft).
+    const publishRefusal: unknown = await refusalOf(
+      connB.reducers.publishTournament({ tournamentId: bId }),
+    );
+    expect(publishRefusal).toBeInstanceOf(SenderError);
+    expect((publishRefusal as Error).message).toBe("Generate the bracket before publishing");
+    await connB.reducers.addParticipant({ tournamentId: bId, name: "B Duo" });
+    await connB.reducers.generateBracket({ tournamentId: bId });
+    await connB.reducers.publishTournament({ tournamentId: bId });
+    const republishRefusal: unknown = await refusalOf(
+      connB.reducers.publishTournament({ tournamentId: bId }),
+    );
+    expect(republishRefusal).toBeInstanceOf(SenderError);
+    expect((republishRefusal as Error).message).toBe(
+      "Cannot publish: the tournament is published",
     );
   });
 

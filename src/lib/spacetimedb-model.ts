@@ -347,15 +347,12 @@ export interface OrganizerRows {
  * beside the composition: the composed facts a write's synthesized
  * return is read from — the roster (an add's inserted ids), the
  * recorded set with its per-record voided set (a report's return),
- * and the header's status.
+ * the match home index, and the header's status.
  */
 export interface TournamentKnowledge {
   status: TournamentSummary["status"];
-  format: Format;
   participants: ParticipantView[];
-  matchCount: number;
   resultCount: number;
-  structure: BracketStructure;
   recorded: RecordedResult[];
   /** Parallel to `recorded`: the Organizer surface's match row ids, as strings. */
   recordedMatchIds: string[];
@@ -389,7 +386,7 @@ export function composeOrganizerTournament(rows: OrganizerRows): OrganizerCompos
     sides: [sideToEngine(result.sides[0]!), sideToEngine(result.sides[1]!)],
   }));
   const matchIdByKey = new Map(matches.map((match) => [match.key, String(match.matchId)]));
-  const { bracket, progression, structure } = composeBracket(
+  const { bracket, progression } = composeBracket(
     format,
     matches,
     (match) => match.slots,
@@ -413,11 +410,8 @@ export function composeOrganizerTournament(rows: OrganizerRows): OrganizerCompos
   };
   const knowledge: TournamentKnowledge = {
     status: view.status,
-    format,
     participants,
-    matchCount: matches.length,
     resultCount: results.length,
-    structure,
     recorded,
     recordedMatchIds: results.map((result) => String(result.matchId)),
     matchKeyById,

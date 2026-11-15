@@ -194,7 +194,7 @@ describe("tournament composition", () => {
     expect(view!.participants.map((p) => p.name)).toEqual(["Alice", "Bob", "Carol", "Dave"]);
     expect(view!.bracket).toBeNull();
     expect(view!.seeding).toBe("random");
-    expect(knowledge!.matchCount).toBe(0);
+    expect(knowledge!.resultCount).toBe(0);
   });
 
   it("derives the progression from structure plus recorded results", () => {
