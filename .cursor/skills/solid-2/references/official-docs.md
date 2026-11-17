@@ -1,13 +1,18 @@
 # Solid 2.0 official documentation — fetchable URLs
 
-Canonical site: https://v2.solidjs.com/ (Cloudflare-protected; blocks non-browser fetchers).
-Agent-friendly mirror (same content, plain markdown): `https://v2-rebuild--solid-docs-v2.netlify.app`
+Canonical site: https://docs.solidjs.com/ — since the 2.0.0 release it serves
+the Solid 2.0 documentation, every page as plain markdown.
 
-- Full index: https://v2-rebuild--solid-docs-v2.netlify.app/llms.txt
-- Single-file corpus: https://v2-rebuild--solid-docs-v2.netlify.app/llms-full.txt
-- Any docs path works with a `.md` suffix.
+- Full index: https://docs.solidjs.com/llms.txt
+- Single-file corpus: https://docs.solidjs.com/llms-full.txt
 
-Only trust these Solid 2.0 sources. Solid 1.x docs (docs.solidjs.com) do not apply.
+The canonical host challenges some non-browser clients on per-page routes
+(Cloudflare), so the per-page links below use the mirror
+`https://v2-rebuild--solid-docs-v2.netlify.app`, which serves the same content
+as plain markdown; any docs path works there with a `.md` suffix.
+
+Only trust these Solid 2.0 sources. Pre-2.0 Solid material (the 1.x docs and
+tutorials) does not apply.
 
 This list is curated for agent work: core TSX first, then the app-stack pages that
 exist when a project has routing, server functions, or document head tags.

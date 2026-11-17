@@ -183,6 +183,14 @@ setTodos((draft) => {
 });
 ```
 
+A draft write that descends into a value that is **another store still loading
+its first answer** is dropped: the draft's base would be that store's contents,
+which do not exist yet (its seed is never shown), and the first answer replaces
+the write when it lands — the outer store keeps following the inner one. Since
+2.0.0 dev warns `[STORE_WRITE_THROUGH_LOADING]`; production drops the write
+silently <!-- upstream:store-write-through-loading -->. Write after the inner
+store loads, or replace the whole value (`setOuter((s) => { s.child = next; })`).
+
 Plain objects and arrays are proxied; `Map`, `Set`, and `Date` are stored as they are.
 `draft.selected.add(id)` inside a setter mutates the `Set` but notifies nobody. Keep a
 set of ids as `Record<string, true>` (`draft.selected[id] = true` /
@@ -785,6 +793,13 @@ after the `yield`, or `createOptimisticStore(() => base.todos, [])` over a separ
 in-flight flags. A write against a function-form source whose first answer has not
 landed yet is not guessed at all — dev warns `[OPTIMISTIC_WRITE_BEFORE_LOAD]`
 <!-- upstream:optimistic-write-before-load -->; let the first answer land before writing.
+A write against a source that *has* answered but is loading a new answer (an
+input changed) is the opposite case: the guess is made, composed on the previous
+answer, and the new answer replaces it when it lands — since 2.0.0 dev warns
+`[OPTIMISTIC_WRITE_WHILE_LOADING]` once per source
+<!-- upstream:optimistic-write-while-loading -->. Render the control inside the
+source's `<Loading>`, disable it while the source is pending, or keep the
+pending change in a separate list until the new answer lands.
 
 `createOptimistic` / `createOptimisticStore` are for a tentative value during an
 active mutation, not a local editing session (use a writable derivation or a plain
@@ -1307,6 +1322,17 @@ still pumping into a document render — declare it `live()`), `[SSR_LIVE_HOLE_L
 — a memo over a fetch inside the hole's expression — or called a slot, so it keeps the
 markup it last sent; create async sources in the component body), and
 `[REVEAL_IN_RENDER_TO_STRING]`.
+Hydration has a render check of its own since 2.0.0: `[INVALID_HTML_NESTING]`,
+when a hydrating insert claims an element the browser's parser rebuilt —
+invalid nesting across a component boundary (`<div>` in `<p>` or `<a>` in
+`<a>`, where the parser moves the inner element out of its parent; `<tr>`
+directly in `<table>`, where it inserts the `<tbody>` the template lacks;
+the compiler rejects it inside one template, so it almost always spans a
+boundary)
+<!-- upstream:invalid-html-nesting -->. Hydration keeps the parser's tree, so
+the page differs from a client render and the moved node cannot be updated
+through its template parent: change the outer element, move the inner element
+out, or write the wrapper the parser expects (`<tbody>` around the rows).
 For the repair behind any code, read the `reactivity-diagnostics` skill Solid ships
 in the repo (`node_modules/solid-js/skills/reactivity-diagnostics/SKILL.md`) — every
 code maps to what the runtime observed and what to change.
@@ -2482,18 +2508,20 @@ return <View value="now" />;
 
 ## Checking the official docs
 
-Solid 2.0 docs: https://v2.solidjs.com/ — the site blocks non-browser fetchers, so from an
-agent use the mirror, which serves every page as plain markdown:
+Solid 2.0 docs: https://docs.solidjs.com/ — the canonical site serves every
+page as plain markdown, and its index and corpus fetch cleanly:
 
-- Index of all pages: `https://v2-rebuild--solid-docs-v2.netlify.app/llms.txt`
-- Single-file corpus: `https://v2-rebuild--solid-docs-v2.netlify.app/llms-full.txt`
-- Any page: append `.md`, e.g. `https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/reactivity/create-signal.md`
+- Index of all pages: `https://docs.solidjs.com/llms.txt`
+- Single-file corpus: `https://docs.solidjs.com/llms-full.txt`
+- Any single page: the canonical host challenges some non-browser clients on
+  per-page routes, so fetch pages from the mirror of the same content —
+  append `.md`, e.g. `https://v2-rebuild--solid-docs-v2.netlify.app/reference/solid-js/reactivity/create-signal.md`
 
 A curated URL list is in [references/official-docs.md](references/official-docs.md).
 Every diagnostic code has its own page under `reference/solid-js/diagnostics/<code-kebab>.md`
 (the console footer links it on a code's first report).
 
-**Never** consult Solid 1.x sources (docs.solidjs.com, pre-2.0 tutorials, old Stack Overflow).
+**Never** consult Solid 1.x sources (the 1.x docs, pre-2.0 tutorials, old Stack Overflow).
 Solid 2.0 is a breaking rewrite; 1.x answers are wrong here. The banned-API table is in the
 always-applied rules installed alongside this skill.
 

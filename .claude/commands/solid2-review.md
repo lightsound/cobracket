@@ -100,8 +100,8 @@ Steps:
    `attribution.enable({ log: false })` + `why()` / `costs()` / `feedback()`. Report
    every coded warning, the silent holds in `feedback().sources`, and the top
    `costs().scopes` entries as findings.
-6. Verify any API you are not certain about against the official docs mirror
-   (`https://v2-rebuild--solid-docs-v2.netlify.app/llms.txt`); never trust Solid 1.x or
+6. Verify any API you are not certain about against the official docs
+   (`https://docs.solidjs.com/llms.txt`); never trust Solid 1.x or
    React memory.
 
 Report each finding as `file:line — problem — Solid 2 replacement`, then fix them. Finish
