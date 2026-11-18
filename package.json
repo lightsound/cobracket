@@ -13,8 +13,8 @@
     "convex:codegen": "convex codegen",
     "deploy": "bun run deploy:backend && bun run deploy:web",
     "deploy:backend": "convex deploy --cmd 'bun run build' --cmd-url-env-var-name VITE_CONVEX_URL",
-    "deploy:web": "cf deploy",
-    "serve:hosting": "cf dev",
+    "deploy:web": "cf deploy dist/client",
+    "serve:hosting": "vp preview",
     "test": "vp test run --project '!e2e' --project '!connection'",
     "test:e2e": "vp test run --project e2e",
     "test:connection": "vp test run --project connection",
@@ -63,8 +63,7 @@
     "solid2-agent-kit": "0.27.0",
     "typescript": "7.0.2",
     "vite": "npm:@voidzero-dev/vite-plus-core@8.3.8000",
-    "vite-plus": "1.7.0",
-    "wrangler": "^4.163.0"
+    "vite-plus": "1.7.0"
   },
   "overrides": {
     "vite": "npm:@voidzero-dev/vite-plus-core@8.3.8000"

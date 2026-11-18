@@ -159,8 +159,5 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # Telemetry is off twice: cf reads CF_SEND_TELEMETRY (falling back to
-          # WRANGLER_SEND_METRICS), and the wrangler it delegates the build to
-          # reads only WRANGLER_SEND_METRICS.
+          # Telemetry is off: cf reads CF_SEND_TELEMETRY.
           CF_SEND_TELEMETRY: "false"
-          WRANGLER_SEND_METRICS: "false"
