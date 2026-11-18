@@ -52,7 +52,7 @@
     "@import-lint/cli": "^0.1.9",
     "@shadcn/lint": "^0.2.0",
     "@solidjs/diagnostics": "^2.0.0",
-    "@solidjs/vite-plugin": "^3.0.0-next.57",
+    "@solidjs/vite-plugin": "^3.0.1",
     "@tailwindcss/vite": "^4.3.3",
     "@types/bun": "^1.4.2",
     "cf": "^1.0.0-rc.1",
@@ -60,7 +60,7 @@
     "fallow": "3.42.0",
     "happy-dom": "^21.0.4",
     "playwright-core": "1.65.1",
-    "solid2-agent-kit": "0.27.0",
+    "solid2-agent-kit": "0.28.0",
     "typescript": "7.0.2",
     "vite": "npm:@voidzero-dev/vite-plus-core@8.3.8000",
     "vite-plus": "1.7.0"
