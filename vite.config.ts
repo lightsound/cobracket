@@ -170,7 +170,7 @@ export default defineConfig(({ mode }) => ({
       "shadcn/no-inline-styles": "error",
     },
     // Full type-aware path: `vp check` also runs TypeScript type checks
-    // (tsgolint), alongside the project's `bun x tsc --noEmit`.
+    // (tsrs), alongside the project's `bun x tsc --noEmit`.
     // `denyWarnings`: the project-owned plugin rules above (Convex, shadcn)
     // are all `error`, but Oxlint's built-in rules sit at `warn` in the
     // effective config, and a warning otherwise exits 0 — measured: a
