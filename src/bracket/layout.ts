@@ -1,11 +1,5 @@
-/**
- * @public
- */
 export type BracketSectionName = "winners" | "losers" | "grand_final";
 
-/**
- * @public
- */
 export interface LayoutMatch {
   key: string;
   bracket: BracketSectionName;
@@ -15,9 +9,6 @@ export interface LayoutMatch {
   indexInRound: number;
 }
 
-/**
- * @public
- */
 export interface BracketCard {
   key: string;
   bracket: BracketSectionName;
@@ -25,9 +16,6 @@ export interface BracketCard {
   y: number;
 }
 
-/**
- * @public
- */
 export interface LayoutPoint {
   x: number;
   y: number;
@@ -43,8 +31,6 @@ export interface LayoutPoint {
  * collapses into one ordinary winner edge — the whole match moves forward,
  * so one connector reads better than a solid and a dashed line side by
  * side.
- *
- * @public
  */
 export interface BracketEdge {
   fromKey: string;
@@ -54,9 +40,6 @@ export interface BracketEdge {
   to: LayoutPoint;
 }
 
-/**
- * @public
- */
 export interface BracketLayout {
   width: number;
   height: number;
@@ -67,14 +50,9 @@ export interface BracketLayout {
 /**
  * Fixed card dimensions (ADR 0007): participant names truncate, and small
  * screens pan/zoom via transform instead of reflowing.
- *
- * @public
  */
 export const CARD_WIDTH = 220;
 
-/**
- * @public
- */
 export const CARD_HEIGHT = 76;
 
 const GAP_X = 56;
@@ -216,8 +194,6 @@ function edgeBetween(kind: Feed["kind"], source: BracketCard, target: BracketCar
  * in its own columns to the right of both. Cards come out in
  * (section, round, indexInRound) order, so the first card of a section is
  * that section's top row.
- *
- * @public
  */
 export function layoutBracket(matches: readonly LayoutMatch[]): BracketLayout {
   const sorted = [...matches].sort(

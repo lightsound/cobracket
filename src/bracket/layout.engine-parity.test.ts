@@ -1,7 +1,10 @@
 import { describe, expect, test } from "vite-plus/test";
-// import-lint-disable-next-line -- parity test only: layout reconstructs the engine's slot wiring from coordinates (the derived view exposes no slots), and this test is what keeps the two in lockstep; app code must not cross this boundary
+// Parity test: layout reconstructs the engine's slot wiring from
+// coordinates (the derived view exposes no slots), and this test is
+// what keeps the two in lockstep. It reads the engine through its
+// public face — the @public re-exports in `spacetimedb/format`'s
+// index — so no boundary is crossed and no suppression is needed.
 import { generateBracket } from "../../spacetimedb/format";
-// import-lint-disable-next-line -- see above; type-only companion of the parity import
 import type { BracketStructure } from "../../spacetimedb/format";
 import { layoutBracket } from "./layout";
 import type { LayoutMatch } from "./layout";

@@ -10,9 +10,6 @@ import type { FunctionArgs, FunctionReference, FunctionReturnType } from "convex
 // migration's M6 removes Convex, this file goes with it and the seam
 // loses nothing but a dispatch branch.
 
-/**
- * @public
- */
 export function getConvexUrl(): string | undefined {
   const url = import.meta.env.VITE_CONVEX_URL;
   return typeof url === "string" && url.length > 0 ? url : undefined;
@@ -20,9 +17,6 @@ export function getConvexUrl(): string | undefined {
 
 let client: ConvexClient | undefined;
 
-/**
- * @public
- */
 export function getConvexClient(): ConvexClient | undefined {
   if (isServer) return undefined;
   const url = getConvexUrl();
@@ -37,8 +31,6 @@ export function getConvexClient(): ConvexClient | undefined {
  * subscription. Without a configured client the subscription never
  * delivers — the seam's accessor stays pending, exactly as it did
  * when this bridging lived in the seam itself.
- *
- * @public
  */
 export function subscribeConvexQuery(
   query: FunctionReference<"query">,
@@ -61,8 +53,6 @@ export function subscribeConvexQuery(
  * `getConvexUrl()` render gate, so a missing client here is a
  * programming error, not a state to branch on — it throws into the
  * caller's error handling like any other mutation failure.
- *
- * @public
  */
 export async function runConvexMutation<Mutation extends FunctionReference<"mutation">>(
   mutation: Mutation,
@@ -93,8 +83,6 @@ const PREFETCH_HOLD_MS = 10_000;
  * inherit) the subscription ends like any other, and the page's own is the
  * only one left. Meant for route `preload`s on link intent; a page that
  * subscribes a round trip after a hover then shows no fallback at all.
- *
- * @public
  */
 export function prefetchConvexQuery<Query extends FunctionReference<"query">>(
   query: Query,
