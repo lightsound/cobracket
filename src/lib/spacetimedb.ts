@@ -93,8 +93,6 @@ export interface SpacetimeConfig {
 /**
  * The SpacetimeDB configuration for this build, or undefined when
  * the host/database env vars are not both set.
- *
- * @public
  */
 export function getSpacetimeConfig(): SpacetimeConfig | undefined {
   const host = import.meta.env.VITE_SPACETIMEDB_HOST;
@@ -187,8 +185,6 @@ function buildConnection(config: SpacetimeConfig): Promise<LiveConnection> {
 
 /**
  * The shared connection, built on first use.
- *
- * @public
  */
 export function getSpacetimeConnection(): Promise<DbConnection> {
   return getLive().then((entry) => entry.conn);
@@ -1395,8 +1391,6 @@ function outcomeToBinding(outcome: Outcome): { tag: (typeof OUTCOME_TO_BINDING)[
 /**
  * The seam's SpacetimeDB implementation: subscribe / write /
  * prefetch, in `./backend`'s BackendImpl shape.
- *
- * @public
  */
 export const spacetimeImpl = {
   subscribe: subscribeSpacetime,
@@ -1425,8 +1419,6 @@ function refreshSessionListeners(): void {
  * The session state as the module's session_state view reports it,
  * delivered on every change; the first delivery waits for the feed
  * to apply.
- *
- * @public
  */
 export function onSpacetimeSession(listener: (state: SessionState) => void): () => void {
   sessionListeners.add(listener);
@@ -1441,8 +1433,6 @@ export function onSpacetimeSession(listener: (state: SessionState) => void): () 
  * bounded at ten seconds: a feed that never applies (a wrong
  * database name, a missing module) is a broken backend, and the
  * caller must hear about it rather than wait forever.
- *
- * @public
  */
 export function waitForSpacetimeSession(
   predicate: (state: SessionState) => boolean,
@@ -1482,8 +1472,6 @@ export function waitForSpacetimeSession(
 
 /**
  * A promise for the first applied session state, whatever it is.
- *
- * @public
  */
 export async function whenSpacetimeSessionReady(): Promise<SessionState> {
   if (systemApplied) return currentSessionState();
@@ -1496,8 +1484,6 @@ export async function whenSpacetimeSessionReady(): Promise<SessionState> {
 /**
  * Bind the connection's identity to its app_user (the module's
  * explicit bind; every reducer would also bind on first use).
- *
- * @public
  */
 export async function bindSpacetimeIdentity(): Promise<void> {
   const { conn } = await getLive();
@@ -1513,8 +1499,6 @@ export async function bindSpacetimeIdentity(): Promise<void> {
  * re-established on the new connection (system feeds and the current
  * scopes); channels keep their last values until the new feeds
  * apply.
- *
- * @public
  */
 export async function resetSpacetimeIdentity(): Promise<void> {
   const config = getSpacetimeConfig();
