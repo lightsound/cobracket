@@ -21,15 +21,8 @@ localStorage.setItem("cobracket:locale", "en");
 
 const ORGANIZER = "user1";
 
-/** Let the async memos settle. */
 const settled = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-/**
- * The routed page arrives through a dynamic import, which takes more than one
- * turn of the loop — so this waits for the page rather than for a fixed number
- * of ticks. It also settles the import before the test returns, which the gate
- * requires: work left in flight lands on whichever test is open next.
- */
 async function routed(host: HTMLElement): Promise<HTMLElement> {
   for (let tick = 0; tick < 100; tick++) {
     const heading = host.querySelector<HTMLElement>("main h2");
@@ -55,16 +48,12 @@ test("frames the routed page with the header and the toggles", async () => {
   );
   expect(controls).toEqual(["日本語", "Theme: Auto"]);
 
-  // The page for `/` arrived through the router's lazy import, inside the
-  // boundaries — its heading is Home's, not the shell's.
   expect(heading.textContent).toBe("Your tournaments");
 });
 
 test("keeps the shell up while the routed page is still waiting on data", async () => {
   const host = mount(() => <App />);
   const heading = await routed(host);
-  // Nothing published: the page is mounted and its own session boundary owns
-  // the frame, while the shell around it is already usable.
   expect(heading.textContent).toBe("Your tournaments");
   expect(host.querySelector("main")?.textContent).toContain("Checking your session…");
   expect(host.querySelectorAll("header button")).toHaveLength(2);

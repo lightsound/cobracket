@@ -48,7 +48,6 @@ test("lists placements by participant name", () => {
     ["2", "Grace"],
     ["3", "Alan"],
   ]);
-  // No champion yet — the banner is the tournament's completion, not first place.
   expect(host.querySelector("p")).toBeNull();
 });
 
@@ -113,7 +112,6 @@ test("a full field of placements costs the table no per-row subscription", () =>
   expect(host.querySelectorAll("tbody tr")).toHaveLength(32);
   const firstRow = host.querySelector("tbody tr");
 
-  // A subscription push with all-new objects, at scale.
   setStandings(fullStandings());
   flush();
 

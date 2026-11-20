@@ -13,7 +13,6 @@ function winOver(matchKey: string, winner: string, loser: string): RecordedResul
   };
 }
 
-// Plays ready matches one at a time, deciding each by participant preference.
 function play(
   progressionOf: (results: RecordedResult[]) => Progression,
   pickWinner: (a: string, b: string) => string,
@@ -52,14 +51,12 @@ describe("double elimination with four participants", () => {
     const opening = deriveProgression(generated, []);
     expect(opening.readyMatchKeys).toHaveLength(2);
 
-    // p1 beats p4, p2 beats p3: both losers stay in contention.
     const [open1, open2] = opening.readyMatchKeys;
     const afterOpeners = deriveProgression(generated, [
       winOver(open1!, "p1", "p4"),
       winOver(open2!, "p2", "p3"),
     ]);
 
-    // Winners semifinal (p1 vs p2) and losers opener (p4 vs p3) both ready.
     expect(afterOpeners.readyMatchKeys).toHaveLength(2);
     const readyOccupants = afterOpeners.readyMatchKeys.map((key) =>
       afterOpeners.matches
@@ -79,8 +76,6 @@ describe("double elimination with four participants", () => {
 
     expect(progression.completed).toBe(true);
     expect(progression.championId).toBe("p1");
-    // Everyone but the champion lost exactly twice... except the grand
-    // final loser, who exits on their second loss too: 2n - 2 matches.
     expect(results).toHaveLength(6);
     expect(progression.standings).toEqual([
       { participantId: "p1", placement: 1 },
@@ -88,20 +83,16 @@ describe("double elimination with four participants", () => {
       { participantId: "p3", placement: 3 },
       { participantId: "p4", placement: 4 },
     ]);
-    // The reset match is structurally unnecessary: cancelled, not pending.
     const cancelled = progression.matches.filter((m) => m.state === "cancelled");
     expect(cancelled).toHaveLength(1);
   });
 
   test("losers-side finalist winning the grand final forces the bracket reset", () => {
     const generated = structure();
-    // p1 and p2 reach the winners final; p1 wins it. p2 drops, returns
-    // through the losers bracket, and beats p1 in the grand final.
     const { results: preset } = play(
       (results) => deriveProgression(generated, results),
       lowerNumberWins,
     );
-    // Replay: take the same bracket but let p2 win the grand final.
     const withoutGrandFinal = preset.slice(0, -1);
     const beforeReset = deriveProgression(generated, withoutGrandFinal);
     const [grandFinalKey] = beforeReset.readyMatchKeys;
@@ -110,7 +101,6 @@ describe("double elimination with four participants", () => {
       winOver(grandFinalKey!, "p2", "p1"),
     ]);
 
-    // Not over: p1 has only lost once. The reset match is now ready.
     expect(afterUpset.completed).toBe(false);
     expect(afterUpset.championId).toBeUndefined();
     expect(afterUpset.readyMatchKeys).toHaveLength(1);
@@ -188,10 +178,8 @@ describe("double elimination byes (five participants)", () => {
 
     expect(progression.completed).toBe(true);
     expect(progression.championId).toBe("p1");
-    // 2n - 2 real matches when the winners-side finalist takes the title.
     expect(results).toHaveLength(8);
     expect(progression.standings).toHaveLength(5);
-    // No match should ever have been ready with a bye in it.
     for (const result of results) {
       expect(result.sides).toHaveLength(2);
     }
@@ -208,13 +196,10 @@ describe("double elimination corrections", () => {
     const done = deriveProgression(generated, results);
     expect(done.completed).toBe(true);
 
-    // Flip the winners final (p1 vs p2): p2 actually won it.
     const winnersFinal = done.matches.find((m) => m.bracket === "winners" && m.round === 2)!;
     const corrected = [...results, winOver(winnersFinal.key, "p2", "p1")];
     const progression = deriveProgression(generated, corrected);
 
-    // The losers final and grand final were played under pairings that no
-    // longer hold: they void and the tournament reopens.
     expect(progression.completed).toBe(false);
     expect(progression.voidedResultIndices.length).toBeGreaterThan(0);
     expect(progression.readyMatchKeys.length).toBeGreaterThan(0);
@@ -235,9 +220,6 @@ describe("double elimination walkovers", () => {
           .occupants.some((o) => o.kind === "participant" && o.participantId === participantId),
       )!;
 
-    // p4 no-shows their opener; the published bracket is never regenerated
-    // (CONTEXT.md "Walkover"): p4 drops to the losers bracket, and the
-    // organizer records a second walkover there when p4 stays absent.
     const results: RecordedResult[] = [
       {
         matchKey: openerOf("p4"),

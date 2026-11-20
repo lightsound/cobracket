@@ -99,9 +99,6 @@ function seed(harness: Harness): Seeded {
       seeding: undefined,
       shareSlug: "strangerslug",
     });
-    // A played match on the published tournament, and one on the
-    // private tournament: the private one's rows exist, so only the
-    // gate can keep them off the shared surface.
     const seedPlayedMatch = (tournamentId: bigint, key: string) => {
       const ada = ctx.db.participant.insert({
         id: 0n,
@@ -164,8 +161,6 @@ describe("module foundation", () => {
       results: [...ctx.db.result.tournamentId.filter(seeded.publishedId)].length,
     }));
     expect(counts).toEqual({ participants: 2, results: 1 });
-    // A reducer-context write from a chosen sender is visible to the
-    // read surfaces afterwards.
     as(harness, ORGANIZER, (ctx) => {
       ctx.db.participant.insert({
         id: 0n,
@@ -189,13 +184,7 @@ describe("module foundation", () => {
     const header = moduleExports.sharedTournament(anon, { slug: "pubslug123" });
     expect(header?.name).toBe("Cup");
     expect(header?.discipline).toBe("Street Fighter 6");
-    // Stored enum values read back with an explicit unit payload.
     expect(header?.status).toEqual({ tag: "published", value: {} });
-    // A draft's slug, a private tournament's slug, and an unknown
-    // slug all resolve to nothing on every shared view — neither
-    // confirms which case it was. The draft and private tournaments
-    // carry rows (the private one a played match), so the empty
-    // answers are the gate's doing, not an empty table's.
     for (const slug of ["draftslug9", "privateslug", "nosuchslug"]) {
       expect(moduleExports.sharedTournament(anon, { slug })).toBeUndefined();
       expect(moduleExports.sharedParticipants(anon, { slug })).toEqual([]);
@@ -219,13 +208,9 @@ describe("module foundation", () => {
     ]);
     const results = moduleExports.sharedResults(anon, { slug: "pubslug123" });
     expect(results).toHaveLength(1);
-    // Keyed by structural match key, sequenced by append order — and
-    // no recordedBy, no result row id: no Organizer handles.
     expect(Object.keys(results[0]!).sort()).toEqual(["matchKey", "seq", "sides"]);
     expect(results[0]!.matchKey).toBe("W1M1");
     const header = moduleExports.sharedTournament(anon, { slug: "pubslug123" });
-    // No tournamentId either: it is the Organizer surface's
-    // addressing key, and Convex's shared view withheld it too.
     expect(Object.keys(header!).sort()).toEqual(["discipline", "format", "name", "status"]);
   });
 
@@ -234,7 +219,6 @@ describe("module foundation", () => {
     const seeded = seed(harness);
     const ownerCtx = harness.viewContext(authFor(ORGANIZER));
     const mine = moduleExports.myTournaments(ownerCtx);
-    // Newest first, per listMyTournaments' contract on Convex.
     expect(mine.map((row) => row.name)).toEqual(["Secret Published", "Secret Draft", "Cup"]);
     expect(mine.find((row) => row.name === "Cup")?.shareSlug).toBe("pubslug123");
 
@@ -243,7 +227,6 @@ describe("module foundation", () => {
     });
     expect(header?.name).toBe("Cup");
     expect(header?.shareSlug).toBe("pubslug123");
-    // Seeding was never stored: the view states the effective mode.
     expect(header?.seeding).toEqual({ tag: "random" });
 
     const matches = moduleExports.organizerMatches(ownerCtx, {
@@ -256,10 +239,6 @@ describe("module foundation", () => {
     });
     expect(results[0]?.matchId).toBe(seeded.matchId);
 
-    // A different organizer — bound, and owning a tournament of
-    // their own — sees exactly their own list, and the empty surface
-    // for every tournament they do not own, drafts and the private
-    // one included. The owner, in turn, cannot open theirs.
     const strangerCtx = harness.viewContext(authFor(STRANGER));
     expect(moduleExports.myTournaments(strangerCtx).map((row) => row.name)).toEqual([
       "Stranger Draft",

@@ -26,22 +26,14 @@ import { OBSERVE } from "solid-js";
  * solid-refresh off.
  */
 
-/**
- * One scope, at its widest run: how many sources it tracked.
- *
- * @public
- */
+/** @public */
 export interface ScopeWidth {
   name: string;
   kind: "effect" | "memo";
   sources: number;
 }
 
-/**
- * Start recording scope widths; the returned function stops and reports them.
- *
- * @public
- */
+/** @public */
 export function watchScopeWidths(): () => ScopeWidth[] {
   if (OBSERVE === undefined) {
     throw new Error("Scope widths need a development build of Solid (OBSERVE is undefined).");
@@ -79,12 +71,7 @@ export function watchScopeWidths(): () => ScopeWidth[] {
  */
 export const SCOPE_WIDTHS_GLOBAL = "__COBRACKET_SCOPE_WIDTHS__";
 
-/**
- * The page side of the browser gate: `begin()` before its capture, `end()`
- * after, both through `page.evaluate`.
- *
- * @public
- */
+/** @public */
 export interface ScopeWidthsBridge {
   begin(): void;
   end(): ScopeWidth[];

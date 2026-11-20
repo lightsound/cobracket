@@ -2,10 +2,11 @@
 
 The operative contracts for the two diagnostics gates live in `AGENTS.md`
 (`## Architecture Notes` and `## Commands`). Implementation mechanics live in
-the headers of the source files named below. This document holds what neither
-of those places owns cleanly: how the gates fit together, why their
-environments differ, the measurements the settings rest on, and the manual
-procedure for re-proving the browser gate.
+the headers of the source files named below — except the browser gate's boot
+mechanics, which live in this document's Global-setup boot model section.
+This document holds what neither of those places owns cleanly: how the gates
+fit together, why their environments differ, the measurements the settings
+rest on, and the manual procedure for re-proving the browser gate.
 
 Read this before changing `src/test-setup.ts`, `src/diagnostics-verdict.ts`,
 `src/diagnostics-gate.test.tsx`, `src/dev-diagnostics.ts`,
@@ -35,6 +36,12 @@ owns the engine (under Vitest and in `--mode e2e`), because an app-side hold
 opens a fresh window over the engine's tables and hides what the gate
 recorded, and because holds combine by the most demanding request per key —
 a threshold a gate turns off would stay armed beside the app's own hold.
+Its hold sets `log: false`: the engine's why-chain would bury the coded
+findings in the console, and a per-run trace is available on demand through
+`costs()` / `feedback()` / `why()`. Since `@solidjs/web` 2.0.0-rc.14, the
+`performanceTracks` hold asks for the six cost checks off; the app-side
+hold keeps them on. The hold lasts as long as the page, so it is the
+background every gate threshold is judged against.
 
 ## Why the environments differ
 
@@ -134,6 +141,33 @@ force when each was taken.
   rc.21 baseline move through the 2026-11-14 toolchain series — the
   stability its earlier by-choice deferral asked for. A red gate on
   `main` sits in front of the deploy on purpose.
+- After the router upgrade, create-then-open and Share Link navigations
+  reported two silent holds (43ms and 16ms) where neither navigation had
+  reported one before — the measurement behind the router's opt-in
+  `links: pendingLinks` (`data-pending`) in `src/router.ts`.
+- On the Vitest side, at 40 rows: plain element rows cost the list's
+  insert effect 0 sources, component rows 1 source each, and rows with a
+  per-row `<Show>` 2 — the counts behind disabling solid-refresh in the
+  test gate as well as in `--mode e2e`.
+- Page boundaries, measured in Chromium against a local deployment with
+  100ms of one-way latency: when every page called `createOrganizer()`
+  for itself, the Home boundary showed its "Checking your session…"
+  fallback for 200ms and the tournament list behind it for another
+  200ms — the engine names the pair an `[ASYNC_WATERFALL]`. The
+  management page reached from Home answered in 2ms, because the router
+  had created it before disposing the old page; the one app-wide
+  subscription in `src/organizer.tsx` gives every page that behaviour.
+- The same setup, for link-intent preloading: every page boundary
+  showed its fallback for one round trip (200ms) after navigation, and
+  under 150ms of latency the same wait reads as a flicker
+  (`[FALLBACK_FLASH]`). A preload on `"initial"` intent would gain
+  nothing — the page subscribes on mount anyway — and for the two
+  Organizer-gated reads it would run before the session is restored, so
+  it is skipped. Router 2.0.0-next.37 preloaded on hover by default,
+  but its focus and touch listeners were gated on `evt.button`, which
+  those events lack, so they never fired; since next.38, preloading is
+  opt-in (`preloadLinks: intentPreload()` — hover after a 20ms rest,
+  focus and touch).
 
 ## Global-setup boot model
 
@@ -142,7 +176,9 @@ order of preference: nothing, when `E2E_BASE_URL` is set; only the dev
 server, when `.env.local` selects the SpacetimeDB backend and a _local_
 standalone already answers (a cloud host is never reused) — the current module is published to the reused standalone first, since it republishes nothing itself; otherwise a
 standalone as well, on the gate's own port, with the module published to
-a database that exists only for the gate.
+a database that exists only for the gate. An `.env.local` value that does
+not parse as a local URL selects nothing: mode 2 falls through to mode 3
+rather than dying on the parse.
 
 Safety invariants: the target is asserted local before the app starts —
 the mode-3 publish host is built from a loopback literal and the gate's
@@ -153,7 +189,45 @@ deployment; the dev server receives its backend configuration in its
 environment, which Vite ranks above `.env.local`; children die with the
 run as a whole process group, waited on until every member is gone,
 because a server outlives a teardown that only waits for the leader.
-Mechanics: the header of `e2e/global-setup.ts`.
+Nothing in the setup writes `.env.local`: the anonymous-Convex boot
+snapshotted and restored it because that CLI saved its deployment there
+whatever it was told to read; no counterpart exists now.
+
+Mechanics. Binaries come from `SPACETIME_BIN_DIR`, the connection
+suite's cached store, or the official release tarball — pinned by
+SHA-256 and failing closed on a mismatch — downloaded into the gate's
+own build directory. Both binaries' versions are asserted (2.15.0)
+before the publish: the gate asserts the wire behaviour of one exact
+server release, the standalone serves and the CLI publishes, and a stale
+or mismatched binary would prove things about the wrong server. The
+standalone driver mirrors the connection suite's
+(`spacetimedb/connection/global-setup.ts`) and the live suite's
+(`src/lib/spacetimedb.live.test.tsx`) deliberately — each driver stays
+self-contained rather than coupling CI-gated suites to one another. The
+module is assembled as package.json + tsconfig.json + src/ + format/ in
+the repo's own layout, the real entry with nothing rewritten, and the
+data directory is fresh per run, so the gate's database starts empty.
+
+Signing keys: a fresh standalone data directory needs explicit key
+paths, so the CLI's own pair under `~/.config/spacetime` serves when it
+exists and an equivalent ES256 pair is minted under the build directory
+otherwise. The private key must be PKCS#8 — the form the CLI itself
+writes; a SEC1 EC key (`openssl ecparam`'s output) is rejected with
+InvalidKeyFormat (measured by the connection suite on a fresh-HOME run,
+the case CI always hits), so keys are minted with `openssl genpkey`, a
+cached key in the rejected form is regenerated rather than reused, and
+the public half is always re-derived from the private half, so a missing
+or foreign `.pub` can never reach the server as half of a mismatched
+pair.
+
+After every publish, the module secret is seeded (ADR 0032) with a fresh
+host-CSPRNG key, before the app starts: tournament creation mints share
+slugs from the secret, so an unseeded database would refuse the
+scenario's first write. Mode 3's database is fresh, so the seed always
+lands there; mode 2 republishes to a developer's long-running
+standalone, whose database the local flow may already have seeded — that
+one refusal ("already seeded") is the state the gate needs anyway, so it
+is accepted, and any other failure is real.
 
 ## Re-proving the browser gate by hand
 
@@ -178,7 +252,11 @@ change:
 - `src/scope-widths.ts` — how widths are counted.
 - `src/dev-diagnostics.ts` and `src/dev-diagnostics.test.tsx` — the
   stand-down behaviour, measured on both sides.
-- `e2e/global-setup.ts` — the boot mechanics, in its header.
+- `e2e/global-setup.ts` — the boot mechanics (Global-setup boot model,
+  above); its header points here.
 - `e2e/share-link.test.ts` — the browser scenario and its header.
 - `vite.config.ts` — the `--mode e2e` switches (refresh,
-  `performanceTracks`) and why they are off there.
+  `performanceTracks`) and why they are off there. Since vite-plus
+  next.47, its `diagnostics: true` also fails the dev server loudly if
+  `@solidjs/diagnostics` goes missing, instead of serving without the
+  bridge.

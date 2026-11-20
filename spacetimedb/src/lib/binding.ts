@@ -9,28 +9,15 @@ import type { spacetimedb } from "../schema";
 // shared; view code passes the view's.
 export type Db = ReadonlyDbView<InferSchema<typeof spacetimedb>>;
 
-// The writable handle, for the helpers that write the binding itself.
 export type WritableDb = DbView<InferSchema<typeof spacetimedb>>;
 
-// The tables' row shapes, derived from the handle itself so the
-// library's signatures track the schema without naming generated
-// types.
 export type TournamentRow = NonNullable<ReturnType<Db["tournament"]["id"]["find"]>>;
 export type ParticipantRow = NonNullable<ReturnType<Db["participant"]["id"]["find"]>>;
 export type MatchRow = NonNullable<ReturnType<Db["match"]["id"]["find"]>>;
 export type ResultRow = NonNullable<ReturnType<Db["result"]["id"]["find"]>>;
 
-// A tournament's lifecycle state as a plain tag — the form
-// requireStatus's messages interpolate, exactly as Convex interpolated
-// the stored string.
 export type TournamentStatusTag = TournamentRow["status"]["tag"];
 
-// The binding row for a connection identity, or null when the
-// identity has never been bound to an app_user. This is the module's
-// one identity seam (ADR 0031): sender-gated views resolve the caller
-// through it, and a reducer's first act must be to consult it — the
-// require* discipline of the Convex operations API, carried over as
-// convention plus tests.
 function bindingFor(db: Db, sender: Identity) {
   return db.identityUser.identity.find(sender);
 }
@@ -60,25 +47,11 @@ export function resolveSession(db: Db, sender: Identity): SessionResolution {
   return { kind: "organizer", userId: binding.userId };
 }
 
-// The caller's app_user id when their identity resolves to one — the
-// read-side getOrganizer. Null-equivalent (undefined) covers both
-// unauthenticated and user_missing, exactly as on Convex.
 export function organizerIdFor(db: Db, sender: Identity): bigint | undefined {
   const session = resolveSession(db, sender);
   return session.kind === "organizer" ? session.userId : undefined;
 }
 
-// The write-side seam every reducer consults first: the caller's
-// app_user id, binding the identity when this is its first act
-// (ADR 0031: the first reducer call from an unbound identity binds it
-// to a fresh app_user, idempotently per identity — this replaces
-// anonymous sign-in wholesale). A binding whose app_user row is gone
-// refuses with "Not signed in", as requireOrganizer did when
-// getOrganizer resolved null: the identity is real, but it no longer
-// names a user, and silently minting a replacement would resurrect a
-// deleted user under the same credential. Because a reducer is
-// atomic, a call that later throws leaves no binding behind — a
-// failed first act does not sign anyone in.
 export function requireBoundUser(db: WritableDb, sender: Identity): bigint {
   const binding = bindingFor(db, sender);
   if (binding !== null) {

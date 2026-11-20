@@ -3,12 +3,8 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { QueryCtx } from "../_generated/server";
 import { getOrganizer } from "../auth";
 
-// Identity, ownership, and lifecycle guards.
-
 export type TournamentStatus = Doc<"tournaments">["status"];
 
-// Every operation funnels identity through getOrganizer (ADR 0003) and
-// never takes it from client arguments.
 export async function requireOrganizer(ctx: QueryCtx): Promise<Id<"users">> {
   const organizerId = await getOrganizer(ctx);
   if (organizerId === null) {
@@ -60,8 +56,6 @@ export function requireStatus(
   }
 }
 
-// The shared prologue of every tournament-keyed Organizer mutation:
-// identity, ownership, then lifecycle.
 export async function requireOwnedTournamentIn(
   ctx: QueryCtx,
   tournamentId: Id<"tournaments">,
@@ -103,6 +97,4 @@ export async function requireOwnedMatch(
   return { match, tournament };
 }
 
-// Roster and seeding stay editable, and the bracket regenerable, until the
-// first result flips the tournament to live (story 10 + Lifecycle).
 export const PRE_LIVE: readonly TournamentStatus[] = ["draft", "published"];

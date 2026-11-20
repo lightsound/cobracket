@@ -23,7 +23,6 @@ import { as, asModule, authFor, makeHarness, type Harness } from "./harness";
 const ALICE = "alice";
 const BOB = "bob";
 
-/** Binds `sub`'s identity (the sign-up) and returns its app_user id. */
 function signUp(harness: Harness, sub: string): bigint {
   as(harness, sub, (ctx) => {
     moduleExports.bindIdentity(ctx, {});
@@ -43,7 +42,6 @@ describe("identity binding and session views", () => {
     const userId = signUp(harness, ALICE);
     const user = asModule(harness, (ctx) => ctx.db.appUser.id.find(userId));
     expect(user).not.toBeNull();
-    // Binding again is the same binding, not a second user.
     expect(signUp(harness, ALICE)).toBe(userId);
     expect(appUserCount(harness)).toBe(1);
     const otherId = signUp(harness, BOB);
@@ -61,7 +59,6 @@ describe("identity binding and session views", () => {
 
   test("sessionState distinguishes missing users from unauthenticated callers", () => {
     const harness = makeHarness();
-    // Never bound: unauthenticated, and currentOrganizer answers nothing.
     expect(moduleExports.sessionState(harness.viewContext(authFor(ALICE)))).toEqual([
       { state: { tag: "unauthenticated" } },
     ]);
@@ -70,8 +67,7 @@ describe("identity binding and session views", () => {
     expect(moduleExports.sessionState(harness.viewContext(authFor(ALICE)))).toEqual([
       { state: { tag: "organizer", value: { userId } } },
     ]);
-    // The distinction the client's recovery depends on: an identity
-    // whose user row is gone must NOT read as merely unauthenticated.
+    // The unauthenticated / user_missing distinction: docs/adr/0031-adopt-spacetimedb-as-the-backend.md.
     asModule(harness, (ctx) => {
       ctx.db.appUser.id.delete(userId);
     });
@@ -92,12 +88,10 @@ describe("identity binding and session views", () => {
   test("one identity's binding never answers for another", () => {
     const harness = makeHarness();
     const aliceId = signUp(harness, ALICE);
-    // Bob, unbound, resolves to nothing — not to Alice's user.
     expect(moduleExports.currentOrganizer(harness.viewContext(authFor(BOB)))).toBeUndefined();
     expect(moduleExports.sessionState(harness.viewContext(authFor(BOB)))).toEqual([
       { state: { tag: "unauthenticated" } },
     ]);
-    // And once Bob binds, he is his own user, not Alice's.
     const bobId = signUp(harness, BOB);
     expect(bobId).not.toBe(aliceId);
     expect(moduleExports.currentOrganizer(harness.viewContext(authFor(BOB)))).toEqual({
@@ -111,10 +105,6 @@ describe("identity binding and session views", () => {
     asModule(harness, (ctx) => {
       ctx.db.appUser.id.delete(userId);
     });
-    // requireBoundUser's refusal — the mirror of requireOrganizer's
-    // "Not signed in" when getOrganizer resolves null — and no
-    // resurrection: the identity stays user_missing, with no new
-    // app_user minted under the same credential.
     expect(() =>
       as(harness, ALICE, (ctx) => {
         moduleExports.bindIdentity(ctx, {});
@@ -128,9 +118,6 @@ describe("identity binding and session views", () => {
 
   test("a harness transaction that throws after binding rolls the binding back", () => {
     const harness = makeHarness();
-    // requireBoundUser is every reducer's first act: bindIdentity is
-    // its thinnest caller, and its success leaves the binding behind —
-    // an anonymous binding naming the one app_user row.
     as(harness, ALICE, (ctx) => {
       moduleExports.bindIdentity(ctx, {});
     });

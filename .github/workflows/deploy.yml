@@ -1,8 +1,5 @@
 name: Deploy
 
-# Continuous deployment to production (ADR 0010): every push to main runs the
-# repository's gates and then, only if they pass, deploys the Convex functions
-# and the static web UI.
 on:
   push:
     branches: [main]
@@ -19,9 +16,6 @@ permissions:
   contents: read
 
 jobs:
-  # The same gates AGENTS.md asks a human to run before committing. They run
-  # before anything touches the production deployment.
-  #
   # Named `gates`, not `verify`, so it does not collide with the check
   # `ci.yml` publishes on pull requests: check runs are identified by job
   # name, and `verify` there is the one a branch ruleset requires.
@@ -31,30 +25,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          # Reads `packageManager` from package.json, so the version is
-          # declared once. Named explicitly rather than left to the action's
-          # implicit fallback, which reaches for `engines.bun` (a range) and
-          # then `latest` without failing.
           bun-version-file: package.json
-      # Before install: the lockfile is resolved by whichever Bun is running,
-      # so prove it is the declared one first. --strict also fails if the
-      # action resolved anything other than the pin.
       - run: bun run check:bun -- --strict
       - run: bun install --frozen-lockfile
-      # The same gate set `ci.yml` runs on pull requests, and the same one
-      # AGENTS.md asks an agent to run before committing — one list, in
-      # package.json, so the three cannot drift apart.
       - run: bun run verify
 
-  # The browser gate (ci.yml's `e2e` job, same steps), promoted from
-  # pull-request-only to a deploy precondition: it ran green on every pull
-  # request from the Solid rc.21 baseline move through the 2026-11-14
-  # toolchain series, which is the stability the recorded "let it prove
-  # itself first" choice asked for (AGENTS.md, Browser gate). The deploy
-  # job waits on it, so a red browser gate on main stops the deploy
-  # instead of only failing a pull request — the consequence that argued
-  # for the probation, now accepted deliberately.
-  #
   # Named `e2e-gate`, not `e2e`, for the same reason the job above is
   # `gates`, not `verify`: check runs are identified by job name, and
   # ci.yml's `e2e` is the pull-request one.
@@ -67,8 +42,6 @@ jobs:
           bun-version-file: package.json
       - run: bun run check:bun -- --strict
       - run: bun install --frozen-lockfile
-      # Same cache contract as ci.yml: the lockfile keys the browser
-      # store; the pinned SpacetimeDB release keys the standalone store.
       - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.cache/ms-playwright
@@ -81,14 +54,6 @@ jobs:
       - run: bun x playwright-core install chromium
       - run: bun run test:e2e
 
-  # Production needs three repository secrets (ADR 0010). They are unset by
-  # decision — production is deliberately not live (AGENTS.md
-  # "## Production deployment") — so `deploy` is skipped rather than failed:
-  # main's status then reflects the gates, the run carries a notice (not a
-  # warning: there is nothing to fix) naming what is missing, and continuous
-  # deployment resumes on the next push once the secrets exist, with no
-  # workflow edit. (The secrets context is not available in a job-level `if`,
-  # hence the step that reads them into an output.)
   preflight:
     runs-on: ubuntu-26.04
     outputs:
@@ -108,8 +73,8 @@ jobs:
             echo "configured=true" >> "$GITHUB_OUTPUT"
           else
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::notice title=Deploy skipped (production not live by decision)::Secrets not set: ${missing[*]}. Nothing to fix — see AGENTS.md, '## Production deployment'. Setting them under Settings > Secrets and variables > Actions is what starts deploying."
-            echo "**Deploy skipped** — production is not live by decision; repository secrets unset: \`${missing[*]}\`." >> "$GITHUB_STEP_SUMMARY"
+            echo "::notice title=Deploy skipped (production secrets not set)::Secrets not set: ${missing[*]}. Nothing to fix — see AGENTS.md, '## Production deployment'. Setting them under Settings > Secrets and variables > Actions is what starts deploying."
+            echo "**Deploy skipped** — repository secrets unset: \`${missing[*]}\`." >> "$GITHUB_STEP_SUMMARY"
           fi
 
   deploy:
@@ -123,14 +88,6 @@ jobs:
           bun-version-file: package.json
       - run: bun install --frozen-lockfile
 
-      # convex.config.ts requires AUTH_PRIVATE_KEY/AUTH_JWKS (ADR 0003), so a
-      # fresh production deployment rejects the first push until they exist.
-      # Seeding them here makes the first deploy self-sufficient; afterwards
-      # the step only reads the variable names. The check is ours, not the
-      # auth CLI's: that CLI treats a failed read as "unset" and would rotate
-      # the signing key — signing every anonymous Organizer out of their
-      # tournaments — whereas a failed `env list` fails this step. Names
-      # only, so no value reaches the log.
       - name: Seed the auth signing keys on a fresh deployment
         run: |
           names=$(bun x convex env list --names-only)
@@ -142,22 +99,14 @@ jobs:
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
 
-      # Deploys convex/ to the deployment CONVEX_DEPLOY_KEY belongs to, and
-      # runs the client build with VITE_CONVEX_URL set to that deployment's
-      # URL. The build runs first, so a broken build aborts before any
-      # function reaches production.
       - name: Deploy Convex functions and build the web UI
         run: bun run deploy:backend
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
 
-      # Uploads dist/client to the Worker declared in cloudflare.config.ts. The
-      # checkout has no .env.local, so the build cannot pick up a local
-      # deployment URL as a Worker variable.
       - name: Deploy the web UI
         run: bun run deploy:web
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # Telemetry is off: cf reads CF_SEND_TELEMETRY.
           CF_SEND_TELEMETRY: "false"

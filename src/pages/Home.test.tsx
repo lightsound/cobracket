@@ -1,9 +1,3 @@
-/**
- * The Organizer home page under the diagnostics gate. Only the router hooks
- * and the Convex seam are faked (`src/test-fakes`); the session boundary, the
- * tournament list, the create form and the Discipline field with its
- * suggestions all run for real.
- */
 import { expect, test, vi } from "vite-plus/test";
 import { flush } from "solid-js";
 import { api } from "../lib/operations";
@@ -29,10 +23,8 @@ const { default: Home } = await import("./Home");
 
 localStorage.setItem("cobracket:locale", "en");
 
-/** Let the async memos settle and the DOM catch up. */
 const settled = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-/** A live session with an empty list and suggestions answered. */
 async function ready(): Promise<HTMLElement> {
   const host = mount(() => (
     <AppProviders>
@@ -46,7 +38,6 @@ async function ready(): Promise<HTMLElement> {
   return host;
 }
 
-/** Rebuilt on every call — the way each subscription push delivers it. */
 function tournaments(): TournamentSummary[] {
   return [
     {
@@ -96,7 +87,6 @@ test("invites a first-time visitor to create one, with no list", async () => {
 
   expect(host.textContent).toContain("Create your first tournament below");
   expect(host.querySelector("ul")).toBeNull();
-  // The create form is not behind the session: story 1 is zero sign-up.
   expect(host.querySelector("form")).not.toBeNull();
 });
 
@@ -130,7 +120,6 @@ test("keeps its rows across a subscription re-delivery", async () => {
   await settled();
   const firstRow = host.querySelector("ul li");
 
-  // Same tournaments, all-new objects.
   publishQuery(api.tournaments.listMyTournaments, tournaments());
   await settled();
 
@@ -263,8 +252,6 @@ test("submits an edited discipline, not the one it replaced", async () => {
   type(field(host, "Tournament name"), "Friday Night Bracket");
   type(field(host, "Discipline"), "Chess");
   await settled();
-  // The worse half of the same bug: a committed previous value passes the
-  // server's non-empty check, so this shipped silently wrong data.
   type(field(host, "Discipline"), "Chess960");
   host
     .querySelector("form")
@@ -278,8 +265,6 @@ test("submits an edited discipline, not the one it replaced", async () => {
 test("a suggestion published while the keystroke is in flight is the one that shows", async () => {
   const host = await ready();
 
-  // Typing opens a new subscription; the answer for it lands before the fake
-  // would have seeded the flight from the previous result.
   type(field(host, "Discipline"), "Che");
   publishQuery(api.disciplines.suggestDisciplines, ["Chess", "Checkers"]);
   await settled();
@@ -309,13 +294,6 @@ test("clears the completions while a new prefix is in flight", async () => {
   expect(options()).toEqual(["Chess", "Checkers"]);
 });
 
-/**
- * The same list at a size the gate's scale-dependent codes can reach — see
- * the roster fixture in `Tournament.test.tsx` for why a small one cannot.
- * An Organizer's list is realistically shorter than a roster, but the rows
- * hold a component (`StatusBadge`), which is the other shape worth measuring
- * rather than reasoning about.
- */
 function manyTournaments(): TournamentSummary[] {
   return Array.from({ length: 32 }, (_, index) => ({
     tournamentId: `t${index + 1}`,
@@ -340,7 +318,6 @@ test("a long tournament list costs the list no per-row subscription", async () =
   expect(host.querySelectorAll("ul li")).toHaveLength(32);
   const firstRow = host.querySelector("ul li");
 
-  // A subscription push with all-new objects, at scale.
   publishQuery(api.tournaments.listMyTournaments, manyTournaments());
   await settled();
 

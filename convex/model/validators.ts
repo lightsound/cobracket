@@ -1,8 +1,6 @@
 import type { Infer } from "convex/values";
 import { v } from "convex/values";
 
-// Validators for function args and returns; storage shapes live in schema.ts.
-
 export const statusValidator = v.union(
   v.literal("draft"),
   v.literal("published"),
@@ -64,13 +62,9 @@ const derivedMatchValidator = v.object({
   occupants: v.array(occupantValidator),
   winnerId: v.optional(v.id("participants")),
   loserId: v.optional(v.id("participants")),
-  // The effective (latest, still-valid) recorded result for this match:
-  // outcome plus optional score per side. Absent for matches resolved
-  // structurally (byes) or not yet decided.
   sides: v.optional(v.array(resultSideValidator)),
 });
 
-// Organizer matches carry the document id — the handle reportResult takes.
 const organizerMatchValidator = derivedMatchValidator.extend({ matchId: v.id("matches") });
 
 const progressionFields = {
@@ -116,8 +110,6 @@ const tournamentViewFields = {
 // function accepts one.
 export const tournamentViewValidator = v.object({
   ...tournamentViewFields,
-  // Null until the bracket has been generated (and after a roster change
-  // invalidates a draft/published bracket).
   bracket: v.union(progressionValidator, v.null()),
 });
 

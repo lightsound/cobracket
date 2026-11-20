@@ -67,30 +67,15 @@ import { type ScopeWidth, watchScopeWidths } from "./scope-widths";
  */
 let endScenario: (() => void) | undefined;
 let capture: Promise<CaptureResult<void>> | undefined;
-/** Stops the open test's scope-width recording and reports it. */
 let stopWidths: (() => ScopeWidth[]) | undefined;
 let owner: string | undefined;
-/** Dispose functions for the roots this test mounted, newest last. */
 const roots: (() => void)[] = [];
-/** Codes this test must produce, which are therefore not failures. */
 let required: DiagnosticCode[] = [];
-/** Codes this test may produce, without having to. */
 let tolerated: DiagnosticCode[] = [];
 let requiredSilentHold = false;
 let requiredWideScope = false;
 
-/**
- * Declare that the current test's subject *is* a diagnostic: each code must be
- * reported, and reporting it is not a failure. Required, not merely tolerated —
- * a test that stops provoking the code it was written to provoke fails, so this
- * cannot decay into a silent mute.
- *
- * Only for the gate's own proofs, which render deliberately broken components.
- * Never reach for it to quiet a finding about real code: every code maps to a
- * repair in `node_modules/solid-js/skills/reactivity-diagnostics/SKILL.md`.
- *
- * @public
- */
+/** @public */
 export function expectDiagnostics(...codes: DiagnosticCode[]): void {
   required.push(...codes);
 }
@@ -112,13 +97,7 @@ export function expectSilentHold(): void {
   tolerated.push("SILENT_HOLD", "LONG_HOLD");
 }
 
-/**
- * The same declaration for a scope tracking `WIDE_SCOPE_SOURCES` sources or
- * more, which no diagnostic code reports since rc.14. Requires the current
- * test to leave one.
- *
- * @public
- */
+/** @public */
 export function expectWideScope(): void {
   requiredWideScope = true;
 }
@@ -151,12 +130,6 @@ export function mount(component: () => Element): HTMLElement {
   return host;
 }
 
-/**
- * The gate's own overlap report. A teardown that finds a missing or foreign
- * capture has nothing it may assert on, and saying so is the only safe move:
- * inheriting another test's findings blames the wrong test, and skipping the
- * assertions lets this one through ungated.
- */
 function ungatedError(name: string, pending: unknown, openedBy: string | undefined): Error {
   const why = pending === undefined ? "missing" : `owned by ${openedBy ?? "?"}`;
   return new Error(
@@ -166,11 +139,6 @@ function ungatedError(name: string, pending: unknown, openedBy: string | undefin
 }
 
 beforeEach((context) => {
-  // Both channels are process-global singletons, so two captures cannot be
-  // told apart: with `test.concurrent` a diagnostic raised by one test lands
-  // in whichever artifact happens to be open, failing the wrong test while
-  // the culprit passes (measured, not assumed). Refuse the overlap rather
-  // than misattribute it.
   if (capture !== undefined) {
     throw new Error(
       `The Solid diagnostics gate cannot separate overlapping tests (${owner ?? "?"} is ` +
@@ -191,53 +159,13 @@ beforeEach((context) => {
       }),
     {
       scenario: context.task.name,
-      // Every engine threshold is left at its default except the two
-      // wall-clock ones, which are off, because neither can mean anything
-      // here: `[HOT_SCOPE_TIME]` measures a DOM that is emulated, and
-      // `[FALLBACK_FLASH]` measures a backend that is faked.
-      //
-      // `[HOT_SCOPE_TIME]`'s 8ms default is "half a frame spent in one
-      // scope" — a real browser's frame. Here the DOM is emulated in JS, so
-      // constructing a page costs an order of magnitude more: the Tournament
-      // page's first render spends 11-13ms in the memo that instantiates it,
-      // idle. That alone only argued for a larger number, and this did run
-      // at 40ms for a while. What settles it is that the measurement is
-      // wall-clock while five vitest projects transform and run
-      // concurrently: on a cold 4-core runner the same page render was
-      // measured at 91.9ms and a list test at 48.3ms, green on the six runs
-      // after. A budget that reports the runner is a gate that cries wolf,
-      // and the failure names an innocent page.
-      //
-      // `[FALLBACK_FLASH]` (engine 2.0.0-rc.10 on) is the same problem from
-      // the other side: it reports a `<Loading>` fallback shown for under
-      // 150ms, a spinner that read as a flicker — and here the data behind
-      // every boundary is `src/test-fakes.ts`, whose first read is a promise
-      // that settles the moment the test delivers it. Measured on the page
-      // tests the day it arrived: 89 findings across 34 tests, every one
-      // between 1ms and 25ms, on code that had not changed. The shell's
-      // boundary, the page's, and a list's each showed for the microtask it
-      // took the fake to answer. Whether a real fallback flashes is a
-      // property of the backend's latency, which no fixture here has, so the
-      // finding is read where it means something — a browser against a real
-      // deployment — and not asked of a stand-in.
-      //
-      // So time budgets are measured where they mean something — the
-      // dev-server artifact loop in AGENTS.md, against a real browser — and
-      // every assertion this gate makes is count-based or structural.
-      // The other duration-gated codes stay on: an unacknowledged hold and a
-      // sequential-flight waterfall are shapes the app either has or does
-      // not, and neither a slow runner nor an instant fixture invents one.
       attribution: { hotTime: false, fallbackFlashes: false },
     },
   );
-  // `captureArtifact` enables the engine synchronously, before its scenario
-  // runs, so the recording covers the whole test body.
   stopWidths = watchScopeWidths();
 });
 
 afterEach(async (context) => {
-  // Before the scenario closes, so teardown work is attributed to the test
-  // that caused it — and so nothing this test mounted can reach the next one.
   for (const dispose of roots.splice(0).reverse()) dispose();
   flush();
 
@@ -259,7 +187,6 @@ afterEach(async (context) => {
   // before this line, on any path.
   const settled = pending === undefined ? undefined : await pending;
 
-  // Never assert on a capture this test did not open.
   if (settled === undefined || openedBy !== context.task.id) {
     throw ungatedError(context.task.name, pending, openedBy);
   }

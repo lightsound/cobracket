@@ -75,8 +75,6 @@ function run(command: string, args: string[], cwd?: string): string {
   return result.stdout;
 }
 
-// --- binaries ---------------------------------------------------------------
-
 function ensureBinaries(): string {
   const override = process.env.SPACETIME_BIN_DIR;
   if (override) {
@@ -89,7 +87,6 @@ function ensureBinaries(): string {
   return downloadBinaries(binDir);
 }
 
-/** Fail closed unless the downloaded tarball matches the pinned hash. */
 function verifyTarball(tarball: string): void {
   const actual = createHash("sha256").update(readFileSync(tarball)).digest("hex");
   if (actual !== SERVER_TARBALL_SHA256) {
@@ -112,16 +109,12 @@ function downloadBinaries(binDir: string): string {
   run("curl", ["-fSL", "-o", tarball, url]);
   verifyTarball(tarball);
   run("tar", ["xzf", tarball, "-C", binDir, "--no-same-owner"]);
-  // The tarball ships the CLI as `spacetimedb-cli`; `spacetime` is the
-  // name the install script gives it.
   const cli = join(binDir, "spacetime");
   if (!existsSync(cli) && existsSync(join(binDir, "spacetimedb-cli"))) {
     cpSync(join(binDir, "spacetimedb-cli"), cli);
   }
   return binDir;
 }
-
-// --- module assembly --------------------------------------------------------
 
 function assembleModule(): string {
   const dir = join(BUILD_DIR, "module");
@@ -134,9 +127,6 @@ function assembleModule(): string {
   // library imports it from src/lib as ../../format, so the assembled
   // layout must keep it beside src/, exactly as in the repo.
   cpSync(join(MODULE_DIR, "format"), join(dir, "format"), { recursive: true });
-  // The fixture seed joins the module only here: copied in with its
-  // one import rewritten to the assembled layout, and the entry gains
-  // its re-export.
   const seed = readFileSync(join(SPIKE_DIR, "fixture", "seed.ts"), "utf8");
   const marker = 'from "../../src/schema"';
   if (!seed.includes(marker)) {
@@ -149,11 +139,6 @@ function assembleModule(): string {
       'import { spacetimedb } from "./schema";',
       "",
       "export default spacetimedb;",
-      // Every registration file, as the real entry exports them — so
-      // publishing the assembled module also proves the host accepts
-      // each registration (M2 added the reducers and the scanning
-      // suggestion view to M1's read surfaces) — plus the fixture
-      // seed, which only exists in this assembly.
       'export * from "./auth";',
       'export * from "./bracket";',
       'export * from "./disciplines";',
@@ -166,8 +151,6 @@ function assembleModule(): string {
   );
   return dir;
 }
-
-// --- server lifecycle -------------------------------------------------------
 
 function jwtKeyPaths(): { pub: string; priv: string } {
   const cliKeys = join(homedir(), ".config", "spacetime");
@@ -186,8 +169,6 @@ function jwtKeyPaths(): { pub: string; priv: string } {
   const keyDir = join(BUILD_DIR, "keys");
   mkdirSync(keyDir, { recursive: true });
   const generated = join(keyDir, "id_ecdsa");
-  // A cached key in the rejected SEC1 form (minted before the form
-  // was pinned) is regenerated, not reused.
   if (
     existsSync(generated) &&
     !readFileSync(generated, "utf8").startsWith("-----BEGIN PRIVATE KEY-----")
@@ -264,8 +245,6 @@ async function startServer(standalone: string): Promise<ReturnType<typeof spawn>
   try {
     await waitForPort(PORT, 30_000);
   } catch (error) {
-    // The child is detached: if startup fails it must not be left
-    // running behind the spike's back.
     await stopServer(server);
     throw error;
   }
@@ -282,8 +261,6 @@ async function stopServer(server: ReturnType<typeof spawn>): Promise<void> {
   } catch {
     server.kill("SIGTERM");
   }
-  // Escalate if the group ignores SIGTERM: a leaked standalone
-  // would hold the port and poison the next run.
   await sleep(500);
   try {
     process.kill(-pid, 0);
@@ -308,8 +285,6 @@ function publishAndGenerate(spacetime: string, moduleDir: string): string {
   ]);
   return bindingsDir;
 }
-
-// --- the probe ----------------------------------------------------------------
 
 // The generated bindings are runtime values assembled by this
 // script; their surface used here is declared structurally.
@@ -401,9 +376,6 @@ function subscribe(conn: SpikeConnection, queries: string[]): Promise<void> {
   });
 }
 
-// Client bindings PascalCase every sum variant; module-side code uses
-// the declared keys. The mapping the M3 adapter will own, spelled out
-// here because composition needs engine-shaped values.
 const SECTION_BY_TAG: Record<string, BracketStructure["matches"][number]["bracket"]> = {
   Winners: "winners",
   Losers: "losers",
@@ -435,9 +407,6 @@ function sideToEngine(side: AnyRow): RecordedResult["sides"][number] {
   };
 }
 
-// Composes the shared tournament from the connection's cached view
-// rows + the relocated engine — the client-side assembly ADR 0031
-// prescribes for the flat view surfaces.
 function composeShared(conn: SpikeConnection) {
   const header = [...conn.db.sharedTournament.iter()][0];
   const matches = [...conn.db.sharedMatches.iter()];
@@ -475,8 +444,6 @@ async function probe(DbConnection: AnyRow): Promise<void> {
   await checkLiveUpdates(conn, viewEvents);
 }
 
-// (1) A private base table is truly unsubscribable: the server
-// rejects the subscription rather than serving an empty set.
 async function checkPrivateTable(conn: SpikeConnection): Promise<void> {
   const events = await new Promise<string[]>((resolve) => {
     const seen: string[] = [];
@@ -497,9 +464,6 @@ async function checkPrivateTable(conn: SpikeConnection): Promise<void> {
   );
 }
 
-// (2) The shared slug surface: the published tournament resolves,
-// the draft slug and an unknown slug resolve to nothing; the rows
-// carry the shared audience's fields only.
 async function checkSharedSurface(conn: SpikeConnection): Promise<string[]> {
   const viewEvents: string[] = [];
   conn.db.sharedTournament.onInsert((_ctx: AnyRow, row: AnyRow) =>
@@ -550,11 +514,6 @@ async function checkSharedSurface(conn: SpikeConnection): Promise<string[]> {
   return viewEvents;
 }
 
-// (3) Sender gating at the wire: the organizer's list holds their
-// tournaments (the draft and the private one included); a second
-// organizer — bound via spikeBind, so the ownership check itself is
-// what answers — sees none of them on any Organizer view, while the
-// shared surface stays readable.
 async function checkSenderGating(conn: SpikeConnection, DbConnection: AnyRow): Promise<void> {
   await subscribe(conn, ["SELECT * FROM my_tournaments"]);
   await sleep(200);
@@ -590,9 +549,6 @@ async function checkSenderGating(conn: SpikeConnection, DbConnection: AnyRow): P
   );
 }
 
-// (4) Composition over the shared surface: matches + results +
-// engine yields the bracket — W1M1 decided for Ada, the final
-// pending on W1M2.
 function checkComposition(conn: SpikeConnection): void {
   const before = composeShared(conn);
   const firstMatch = before.matches.find((match) => match.key === "W1M1");

@@ -40,7 +40,6 @@ const FIXTURE = [
   ``,
 ].join("\n");
 
-// A component of the repo's own, imported by relative path like every other.
 const COMPONENT = [
   `export const Box = (props: { class?: string }) => <div class={props.class} />;`,
   ``,
@@ -59,7 +58,6 @@ beforeAll(async () => {
     [
       `import config from ${JSON.stringify(join(REPO, "vite.config.ts"))};`,
       `const { lint } = config({ mode: "production", command: "build" });`,
-      // Type-aware checks need the repo's tsconfig; this test is about classes.
       `export default { lint: { ...lint, options: { typeAware: false, typeCheck: false } } };`,
       ``,
     ].join("\n"),
@@ -86,8 +84,6 @@ test(
         encoding: "utf8",
       },
     );
-    // A linter that failed to start (or to load the plugin) prints nothing to
-    // stdout; show its stderr rather than a JSON parse error.
     expect(result.stdout, result.stderr).not.toBe("");
     const { diagnostics } = JSON.parse(result.stdout) as {
       diagnostics: { code: string; labels: { span: { line: number } }[] }[];
@@ -99,15 +95,13 @@ test(
 
     expect(found).toEqual(
       [
-        "2 shadcn(no-raw-colors)", // constant, reported where it is declared
-        "5 shadcn(no-unknown-classes)", // string
-        "6 shadcn(no-raw-colors)", // object in array
-        "7 shadcn(no-raw-colors)", // `&&` in array
-        "8 shadcn(no-arbitrary-values)", // template literal
-        "10 shadcn(no-inline-styles)", // style property
-        // 11 and 12 are clean: a custom property, and plain tokens.
-        "13 shadcn(no-restyle)", // a color on an imported component
-        // 14 is clean: placing a component (margin, width) is layout.
+        "2 shadcn(no-raw-colors)",
+        "5 shadcn(no-unknown-classes)",
+        "6 shadcn(no-raw-colors)",
+        "7 shadcn(no-raw-colors)",
+        "8 shadcn(no-arbitrary-values)",
+        "10 shadcn(no-inline-styles)",
+        "13 shadcn(no-restyle)",
       ].sort(),
     );
   },

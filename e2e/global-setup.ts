@@ -1,85 +1,8 @@
 // fallow-ignore-file code-duplication -- the standalone driver mechanics are shared with the connection suite (spacetimedb/connection/global-setup.ts) and the live suite (src/lib/spacetimedb.live.test.tsx) by deliberate mirror: each driver stays self-contained rather than coupling CI-gated suites to one another; the connection suite's driver carries the same suppression for the same reason
 /**
- * What the browser gate drives, brought up once per run: a local
- * SpacetimeDB standalone with the real module published to it, and the
- * app's dev server in `--mode e2e` with the SpacetimeDB backend selected
- * (`VITE_BACKEND=spacetimedb`).
- *
- * Nothing here is faked. The gate exists because the happy-dom one, which
- * replaces the data seam (`src/test-fakes.ts`), let a real-browser finding
- * through — so this one keeps the seam real: the page connects tokenless,
- * subscribes over the websocket and runs the same reducers an Organizer
- * does. Auth, subscriptions and the bracket are all under the capture.
- * Since migration slice M4 the backend under the gate is SpacetimeDB;
- * production still serves Convex until the M5 cutover, so for that window
- * the gate proves the backend that is not yet serving — the coverage
- * inversion the migration plan records as known and accepted.
- *
- * Three ways in, in order of preference:
- *
- * 1. `E2E_BASE_URL` set — the caller runs the app (their own backend and
- *    a `bun dev --mode e2e`); nothing is started or stopped here.
- * 2. `.env.local` selects the SpacetimeDB backend and names a *local*
- *    host that answers — the long-running `spacetime start` from
- *    AGENTS.md's workflow — so no server is started here. The server
- *    process is reused; its published state is not: a long-running
- *    standalone republishes nothing itself, so the current module is
- *    published to that host and database first, and only the dev server
- *    starts, pointed at exactly that host and database.
- * 3. Neither (CI, a fresh container, a developer whose `.env.local` names
- *    the Convex backend) — a standalone starts too, on this gate's own
- *    port, the module is published to a database that exists only for
- *    this gate, and the dev server starts against it. There is no keys
- *    dance and no restart: the standalone is handed an ES256 key pair to
- *    sign connection tokens with (below), and that is the whole of it —
- *    the anonymous-Convex boot's `auth:keys` restart has no counterpart.
- *
- * The gate never publishes to a target it did not choose, and mode 3's
- * target is local by construction before it is local by assertion: the
- * host string is built in this file from a loopback literal and the
- * gate's own port, the port is asserted free before the server starts (a
- * foreign server already listening would silently take the publish), the
- * database name is a constant of this file, and the publish passes
- * `--server` explicitly, so no CLI default (a developer's configured
- * default server, a stray environment variable) can redirect it to
- * Maincloud. What the app is pointed at is asserted local before it
- * starts. The dev server receives its backend configuration in its
- * environment, which Vite ranks above any `.env` file, so in mode 3 a
- * `.env.local` pointing elsewhere reaches neither the publish nor the
- * app. Nothing here writes `.env.local`: the old boot snapshotted and
- * restored it because the anonymous Convex CLI saved its deployment
- * there whatever it was told to read; no counterpart exists now, and
- * that side effect is gone with the CLI.
- *
- * The standalone driver mirrors the connection suite's
- * (`spacetimedb/connection/global-setup.ts`) and the live suite's
- * (`src/lib/spacetimedb.live.test.tsx`) deliberately — each driver stays
- * self-contained rather than coupling CI-gated suites to one another.
- * Binaries come from `SPACETIME_BIN_DIR`, the connection suite's cached
- * store, or the pinned release tarball downloaded into this gate's own
- * build directory; both binaries' versions are asserted (2.15.0) before
- * it is trusted with the publish; the module is assembled as
- * package.json + tsconfig.json + src/ + format/ in the repo's own
- * layout — the real entry, nothing rewritten; the data directory is
- * fresh per run, so the gate's database starts empty. After every
- * publish the module secret is seeded (ADR 0032) with a fresh
- * host-CSPRNG key, before the app starts (see seedModule below).
- *
- * The signing keys: a fresh standalone data directory needs explicit key
- * paths (its generated config leaves the CA paths commented out), so the
- * CLI's own pair under `~/.config/spacetime` serves when it exists, and
- * otherwise an equivalent ES256 pair is minted under the build
- * directory. The private key must be PKCS#8 — the form the CLI itself
- * writes; a SEC1 EC key (openssl ecparam's output) is rejected with
- * InvalidKeyFormat (measured by the connection suite on a fresh-HOME
- * run, the case CI always hits), so keys are minted with
- * `openssl genpkey`, and a cached key in the rejected form is
- * regenerated rather than reused.
- *
- * Children run in their own process group and the group is what gets
- * killed: the dev server spawns children of its own, and killing a
- * leader alone leaves a server on its port for the next run to trip
- * over.
+ * The browser gate's global setup: boots the standalone, the module and
+ * the dev server the scenario drives. Boot model, safety invariants and
+ * mechanics: docs/diagnostics-gates.md (Global-setup boot model).
  */
 import { type ChildProcess, spawn, spawnSync } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
@@ -114,7 +37,7 @@ const DATA_DIR = join(BUILD_DIR, "server-data");
 /** This gate's own port (the connection suite's is 3123, the live suite's 3124). */
 const PORT = Number(process.env.E2E_SPACETIME_PORT ?? 3125);
 const HOST = `http://127.0.0.1:${PORT}`;
-/** A database that exists only for this gate; never an environment input. */
+/** Gate-only database, never an environment input — docs/diagnostics-gates.md, Global-setup boot model. */
 const DB_NAME = "cobracket-e2e";
 const SERVER_VERSION = "2.15.0";
 /**
@@ -128,11 +51,9 @@ const SERVER_TARBALL_SHA256 = "30ee1d0ad345eb479bc269423f1c0f2f21fc564cd634fcb11
 interface Child {
   label: string;
   process: ChildProcess;
-  /** The last lines of output, for the failure message. */
   tail: string[];
 }
 
-/** Colour codes chalk emits when `FORCE_COLOR` is set even on a pipe. */
 const ANSI_CODE = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g");
 function stripAnsi(line: string): string {
   return line.replace(ANSI_CODE, "");
@@ -175,7 +96,6 @@ function alive(child: ChildProcess): child is ChildProcess & { pid: number } {
   return child.pid !== undefined && child.exitCode === null && child.signalCode === null;
 }
 
-/** Whether any process of the group led by `pid` still exists (signal 0 probes). */
 function groupAlive(pid: number): boolean {
   try {
     process.kill(-pid, 0);
@@ -193,7 +113,6 @@ function signalGroup(pid: number, signal: NodeJS.Signals): void {
   }
 }
 
-/** Poll `done` until it holds or `timeoutMs` passes; true when it held. */
 async function settles(done: () => boolean, timeoutMs: number): Promise<boolean> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
@@ -203,15 +122,6 @@ async function settles(done: () => boolean, timeoutMs: number): Promise<boolean>
   return done();
 }
 
-/**
- * Take a child's whole process group down, and wait until it is gone —
- * every member, not just the leader. The dev server is a `bun run`
- * leader with servers below it; the leader exits on SIGTERM at once, and
- * a teardown that only waited for it left a backend behind on its port
- * (measured once, on the old boot, on a run that otherwise passed). So
- * the wait is on the group, and a group that outlives the grace period
- * is killed outright.
- */
 async function stop(child: Child): Promise<void> {
   const { pid } = child.process;
   if (pid === undefined || !groupAlive(pid)) return;
@@ -221,7 +131,6 @@ async function stop(child: Child): Promise<void> {
   await settles(() => !groupAlive(pid), 5000);
 }
 
-/** Whether anything at all answers HTTP at `url` (a listener, not a health check). */
 async function listening(url: string): Promise<boolean> {
   try {
     await fetch(url, { signal: AbortSignal.timeout(2000) });
@@ -253,7 +162,6 @@ async function waitForPort(port: number, timeoutMs: number): Promise<void> {
   }
 }
 
-/** `.env.local` as it is, or nothing when there is no such file. */
 function readEnvLocal(): string | undefined {
   try {
     return readFileSync(ENV_LOCAL, "utf8");
@@ -262,7 +170,6 @@ function readEnvLocal(): string | undefined {
   }
 }
 
-/** One `NAME=value` entry from `.env.local`, if the file exists and names one. */
 function envLocalValue(name: string): string | undefined {
   const env = readEnvLocal();
   if (env === undefined) return undefined;
@@ -270,12 +177,6 @@ function envLocalValue(name: string): string | undefined {
   return pattern.exec(env)?.[1]?.trim();
 }
 
-/**
- * Reuse only a local backend: a `.env.local` can name a cloud host, and
- * the gate writes real tournaments through whatever it reaches. An
- * unparseable value is not a local URL — mode 2 falls through to mode 3
- * rather than dying on the parse.
- */
 function isLocal(url: string): boolean {
   try {
     const { hostname } = new URL(url);
@@ -285,7 +186,6 @@ function isLocal(url: string): boolean {
   }
 }
 
-/** Run a command to completion, or throw with its output. */
 function run(command: string, args: string[], cwd?: string): string {
   const result = spawnSync(command, args, { cwd, encoding: "utf8" });
   if (result.status !== 0) {
@@ -295,8 +195,6 @@ function run(command: string, args: string[], cwd?: string): string {
   }
   return result.stdout;
 }
-
-// --- the standalone driver (mirrors the connection suite's) ---------------
 
 function ensureBinaries(): string {
   const override = process.env.SPACETIME_BIN_DIR;
@@ -308,7 +206,6 @@ function ensureBinaries(): string {
   return downloadBinaries(binDir);
 }
 
-/** Fail closed unless the downloaded tarball matches the pinned hash. */
 function verifyTarball(tarball: string): void {
   const actual = createHash("sha256").update(readFileSync(tarball)).digest("hex");
   if (actual !== SERVER_TARBALL_SHA256) {
@@ -343,11 +240,6 @@ function renameCliBinary(binDir: string): void {
   }
 }
 
-// The gate asserts wire behavior of one exact server release; a stale
-// or foreign binary in the bin dir must fail loudly rather than prove
-// things about the wrong server. Both binaries are asserted — the
-// standalone serves and the CLI publishes, and a mismatched pair is a
-// wrong proof either way.
 function assertBinaryVersions(binDir: string): void {
   for (const binary of ["spacetimedb-standalone", "spacetime"]) {
     const out = run(join(binDir, binary), ["--version"]);
@@ -375,7 +267,6 @@ function jwtKeyPaths(): { pub: string; priv: string } {
   return cliKeyPaths() ?? generatedKeyPaths();
 }
 
-/** The CLI's own pair, when it exists. */
 function cliKeyPaths(): { pub: string; priv: string } | undefined {
   const cliKeys = join(homedir(), ".config", "spacetime");
   const pub = join(cliKeys, "id_ecdsa.pub");
@@ -389,14 +280,12 @@ function generatedKeyPaths(): { pub: string; priv: string } {
   const generated = join(keyDir, "id_ecdsa");
   dropRejectedKey(generated);
   if (!existsSync(generated)) mintKeyPair(generated);
-  // The public half is re-derived either way, so a `.pub` that went
-  // missing — or was left by another key — cannot reach the server as
-  // half of a mismatched pair.
+  // The public half is re-derived either way: docs/diagnostics-gates.md, Global-setup boot model.
   else derivePublicKey(generated);
   return { pub: `${generated}.pub`, priv: generated };
 }
 
-/** A cached key in the rejected SEC1 form is regenerated, not reused (see the file comment). */
+/** A cached key in the rejected SEC1 form is regenerated, not reused — docs/diagnostics-gates.md, Global-setup boot model. */
 function dropRejectedKey(generated: string): void {
   if (
     existsSync(generated) &&
@@ -424,26 +313,10 @@ function derivePublicKey(generated: string): void {
   run("openssl", ["pkey", "-in", generated, "-pubout", "-out", `${generated}.pub`]);
 }
 
-/**
- * Publish the assembled module to `db` on `host`. `--server` is named
- * explicitly: the target never comes from the CLI's configured default,
- * which a developer may have set to a named deployment — Maincloud
- * above all. Callers pass only targets they have asserted local.
- */
 function publishModule(binDir: string, host: string, db: string): void {
   run(join(binDir, "spacetime"), ["publish", "--server", host, "--module-path", MODULE_DIR, db]);
 }
 
-/**
- * Seed the module secret (ADR 0032) on a database this gate just
- * published to, with a fresh host-CSPRNG key — tournament creation
- * mints share slugs from the secret, so an unseeded database would
- * refuse the scenario's first write. Mode 3's database is fresh, so
- * the seed always lands there. Mode 2 republishes to a developer's
- * long-running standalone, whose database the local flow may already
- * have seeded: that one refusal ("already seeded") is the state the
- * gate needs anyway, so it is accepted; any other failure is real.
- */
 function seedModule(binDir: string, host: string, db: string): void {
   const key = randomBytes(32).toString("hex");
   const result = spawnSync(
@@ -458,8 +331,6 @@ ${result.stderr}`;
   throw new Error(`seeding the module secret on ${db} failed (${result.status}):
 ${output}`);
 }
-
-// --- the browser ------------------------------------------------------------
 
 /**
  * Whether the headless Chromium the pinned playwright-core wants is where it
@@ -478,23 +349,7 @@ async function chromiumLaunches(): Promise<boolean> {
   }
 }
 
-/**
- * Make sure the browser the gate drives exists, like the standalone
- * binary the gate downloads on first use: `playwright-core` is pinned
- * exactly and downloads nothing on install, so the build it wants is a
- * download the gate owns. With `PLAYWRIGHT_BROWSERS_PATH` unset the
- * headless shell goes where playwright puts browsers on this platform,
- * the same place a `playwright-core install` by hand would. A store the
- * variable points at that carries a different build — the hosted agent
- * images preinstall one and set the variable to it — is left alone: the
- * shell goes to `BROWSER_CACHE` and the workers are pointed there, which
- * is why this runs before the servers start, in the process the workers
- * inherit their environment from. The preinstalled build is not a
- * substitute (measured: Chromium 141 through `executablePath` on this
- * scenario tripped `[HOT_SCOPE_TIME]` twice at 8.1ms and 8.3ms, where the
- * pinned headless shell passes). The headless shell is all a headless
- * launch needs; CI's `install chromium` carries it too.
- */
+/** Browser-shell install and fallback store: AGENTS.md (Browser gate); the preinstalled-build measurement: docs/diagnostics-gates.md, Evidence log. */
 async function ensureChromium(): Promise<void> {
   if (await chromiumLaunches()) return;
   const store = process.env.PLAYWRIGHT_BROWSERS_PATH === undefined ? undefined : BROWSER_CACHE;
@@ -502,7 +357,6 @@ async function ensureChromium(): Promise<void> {
   if (store !== undefined) process.env.PLAYWRIGHT_BROWSERS_PATH = store;
 }
 
-/** `playwright-core install` of the headless shell, into `store` or playwright's own default. */
 function installHeadlessShell(store: string | undefined): void {
   const install = spawnSync("bun", ["x", "playwright-core", "install", "chromium-headless-shell"], {
     cwd: ROOT,
@@ -516,16 +370,12 @@ function installHeadlessShell(store: string | undefined): void {
   }
 }
 
-// --- the backend --------------------------------------------------------------
-
-/** What the gate runs against, and how to take down what it started. */
 interface Backend {
   host: string;
   db: string;
   teardown: () => Promise<void>;
 }
 
-/** The backend `.env.local` selects, when it selects SpacetimeDB in full. */
 function envLocalBackend(): { host: string; db: string } | undefined {
   if (envLocalValue("VITE_BACKEND") !== "spacetimedb") return undefined;
   const host = envLocalValue("VITE_SPACETIMEDB_HOST");
@@ -534,15 +384,7 @@ function envLocalBackend(): { host: string; db: string } | undefined {
   return { host, db };
 }
 
-/**
- * The local standalone `.env.local` selects, if one is up — the
- * long-running `spacetime start` from AGENTS.md's workflow. All three
- * configuration values must be there and the host must be local and
- * answering; anything less is mode 3's business, not a half-reuse. The
- * current module is then published to it (see the file comment): the
- * gate proves the current module, not whatever an earlier publish left
- * in the database.
- */
+/** Mode-2 reuse conditions and republishing the current module: docs/diagnostics-gates.md, Global-setup boot model. */
 async function runningSpacetime(): Promise<Backend | undefined> {
   const selected = envLocalBackend();
   if (selected === undefined || !isLocal(selected.host)) return undefined;
@@ -555,20 +397,13 @@ async function runningSpacetime(): Promise<Backend | undefined> {
   return { ...selected, teardown: async () => {} };
 }
 
-/** An unusable `E2E_SPACETIME_PORT` fails here, by name, not as a 60-second wait downstream. */
 function assertUsablePort(): void {
   if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
     throw new Error(`E2E_SPACETIME_PORT is not a usable port: ${process.env.E2E_SPACETIME_PORT}`);
   }
 }
 
-/**
- * Start the gate's own standalone and publish the real module to the
- * gate's own database. The local-target assertion, in the connection
- * suite's form: a loopback host built in this file, the gate's own
- * port, free before the child starts — a foreign server already
- * listening there would silently take the publish and the proof.
- */
+/** Local-target assertion (loopback host, own port asserted free, explicit --server): docs/diagnostics-gates.md, Global-setup boot model. */
 async function startSpacetime(): Promise<Backend> {
   assertUsablePort();
   const binDir = ensureBinaries();
@@ -620,7 +455,6 @@ async function startSpacetime(): Promise<Backend> {
   };
 }
 
-/** Make sure a local backend is up with the module published, and say where it is. */
 async function ensureBackend(): Promise<Backend> {
   const running = await runningSpacetime();
   if (running !== undefined) return running;
@@ -639,10 +473,6 @@ function freePort(): Promise<number> {
   });
 }
 
-/**
- * Poll until `url` serves a page. The dev server answers HTML only to a
- * browser-shaped Accept header (AGENTS.md); a plain fetch gets a 404.
- */
 async function servesHtml(url: string): Promise<boolean> {
   try {
     const response = await fetch(url, {
@@ -659,8 +489,6 @@ async function startVite(port: number, backend: Backend): Promise<Child> {
   const vite = start(
     "vp dev",
     ["bun", "x", "vp", "dev", "--mode", "e2e", "--port", String(port), "--strictPort"],
-    // Vite ranks an existing environment variable above every `.env`
-    // file, so this is what the app talks to whatever `.env.local` says.
     {
       ...process.env,
       VITE_BACKEND: "spacetimedb",
@@ -678,12 +506,10 @@ async function startVite(port: number, backend: Backend): Promise<Child> {
   throw new Error(`vp dev did not serve ${url}\n--- last output ---\n${vite.tail.join("\n")}`);
 }
 
-/** Start both servers, or throw with everything already stopped. */
 async function startServers(): Promise<{ baseUrl: string; teardown: () => Promise<void> }> {
   const backend = await ensureBackend();
   try {
-    // Both paths above produce a local URL; this is the one place that
-    // says so before anything writes through it.
+    // Local-target assertion before any write: docs/diagnostics-gates.md, Global-setup boot model (Safety invariants).
     if (!isLocal(backend.host)) {
       throw new Error(`The browser gate only runs against a local backend, not ${backend.host}`);
     }

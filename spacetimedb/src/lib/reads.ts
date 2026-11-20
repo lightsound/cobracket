@@ -34,10 +34,6 @@ export function sharedTournamentBySlug(db: Db, slug: string) {
   return { tournament, disciplineName: discipline.name };
 }
 
-// The Organizer gate: the tournament with this id, only when the
-// sender's bound app_user owns it. Unbound identities and other
-// organizers resolve to undefined — routes addressed by id are not
-// capabilities (ADR 0019).
 export function ownedTournament(db: Db, sender: Identity, tournamentId: bigint) {
   const userId = organizerIdFor(db, sender);
   if (userId === undefined) {

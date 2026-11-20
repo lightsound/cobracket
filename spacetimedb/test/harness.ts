@@ -35,18 +35,12 @@ export type Ctx = ReducerCtx<InferSchema<typeof schema>>;
 
 const ISSUER = "https://auth.cobracket.test";
 
-/** A harness on a fresh datastore, its clock pinned at `millis`. */
 export function makeHarness(millis = 100_000): Harness {
   return createModuleTestHarness(schema, moduleExports, {
     clock: new TestClock(at(millis)),
   });
 }
 
-/**
- * An authenticated test auth for the subject `sub`. The harness
- * derives the sender Identity from iss+sub, so one sub is one stable
- * identity across harnesses.
- */
 export function authFor(sub: string): TestAuth {
   return TestAuth.fromJwtPayload(
     JSON.stringify({ iss: ISSUER, sub, exp: 9_999_999_999 }),
@@ -54,38 +48,27 @@ export function authFor(sub: string): TestAuth {
   );
 }
 
-/** The sender identity `sub` maps to in this harness. */
 export function identityFor(harness: Harness, sub: string): Identity {
   return harness.withReducerTx(authFor(sub), (ctx) => ctx.sender);
 }
 
-/** Runs `body` as `sub` in one reducer transaction and returns its result. */
 export function as<T>(harness: Harness, sub: string, body: (ctx: Ctx) => T): T {
   return harness.withReducerTx(authFor(sub), body);
 }
 
-/** The fixed test key for the module secret: bytes 0x00 through 0x1f, hex. */
 export const TEST_SECRET_HEX = "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f";
 
-/**
- * Seed a fresh harness's module secret (ADR 0032) with `keyHex` — the
- * provisioning act every tournament-creating test needs first, since
- * createTournament mints its share slug from the secret. Runs as the
- * module itself: seeding binds no identity, so the harness stays
- * unbound afterwards.
- */
+/** Seeding requirement: docs/adr/0032-module-secret-in-a-private-table.md. */
 export function seedTestSecret(harness: Harness, keyHex: string = TEST_SECRET_HEX): void {
   asModule(harness, (ctx) => {
     moduleExports.seedModuleSecret(ctx, { keyHex });
   });
 }
 
-/** Runs `body` as the module itself (seeding and cross-user reads). */
 export function asModule<T>(harness: Harness, body: (ctx: Ctx) => T): T {
   return harness.withReducerTx(TestAuth.internal(), body);
 }
 
-/** A Timestamp `millis` after the epoch. */
 function at(millis: number): Timestamp {
   return new Timestamp(BigInt(millis) * 1000n);
 }

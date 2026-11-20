@@ -42,7 +42,6 @@ export function loadBracket(db: WritableDb, tournament: TournamentRow): StoredBr
       bracket: doc.bracket.tag,
       round: doc.round,
       indexInRound: doc.indexInRound,
-      // Stored as an array (schema limitation); exactly two by construction.
       slots: [slotToEngine(doc.slots[0]!), slotToEngine(doc.slots[1]!)],
       // fallow-ignore-next-line code-duplication -- intentionally mirrors the Convex original during the migration window (both backends live until M6 deletes the Convex side; this module copy is the survivor)
     })),
@@ -55,8 +54,6 @@ export function loadBracket(db: WritableDb, tournament: TournamentRow): StoredBr
   };
 }
 
-// Append order is id order — what the engine's correction semantics
-// (latest record per match wins) are defined over.
 export function loadResults(db: WritableDb, tournamentId: bigint): ResultRow[] {
   return sortedRows(
     takeAll(db.result.tournamentId.filter(tournamentId), MAX_RESULTS, "results"),
@@ -72,8 +69,6 @@ export function toRecordedResults(
   return resultDocs.map((doc) => {
     const match = bracket.byId.get(doc.matchId);
     if (match === undefined) {
-      // Unreachable: results only exist from live on, and the structure is
-      // immutable from live on.
       throw new Error("result references a match outside the current bracket");
     }
     const [a, b] = doc.sides.map(sideToEngine);

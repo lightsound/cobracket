@@ -25,9 +25,6 @@ import {
   withMatchIds,
 } from "./model";
 
-// Tournament creation, settings, deletion, and the Organizer's reads
-// (stories 1–3, 9, 15–17, 25–27).
-
 const SLUG_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
 const SLUG_LENGTH = 12;
 
@@ -57,7 +54,6 @@ async function mintShareSlug(ctx: MutationCtx): Promise<string> {
 
 type Format = Doc<"tournaments">["format"];
 
-// Grand-final bracket reset defaults to on (spec: Format engine).
 function toStoredFormat(format: Infer<typeof formatArgsValidator>): Format {
   return format.family === "double_elimination"
     ? { family: "double_elimination", grandFinalReset: format.grandFinalReset ?? true }
@@ -89,8 +85,6 @@ export const createTournament = mutation({
       organizerId,
       disciplineId,
       format,
-      // Elimination requires a decisive outcome; the field ships for later
-      // draw-capable families.
       drawsAllowed: false,
       status: "draft",
       visibility: "unlisted",
@@ -100,11 +94,6 @@ export const createTournament = mutation({
   },
 });
 
-// Partial update: every field is optional and independently validated. Name
-// and Discipline are labels, so they stay editable in every status (a typo on
-// the Share Link is worth fixing after completion too). The Format decides
-// the bracket structure, so changing it is a pre-live operation that drops
-// the generated bracket, exactly like a roster change.
 export const updateTournament = mutation({
   args: {
     tournamentId: v.id("tournaments"),
@@ -139,12 +128,7 @@ export const updateTournament = mutation({
   },
 });
 
-// Deletion is physical and whole (ADR 0011): the tournament and everything
-// that hangs off it — roster, bracket, results — go together, in every
-// status. Results are never deleted on their own (ADR 0005: corrections are
-// the only way to change them); removing the tournament they belong to is a
-// different act. The Share Link reads as not found from then on. Bounded by
-// one tournament's size, like every other per-tournament write.
+// Deletion is physical and whole, in every status: docs/adr/0011-physical-whole-tournament-deletion.md.
 export const deleteTournament = mutation({
   args: { tournamentId: v.id("tournaments") },
   returns: v.null(),
@@ -184,8 +168,6 @@ export const listMyTournaments = query({
       .query("tournaments")
       .withIndex("by_organizer", (q) => q.eq("organizerId", organizerId))
       .order("desc")
-      // Newest 100 only, no cursor — callers must not assume completeness.
-      // Enough headroom for the MVP; pagination is an additive change.
       .take(100);
     return await Promise.all(
       tournaments.map(async (tournament) => ({
@@ -200,11 +182,6 @@ export const listMyTournaments = query({
   },
 });
 
-// The Organizer's full view, drafts included (story 9: see the bracket
-// before anyone else does). Keyed by the raw URL segment and null for
-// anything that is not the caller's tournament — malformed, missing (e.g.
-// just deleted in another tab), or someone else's — so the page renders a
-// not-found state instead of an error to retry.
 export const getTournament = query({
   args: { tournamentId: v.string() },
   returns: v.union(organizerTournamentViewValidator, v.null()),

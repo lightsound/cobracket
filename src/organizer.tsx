@@ -1,32 +1,6 @@
 import { createContext, useContext, type Accessor, type ParentProps } from "solid-js";
 import { createOrganizer } from "./lib/auth";
 
-/**
- * The current Organizer, as one subscription for the whole mounted app.
- *
- * Every page used to call `createOrganizer()` for itself, which meant one
- * `currentOrganizer` subscription per page visit: the previous page's was
- * disposed on unmount, the next page's opened on mount, and the Convex client
- * answered the new one with a round trip — so every page began with a
- * "Checking your session…" fallback that cost one RTT before the page's own
- * data could even be asked for. Measured in Chromium against a local
- * deployment with 100ms of one-way latency: 200ms on the Home boundary, then
- * another 200ms on the tournament list behind it, the engine naming the
- * pair an `[ASYNC_WATERFALL]`. The one exception was the management page
- * reached from Home, where the router created the new page before disposing
- * the old one, so the client still held the subscription and answered from
- * it in 2ms — which is the behaviour every page should have.
- *
- * Session identity is app-wide state, and app-wide state lives in a provider
- * at the root of `App` (CLAUDE.md rule 11). Creating the query here keeps the
- * subscription alive for the app's lifetime, so a page reads an answer the
- * client already holds. A memo's computation runs when the memo is created,
- * not on first read, so the subscription opens with the provider, before any
- * page reads it. A provider mounted without a configured backend (as in
- * tests of components that never touch the backend) opens nothing, because
- * `createBackendQuery` resolves the client inside that computation and
- * finds none.
- */
 const OrganizerContext = createContext<Accessor<string | null>>();
 
 /**

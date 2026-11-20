@@ -97,7 +97,6 @@ describe("single elimination byes (non-power-of-two rosters)", () => {
     });
     const progression = deriveProgression(generated, []);
 
-    // Only p2 vs p3 is playable; p1's opener resolved structurally.
     expect(progression.readyMatchKeys).toHaveLength(1);
     const byeMatch = progression.matches.find(
       (match) => match.round === 1 && match.state === "completed",

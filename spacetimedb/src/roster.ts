@@ -12,10 +12,6 @@ import {
 } from "./lib";
 import { spacetimedb } from "./schema";
 
-// Roster management and seeding (stories 4–8), the successor of
-// convex/roster.ts. Every reducer resolves identity and ownership
-// through the guards before touching a row.
-
 function insertParticipant(
   db: WritableDb,
   tournamentId: bigint,
@@ -37,8 +33,6 @@ export const addParticipant = spacetimedb.reducer(
   },
 );
 
-// Bulk entry (story 5): one name per line, e.g. pasted from Discord.
-// Blank lines and surrounding whitespace are dropped.
 export const addParticipants = spacetimedb.reducer(
   { tournamentId: t.u64(), text: t.string() },
   (ctx, args) => {
@@ -70,8 +64,6 @@ export const renameParticipant = spacetimedb.reducer(
     );
     requireStatus(tournament, PRE_LIVE, "edit the roster");
     const name = requireName(args.name, "Participant name");
-    // Names live on the participant row and matches reference ids, so a
-    // rename never invalidates the bracket.
     ctx.db.participant.id.update({ ...participant, name });
   },
 );
@@ -84,7 +76,6 @@ export const removeParticipant = spacetimedb.reducer({ participantId: t.u64() },
   );
   requireStatus(tournament, PRE_LIVE, "edit the roster");
   ctx.db.participant.id.delete(participant.id);
-  // Close the seed gap so seeds stay a contiguous 1..n sequence.
   const roster = loadRoster(ctx.db, tournament.id);
   for (const other of roster) {
     if (other.seed > participant.seed) {

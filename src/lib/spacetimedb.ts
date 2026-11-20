@@ -81,19 +81,11 @@ import type {
 //   arrives as) or a transport failure — surfaces as the one
 //   generic message below.
 
-// ---------------------------------------------------------------------------
-// Configuration
-// ---------------------------------------------------------------------------
-
 export interface SpacetimeConfig {
   host: string;
   db: string;
 }
 
-/**
- * The SpacetimeDB configuration for this build, or undefined when
- * the host/database env vars are not both set.
- */
 export function getSpacetimeConfig(): SpacetimeConfig | undefined {
   const host = import.meta.env.VITE_SPACETIMEDB_HOST;
   const db = import.meta.env.VITE_SPACETIMEDB_DB;
@@ -102,15 +94,7 @@ export function getSpacetimeConfig(): SpacetimeConfig | undefined {
   return { host, db };
 }
 
-// ---------------------------------------------------------------------------
-// The one generic write failure (see the header)
-// ---------------------------------------------------------------------------
-
 const GENERIC_WRITE_ERROR = "The operation could not be completed. Please try again.";
-
-// ---------------------------------------------------------------------------
-// Connection singleton and its token
-// ---------------------------------------------------------------------------
 
 // The token is the credential (the module's identity seam, ADR
 // 0031): the server mints the identity on a tokenless connect and
@@ -183,9 +167,6 @@ function buildConnection(config: SpacetimeConfig): Promise<LiveConnection> {
   });
 }
 
-/**
- * The shared connection, built on first use.
- */
 export function getSpacetimeConnection(): Promise<DbConnection> {
   return getLive().then((entry) => entry.conn);
 }
@@ -243,10 +224,6 @@ function getLive(): Promise<LiveConnection> {
   return livePromise;
 }
 
-// ---------------------------------------------------------------------------
-// View state: reconciled snapshots of every view's rows
-// ---------------------------------------------------------------------------
-
 type ViewName =
   | "myTournaments"
   | "sessionState"
@@ -261,7 +238,6 @@ type ViewName =
   | "sharedResults"
   | "suggestDisciplines";
 
-/** The latest reconciled rows of each view, keyed per view below. */
 const viewRows = {
   myTournaments: new Map<string, MyTournamentRow>(),
   sessionState: new Map<string, SessionStateRow>(),
@@ -319,7 +295,6 @@ function viewSource<Row>(
   };
 }
 
-/** Each view's cache source: where its rows iterate from, and the key they file under. */
 const VIEW_SOURCES: Record<ViewName, ViewSource> = {
   myTournaments: viewSource(
     (db) => db.myTournaments.iter(),
@@ -391,7 +366,6 @@ function replaceRows<Row>(
   }
 }
 
-/** Register cache-event handlers that mark a view dirty on any change batch. */
 function watchView(conn: DbConnection, view: ViewName): void {
   const table = conn.db[view] as {
     onInsert: (cb: () => void) => void;
@@ -417,10 +391,6 @@ const ALL_VIEWS: readonly ViewName[] = [
   "sharedResults",
   "suggestDisciplines",
 ];
-
-// ---------------------------------------------------------------------------
-// Contract row identity: what pages are handed, kept stable per row
-// ---------------------------------------------------------------------------
 
 /**
  * An identity cache for contract rows, keyed by id. Reconciling a fresh
@@ -476,7 +446,6 @@ function createIdentityCache<Row extends object>(
   };
 }
 
-/** The my_tournaments summaries, in the cache the list is rendered from. */
 const summaryCache = createIdentityCache<TournamentSummary>(
   (a, b) =>
     a.name === b.name &&
@@ -489,14 +458,8 @@ const summaryCache = createIdentityCache<TournamentSummary>(
         a.format.grandFinalReset === b.format.grandFinalReset)),
 );
 
-/** The current organizer scope's participant rows, keyed by participant id. */
 const organizerParticipantCache = createIdentityCache<ParticipantView>();
-/** The current shared scope's participant rows, keyed by participant id. */
 const sharedParticipantCache = createIdentityCache<ParticipantView>();
-
-// ---------------------------------------------------------------------------
-// Channels: one per (operation, arguments) the seam subscribes
-// ---------------------------------------------------------------------------
 
 interface ChannelListener {
   onValue: (value: unknown) => void;
@@ -509,14 +472,10 @@ interface Channel {
   hasValue: boolean;
   value: unknown;
   fingerprint: string;
-  /** Recompute from current view state; undefined while not ready. */
   compute: () => unknown;
   ready: () => boolean;
-  /** The views whose changes should recompute this channel. */
   inputs: readonly ViewName[];
-  /** Release the underlying subscriptions when the last listener goes. */
   release: () => void;
-  /** Rebind the underlying subscription (scope channels, on re-subscribe). */
   ensure?: () => void;
   scopeKind?: "organizer" | "shared";
   scopeKey?: string;
@@ -588,15 +547,10 @@ function subscribeChannel(
   };
 }
 
-// ---------------------------------------------------------------------------
-// System feeds: held for the connection's whole life once built
-// ---------------------------------------------------------------------------
-
 let systemApplied = false;
 let systemHandle: { unsubscribe: () => void } | undefined;
 const watchedConnections = new WeakSet<DbConnection>();
 
-/** Scopes requested before the connection existed (or dropped by an identity reset) start here. */
 function startPendingScopes(): void {
   for (const scope of [scopes.organizer, scopes.shared]) {
     if (scope !== undefined && !scope.started && !scopeDraining[scope.kind]) {
@@ -648,24 +602,15 @@ function onConnected(conn: DbConnection): void {
 
 const SYSTEM_VIEWS: readonly ViewName[] = ["myTournaments", "sessionState", "currentOrganizer"];
 
-// ---------------------------------------------------------------------------
-// Scopes: one tournament (or one slug) at a time per surface family
-// ---------------------------------------------------------------------------
-
 interface Scope {
   kind: "organizer" | "shared";
   key: string;
   handle: { unsubscribeThen: (cb: () => void) => void; unsubscribe: () => void } | undefined;
   applied: boolean;
-  /** True once the subscription has actually been started (a scope
-   * created behind a pending drain, or before the connection
-   * exists, has not). */
   started: boolean;
-  /** Channels waiting on or reading this scope. */
   channels: Set<Channel>;
 }
 
-/** A drain (the previous scope's rows leaving the caches) is in flight, per family. */
 const scopeDraining: Record<"organizer" | "shared", boolean> = {
   organizer: false,
   shared: false,
@@ -768,8 +713,6 @@ function ensureScope(kind: "organizer" | "shared", key: string): Scope {
   } else if (!scopeDraining[kind]) {
     startScope(next);
   }
-  // Otherwise a drain from an earlier switch is still in flight;
-  // its completion starts the now-current scope (this one).
   return next;
 }
 
@@ -804,11 +747,6 @@ function releaseScope(scope: Scope): void {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Read channels per operation
-// ---------------------------------------------------------------------------
-
-/** Latest composed knowledge per tournament, for write-result synthesis. */
 const knowledgeByTournament = new Map<string, TournamentKnowledge>();
 const matchHome = new Map<string, string>();
 
@@ -831,7 +769,6 @@ function registerKnowledge(tournamentId: string, knowledge: TournamentKnowledge)
   }
 }
 
-/** The organizer composition over the tier-1 rows as they stand. */
 function composeHeldOrganizer(): OrganizerComposition {
   return composeOrganizerTournament({
     header: viewRows.organizerTournament.get("header"),
@@ -862,13 +799,6 @@ function currentKnowledge(tournamentId: string): TournamentKnowledge | undefined
   return knowledge;
 }
 
-/**
- * Compose the held scope's knowledge afresh, so the home index and
- * the before-state a write's snapshots read are current: the
- * organizer channel maintains them only while it has listeners,
- * and a write must not depend on a read subscription staying alive
- * beside it.
- */
 function refreshHeldKnowledge(): void {
   const scope = scopes.organizer;
   if (scope !== undefined) currentKnowledge(scope.key);
@@ -981,10 +911,8 @@ function currentOrganizerChannel(): Channel {
   );
 }
 
-/** Suggestion feeds: one subscription per distinct prefix; the caches merge, the filter sorts it out. */
 const suggestHandles = new Map<string, { unsubscribe: () => void }>();
 const suggestApplied = new Map<string, boolean>();
-/** Set by an identity reset: the suggestion subscriptions died with the old connection and onConnected re-establishes them. */
 let suggestResubscribe = false;
 
 function subscribeSuggest(prefix: string, channel: Channel): void {
@@ -1082,16 +1010,10 @@ function subscribeSpacetime<Args, Result>(
   }
 }
 
-// ---------------------------------------------------------------------------
-// Prefetch: warm a read ahead of its page (the seam's contract)
-// ---------------------------------------------------------------------------
-
 function prefetchSpacetime<Args>(op: ReadOp<Args, unknown>, args: Args): void {
   switch (op.spacetime) {
     case "myTournaments":
     case "currentOrganizer":
-      // System feeds are held for the connection's life; warming is
-      // just making sure the connection exists.
       void getLive().catch(() => {});
       return;
     case "organizerTournament": {
@@ -1144,10 +1066,6 @@ function prefetchScope(channel: Channel): void {
   setTimeout(release, HOLD_MS);
 }
 
-// ---------------------------------------------------------------------------
-// Writes: call the reducer, surface its refusal, synthesize the return
-// ---------------------------------------------------------------------------
-
 const SYNTHESIS_TIMEOUT_MS = 2_000;
 const SYNTHESIS_POLL_MS = 20;
 
@@ -1168,7 +1086,6 @@ function idArg(value: string): bigint {
 
 type Reducers = DbConnection["reducers"];
 
-/** The reducer dispatch table: contract arguments in, the module's call out. */
 const REDUCER_CALLS: Record<
   string,
   (reducers: Reducers, args: Record<string, unknown>) => Promise<void>
@@ -1249,7 +1166,6 @@ async function callReducer(
   await call(conn.reducers, args);
 }
 
-/** What a write's return is read back from, snapshotted before the call. */
 interface WriteSnapshots {
   beforeSummaryIds: ReadonlySet<string>;
   tournamentId: string | undefined;
@@ -1279,7 +1195,6 @@ function snapshotWrite(record: Record<string, unknown>): WriteSnapshots {
   };
 }
 
-/** The returns the reducers do not have, read back from the subscriptions (see the model). */
 async function synthesizeWriteResult<Result>(
   opKey: string,
   args: Record<string, unknown>,
@@ -1337,8 +1252,6 @@ async function synthesizeWriteResult<Result>(
     case "reportResult": {
       const { beforeReport: before, reportHome: home } = snapshots;
       if (before === undefined || home === undefined) {
-        // The composition this return is read from is not held;
-        // without it there is no honest value to hand back.
         throw new Error(GENERIC_WRITE_ERROR);
       }
       const report = await waitForSynthesis(() => {
@@ -1384,23 +1297,11 @@ function outcomeToBinding(outcome: Outcome): { tag: (typeof OUTCOME_TO_BINDING)[
   return { tag: OUTCOME_TO_BINDING[outcome] };
 }
 
-// ---------------------------------------------------------------------------
-// The implementation behind the seam
-// ---------------------------------------------------------------------------
-
-/**
- * The seam's SpacetimeDB implementation: subscribe / write /
- * prefetch, in `./backend`'s BackendImpl shape.
- */
 export const spacetimeImpl = {
   subscribe: subscribeSpacetime,
   write: writeSpacetime,
   prefetch: prefetchSpacetime,
 };
-
-// ---------------------------------------------------------------------------
-// Session access for `./auth`'s SpacetimeDB implementation
-// ---------------------------------------------------------------------------
 
 const sessionListeners = new Set<(state: SessionState) => void>();
 
@@ -1470,9 +1371,6 @@ export function waitForSpacetimeSession(
   });
 }
 
-/**
- * A promise for the first applied session state, whatever it is.
- */
 export async function whenSpacetimeSessionReady(): Promise<SessionState> {
   if (systemApplied) return currentSessionState();
   return waitForSpacetimeSession(
@@ -1481,10 +1379,6 @@ export async function whenSpacetimeSessionReady(): Promise<SessionState> {
   );
 }
 
-/**
- * Bind the connection's identity to its app_user (the module's
- * explicit bind; every reducer would also bind on first use).
- */
 export async function bindSpacetimeIdentity(): Promise<void> {
   const { conn } = await getLive();
   await conn.reducers.bindIdentity({});
@@ -1525,7 +1419,5 @@ export async function resetSpacetimeIdentity(): Promise<void> {
       scope.started = false;
     }
   }
-  // The new connection's onConnect re-subscribes the system feeds
-  // and restarts the scopes (onConnected).
   await getLive();
 }

@@ -124,8 +124,6 @@ export const spikeSeed = spacetimedb.reducer({}, (ctx) => {
   ctx.db.participant.insert({ id: 0n, tournamentId: hidden.id, name: "Fox", seed: 2 });
 });
 
-// Binds the caller as an anonymous organizer (a fresh app_user) if
-// they are not bound yet; a no-op for an already-bound caller.
 export const spikeBind = spacetimedb.reducer({}, (ctx) => {
   if (ctx.db.identityUser.identity.find(ctx.sender) !== null) {
     return;
@@ -138,9 +136,6 @@ export const spikeBind = spacetimedb.reducer({}, (ctx) => {
   });
 });
 
-// A second result (W1M2: Ben beats Cid 2–1) plus a rename of the
-// published tournament — the live-update probes watch the shared
-// views react to both.
 export const spikeMutate = spacetimedb.reducer({}, (ctx) => {
   const cup = ctx.db.tournament.shareSlug.find("abc123slug");
   if (cup === null) {

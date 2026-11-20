@@ -1,23 +1,7 @@
 import type { FunctionArgs, FunctionReference, FunctionReturnType } from "convex/server";
 import { api as convexApi } from "../../convex/_generated/api";
 
-// The operations API (ADR 0001) as backend-neutral descriptors, plus
-// the contract types pages consume. This module is data only — no
-// connection, no reactivity — which is what lets `src/test-fakes.ts`
-// (and any test) import the real descriptors while the seam module
-// beside it (`./backend`) is mocked away.
-//
-// The contract types are the shapes pages have always consumed — the
-// Convex validators' shapes with document ids as plain strings — so
-// a page cannot tell which implementation answered. Each descriptor
-// carries both implementations' handles: the Convex function
-// reference the Convex implementation subscribes to, and the key the
-// SpacetimeDB adapter's registry is indexed by. Each descriptor's
-// Args/Result are derived from its generated Convex reference at
-// compile time (document ids mapped to plain strings — the seam's id
-// rule), so the Convex side cannot drift from the descriptors; the
-// SpacetimeDB side will be checked by the adapter against the
-// generated bindings' row types its composition maps from (plan §2.5).
+// Backend-neutral operation descriptors: docs/adr/0001-mcp-first-chat-operations.md, extended by docs/adr/0031-adopt-spacetimedb-as-the-backend.md.
 
 /** @public */
 export type TournamentStatus = "draft" | "published" | "live" | "completed";
@@ -70,7 +54,6 @@ export interface MatchView {
 
 /** @public */
 export interface OrganizerMatchView extends MatchView {
-  /** The handle `reportResult` takes. Organizer surface only. */
   matchId: string;
 }
 
@@ -133,11 +116,6 @@ export interface ReportResult {
   voided: { matchId: string; matchKey: string }[];
 }
 
-// ---------------------------------------------------------------------------
-// Operation descriptors
-// ---------------------------------------------------------------------------
-
-/** The SpacetimeDB read surfaces, named for the adapter's registry. */
 export type SpacetimeReadKey =
   | "myTournaments"
   | "organizerTournament"
@@ -145,7 +123,6 @@ export type SpacetimeReadKey =
   | "suggestDisciplines"
   | "currentOrganizer";
 
-/** The SpacetimeDB write reducers, named for the adapter's registry. */
 export type SpacetimeWriteKey =
   | "createTournament"
   | "updateTournament"
@@ -160,17 +137,12 @@ export type SpacetimeWriteKey =
   | "reportResult";
 
 /**
- * One read operation, described once for both implementations: the
- * Convex query reference the Convex implementation subscribes to, and
- * the key the SpacetimeDB adapter's feed registry is indexed by. Pages
- * pass descriptors, never implementation references, so a call site is
- * identical on either backend.
+ * One descriptor for both implementations: docs/adr/0001-mcp-first-chat-operations.md.
  *
  * @public
  */
 export interface ReadOp<Args, Result> {
   readonly kind: "read";
-  /** The operation's canonical name — attribution labels and test-fake keys. */
   readonly name: string;
   readonly convex: FunctionReference<"query">;
   readonly spacetime: SpacetimeReadKey;
@@ -178,11 +150,7 @@ export interface ReadOp<Args, Result> {
   readonly __types?: { args: Args; result: Result };
 }
 
-/**
- * One write operation; the write-side twin of {@link ReadOp}.
- *
- * @public
- */
+/** @public */
 export interface WriteOp<Args, Result> {
   readonly kind: "write";
   readonly name: string;
@@ -224,8 +192,7 @@ function write<Ref extends FunctionReference<"mutation">>(
 }
 
 /**
- * The operations API (ADR 0001) as descriptors — the same tree shape
- * as the Convex `api` object it replaces at call sites.
+ * The descriptors-as-api-tree decision: docs/adr/0001-mcp-first-chat-operations.md.
  *
  * @public
  */

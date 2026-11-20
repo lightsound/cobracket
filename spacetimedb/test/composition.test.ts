@@ -11,17 +11,7 @@ import type {
 import * as moduleExports from "../src/index";
 import { asModule, authFor, identityFor, makeHarness, type Harness } from "./harness";
 
-// The getTournament shape proof (migration slice M1, spike surface
-// (b)): ADR 0031 replaces Convex's one assembled query with flat
-// per-table views the client composes. This test builds a full
-// 16-player double-elimination tournament — the browser gate's
-// scenario size — plays it to completion through the tables
-// (including a correction that voids downstream records), then shows
-// that composing the four Organizer views client-side and running
-// the relocated engine over the composed inputs yields exactly the
-// read shape a direct engine derivation over the fixture produces:
-// same header, same roster, same derived matches (with the
-// Organizer's match handles), same voided keys, same champion.
+// The composition model this proof exercises: docs/adr/0031-adopt-spacetimedb-as-the-backend.md.
 
 const ORGANIZER = "organizer-a";
 const PLAYER_COUNT = 16;
@@ -84,7 +74,6 @@ function sideToDb(side: EngineSide): DbSide {
   return {
     participantId: BigInt(side.participantId),
     outcome: outcomeToDb(side.outcome),
-    // The row type carries score as a present-but-optional value.
     score: side.score,
   };
 }
@@ -154,8 +143,6 @@ describe("getTournament composition over views", () => {
     const structure: BracketStructure = generateBracket(engineIds, format);
     expect(structure.matches).toHaveLength(31);
 
-    // Seed the fixture: roster in seed order (auto-increment ids then
-    // match the engine's string ids), structure from the engine.
     const seeded = asModule(harness, (ctx) => {
       const discipline = ctx.db.discipline.insert({
         id: 0n,
@@ -189,8 +176,6 @@ describe("getTournament composition over views", () => {
             seed: i + 1,
           }).id,
       );
-      // The engine's string ids are the seed positions; auto-increment
-      // must agree, or every mapping below is meaningless.
       expect(participantIds.map(String)).toEqual(engineIds);
       const matchIdByKey = new Map<string, bigint>();
       for (const match of structure.matches) {
@@ -208,12 +193,6 @@ describe("getTournament composition over views", () => {
       return { tournamentId: tournament.id, userId: user.id, matchIdByKey };
     });
 
-    // Play the bracket: always record the first ready match (first
-    // occupant wins 2–0). After sixteen records — winners rounds 1–2
-    // and losers round 1, so both consumers of the first match's
-    // outcome already hold records — correct the first match by
-    // flipping its winner: those downstream records must void, on
-    // both sides of the comparison.
     const recorded: RecordedResult[] = [];
     const appendResult = (result: RecordedResult) => {
       recorded.push(result);
@@ -245,11 +224,6 @@ describe("getTournament composition over views", () => {
           ],
         });
         corrected = true;
-        // The correction flips the first match's winner, so the
-        // downstream matches already played under the old pairing
-        // must stand void until re-entered (the engine reports a
-        // match's latest record as void only until then — at
-        // completion the void list is empty by construction).
         voidedAfterCorrection = deriveProgression(structure, recorded).voidedResultIndices.length;
         continue;
       }
@@ -271,9 +245,6 @@ describe("getTournament composition over views", () => {
     const finalProgression = deriveProgression(structure, recorded);
     expect(finalProgression.completed).toBe(true);
     expect(finalProgression.championId).toBeDefined();
-    // The fixture must actually exercise the correction path:
-    // records were voided by the correction and re-entered after it,
-    // so more records exist than matches.
     expect(voidedAfterCorrection).toBeGreaterThan(0);
     expect(recorded.length).toBeGreaterThan(structure.matches.length);
 
@@ -293,8 +264,6 @@ describe("getTournament composition over views", () => {
       new Map([...seeded.matchIdByKey].map(([key, id]) => [key, String(id)])),
     );
 
-    // The view side: fetch the four Organizer views as the owner,
-    // translate rows back into engine inputs, derive, assemble.
     const ownerCtx = harness.viewContext(authFor(ORGANIZER));
     const headerRow = moduleExports.organizerTournament(ownerCtx, {
       tournamentId: seeded.tournamentId,
@@ -351,8 +320,6 @@ describe("getTournament composition over views", () => {
     );
 
     expect(actual).toEqual(expected);
-    // The composed shape is the full Organizer read shape of
-    // convex/model/validators.ts (organizerTournamentViewValidator).
     expect(Object.keys(actual).sort()).toEqual([
       "bracket",
       "discipline",

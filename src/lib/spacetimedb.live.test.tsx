@@ -1,30 +1,3 @@
-/**
- * The SpacetimeDB adapter, live, at app scale, under the diagnostics gate.
- *
- * Every other src test fakes the backend seam (`src/test-fakes.ts`); this one
- * fakes nothing. It boots a real SpacetimeDB standalone with the real module
- * published, points the app at it through the environment selection PR-B
- * added (`VITE_BACKEND=spacetimedb`), and drives the real pages through the
- * adapter: create a tournament on Home, bulk-add sixteen participants,
- * generate and publish a double-elimination bracket (31 matches — the same
- * scenario size as the browser gate, because scenario size is the
- * scope-width contract), report a result through the dialog, and open the
- * Share page anonymously. The whole flow runs inside this project's test
- * bodies, so the diagnostics gate in `src/test-setup.ts` judges it with the
- * same checks and thresholds as every other test — that is the point: the
- * adapter's subscription bursts and deliveries must hold the gate the
- * Convex client holds.
- *
- * The suite boots its own server (its own port, database, and build
- * directory) so `bun run test` stays self-contained; the boot mechanics
- * deliberately mirror `spacetimedb/connection/global-setup.ts`, the same
- * self-contained pattern the spike used. The browser gate re-boots this
- * scenario against SpacetimeDB separately (M4); this suite's job is the
- * adapter under the *test* gate, where the pages already run.
- *
- * The boot happens in `beforeAll`, outside any test body: server startup is
- * fixture work, not app behavior, and the gate captures per test body.
- */
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -39,9 +12,6 @@ import { mount } from "../test-setup";
 const { default: App } = await import("../App");
 
 localStorage.setItem("cobracket:locale", "en");
-
-// ---------------------------------------------------------------------------
-// The standalone driver (mirrors spacetimedb/connection/global-setup.ts).
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const BUILD_DIR = join(REPO_ROOT, "spacetimedb", ".live-build");
@@ -105,7 +75,6 @@ function ensureBinaries(): string {
   return downloadBinaries(binDir);
 }
 
-/** Fail closed unless the downloaded tarball matches the pinned hash. */
 function verifyTarball(tarball: string): void {
   const actual = createHash("sha256").update(readFileSync(tarball)).digest("hex");
   if (actual !== SERVER_TARBALL_SHA256) {
@@ -257,13 +226,8 @@ async function boot(): Promise<void> {
       MODULE_DIR,
       DB_NAME,
     ]);
-    // Seed the module secret (ADR 0032) immediately after publishing,
-    // before the app connects: a host-CSPRNG key for this run's
-    // throwaway database.
     seedModuleSecret(join(binDir, "spacetime"));
   } catch (error) {
-    // The child is detached: a failed boot must not leave it running
-    // behind the suite's back.
     await shutdown();
     throw error;
   }
@@ -294,9 +258,6 @@ async function shutdown(): Promise<void> {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Driving the pages.
-
 const NAMES = [
   "Alpha",
   "Bravo",
@@ -316,8 +277,6 @@ const NAMES = [
   "Papa",
 ];
 
-/** Poll a DOM condition until it holds; the gate counts nothing here — the
- * waits are the test's own synchronization with a real network backend. */
 async function waitFor(what: string, probe: () => boolean, timeoutMs = 30_000): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   for (;;) {
@@ -370,7 +329,6 @@ afterAll(async () => {
 test("runs a sixteen-player double elimination live through the adapter", async () => {
   const host = mount(() => <App />);
 
-  // Home: the create form, through the real auth bind and create write.
   await waitFor("the create form", () => host.querySelector("form") !== null);
   type(field(host, "Tournament name"), "Live Cup");
   type(field(host, "Discipline"), "Chess");
@@ -383,18 +341,15 @@ test("runs a sixteen-player double elimination live through the adapter", async 
     .querySelector("form")
     ?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
 
-  // The organizer page for the new tournament, roster empty.
   await waitFor("the roster editor", () => host.querySelector("textarea") !== null);
   expect(host.querySelector("main")?.textContent).toContain("Live Cup");
 
-  // Bulk-add the sixteen participants in one write.
   const bulk = host.querySelector<HTMLTextAreaElement>("textarea");
   if (!bulk) throw new Error("no bulk textarea");
   type(bulk, NAMES.join("\n"));
   buttonByText(host, "Add all").click();
   await waitFor("sixteen roster rows", () => NAMES.every((name) => occurrences(host, name) >= 1));
 
-  // Generate: the bracket composition derives all 31 matches client-side.
   buttonByText(host, "Generate Bracket").click();
   await waitFor(
     "31 match cards",
@@ -412,8 +367,6 @@ test("runs a sixteen-player double elimination live through the adapter", async 
   const shareAnchor = () =>
     [...host.querySelectorAll("a")].find((a) => (a.getAttribute("href") ?? "").startsWith("/s/"));
   buttonByText(host, "Publish").click();
-  // The share anchor is always in the header; the status badge is what
-  // proves the publish landed.
   await waitFor("the published status", () =>
     (host.querySelector("main")?.textContent ?? "").includes("Published"),
   );
@@ -434,10 +387,8 @@ test("runs a sixteen-player double elimination live through the adapter", async 
   flush();
   dialog?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
   await waitFor("the dialog to close", () => document.body.querySelector("form.max-w-sm") === null);
-  // The winner advances: their name now also occupies the next-round card.
   await waitFor("the winner to advance", () => occurrences(host, winner) > before);
 
-  // The Share page renders the same bracket for an anonymous viewer.
   shareAnchor()?.click();
   await waitFor(
     "31 shared match cards",

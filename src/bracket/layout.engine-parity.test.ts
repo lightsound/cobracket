@@ -22,8 +22,6 @@ function layoutInput(structure: BracketStructure): LayoutMatch[] {
   }));
 }
 
-// The edge set the engine's slots imply, under the layout's collapse rule:
-// a winner + loser pair from the same source match becomes one winner edge.
 function edgesFromSlots(structure: BracketStructure): string[] {
   const edges: string[] = [];
   for (const match of structure.matches) {

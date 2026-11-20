@@ -4,10 +4,6 @@ import { useI18n } from "./i18n";
 import { createBackendQuery } from "./lib/backend";
 import { TextInput } from "./TextInput";
 
-// The freeform Discipline field with suggestions (story 2), shared by the
-// create form and the tournament settings so both offer the same label and
-// completions. Uncontrolled beyond `value`: the parent owns the signal. It
-// owns its look too: callers place it, they do not restyle it (ADR 0012).
 export function DisciplineField(props: { value: string; onInput: (value: string) => void }) {
   const { t } = useI18n();
   const listId = createUniqueId();

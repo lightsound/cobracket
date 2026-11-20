@@ -1,40 +1,4 @@
-/**
- * The real-browser diagnostics gate.
- *
- * The happy-dom gate (`src/test-setup.ts`) judges every test under `src/`,
- * and it let a finding through that only a browser reported: an 8-player
- * double elimination (15 matches) put `BracketView`'s list insert effect over
- * the then 30-source [WIDE_SCOPE_DEPS] threshold, and a human found it in `bun dev`. Fixture size explained part
- * of that, and the `src` tests now render above the thresholds — but their
- * data seam is a fake, their DOM is emulated, and their time budget is
- * loosened for it. This gate closes the rest of the gap: a scripted Chromium
- * session against the dev server, the local SpacetimeDB standalone behind it,
- * captured through the same `@solidjs/diagnostics` bridge the plugin injects
- * for the curl loop in AGENTS.md, judged by the same `assertGate` the
- * happy-dom tests use. Engine thresholds stay at their defaults here — a real
- * browser is where the wall-clock ones mean something.
- *
- * One scenario, the Organizer's whole path: create a tournament, add the
- * roster, generate, publish, open the Share Link. Sixteen players in double
- * elimination, not the eight the story needs, because the bracket is what
- * the gate is for and the threshold is counted in sources: 8 players is 15
- * matches, and the defect that motivated this gate (a per-row `<Show>` in
- * `BracketView`) costs the insert effect one source per row, so 15 rows sit
- * under the 30-source line and the pre-fix code passes. 16 players (31
- * matches) do not.
- *
- * Since Solid 2.0.0-rc.14 no diagnostic code reports that defect: the engine
- * leaves the insert effect out of [WIDE_SCOPE_DEPS] and raised its default to
- * 200. The verdict counts it itself, from the scope widths the page records
- * beside the capture (`src/scope-widths.ts`, installed by
- * `initDevDiagnostics` in this mode). Measured on rc.14 with the defect
- * re-injected: the insert effect tracked 31 sources, and with the shipped
- * code the widest scope tracked 9.
- *
- * The dev server runs in `--mode e2e` with solid-refresh off because its
- * wrapper memos are sources too: with it on, the *fixed* code tracked the
- * same 31, every one named `[solid-refresh]MatchCard` (vite.config.ts).
- */
+/** Gate design, scenario-size contract and all measurements: docs/diagnostics-gates.md. */
 import { afterAll, beforeAll, expect, inject, test } from "vite-plus/test";
 import { captureBrowserArtifact } from "@solidjs/diagnostics/playwright";
 import { type Browser, chromium } from "playwright-core";
@@ -42,7 +6,6 @@ import { assertGate } from "../src/diagnostics-verdict";
 import { SCOPE_WIDTHS_GLOBAL, type ScopeWidthsBridge } from "../src/scope-widths";
 
 const PLAYERS = 16;
-/** 16 players, double elimination: 15 winners + 14 losers + grand final + reset. */
 const MATCHES = 31;
 
 let browser: Browser;
@@ -66,8 +29,6 @@ test("creating, publishing and sharing a 16-player double elimination raises no 
   await page.goto(`${inject("e2eBaseUrl")}/`);
   await page.waitForFunction(() => "__SOLID_DIAGNOSTICS__" in globalThis);
 
-  // Recorded beside the capture: the verdict's third question (scope widths)
-  // is in the engine's records, not in the artifact.
   await page.waitForFunction((key) => key in globalThis, SCOPE_WIDTHS_GLOBAL);
   await page.evaluate((key) => {
     (globalThis as unknown as Record<string, ScopeWidthsBridge>)[key].begin();
@@ -93,28 +54,12 @@ test("creating, publishing and sharing a 16-player double elimination raises no 
 
       await page.locator('a[href^="/s/"]').first().click();
       await page.waitForURL(/\/s\//);
-      // The cards are the buttons laid out beside the bracket's edge SVG.
       const bracket = page.locator("svg[aria-hidden='true'] ~ button");
       await bracket.nth(MATCHES - 1).waitFor();
       return bracket.count();
     },
     {
       scenario: "16-player double elimination to Share Link",
-      // Engine thresholds at their defaults — a real browser is where the
-      // wall-clock ones mean something — with one exception. `[FALLBACK_FLASH]`
-      // (engine 2.0.0-rc.10 on, `info`) reports a `<Loading>` fallback shown
-      // for under 150ms, and what decides that here is the anonymous local
-      // Convex deployment answering over loopback: measured on this
-      // scenario, six fallbacks between 1.7ms and 37ms (the Home list, the
-      // discipline suggestions, the management page, the Share Link), each
-      // the time a local subscription took to deliver its first value. The
-      // same boundaries against the production deployment wait a network
-      // round trip, which is the latency the finding is about and the one
-      // neither gate has. Read it in the dev-server artifact loop against a
-      // real deployment (AGENTS.md); here it would report loopback. This
-      // option rules only because the app's own hold stands down in
-      // `--mode e2e` (`src/dev-diagnostics.ts`): holds combine by the most
-      // demanding request per key, and the app's defaults would re-arm it.
       attribution: { fallbackFlashes: false },
     },
   );

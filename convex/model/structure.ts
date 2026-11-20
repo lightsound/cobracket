@@ -2,9 +2,7 @@ import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { MAX_MATCHES, takeAll } from "./limits";
 
-// A structural roster or seeding change makes the generated bracket stale
-// (structure is fixed at generation), so it is dropped and must be
-// regenerated. Safe pre-live: no results exist yet, so nothing is orphaned.
+// Structural changes drop the generated bracket: docs/specs/mvp.md.
 export async function invalidateBracket(
   ctx: MutationCtx,
   tournamentId: Id<"tournaments">,

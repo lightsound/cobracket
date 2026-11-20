@@ -67,8 +67,6 @@ describe("draw progression under draw-allowing rules", () => {
       match("m1", [participant("p1"), participant("p2")]),
       match("m2", [{ kind: "winnerOf", matchKey: "m1" }, participant("p3")], 2),
     ]);
-    // The draw was recorded while p1 occupied m2; the correction reruns m1 in
-    // p2's favor, invalidating the draw's pairing before it can progress.
     const results = [win("m1", "p1", "p2"), draw("m2", "p1", "p3"), win("m1", "p2", "p1")];
 
     const progression = evaluate(structure, results, drawAllowingRules);
@@ -101,8 +99,6 @@ describe("cyclic slot references", () => {
   });
 
   test("a diamond (two paths to the same upstream match) is not mistaken for a cycle", () => {
-    // m3 consumes both the winner and the loser of m1 — the same upstream is
-    // reached twice, which is normal in double elimination structures.
     const structure = structureOf([
       match("m1", [participant("p1"), participant("p2")]),
       match(

@@ -19,8 +19,6 @@ export interface FamilyRules {
   // Stage number at which losing this match eliminates a participant; later
   // stages place higher. Only consulted for matches whose loser exits.
   eliminationStage(match: StructureMatch, structure: BracketStructure): number;
-  // True when upstream outcomes make this match structurally unnecessary
-  // (e.g. a grand-final reset after the winners-side finalist already won).
   isCancelled(
     match: StructureMatch,
     resolutionOf: (matchKey: string) => MatchResolution | undefined,
@@ -101,7 +99,6 @@ function resolveWithoutResult(occupants: [Occupant, Occupant]): MatchResolution 
     return { ...PENDING, occupants };
   }
   if (a.kind === "bye" && b.kind === "bye") {
-    // Nobody to play: the bye itself advances.
     return { state: "completed", occupants, winner: BYE, loser: BYE };
   }
   if (a.kind === "bye" || b.kind === "bye") {
@@ -121,16 +118,11 @@ function applyResult(
   );
   const pairingMatches = result.sides.every((side) => occupantIds.has(side.participantId));
   if (!pairingMatches) {
-    // A correction upstream changed the occupants: the record is void and
-    // the match awaits a new result.
     return undefined;
   }
   const winnerSide = result.sides.find((side) => side.outcome === "win");
   if (winnerSide === undefined) {
-    // validateResult only lets a draw through when the rules allow draws, but
-    // how a draw advances through winnerOf/loserOf slots is a design decision
-    // owned by the first draw-capable family. Until one lands, fail typed
-    // instead of dereferencing a missing winner.
+    // Draw advancement is owned by the first draw-capable family: docs/adr/0002-format-scope-five-families-no-custom.md.
     throw new FormatEngineError(
       "draw_progression_unsupported",
       `result ${resultIndex} is a draw, and draw progression is not implemented under this format's rules`,
@@ -146,8 +138,6 @@ function applyResult(
   };
 }
 
-// Resolves every match: occupants from slot sources, then the effective
-// (latest, pairing-valid) result, a structural bye, or ready/pending.
 function resolveMatches(
   structure: BracketStructure,
   matchesByKey: Map<string, StructureMatch>,
@@ -192,7 +182,6 @@ function resolveMatches(
     }
     resolving.add(matchKey);
 
-    // Resolve upstream matches first so cancellation rules can inspect them.
     for (const slot of match.slots) {
       if (slot.kind === "winnerOf" || slot.kind === "loserOf") {
         resolveMatch(slot.matchKey);
@@ -235,7 +224,6 @@ interface ConsumedSlots {
   loserConsumed: Set<string>;
 }
 
-// Which matches' winners/losers feed another (non-cancelled) match.
 function collectConsumedSlots(
   structure: BracketStructure,
   resolutions: Map<string, MatchResolution>,
@@ -257,7 +245,6 @@ function collectConsumedSlots(
   return { winnerConsumed, loserConsumed };
 }
 
-// Elimination: losing a match whose loser goes nowhere ends the run.
 function collectEliminationStages(
   structure: BracketStructure,
   active: readonly StructureMatch[],
@@ -337,8 +324,6 @@ export function evaluate(
 ): Progression {
   const matchesByKey = new Map(structure.matches.map((match) => [match.key, match]));
 
-  // Latest record per match is the effective candidate; earlier records for
-  // the same match are corrections' history and are simply superseded.
   const latestResultIndex = new Map<string, number>();
   results.forEach((result, index) => {
     validateResult(result, index, matchesByKey, rules);

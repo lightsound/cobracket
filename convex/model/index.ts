@@ -1,5 +1,4 @@
-// The shared model behind the API modules in convex/ (ADR 0020). Only this
-// entry point is importable outside convex/model/, and only from convex/.
+// Only this entry point is importable outside convex/model (docs/adr/0020-convex-code-layout.md).
 export { getOrCreateDiscipline, normalizeDisciplineName } from "./disciplines";
 export type { TournamentStatus } from "./guards";
 export {

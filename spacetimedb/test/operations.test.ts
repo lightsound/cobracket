@@ -18,46 +18,7 @@ import {
   type Harness,
 } from "./harness";
 
-// The operations parity suite (migration slice M2): the port of
-// convex/operations.test.ts (1,112 lines) onto the SpacetimeDB module
-// harness. Same discipline as the original — drive the operations API
-// through the same registrations the client calls, and assert
-// external behavior: results in, progression / standings / ready
-// matches out, never internal bookkeeping.
-//
-// What changes in the port, and why:
-// - The harness is synchronous: Convex's async mutations and
-//   `rejects.toThrow` become direct reducer calls and sync throws.
-//   Error *messages* are the contract and are asserted unchanged.
-// - Reducers return nothing, so createTournament's Convex return
-//   ({ tournamentId, shareSlug }) is read back from my_tournaments
-//   (newest first), and participant ids from organizer_participants.
-// - getTournament / getSharedTournament are composed client-side
-//   from the flat views + the format engine (compose.ts, ADR 0031),
-//   exactly as the M3 client will.
-// - reportResult's Convex return ({ status, voided }) has no reducer
-//   counterpart: status is asserted on the organizer header view, and
-//   "what this append voided" as the composed progression's
-//   voidedMatchKeys difference across the call — the same set,
-//   derived from the same append-only records.
-// - Convex's "unauthenticated callers are refused" suite is REPLACED
-//   by the platform-form test below ("there is no unauthenticated
-//   caller on this platform"): every connection carries a
-//   server-minted Identity, so no caller is unauthenticated — an
-//   unbound identity binds on its first act and owns only its own
-//   scope, and identity is still resolved before any row lookup
-//   (foreign ≡ missing, asserted in the foreign-organizer test). The
-//   view-side unbound behavior is pinned in auth.test.ts.
-// - getTournament's malformed-string-id case is inexpressible: the
-//   organizer views take a u64 id, so there is no string to
-//   malform. Nonexistent and foreign ids answer undefined and carry
-//   the property (ids are per-table sequences, so "an id from
-//   another table" is not a distinct value class here).
-
-// Every harness in this suite is seeded with the fixed test key
-// (ADR 0032): createTournament mints share slugs from the module
-// secret, so an unseeded harness refuses creation. The seed-rule and
-// slug tests at the bottom build theirs from makeUnseededHarness.
+// Seeded with the fixed test key (share slugs derive from the module secret): docs/adr/0032-module-secret-in-a-private-table.md.
 function makeHarness(): Harness {
   const harness = makeUnseededHarness();
   seedTestSecret(harness);
@@ -77,8 +38,6 @@ function winOver(winnerId: bigint, loserId: bigint, loserOutcome: OutcomeTag = "
   ];
 }
 
-// Create a tournament as `sub` and read its handles back from
-// my_tournaments, newest first — the reducer returns nothing.
 function create(
   harness: Harness,
   sub: string,
@@ -96,15 +55,12 @@ function create(
   return { tournamentId: row.tournamentId, shareSlug: row.shareSlug };
 }
 
-// The Organizer's composed read of a tournament they own: undefined
-// is a failure here.
 function ownedView(harness: Harness, sub: string, tournamentId: bigint): OrganizerView {
   const view = organizerView(harness, sub, tournamentId);
   expect(view).toBeDefined();
   return view!;
 }
 
-// Non-null bracket accessor: most assertions run after generation.
 function bracketOf(view: { bracket: ComposedBracket | null }): ComposedBracket {
   expect(view.bracket).not.toBeNull();
   return view.bracket!;
@@ -116,10 +72,6 @@ interface Setup {
   ids: Map<string, bigint>;
 }
 
-// Create a tournament, enter the roster in one paste, pin the pasted
-// order as manual seeding (so pairings are deterministic to assert
-// against), and generate the bracket. Seeds follow the names' order:
-// names[0] is seed 1.
 function seededTournament(
   harness: Harness,
   sub: string,
@@ -209,22 +161,15 @@ function newlyVoided(
 }
 
 describe("operations parity", () => {
-  // -------------------------------------------------------------------------
-  // The full lifecycle: create → roster → generate → publish → report → complete
-  // -------------------------------------------------------------------------
-
   test("a tournament runs end to end through the operations API", () => {
     const harness = makeHarness();
 
-    // Create (story 1–3): freeform discipline, single elimination, draft.
     const { tournamentId, shareSlug } = create(harness, ALICE, {
       name: "  Friday Night Fights ",
       discipline: "Street Fighter 6",
       format: { tag: "single_elimination" },
     });
 
-    // Roster (stories 4–6): bulk paste with blank lines, one-by-one
-    // add, rename, remove.
     as(harness, ALICE, (ctx) => {
       moduleExports.addParticipants(ctx, {
         tournamentId,
@@ -262,7 +207,6 @@ describe("operations parity", () => {
     expect(view.participants.map((p) => p.seed)).toEqual([1, 2, 3, 4]);
     expect(view.bracket).toBeNull();
 
-    // Seeding (story 8): manual reorder, then generate (story 9).
     const bobId = participantIdOf("Bob");
     const carolId = participantIdOf("Carol");
     const daiId = participantIdOf("Dai");
@@ -279,13 +223,11 @@ describe("operations parity", () => {
     view = ownedView(harness, ALICE, tournamentId);
     expect(view.seeding).toBe("manual");
     let bracket = bracketOf(view);
-    // Standard placement for 4 seeds: (1 vs 4) and (2 vs 3).
     expect(occupantIds(matchAt(bracket, "winners", 1, 0))).toEqual([daiId, aliceId]);
     expect(occupantIds(matchAt(bracket, "winners", 1, 1))).toEqual([carolId, bobId]);
     expect(bracket.readyMatchKeys).toHaveLength(2);
     expect(bracket.completed).toBe(false);
 
-    // Publish (story 11): draft → published, Share Link goes visible.
     expect(sharedView(harness, shareSlug)).toBeUndefined();
     as(harness, ALICE, (ctx) => {
       moduleExports.publishTournament(ctx, { tournamentId });
@@ -294,8 +236,6 @@ describe("operations parity", () => {
     expect(shared).toBeDefined();
     expect(shared!.status).toBe("published");
 
-    // First result (story 12): published → live, roster and structure
-    // lock.
     const semiA = matchAt(bracket, "winners", 1, 0);
     const beforeA = voidedKeys(harness, ALICE, tournamentId);
     report(harness, ALICE, semiA.matchId!, [
@@ -324,8 +264,6 @@ describe("operations parity", () => {
       }),
     ).toThrow(/live/);
 
-    // Progress to the final: current/next matches come from
-    // readyMatchKeys (story 15).
     const semiB = matchAt(bracket, "winners", 1, 1);
     report(harness, ALICE, semiB.matchId!, winOver(carolId, bobId));
     view = ownedView(harness, ALICE, tournamentId);
@@ -338,8 +276,6 @@ describe("operations parity", () => {
       { participantId: aliceId, outcome: "loss", score: 1 },
     ]);
 
-    // Final result: automatic completion (story 16) and standings
-    // (story 23).
     report(harness, ALICE, final.matchId!, winOver(daiId, carolId));
     expect(ownedView(harness, ALICE, tournamentId).status).toBe("completed");
 
@@ -357,10 +293,6 @@ describe("operations parity", () => {
     ]);
   });
 
-  // -------------------------------------------------------------------------
-  // Correction → downstream void → re-entry (story 14, ADR 0005)
-  // -------------------------------------------------------------------------
-
   test("a correction voids downstream results, which are surfaced and re-enterable", () => {
     const harness = makeHarness();
     const names = ["A", "B", "C", "D", "E", "F", "G", "H"];
@@ -372,8 +304,6 @@ describe("operations parity", () => {
 
     let view = ownedView(harness, ALICE, tournamentId);
     let bracket = bracketOf(view);
-    // Standard placement for 8 seeds: round 1 pairs (1v8), (4v5),
-    // (2v7), (3v6).
     const r1m0 = matchAt(bracket, "winners", 1, 0);
     const r1m1 = matchAt(bracket, "winners", 1, 1);
     expect(occupantIds(r1m0)).toEqual([id("A"), id("H")]);
@@ -388,8 +318,6 @@ describe("operations parity", () => {
     expect(occupantIds(semi)).toEqual([id("A"), id("D")]);
     report(harness, ALICE, semi.matchId!, winOver(id("A"), id("D")));
 
-    // Correct round 1: H actually beat A. The semifinal's recorded
-    // result (A over D) no longer pairs — it is voided.
     const beforeCorrection = voidedKeys(harness, ALICE, tournamentId);
     report(harness, ALICE, r1m0.matchId!, winOver(id("H"), id("A")));
     expect(ownedView(harness, ALICE, tournamentId).status).toBe("live");
@@ -397,25 +325,18 @@ describe("operations parity", () => {
       { matchId: semi.matchId, matchKey: semi.key },
     ]);
 
-    // The derived view agrees: the semifinal is open again with the
-    // corrected pairing, and flagged as awaiting re-entry.
     view = ownedView(harness, ALICE, tournamentId);
     bracket = bracketOf(view);
     const reopenedSemi = matchAt(bracket, "winners", 2, 0);
     expect(reopenedSemi.state).toBe("ready");
     expect(occupantIds(reopenedSemi)).toEqual([id("H"), id("D")]);
     expect(bracket.voidedMatchKeys).toEqual([semi.key]);
-    // The corrected-over round-1 record is superseded, not voided.
     expect(matchAt(bracket, "winners", 1, 0).winnerId).toBe(id("H"));
 
-    // Reporting an unrelated match while the semifinal still awaits
-    // re-entry voids nothing new: the outstanding void stays visible
-    // as voidedMatchKeys.
     const beforeUnrelated = voidedKeys(harness, ALICE, tournamentId);
     report(harness, ALICE, matchAt(bracket, "winners", 1, 2).matchId!, winOver(id("B"), id("G")));
     expect(newlyVoided(harness, ALICE, tournamentId, beforeUnrelated)).toEqual([]);
 
-    // Re-enter the semifinal; play continues with nothing else lost.
     const beforeReentry = voidedKeys(harness, ALICE, tournamentId);
     report(harness, ALICE, semi.matchId!, winOver(id("H"), id("D")));
     expect(newlyVoided(harness, ALICE, tournamentId, beforeReentry)).toEqual([]);
@@ -424,10 +345,6 @@ describe("operations parity", () => {
     expect(bracket.voidedMatchKeys).toEqual([]);
     expect(matchAt(bracket, "winners", 2, 0).winnerId).toBe(id("H"));
 
-    // Correct round 1 back (A beat H after all): the semifinal's
-    // re-entered result no longer pairs and is voided a second time.
-    // The per-record difference reports it, exactly as Convex's
-    // return — filtered from the same engine indices — would.
     const beforeSecondVoid = voidedKeys(harness, ALICE, tournamentId);
     report(harness, ALICE, r1m0.matchId!, winOver(id("A"), id("H")));
     expect(newlyVoided(harness, ALICE, tournamentId, beforeSecondVoid)).toEqual([
@@ -459,14 +376,10 @@ describe("operations parity", () => {
     report(harness, ALICE, final.matchId!, winOver(id("A"), id("B")));
     expect(ownedView(harness, ALICE, tournamentId).status).toBe("completed");
 
-    // A correction that would void the final (and so reopen play) is
-    // refused: the lifecycle is one-way.
     expect(() => report(harness, ALICE, r1m0.matchId!, winOver(id("D"), id("A")))).toThrow(
       /reopen/,
     );
 
-    // A correction that keeps the tournament completed (fixing the
-    // recorded score of the final) is fine.
     report(harness, ALICE, final.matchId!, [
       { participantId: id("A"), outcome: { tag: "win" }, score: 3 },
       { participantId: id("B"), outcome: { tag: "loss" }, score: 2 },
@@ -475,10 +388,6 @@ describe("operations parity", () => {
     const after = ownedView(harness, ALICE, tournamentId);
     expect(bracketOf(after).championId).toBe(id("A"));
   });
-
-  // -------------------------------------------------------------------------
-  // Walkovers (story 13) and outcome validation
-  // -------------------------------------------------------------------------
 
   test("a no-show is a walkover result; the bracket advances without regeneration", () => {
     const harness = makeHarness();
@@ -493,8 +402,6 @@ describe("operations parity", () => {
       matchAt(bracketOf(ownedView(harness, ALICE, tournamentId)), "winners", 1, 0).matchId!,
       winOver(ids.get("A")!, ids.get("B")!, "walkover"),
     );
-    // A 2-participant bracket completes on its first (walkover)
-    // result: published → live → completed in one report.
     expect(ownedView(harness, ALICE, tournamentId).status).toBe("completed");
     const view = ownedView(harness, ALICE, tournamentId);
     expect(bracketOf(view).championId).toBe(ids.get("A"));
@@ -512,7 +419,6 @@ describe("operations parity", () => {
     const r1m0 = matchAt(bracket, "winners", 1, 0);
     const final = matchAt(bracket, "winners", 2, 0);
 
-    // Draws are not allowed under elimination.
     expect(() =>
       report(harness, ALICE, r1m0.matchId!, [
         { participantId: id("A"), outcome: { tag: "draw" }, score: undefined },
@@ -520,27 +426,20 @@ describe("operations parity", () => {
       ]),
     ).toThrow(/draw/);
 
-    // Both sides must be the match's current occupants.
     expect(() => report(harness, ALICE, r1m0.matchId!, winOver(id("A"), id("B")))).toThrow(
       /does not apply/,
     );
 
-    // A pending match (occupants undetermined) cannot take a result.
     expect(() => report(harness, ALICE, final.matchId!, winOver(id("A"), id("B")))).toThrow(
       /does not apply/,
     );
 
-    // Exactly two sides.
     expect(() =>
       report(harness, ALICE, r1m0.matchId!, [
         { participantId: id("A"), outcome: { tag: "win" }, score: undefined },
       ]),
     ).toThrow(/two sides/);
   });
-
-  // -------------------------------------------------------------------------
-  // Seeding and regeneration (stories 7–10)
-  // -------------------------------------------------------------------------
 
   test("random seeding assigns a 1..n permutation and pairs by standard placement", () => {
     const harness = makeHarness();
@@ -562,8 +461,6 @@ describe("operations parity", () => {
     expect(view.participants.map((p) => p.seed)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
     expect(view.participants.map((p) => p.name).sort()).toEqual(names);
 
-    // Whatever the shuffle produced, the bracket pairs those seeds by
-    // standard placement: (1v8), (4v5), (2v7), (3v6).
     const bySeed = new Map(view.participants.map((p) => [p.seed, p.participantId]));
     const bracket = bracketOf(view);
     expect(occupantIds(matchAt(bracket, "winners", 1, 0))).toEqual([bySeed.get(1), bySeed.get(8)]);
@@ -576,7 +473,6 @@ describe("operations parity", () => {
     const harness = makeHarness();
     const { tournamentId } = seededTournament(harness, ALICE, ["A", "B", "C", "D"]);
 
-    // A rename does not touch the structure.
     let view = ownedView(harness, ALICE, tournamentId);
     as(harness, ALICE, (ctx) => {
       moduleExports.renameParticipant(ctx, {
@@ -587,7 +483,6 @@ describe("operations parity", () => {
     view = ownedView(harness, ALICE, tournamentId);
     expect(view.bracket).not.toBeNull();
 
-    // Adding a participant drops the stale bracket until regeneration.
     as(harness, ALICE, (ctx) => {
       moduleExports.addParticipant(ctx, { tournamentId, name: "Late" });
     });
@@ -613,7 +508,6 @@ describe("operations parity", () => {
       moduleExports.publishTournament(ctx, { tournamentId });
     });
 
-    // A late roster change (story 10) drops the published bracket...
     as(harness, ALICE, (ctx) => {
       moduleExports.addParticipant(ctx, { tournamentId, name: "E" });
     });
@@ -621,7 +515,6 @@ describe("operations parity", () => {
     expect(shared!.status).toBe("published");
     expect(shared!.bracket).toBeNull();
 
-    // ...and regeneration restores it, still published, roster of five.
     as(harness, ALICE, (ctx) => {
       moduleExports.generateBracket(ctx, { tournamentId });
     });
@@ -674,10 +567,6 @@ describe("operations parity", () => {
     ).toThrow(/every participant/);
   });
 
-  // -------------------------------------------------------------------------
-  // Formats (story 3)
-  // -------------------------------------------------------------------------
-
   test("double elimination defaults to grand-final reset on and generates all sections", () => {
     const harness = makeHarness();
     const { tournamentId } = seededTournament(harness, ALICE, ["A", "B", "C", "D"], {
@@ -689,10 +578,6 @@ describe("operations parity", () => {
     const sections = new Set(bracketOf(view).matches.map((m) => m.bracket));
     expect(sections).toEqual(new Set(["winners", "losers", "grand_final"]));
   });
-
-  // -------------------------------------------------------------------------
-  // Lifecycle status enforcement
-  // -------------------------------------------------------------------------
 
   test("publishing requires a draft with a generated bracket", () => {
     const harness = makeHarness();
@@ -732,13 +617,8 @@ describe("operations parity", () => {
     ).toThrow(/draft/);
   });
 
-  // -------------------------------------------------------------------------
-  // Authorization (ADR 0031): identity is native, binding is the first act
-  // -------------------------------------------------------------------------
-
   test("there is no unauthenticated caller: an unbound identity binds on its first act and owns only its own scope", () => {
     const harness = makeHarness();
-    // Alice's tournament exists before Carol ever acts.
     const { tournamentId } = seededTournament(harness, ALICE, ["A", "B"]);
 
     // A failed first act binds nobody: createTournament's reducer
@@ -759,7 +639,6 @@ describe("operations parity", () => {
       { state: { tag: "unauthenticated" } },
     ]);
 
-    // A successful first act binds the identity as a fresh user...
     const carols = create(harness, CAROL, {
       name: "Carol's Cup",
       discipline: "Chess",
@@ -774,9 +653,6 @@ describe("operations parity", () => {
     ]);
     expect(carols.tournamentId).not.toBe(tournamentId);
 
-    // ...whose scope is only its own: identity is resolved before any
-    // row lookup, so Carol's reducers cannot reach Alice's tournament,
-    // and the refusal is the same "not found" a missing id earns.
     expect(() =>
       as(harness, CAROL, (ctx) => {
         moduleExports.addParticipant(ctx, { tournamentId, name: "X" });
@@ -788,7 +664,6 @@ describe("operations parity", () => {
 
   test("another organizer's tournament is untouchable and reads as not found", () => {
     const harness = makeHarness();
-    // Bob is a bound organizer who owns nothing.
     as(harness, BOB, (ctx) => {
       moduleExports.bindIdentity(ctx, {});
     });
@@ -799,9 +674,6 @@ describe("operations parity", () => {
     const view = ownedView(harness, ALICE, tournamentId);
     const final = matchAt(bracketOf(view), "winners", 1, 0);
 
-    // The Organizer read answers nothing for a foreign tournament —
-    // the same answer as for a missing one — while every reducer
-    // refuses outright.
     expect(organizerView(harness, BOB, tournamentId)).toBeUndefined();
     expect(() =>
       as(harness, BOB, (ctx) => {
@@ -837,14 +709,11 @@ describe("operations parity", () => {
       }),
     ).toThrow(/not found/);
 
-    // The owner's state is intact and the intruder's list is empty.
     const intact = ownedView(harness, ALICE, tournamentId);
     expect(intact.name).toBe("Test Cup");
     expect(intact.participants).toHaveLength(2);
     expect(moduleExports.myTournaments(harness.viewContext(authFor(BOB)))).toEqual([]);
 
-    // A foreign document and a missing one read identically, so
-    // probing ids confirms nothing about their existence.
     expect(() =>
       as(harness, BOB, (ctx) => {
         moduleExports.renameParticipant(ctx, { participantId: ids.get("A")!, name: "X" });
@@ -860,15 +729,10 @@ describe("operations parity", () => {
     ).toThrow(/Participant not found/);
   });
 
-  // -------------------------------------------------------------------------
-  // The Share Link's public read (stories 17, 21–23)
-  // -------------------------------------------------------------------------
-
   test("the share link works without auth, hides drafts, and leaks nothing organizer-only", () => {
     const harness = makeHarness();
     const { tournamentId, shareSlug, ids } = seededTournament(harness, ALICE, ["A", "B", "C", "D"]);
 
-    // Unknown slugs and drafts both read as nothing.
     expect(sharedView(harness, "nosuchslug00")).toBeUndefined();
     expect(sharedView(harness, shareSlug)).toBeUndefined();
 
@@ -883,8 +747,6 @@ describe("operations parity", () => {
       winOver(ids.get("A")!, ids.get("D")!),
     );
 
-    // Spectators (no identity at all) see the live bracket, results,
-    // and standings...
     const shared = sharedView(harness, shareSlug);
     expect(shared).toBeDefined();
     expect(shared!.status).toBe("live");
@@ -938,9 +800,7 @@ describe("operations parity", () => {
     });
     expect(sharedView(harness, shareSlug)).toBeDefined();
 
-    // No MVP reducer can set "private", but the public gate must
-    // already honor it so exposing the field later cannot leak by
-    // omission.
+    // The public gate must already honor "private", though no MVP reducer can set it: docs/adr/0019-visibility-and-access.md.
     asModule(harness, (ctx) => {
       const tournament = ctx.db.tournament.id.find(tournamentId)!;
       ctx.db.tournament.id.update({ ...tournament, visibility: { tag: "private" } });
@@ -952,7 +812,6 @@ describe("operations parity", () => {
     const harness = makeHarness();
     const { tournamentId, ids } = seededTournament(harness, ALICE, ["A", "B"]);
 
-    // Scores must be finite (the wire admits NaN/Infinity).
     as(harness, ALICE, (ctx) => {
       moduleExports.publishTournament(ctx, { tournamentId });
     });
@@ -970,9 +829,6 @@ describe("operations parity", () => {
       }),
     ).toThrow(/at most 120 characters/);
 
-    // The roster cap is pinned on both sides of the boundary: filling
-    // to exactly 128 succeeds, the 129th is refused (single and bulk
-    // alike).
     as(harness, ALICE, (ctx) => {
       moduleExports.addParticipants(ctx, {
         tournamentId,
@@ -1006,9 +862,6 @@ describe("operations parity", () => {
       0,
     ).matchId!;
     const sides = winOver(ids.get("A")!, ids.get("B")!);
-    // MAX_RESULTS: four records for each of the 256 matches a full
-    // roster can generate. Seeded directly — a thousand reports would
-    // only slow the test.
     asModule(harness, (ctx) => {
       const tournament = ctx.db.tournament.id.find(tournamentId)!;
       for (let i = 0; i < 1024; i++) {
@@ -1037,34 +890,21 @@ describe("operations parity", () => {
         });
       });
 
-    // A bidi override (U+202E) in a tournament name.
     expect(createNamed("Final\u202E Cup")).toThrow(spoofed);
-    // An embedded newline (a C0 control).
     expect(createNamed("Line\nBreak")).toThrow(spoofed);
-    // A C1 control (U+0085).
     expect(createNamed("Next\u0085Line")).toThrow(spoofed);
-    // DEL (U+007F), embedded between letters.
     expect(createNamed("A\u007FB")).toThrow(spoofed);
-    // A zero-width no-break space / BOM (U+FEFF), embedded mid-name so
-    // trim() cannot strip it from an edge.
     expect(createNamed("A\uFEFFB")).toThrow(spoofed);
-    // A zero-width space (U+200B).
     expect(createNamed("A\u200BB")).toThrow(spoofed);
-    // A zero-width non-joiner (U+200C), embedded between letters.
     expect(createNamed("A\u200CB")).toThrow(spoofed);
-    // A zero-width joiner (U+200D), embedded between letters.
     expect(createNamed("A\u200DB")).toThrow(spoofed);
-    // A bidi isolate (U+2066), embedded between letters.
     expect(createNamed("A\u2066B")).toThrow(spoofed);
 
-    // Ordinary names \u2014 Japanese text and emoji included \u2014 pass, on
-    // creation and on the roster alike.
     const { tournamentId } = create(harness, ALICE, {
       name: "\u5bae\u5d0e\u30ab\u30c3\u30d7 🏆",
       discipline: "\u5c06\u68cb",
       format: { tag: "single_elimination" },
     });
-    // A zero-width space (U+200B) in a participant name.
     expect(() =>
       as(harness, ALICE, (ctx) => {
         moduleExports.addParticipant(ctx, { tournamentId, name: "Alice\u200B" });
@@ -1082,10 +922,6 @@ describe("operations parity", () => {
       "\u5c71\u7530\u592a\u90ce 🎮",
     ]);
   });
-
-  // -------------------------------------------------------------------------
-  // Disciplines (story 2)
-  // -------------------------------------------------------------------------
 
   test("disciplines deduplicate on their normalized form and feed suggestions", () => {
     const harness = makeHarness();
@@ -1108,7 +944,6 @@ describe("operations parity", () => {
     const disciplines = asModule(harness, (ctx) => [...ctx.db.discipline.iter()]);
     expect(disciplines.map((d) => d.name).sort()).toEqual(["Street Fighter 6", "Strive"]);
 
-    // Suggestions are a public prefix search over the normalized form.
     const suggest = (prefix: string) =>
       moduleExports
         .suggestDisciplines(harness.anonymousViewContext(), { prefix })
@@ -1120,9 +955,6 @@ describe("operations parity", () => {
 
   test("the global discipline list is capped, but existing disciplines stay reusable", () => {
     const harness = makeHarness();
-    // MAX_DISCIPLINES: the global list holds at most 1000 rows. Seeded
-    // directly through a reducer transaction \u2014 a thousand tournament
-    // creations would only slow the test.
     asModule(harness, (ctx) => {
       for (let i = 0; i < 1000; i++) {
         ctx.db.discipline.insert({
@@ -1133,7 +965,6 @@ describe("operations parity", () => {
       }
     });
 
-    // A brand-new discipline would be row 1001: refused.
     expect(() =>
       create(harness, ALICE, {
         name: "One Too Many",
@@ -1142,8 +973,6 @@ describe("operations parity", () => {
       }),
     ).toThrow(/Cannot add a new discipline: the list is limited to 1000/);
 
-    // Reusing an existing discipline inserts no row, so it stays allowed
-    // at the cap.
     create(harness, ALICE, {
       name: "Still Fine",
       discipline: "Seeded 42",
@@ -1155,8 +984,6 @@ describe("operations parity", () => {
 
   test("the 1000th discipline is admitted, and the cap refuses only the 1001st", () => {
     const harness = makeHarness();
-    // Seed 999 directly, so the next brand-new discipline is exactly row
-    // 1000: the cap must admit it, not refuse one row early.
     asModule(harness, (ctx) => {
       for (let i = 0; i < 999; i++) {
         ctx.db.discipline.insert({
@@ -1167,7 +994,6 @@ describe("operations parity", () => {
       }
     });
 
-    // The 1000th row is admitted and the table reaches exactly 1000.
     create(harness, ALICE, {
       name: "At The Cap",
       discipline: "Thousandth Discipline",
@@ -1176,7 +1002,6 @@ describe("operations parity", () => {
     let disciplines = asModule(harness, (ctx) => [...ctx.db.discipline.iter()]);
     expect(disciplines).toHaveLength(1000);
 
-    // A brand-new discipline would be row 1001: refused.
     expect(() =>
       create(harness, ALICE, {
         name: "One Too Many",
@@ -1185,8 +1010,6 @@ describe("operations parity", () => {
       }),
     ).toThrow(/Cannot add a new discipline: the list is limited to 1000/);
 
-    // Reusing an existing discipline inserts no row, so it stays allowed
-    // at the cap.
     create(harness, ALICE, {
       name: "Still Fine",
       discipline: "Seeded 42",
@@ -1198,8 +1021,6 @@ describe("operations parity", () => {
 
   test("canonically equivalent discipline spellings deduplicate onto one row", () => {
     const harness = makeHarness();
-    // Precomposed \u00e9 (U+00E9) vs. e + combining acute (U+0301): the same
-    // name under canonical equivalence, so NFC must land both on one row.
     create(harness, ALICE, {
       name: "First",
       discipline: "Caf\u00e9",
@@ -1215,7 +1036,6 @@ describe("operations parity", () => {
     expect(disciplines).toHaveLength(1);
     expect(disciplines[0]!.name).toBe("Caf\u00e9");
 
-    // Suggestions find the row under either spelling.
     const suggest = (prefix: string) =>
       moduleExports
         .suggestDisciplines(harness.anonymousViewContext(), { prefix })
@@ -1224,10 +1044,6 @@ describe("operations parity", () => {
     expect(suggest("cafe\u0301")).toEqual(["Caf\u00e9"]);
   });
 
-  // -------------------------------------------------------------------------
-  // Tournament settings (story 26)
-  // -------------------------------------------------------------------------
-
   test("name and discipline are editable in every status; the bracket is untouched", () => {
     const harness = makeHarness();
     const { tournamentId, shareSlug, ids } = seededTournament(harness, ALICE, ["A", "B"]);
@@ -1235,9 +1051,6 @@ describe("operations parity", () => {
       moduleExports.publishTournament(ctx, { tournamentId });
     });
 
-    // Whitespace is trimmed like at creation; the discipline dedups
-    // onto the existing row; the generated bracket survives (labels
-    // are not structure).
     as(harness, ALICE, (ctx) => {
       moduleExports.updateTournament(ctx, {
         tournamentId,
@@ -1252,7 +1065,6 @@ describe("operations parity", () => {
     const disciplines = asModule(harness, (ctx) => [...ctx.db.discipline.iter()]);
     expect(disciplines).toHaveLength(1);
 
-    // A partial update leaves the other fields alone.
     as(harness, ALICE, (ctx) => {
       moduleExports.updateTournament(ctx, { tournamentId, discipline: "Tekken 8" });
     });
@@ -1260,8 +1072,6 @@ describe("operations parity", () => {
     expect(view.name).toBe("Friday Finals");
     expect(view.discipline).toBe("Tekken 8");
 
-    // Still editable once completed: a typo on the record is worth
-    // fixing.
     report(
       harness,
       ALICE,
@@ -1274,12 +1084,10 @@ describe("operations parity", () => {
     view = ownedView(harness, ALICE, tournamentId);
     expect(view.status).toBe("completed");
     expect(view.name).toBe("Friday Finals #1");
-    // The Share Link shows the new labels.
     const shared = sharedView(harness, shareSlug);
     expect(shared!.name).toBe("Friday Finals #1");
     expect(shared!.discipline).toBe("Tekken 8");
 
-    // The same bounds as creation.
     expect(() =>
       as(harness, ALICE, (ctx) => {
         moduleExports.updateTournament(ctx, { tournamentId, name: "   " });
@@ -1299,7 +1107,6 @@ describe("operations parity", () => {
       moduleExports.publishTournament(ctx, { tournamentId });
     });
 
-    // Re-sending the current format is a no-op: the bracket stays.
     as(harness, ALICE, (ctx) => {
       moduleExports.updateTournament(ctx, {
         tournamentId,
@@ -1309,8 +1116,6 @@ describe("operations parity", () => {
     let view = ownedView(harness, ALICE, tournamentId);
     expect(view.bracket).not.toBeNull();
 
-    // A real change invalidates the generated structure, like a
-    // roster edit.
     as(harness, ALICE, (ctx) => {
       moduleExports.updateTournament(ctx, {
         tournamentId,
@@ -1329,7 +1134,6 @@ describe("operations parity", () => {
       new Set(["winners", "losers", "grand_final"]),
     );
 
-    // Toggling an option within the family is a change too.
     as(harness, ALICE, (ctx) => {
       moduleExports.updateTournament(ctx, {
         tournamentId,
@@ -1340,8 +1144,6 @@ describe("operations parity", () => {
     expect(view.format).toEqual({ family: "double_elimination", grandFinalReset: false });
     expect(view.bracket).toBeNull();
 
-    // Once a result exists the structure is locked; the format goes
-    // with it.
     as(harness, ALICE, (ctx) => {
       moduleExports.generateBracket(ctx, { tournamentId });
     });
@@ -1360,8 +1162,6 @@ describe("operations parity", () => {
         });
       }),
     ).toThrow(/live/);
-    // ...but re-sending the unchanged format alongside a rename still
-    // works.
     as(harness, ALICE, (ctx) => {
       moduleExports.updateTournament(ctx, {
         tournamentId,
@@ -1374,14 +1174,9 @@ describe("operations parity", () => {
     expect(view.bracket).not.toBeNull();
   });
 
-  // -------------------------------------------------------------------------
-  // Tournament deletion (story 27, ADR 0011)
-  // -------------------------------------------------------------------------
-
   test("deleting a tournament removes it whole, in any status, and darkens its Share Link", () => {
     const harness = makeHarness();
 
-    // A draft with nothing attached.
     const empty = create(harness, ALICE, {
       name: "asdf",
       discipline: "Chess",
@@ -1392,9 +1187,6 @@ describe("operations parity", () => {
     });
     expect(organizerView(harness, ALICE, empty.tournamentId)).toBeUndefined();
 
-    // A completed tournament with roster, bracket, and results
-    // (including a correction): everything that hangs off it goes
-    // with it.
     const { tournamentId, shareSlug, ids } = seededTournament(harness, ALICE, ["A", "B", "C", "D"]);
     as(harness, ALICE, (ctx) => {
       moduleExports.publishTournament(ctx, { tournamentId });
@@ -1420,8 +1212,6 @@ describe("operations parity", () => {
     expect(ownedView(harness, ALICE, tournamentId).status).toBe("completed");
     expect(sharedView(harness, shareSlug)).toBeDefined();
 
-    // An unrelated tournament of the same Organizer must be
-    // untouched.
     const other = seededTournament(harness, ALICE, ["X", "Y"]);
 
     as(harness, ALICE, (ctx) => {
@@ -1442,7 +1232,6 @@ describe("operations parity", () => {
       results: [...ctx.db.result.tournamentId.filter(tournamentId)].length,
     }));
     expect(leftovers).toEqual({ participants: 0, matches: 0, results: 0 });
-    // Deleting twice reads as not found, like any missing tournament.
     expect(() =>
       as(harness, ALICE, (ctx) => {
         moduleExports.deleteTournament(ctx, { tournamentId });
@@ -1454,27 +1243,12 @@ describe("operations parity", () => {
     expect(intact.bracket).not.toBeNull();
   });
 
-  // -------------------------------------------------------------------------
-  // The Organizer read by id
-  // -------------------------------------------------------------------------
-
   test("the organizer views answer nothing for unknown ids instead of throwing", () => {
     const harness = makeHarness();
     const { tournamentId } = seededTournament(harness, ALICE, ["A", "B"]);
-    // Convex's getTournament also answers null for a malformed string
-    // id and for a well-formed id of another table; both are
-    // inexpressible here (the views take a u64, and ids are per-table
-    // sequences), so the port pins the expressible cases: an id that
-    // names nothing, and (in the foreign test above) an id that
-    // names someone else's.
     expect(organizerView(harness, ALICE, 999_999n)).toBeUndefined();
-    // The real one still resolves.
     expect(ownedView(harness, ALICE, tournamentId).tournamentId).toBe(tournamentId);
   });
-
-  // -------------------------------------------------------------------------
-  // Organizer's tournament list
-  // -------------------------------------------------------------------------
 
   test("listMyTournaments returns only the caller's tournaments, newest first", () => {
     const harness = makeHarness();
@@ -1511,10 +1285,6 @@ describe("operations parity", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// The module secret and share slugs (ADR 0032)
-// ---------------------------------------------------------------------------
-
 describe("module secret and share slugs", () => {
   const OTHER_SECRET_HEX = "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f";
 
@@ -1537,8 +1307,6 @@ describe("module secret and share slugs", () => {
     expect(state.secrets[0]!.key).toHaveLength(32);
     expect(state.users).toBe(0);
     expect(state.bindings).toBe(0);
-    // Nobody is signed in by the seed: a fresh identity still reads
-    // unauthenticated.
     expect(moduleExports.sessionState(harness.viewContext(authFor(ALICE)))).toEqual([
       { state: { tag: "unauthenticated" } },
     ]);
@@ -1553,15 +1321,12 @@ describe("module secret and share slugs", () => {
 
   test("seeding after an identity has bound is refused", () => {
     const harness = makeUnseededHarness();
-    // A first act binds the identity to a fresh app_user.
     as(harness, ALICE, (ctx) => {
       moduleExports.bindIdentity(ctx, {});
     });
     expect(() => seed(harness, TEST_SECRET_HEX)).toThrow(
       /can only be seeded before any identity binds/,
     );
-    // And nothing was seeded: tournament creation still refuses as
-    // unseeded (below).
     expect(() =>
       create(harness, ALICE, {
         name: "Too Late",
@@ -1573,14 +1338,10 @@ describe("module secret and share slugs", () => {
 
   test("malformed and short keys are refused", () => {
     const harness = makeUnseededHarness();
-    // Not hex at all.
     expect(() => seed(harness, "not-a-hex-key")).toThrow(/hex/);
-    // Odd-length hex cannot decode to whole bytes.
     expect(() => seed(harness, "abc")).toThrow(/hex/);
-    // Valid hex, wrong size: 2 bytes and 33 bytes.
     expect(() => seed(harness, "abcd")).toThrow(/exactly 32 bytes, got 2/);
     expect(() => seed(harness, `${TEST_SECRET_HEX}00`)).toThrow(/exactly 32 bytes, got 33/);
-    // None of the refusals seeded anything.
     const secrets = asModule(harness, (ctx) => [...ctx.db.moduleSecret.iter()]);
     expect(secrets).toEqual([]);
   });
@@ -1594,10 +1355,6 @@ describe("module secret and share slugs", () => {
         format: { tag: "single_elimination" },
       }),
     ).toThrow(/Module secret is not seeded/);
-    // The failed create is one reducer transaction, so its rollback
-    // takes the identity binding it began with it: the database is
-    // still completely fresh, seeding still succeeds, and creation
-    // works from then on.
     seedTestSecret(harness);
     const { shareSlug } = create(harness, ALICE, {
       name: "Seeded Late",
@@ -1620,8 +1377,6 @@ describe("module secret and share slugs", () => {
       slugs.add(shareSlug);
     }
     expect(slugs.size).toBe(12);
-    // A second organizer's mints land in the same slug space without
-    // colliding with the first organizer's.
     for (let i = 0; i < 3; i++) {
       const { shareSlug } = create(harness, BOB, {
         name: `Bob Cup ${i}`,
@@ -1636,11 +1391,7 @@ describe("module secret and share slugs", () => {
 
   test("the first slug with the fixed test key is the golden vector", () => {
     const harness = makeHarness();
-    // The byte layout ADR 0032 documents, pinned end to end: the
-    // fixed test key (bytes 0x00-0x1f), keyVersion 1, the first
-    // organizer (app_user id 1), counter 0. Any drift in the layout —
-    // label, separator, field widths, endianness, alphabet, or the
-    // rejection bound — moves this value.
+    // The slug byte layout pinned below is ADR 0032's derivation: docs/adr/0032-module-secret-in-a-private-table.md.
     const { shareSlug } = create(harness, ALICE, {
       name: "Golden",
       discipline: "Chess",
@@ -1659,12 +1410,7 @@ describe("module secret and share slugs", () => {
         format: { tag: "single_elimination" },
       }).shareSlug;
     };
-    // The derivation is deterministic — key, organizer, and counter
-    // are all it reads — so the same provisioning reproduces it.
     expect(firstSlugWith(TEST_SECRET_HEX)).toBe(firstSlugWith(TEST_SECRET_HEX));
-    // A database provisioned with another key mints a different first
-    // slug for the identical organizer journey: the key, not the
-    // journey, is what makes slugs unguessable.
     expect(firstSlugWith(OTHER_SECRET_HEX)).not.toBe(firstSlugWith(TEST_SECRET_HEX));
   });
 });

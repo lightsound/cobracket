@@ -4,14 +4,7 @@ import { formatToEngine, sideToEngine, slotToEngine } from "../src/lib";
 import * as moduleExports from "../src/index";
 import { authFor, type Harness } from "./harness";
 
-// The composed read shapes the operations tests assert against. ADR
-// 0031 replaces Convex's one assembled getTournament query with flat
-// per-table views the client composes: these helpers perform that
-// composition (views + the format engine) exactly as a client would,
-// so the ported tests assert the same external behavior — results in,
-// progression / standings / ready matches out — through the module's
-// real surfaces. Ids stay bigint (the row handles); everything the
-// engine derives is converted back from its string ids.
+// Client composition over flat per-table views: docs/adr/0031-adopt-spacetimedb-as-the-backend.md.
 
 export type ComposedOccupant =
   | { kind: "participant"; participantId: bigint }
@@ -34,7 +27,6 @@ export interface ComposedMatch {
   winnerId?: bigint;
   loserId?: bigint;
   sides?: ComposedSide[];
-  // The Organizer composition only: the handle reportResult takes.
   matchId?: bigint;
 }
 
@@ -77,8 +69,6 @@ export interface SharedView {
   bracket: ComposedBracket | null;
 }
 
-// The engine structure over either audience's match rows (both
-// surfaces project the same stored shape).
 function structureOf(
   format: Parameters<typeof formatToEngine>[0],
   matches: readonly {
@@ -144,10 +134,6 @@ function assembleBracket(
   };
 }
 
-// The Organizer's read of one tournament, composed from the four
-// sender-gated views as the owner — or undefined when the gate
-// answers nothing (unbound, foreign, or missing), the module form of
-// getTournament's null.
 export function organizerView(
   harness: Harness,
   sub: string,
@@ -190,9 +176,6 @@ export function organizerView(
   };
 }
 
-// The Share Link's read, composed from the four anonymous slug views
-// — or undefined when the gate answers nothing (unknown slug, draft,
-// or private), the module form of getSharedTournament's null.
 export function sharedView(harness: Harness, slug: string): SharedView | undefined {
   const ctx = harness.anonymousViewContext();
   const header = moduleExports.sharedTournament(ctx, { slug });

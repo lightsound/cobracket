@@ -81,8 +81,6 @@ function seedModuleSecret(cli: string): void {
   );
 }
 
-// --- binaries ---------------------------------------------------------------
-
 function ensureBinaries(): string {
   const override = process.env.SPACETIME_BIN_DIR;
   if (override) {
@@ -95,7 +93,6 @@ function ensureBinaries(): string {
   return downloadBinaries(binDir);
 }
 
-/** Fail closed unless the downloaded tarball matches the pinned hash. */
 function verifyTarball(tarball: string): void {
   const actual = createHash("sha256").update(readFileSync(tarball)).digest("hex");
   if (actual !== SERVER_TARBALL_SHA256) {
@@ -127,9 +124,6 @@ function downloadBinaries(binDir: string): string {
   return binDir;
 }
 
-// The probes assert wire behavior of one exact server release; a
-// stale or foreign binary in the bin dir must fail loudly rather than
-// prove things about the wrong server.
 function assertServerVersion(binDir: string): void {
   const out = run(join(binDir, "spacetimedb-standalone"), ["--version"]);
   if (!out.includes(SERVER_VERSION)) {
@@ -139,8 +133,6 @@ function assertServerVersion(binDir: string): void {
   }
 }
 
-// --- module assembly ----------------------------------------------------------
-
 function assembleModule(): string {
   const dir = join(BUILD_DIR, "module");
   rmSync(dir, { recursive: true, force: true });
@@ -148,13 +140,9 @@ function assembleModule(): string {
   cpSync(join(MODULE_DIR, "package.json"), join(dir, "package.json"));
   cpSync(join(MODULE_DIR, "tsconfig.json"), join(dir, "tsconfig.json"));
   cpSync(join(MODULE_DIR, "src"), join(dir, "src"), { recursive: true });
-  // The format engine sits beside src/ in the repo layout, and the
-  // module's library imports it as ../../format — keep the layout.
   cpSync(join(MODULE_DIR, "format"), join(dir, "format"), { recursive: true });
   return dir;
 }
-
-// --- server lifecycle ---------------------------------------------------------
 
 function jwtKeyPaths(): { pub: string; priv: string } {
   const cliKeys = join(homedir(), ".config", "spacetime");
@@ -173,8 +161,6 @@ function jwtKeyPaths(): { pub: string; priv: string } {
   const keyDir = join(BUILD_DIR, "keys");
   mkdirSync(keyDir, { recursive: true });
   const generated = join(keyDir, "id_ecdsa");
-  // A cached key in the rejected SEC1 form (minted before the form
-  // was pinned) is regenerated, not reused.
   if (
     existsSync(generated) &&
     !readFileSync(generated, "utf8").startsWith("-----BEGIN PRIVATE KEY-----")
@@ -222,10 +208,6 @@ async function waitForPort(port: number, timeoutMs: number): Promise<void> {
 }
 
 async function startServer(standalone: string): Promise<ReturnType<typeof spawn>> {
-  // The local-target assertion, in the spike's and the e2e gate's
-  // spirit: loopback host, this suite's own port, free before the
-  // child starts — a foreign server already listening there would
-  // silently take the publish and the probes.
   if (!HOST.startsWith("http://127.0.0.1:")) {
     throw new Error(`connection suite target is not loopback: ${HOST}`);
   }
@@ -255,8 +237,6 @@ async function startServer(standalone: string): Promise<ReturnType<typeof spawn>
   try {
     await waitForPort(PORT, 30_000);
   } catch (error) {
-    // The child is detached: if startup fails it must not be left
-    // running behind the suite's back.
     await stopServer(server);
     throw error;
   }
@@ -273,8 +253,6 @@ async function stopServer(server: ReturnType<typeof spawn>): Promise<void> {
   } catch {
     server.kill("SIGTERM");
   }
-  // Escalate if the group ignores SIGTERM: a leaked standalone would
-  // hold the port and poison the next run.
   await sleep(500);
   try {
     process.kill(-pid, 0);
@@ -283,8 +261,6 @@ async function stopServer(server: ReturnType<typeof spawn>): Promise<void> {
     // The group is gone — the expected path.
   }
 }
-
-// --- the setup entry ------------------------------------------------------------
 
 export default async function setup(): Promise<() => Promise<void>> {
   const binDir = ensureBinaries();
