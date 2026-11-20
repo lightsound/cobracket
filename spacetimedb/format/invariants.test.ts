@@ -7,8 +7,6 @@ function ids(count: number): string[] {
   return Array.from({ length: count }, (_, i) => `p${i + 1}`);
 }
 
-// Plays every ready match until the tournament completes, picking the winner
-// by preference order (lower participant number wins unless flipped).
 function playToCompletion(
   participantIds: string[],
   format: FormatOptions,
@@ -65,7 +63,6 @@ describe("single elimination invariants for any roster size", () => {
       expect(progression.standings.find((entry) => entry.participantId === "p1")?.placement).toBe(
         1,
       );
-      // Placements start at 1 and never skip past the roster size.
       for (const entry of progression.standings) {
         expect(entry.placement).toBeGreaterThanOrEqual(1);
         expect(entry.placement).toBeLessThanOrEqual(count);
@@ -95,7 +92,6 @@ describe("double elimination invariants for any roster size", () => {
         lowerNumberWins,
       );
 
-      // p1 never loses, so the reset never triggers.
       expect(playedMatches).toBe(2 * count - 2);
       expect(progression.completed).toBe(true);
       expect(progression.championId).toBe("p1");
@@ -104,14 +100,12 @@ describe("double elimination invariants for any roster size", () => {
         participantId: "p1",
         placement: 1,
       });
-      // Exactly one runner-up (the grand-final loser).
       expect(progression.standings.filter((entry) => entry.placement === 2)).toHaveLength(1);
     });
   }
 
   for (let count = 2; count <= 33; count++) {
     test(`${count} participants: scrambled outcomes still complete in 2n-2 or 2n-1 matches`, () => {
-      // Deterministic but irregular winner picking, seeded by roster size.
       let state = count * 2654435761;
       const scrambled = (a: string, b: string) => {
         state = (state * 1103515245 + 12345) % 2147483648;

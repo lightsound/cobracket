@@ -1,12 +1,3 @@
-/**
- * BracketView under the diagnostics gate (src/test-setup.ts): every test here
- * also asserts, implicitly, that rendering and updating the bracket produces no
- * Solid diagnostic — no lost row identity, no untracked read, no wasted
- * recompute. That is the point of exercising it with the update shape the app
- * actually sees: Convex hands the page a whole new array of new objects on
- * every subscription push, so a `<For>` keyed by object identity would rebuild
- * every card, and only this kind of test can see that.
- */
 import { createSignal, flush } from "solid-js";
 import { expect, test } from "vite-plus/test";
 import { mount } from "../test-setup";
@@ -22,10 +13,6 @@ const PARTICIPANTS = [
   { participantId: "p4", name: "Edsger" },
 ];
 
-/**
- * A 4-player single-elimination bracket, rebuilt from scratch on every call —
- * the way a fresh subscription payload arrives.
- */
 function semisAndFinal(final: Partial<ViewMatch> = {}): ViewMatch[] {
   return [
     {
@@ -105,7 +92,6 @@ test("renders every match with its participants, scores and ready marker", () =>
   expect(labels[0]).toContain("Grace");
   expect(labels[0]).toContain("2");
   expect(labels[2]).toContain("Up next");
-  // Every edge of the 4-player bracket: both semis feed the final.
   expect(host.querySelectorAll("svg path")).toHaveLength(2);
 });
 
@@ -120,15 +106,11 @@ test("survives a refetch that replaces every match object", () => {
   }));
   const before = host.querySelector("button[style*='--card-x']");
 
-  // Same data, all-new objects — an idle subscription push.
   setMatches(semisAndFinal());
   flush();
 
-  // Identity survived: the DOM node was updated in place, not rebuilt. The
-  // gate catches the same mistake from the other side (UNSTABLE_LIST_IDENTITY).
   expect(host.querySelector("button[style*='--card-x']")).toBe(before);
 
-  // And a real change still lands.
   setMatches(
     semisAndFinal({
       state: "completed",
@@ -163,7 +145,6 @@ test("reports only the matches an organizer may score", () => {
   }
   flush();
 
-  // Two completed head-to-heads (correctable) plus the ready final.
   expect(selected).toEqual(["w1m1", "w1m2", "w2m1"]);
 });
 
@@ -187,8 +168,6 @@ test("zooming and panning move the canvas without disturbing the cards", () => {
     voidedMatchKeys: [],
   }));
   const viewport = host.firstElementChild as HTMLElement;
-  // The pan/zoom canvas: the viewport's first child. Its geometry reaches the
-  // stylesheet as custom properties (ADR 0012), so those are what move.
   const canvas = viewport.firstElementChild as HTMLElement;
   const geometry = () => ({
     x: canvas.style.getPropertyValue("--pan-x"),
@@ -201,12 +180,9 @@ test("zooming and panning move the canvas without disturbing the cards", () => {
   flush();
   expect(geometry().zoom).toBe("1.25");
 
-  // Pan by a known delta. CANVAS_PADDING (24) is the untouched origin, so the
-  // translate is the drag distance plus it.
   drag(viewport, [100, 100], [140, 70]);
   expect(geometry()).toMatchObject({ x: "64px", y: "-6px" });
 
-  // Released: further movement is not a drag.
   viewport.dispatchEvent(
     new PointerEvent("pointermove", { pointerId: 1, bubbles: true, clientX: 300, clientY: 300 }),
   );
@@ -219,10 +195,6 @@ test("zooming and panning move the canvas without disturbing the cards", () => {
   expect(cardLabels(host)).toEqual(before);
 });
 
-/**
- * A 32-player single elimination: 16 + 8 + 4 + 2 + 1 = 31 matches, rebuilt
- * from scratch on every call like the fixtures above.
- */
 function bigBracket(): ViewMatch[] {
   const matches: ViewMatch[] = [];
   for (let round = 1, count = 16; count >= 1; round++, count /= 2) {
@@ -251,20 +223,6 @@ const MANY_PARTICIPANTS = Array.from({ length: 32 }, (_, index) => ({
   name: `Player ${index + 1}`,
 }));
 
-/**
- * The gate has scale-dependent checks, and the 3-match fixtures above cannot
- * reach them: a scope fails at 30 sources (`WIDE_SCOPE_SOURCES`), so a
- * bracket has to be tournament-sized before a per-row cost shows up at all.
- * This is the case that caught the real one — a per-row `<Show>` narrowing
- * each card's match made every row a source of the list's insert effect, and
- * 15 matches were already enough to report it in the browser while every test
- * here passed. Since Solid 2.0.0-rc.14 no diagnostic code reports it (the
- * engine exempts that effect from [WIDE_SCOPE_DEPS]); the gate counts the
- * effect's sources itself (`src/scope-widths.ts`), and with that defect
- * re-injected this test fails at 31. Keep this fixture above the threshold:
- * it is the only thing standing between a per-row reactive wrapper and a
- * silent regression.
- */
 test("a tournament-sized bracket costs the list no per-row subscription", () => {
   const [matches, setMatches] = createSignal(bigBracket(), { name: "matches" });
   const host = mountBracket(() => ({
@@ -276,7 +234,6 @@ test("a tournament-sized bracket costs the list no per-row subscription", () => 
   expect(host.querySelectorAll("button[style*='--card-x']")).toHaveLength(31);
   const before = host.querySelector("button[style*='--card-x']");
 
-  // A subscription push with all-new objects, at scale.
   setMatches(bigBracket());
   flush();
 

@@ -7,11 +7,6 @@ import type { Id } from "./_generated/dataModel";
 import type { QueryCtx } from "./_generated/server";
 import { internalMutation, query } from "./_generated/server";
 
-// The whole auth surface lives in this one module (ADR 0003): Convex Auth v2
-// (preview) with Anonymous Sign-In. Everything else in convex/ learns "who is
-// the current Organizer" through getOrganizer (verified against the core's
-// JWKS via auth.config.ts), never from client-supplied arguments.
-
 const core = setupCore({ component: components.auth });
 
 export const { signOut, refreshSession } = core;
@@ -58,17 +53,12 @@ async function resolveSession(ctx: QueryCtx): Promise<SessionState> {
   return { kind: "organizer", userId };
 }
 
-/**
- * Who the caller is: the signed-in Organizer's user id, or null. The seam
- * every Organizer capability (operations API, MCP tokens later) resolves
- * identity through, so an added auth mechanism stays an edit to this module.
- */
+/** Auth boundary: docs/adr/0003-convex-auth-v2-anonymous-signin.md. */
 export async function getOrganizer(ctx: QueryCtx): Promise<Id<"users"> | null> {
   const session = await resolveSession(ctx);
   return session.kind === "organizer" ? session.userId : null;
 }
 
-// The same answer for clients, as a subscribable query.
 // oxlint-disable-next-line @convex-dev/require-access-control -- answers who the caller is
 export const currentOrganizer = query({
   args: {},

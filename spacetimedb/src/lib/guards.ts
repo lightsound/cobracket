@@ -29,8 +29,6 @@ export function requireStatus(
   }
 }
 
-// The shared prologue of every tournament-keyed mutation: identity,
-// ownership, then (in requireOwnedTournamentIn) lifecycle.
 export function requireOwnedTournament(
   db: WritableDb,
   sender: Identity,
@@ -84,6 +82,4 @@ export function requireOwnedMatch(
   return { match, tournament };
 }
 
-// Roster and seeding stay editable, and the bracket regenerable, until
-// the first result flips the tournament to live (story 10 + Lifecycle).
 export const PRE_LIVE: readonly TournamentStatusTag[] = ["draft", "published"];

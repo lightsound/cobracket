@@ -24,8 +24,6 @@ export function formatToEngine(format: StoredFormat): FormatOptions {
     : { family: "double_elimination", grandFinalReset: format.value.grandFinalReset };
 }
 
-// The stored form of a format argument: grand-final bracket reset
-// defaults to on (spec: Format engine).
 export function formatToStored(format: FormatArg): StoredFormat {
   return format.tag === "double_elimination"
     ? {

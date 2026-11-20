@@ -34,22 +34,6 @@ import {
   TournamentStatus,
 } from "./schema";
 
-// Tournament creation, settings, deletion, and the Organizer read
-// surface (ADR 0031) — the successor of convex/tournaments.ts. Every
-// view resolves the caller through the binding table first; an
-// unbound identity sees nothing, and the per-tournament views
-// additionally require ownership (ownedTournament) — routes addressed
-// by id are not capabilities (ADR 0019). The reducers below resolve
-// identity through requireBoundUser and ownership through the guards,
-// in that order.
-//
-// The row types are the Organizer audience's own (ADR 0019): unlike
-// the shared surface they carry the handles the Organizer's reducers
-// take — match row ids on matches and results — plus the header's
-// shareSlug and seeding. What getTournament assembles server-side on
-// Convex (one nested view) is composed by the client here from these
-// flat per-table views plus the format engine (ADR 0005).
-
 const MyTournamentRow = t.row("MyTournamentRow", {
   tournamentId: t.u64().primaryKey(),
   name: t.string(),
@@ -76,8 +60,6 @@ export const myTournaments = spacetimedb.view(
       .flatMap((tournament) => {
         const discipline = ctx.db.discipline.id.find(tournament.disciplineId);
         if (discipline === null) {
-          // Unreachable while disciplines are never deleted; a row
-          // without its discipline name is not a listable tournament.
           return [];
         }
         return [
@@ -121,8 +103,6 @@ export const organizerTournament = spacetimedb.view(
       format: tournament.format,
       discipline: found.disciplineName,
       shareSlug: tournament.shareSlug,
-      // Absent means "random" (schema.ts) — the read surface states
-      // the effective mode, as getTournament does today.
       seeding: tournament.seeding ?? { tag: "random" },
     };
   },
@@ -189,8 +169,6 @@ export const organizerResults = spacetimedb.view(
     if (found === undefined) {
       return [];
     }
-    // Append order is the engine's input order (latest record per
-    // match wins); resultId is the append sequence.
     return sortedRows(ctx.db.result.tournamentId.filter(found.tournament.id), compareById).map(
       (result) => ({
         matchId: result.matchId,
@@ -200,20 +178,6 @@ export const organizerResults = spacetimedb.view(
     );
   },
 );
-
-// ---------------------------------------------------------------------------
-// Writes (M2): tournament creation, settings, deletion — the successor
-// of convex/tournaments.ts's mutations. Reducers return nothing; the
-// client re-reads through the views above (createTournament's Convex
-// return of { tournamentId, shareSlug } is the newest row of
-// my_tournaments).
-// ---------------------------------------------------------------------------
-
-// The Share Link identifier: an unlisted tournament's URL is its only
-// guard, so the slug is a keyed derivation (HMAC-SHA256 over the module
-// secret, the organizer, and a per-organizer counter), minted in
-// lib/secret.ts — ADR 0032 carries the design and why the module has
-// no other randomness fit for a capability token.
 
 export const createTournament = spacetimedb.reducer(
   { name: t.string(), discipline: t.string(), format: formatArg },
@@ -229,8 +193,6 @@ export const createTournament = spacetimedb.reducer(
       userId,
       disciplineId,
       format,
-      // Elimination requires a decisive outcome; the field ships for later
-      // draw-capable families.
       drawsAllowed: false,
       status: { tag: "draft" },
       visibility: { tag: "unlisted" },
@@ -282,13 +244,6 @@ export const updateTournament = spacetimedb.reducer(
   },
 );
 
-// Deletion is physical and whole (ADR 0011): the tournament and
-// everything that hangs off it — roster, bracket, results — go
-// together, in every status. Results are never deleted on their own
-// (ADR 0005: corrections are the only way to change them); removing
-// the tournament they belong to is a different act. The Share Link
-// reads as not found from then on. Bounded by one tournament's size,
-// like every other per-tournament write.
 export const deleteTournament = spacetimedb.reducer({ tournamentId: t.u64() }, (ctx, args) => {
   const tournament = requireOwnedTournament(ctx.db, ctx.sender, args.tournamentId);
   const results = takeAll(ctx.db.result.tournamentId.filter(tournament.id), MAX_RESULTS, "results");

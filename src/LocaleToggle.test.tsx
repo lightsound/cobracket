@@ -1,7 +1,3 @@
-/**
- * The language button, which offers the locale you are *not* in — so its own
- * label is the thing that has to flip when it is pressed.
- */
 import { expect, test } from "vite-plus/test";
 import { flush } from "solid-js";
 import { mount } from "./test-setup";
@@ -25,7 +21,6 @@ test("offers the other locale, and switches to it on click", () => {
   button.click();
   flush();
 
-  // The label is now the way back, and the aria-label is translated too.
   expect(localStorage.getItem("cobracket:locale")).toBe("ja");
   expect(button.textContent?.trim()).toBe("English");
   expect(button.getAttribute("aria-label")).toBe("言語");

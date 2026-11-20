@@ -1,5 +1,3 @@
-// The one text field look, shared by NameField and DisciplineField so a
-// change to it is one edit. Callers never restyle it (ADR 0012).
 export function TextInput(props: {
   value: string;
   onInput: (value: string) => void;

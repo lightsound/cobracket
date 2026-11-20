@@ -13,8 +13,6 @@ import {
   requireStatus,
 } from "./model";
 
-// Roster management and seeding (stories 4–8).
-
 async function insertParticipant(
   ctx: MutationCtx,
   tournamentId: Id<"tournaments">,
@@ -43,8 +41,6 @@ export const addParticipant = mutation({
   },
 });
 
-// Bulk entry (story 5): one name per line, e.g. pasted from Discord. Blank
-// lines and surrounding whitespace are dropped.
 export const addParticipants = mutation({
   args: { tournamentId: v.id("tournaments"), text: v.string() },
   returns: v.array(v.id("participants")),
@@ -91,7 +87,6 @@ export const removeParticipant = mutation({
     const { participant, tournament } = await requireOwnedParticipant(ctx, args.participantId);
     requireStatus(tournament, PRE_LIVE, "edit the roster");
     await ctx.db.delete("participants", args.participantId);
-    // Close the seed gap so seeds stay a contiguous 1..n sequence.
     const roster = await loadRoster(ctx, tournament._id);
     for (const other of roster) {
       if (other.seed > participant.seed) {

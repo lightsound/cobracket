@@ -343,8 +343,6 @@ describe("write-result synthesis", () => {
   });
 
   it("diffs voided records for a report's return", () => {
-    // All three matches decided, nothing voided: Alice and Bob won
-    // their semifinals, Alice won the final.
     const before = composeOrganizerTournament({
       header: { ...HEADER, status: { tag: "Live" } },
       participants: ROSTER,

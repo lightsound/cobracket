@@ -2,9 +2,6 @@ import { SenderError } from "spacetimedb/server";
 import type { WritableDb } from "./binding";
 import { MAX_DISCIPLINES, requireName } from "./limits";
 
-// Discipline normalization and dedup, the successor of
-// convex/model/disciplines.ts.
-
 // fallow-ignore-next-line code-duplication -- intentionally mirrors the Convex original during the migration window (both backends live until M6 deletes the Convex side; this module copy is the survivor)
 export function normalizeDisciplineName(raw: string): { name: string; normalizedName: string } {
   // Canonical equivalence only: NFC folds canonically identical spellings
@@ -17,9 +14,6 @@ export function normalizeDisciplineName(raw: string): { name: string; normalized
   return { name, normalizedName: name.toLowerCase().normalize("NFC") };
 }
 
-// Disciplines are freeform organizer input, normalized into rows so the
-// same discipline entered twice (case/spacing aside) is one row
-// (story 2). The unique index on normalizedName is the probe.
 export function getOrCreateDiscipline(db: WritableDb, rawName: string): bigint {
   const { name, normalizedName } = normalizeDisciplineName(rawName);
   requireName(name, "Discipline");

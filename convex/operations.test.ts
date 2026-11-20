@@ -6,11 +6,6 @@ import { api, internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
 
-// Seam 2 lifecycle tests (docs/specs/mvp.md Testing Decisions): drive the
-// operations API through the same functions the web UI and the MCP server
-// call, and assert external behavior — results in, progression / standings /
-// ready matches out — never internal bookkeeping.
-
 // Test files are excluded: convex-test only needs the function modules, and
 // globbing sibling tests would create test-to-test import cycles.
 const modules = import.meta.glob(["./**/*.ts", "!./**/*.test.ts"]);
@@ -44,7 +39,6 @@ function winOver(
   ];
 }
 
-// Non-null bracket accessor: most assertions run after generation.
 function bracketOf<V extends { bracket: unknown }>(view: V): NonNullable<V["bracket"]> {
   expect(view.bracket).not.toBeNull();
   return view.bracket as NonNullable<V["bracket"]>;
@@ -52,7 +46,6 @@ function bracketOf<V extends { bracket: unknown }>(view: V): NonNullable<V["brac
 
 type OrganizerView = NonNullable<FunctionReturnType<typeof api.tournaments.getTournament>>;
 
-// The Organizer's read of a tournament they own: null is a failure here.
 async function ownedView(as: Organizer, tournamentId: string): Promise<OrganizerView> {
   const view = await as.query(api.tournaments.getTournament, { tournamentId });
   expect(view).not.toBeNull();
@@ -114,23 +107,16 @@ function occupantIds(match: {
   );
 }
 
-// ---------------------------------------------------------------------------
-// The full lifecycle: create → roster → generate → publish → report → complete
-// ---------------------------------------------------------------------------
-
 test("a tournament runs end to end through the operations API", async () => {
   const t = convexTest(schema, modules);
   const { as } = await newOrganizer(t);
 
-  // Create (story 1–3): freeform discipline, single elimination, draft.
   const { tournamentId, shareSlug } = await as.mutation(api.tournaments.createTournament, {
     name: "  Friday Night Fights ",
     discipline: "Street Fighter 6",
     format: { family: "single_elimination" },
   });
 
-  // Roster (stories 4–6): bulk paste with blank lines, one-by-one add,
-  // rename, remove.
   const [aliceId] = await as.mutation(api.roster.addParticipants, {
     tournamentId,
     text: "Alice\n\n  Bob \nCarol\n",
@@ -154,7 +140,6 @@ test("a tournament runs end to end through the operations API", async () => {
   expect(view.participants.map((p) => p.seed)).toEqual([1, 2, 3, 4]);
   expect(view.bracket).toBeNull();
 
-  // Seeding (story 8): manual reorder, then generate (story 9).
   const bobId = view.participants.find((p) => p.name === "Bob")!.participantId;
   const carolId = view.participants.find((p) => p.name === "Carol")!.participantId;
   await as.mutation(api.roster.reorderSeeding, {
@@ -166,20 +151,17 @@ test("a tournament runs end to end through the operations API", async () => {
   view = await ownedView(as, tournamentId);
   expect(view.seeding).toBe("manual");
   let bracket = bracketOf(view);
-  // Standard placement for 4 seeds: (1 vs 4) and (2 vs 3).
   expect(occupantIds(matchAt(bracket, "winners", 1, 0))).toEqual([daveId, aliceId]);
   expect(occupantIds(matchAt(bracket, "winners", 1, 1))).toEqual([carolId, bobId]);
   expect(bracket.readyMatchKeys).toHaveLength(2);
   expect(bracket.completed).toBe(false);
 
-  // Publish (story 11): draft → published, Share Link goes visible.
   expect(await t.query(api.share.getSharedTournament, { shareSlug })).toBeNull();
   await as.mutation(api.bracket.publishTournament, { tournamentId });
   const shared = await t.query(api.share.getSharedTournament, { shareSlug });
   expect(shared).not.toBeNull();
   expect(shared!.status).toBe("published");
 
-  // First result (story 12): published → live, roster and structure lock.
   const semiA = matchAt(bracket, "winners", 1, 0);
   const reportA = await as.mutation(api.bracket.reportResult, {
     matchId: semiA.matchId,
@@ -202,8 +184,6 @@ test("a tournament runs end to end through the operations API", async () => {
     }),
   ).rejects.toThrow(/live/);
 
-  // Progress to the final: current/next matches come from readyMatchKeys
-  // (story 15).
   const semiB = matchAt(bracket, "winners", 1, 1);
   await as.mutation(api.bracket.reportResult, {
     matchId: semiB.matchId,
@@ -219,7 +199,6 @@ test("a tournament runs end to end through the operations API", async () => {
     { participantId: aliceId, outcome: "loss", score: 1 },
   ]);
 
-  // Final result: automatic completion (story 16) and standings (story 23).
   const reportFinal = await as.mutation(api.bracket.reportResult, {
     matchId: final.matchId,
     sides: winOver(daveId, carolId),
@@ -240,10 +219,6 @@ test("a tournament runs end to end through the operations API", async () => {
   ]);
 });
 
-// ---------------------------------------------------------------------------
-// Correction → downstream void → re-entry (story 14, ADR 0005)
-// ---------------------------------------------------------------------------
-
 test("a correction voids downstream results, which are surfaced and re-enterable", async () => {
   const t = convexTest(schema, modules);
   const { as } = await newOrganizer(t);
@@ -254,7 +229,6 @@ test("a correction voids downstream results, which are surfaced and re-enterable
 
   let view = await ownedView(as, tournamentId);
   let bracket = bracketOf(view);
-  // Standard placement for 8 seeds: round 1 pairs (1v8), (4v5), (2v7), (3v6).
   const r1m0 = matchAt(bracket, "winners", 1, 0);
   const r1m1 = matchAt(bracket, "winners", 1, 1);
   expect(occupantIds(r1m0)).toEqual([id("A"), id("H")]);
@@ -278,8 +252,6 @@ test("a correction voids downstream results, which are surfaced and re-enterable
     sides: winOver(id("A"), id("D")),
   });
 
-  // Correct round 1: H actually beat A. The semifinal's recorded result
-  // (A over D) no longer pairs — it is voided and reported back.
   const correction = await as.mutation(api.bracket.reportResult, {
     matchId: r1m0.matchId,
     sides: winOver(id("H"), id("A")),
@@ -287,8 +259,6 @@ test("a correction voids downstream results, which are surfaced and re-enterable
   expect(correction.status).toBe("live");
   expect(correction.voided).toEqual([{ matchId: semi.matchId, matchKey: semi.key }]);
 
-  // The derived view agrees: the semifinal is open again with the corrected
-  // pairing, and flagged as awaiting re-entry.
   view = await ownedView(as, tournamentId);
   bracket = bracketOf(view);
   const reopenedSemi = matchAt(bracket, "winners", 2, 0);
@@ -307,7 +277,6 @@ test("a correction voids downstream results, which are surfaced and re-enterable
   });
   expect(unrelated.voided).toEqual([]);
 
-  // Re-enter the semifinal; play continues with nothing else lost.
   const reentry = await as.mutation(api.bracket.reportResult, {
     matchId: semi.matchId,
     sides: winOver(id("H"), id("D")),
@@ -368,10 +337,6 @@ test("corrections cannot reopen a completed tournament, but may refine it", asyn
   expect(bracketOf(after).championId).toBe(id("A"));
 });
 
-// ---------------------------------------------------------------------------
-// Walkovers (story 13) and outcome validation
-// ---------------------------------------------------------------------------
-
 test("a no-show is a walkover result; the bracket advances without regeneration", async () => {
   const t = convexTest(schema, modules);
   const { as } = await newOrganizer(t);
@@ -382,8 +347,6 @@ test("a no-show is a walkover result; the bracket advances without regeneration"
     matchId: matchAt(bracketOf(await ownedView(as, tournamentId)), "winners", 1, 0).matchId,
     sides: winOver(ids.get("A")!, ids.get("B")!, "walkover"),
   });
-  // A 2-participant bracket completes on its first (walkover) result:
-  // published → live → completed in one report.
   expect(report.status).toBe("completed");
   const view = await ownedView(as, tournamentId);
   expect(bracketOf(view).championId).toBe(ids.get("A"));
@@ -400,7 +363,6 @@ test("invalid results are refused with the engine's reasons", async () => {
   const r1m0 = matchAt(bracket, "winners", 1, 0);
   const final = matchAt(bracket, "winners", 2, 0);
 
-  // Draws are not allowed under elimination.
   await expect(
     as.mutation(api.bracket.reportResult, {
       matchId: r1m0.matchId,
@@ -411,7 +373,6 @@ test("invalid results are refused with the engine's reasons", async () => {
     }),
   ).rejects.toThrow(/draw/);
 
-  // Both sides must be the match's current occupants.
   await expect(
     as.mutation(api.bracket.reportResult, {
       matchId: r1m0.matchId,
@@ -419,7 +380,6 @@ test("invalid results are refused with the engine's reasons", async () => {
     }),
   ).rejects.toThrow(/does not apply/);
 
-  // A pending match (occupants undetermined) cannot take a result.
   await expect(
     as.mutation(api.bracket.reportResult, {
       matchId: final.matchId,
@@ -427,7 +387,6 @@ test("invalid results are refused with the engine's reasons", async () => {
     }),
   ).rejects.toThrow(/does not apply/);
 
-  // Exactly two sides.
   await expect(
     as.mutation(api.bracket.reportResult, {
       matchId: r1m0.matchId,
@@ -435,10 +394,6 @@ test("invalid results are refused with the engine's reasons", async () => {
     }),
   ).rejects.toThrow(/two sides/);
 });
-
-// ---------------------------------------------------------------------------
-// Seeding and regeneration (stories 7–10)
-// ---------------------------------------------------------------------------
 
 test("random seeding assigns a 1..n permutation and pairs by standard placement", async () => {
   const t = convexTest(schema, modules);
@@ -457,8 +412,6 @@ test("random seeding assigns a 1..n permutation and pairs by standard placement"
   expect(view.participants.map((p) => p.seed)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
   expect(view.participants.map((p) => p.name).sort()).toEqual(names);
 
-  // Whatever the shuffle produced, the bracket pairs those seeds by standard
-  // placement: (1v8), (4v5), (2v7), (3v6).
   const bySeed = new Map(view.participants.map((p) => [p.seed, p.participantId]));
   const bracket = bracketOf(view);
   expect(occupantIds(matchAt(bracket, "winners", 1, 0))).toEqual([bySeed.get(1), bySeed.get(8)]);
@@ -472,7 +425,6 @@ test("roster changes invalidate a generated bracket; regeneration picks them up"
   const { as } = await newOrganizer(t);
   const { tournamentId } = await seededTournament(as, ["A", "B", "C", "D"]);
 
-  // A rename does not touch the structure.
   let view = await ownedView(as, tournamentId);
   await as.mutation(api.roster.renameParticipant, {
     participantId: view.participants[0]!.participantId,
@@ -481,7 +433,6 @@ test("roster changes invalidate a generated bracket; regeneration picks them up"
   view = await ownedView(as, tournamentId);
   expect(view.bracket).not.toBeNull();
 
-  // Adding a participant drops the stale bracket until regeneration.
   const lateId = await as.mutation(api.roster.addParticipant, {
     tournamentId,
     name: "Late",
@@ -504,13 +455,11 @@ test("roster edits and regeneration stay available while published, until the fi
   const { tournamentId, shareSlug } = await seededTournament(as, ["A", "B", "C", "D"]);
   await as.mutation(api.bracket.publishTournament, { tournamentId });
 
-  // A late roster change (story 10) drops the published bracket...
   await as.mutation(api.roster.addParticipant, { tournamentId, name: "E" });
   let shared = await t.query(api.share.getSharedTournament, { shareSlug });
   expect(shared!.status).toBe("published");
   expect(shared!.bracket).toBeNull();
 
-  // ...and regeneration restores it, still published, roster of five.
   await as.mutation(api.bracket.generateBracket, { tournamentId });
   shared = await t.query(api.share.getSharedTournament, { shareSlug });
   expect(shared!.status).toBe("published");
@@ -553,10 +502,6 @@ test("reorderSeeding requires a complete permutation of the roster", async () =>
   ).rejects.toThrow(/every participant/);
 });
 
-// ---------------------------------------------------------------------------
-// Formats (story 3)
-// ---------------------------------------------------------------------------
-
 test("double elimination defaults to grand-final reset on and generates all sections", async () => {
   const t = convexTest(schema, modules);
   const { as } = await newOrganizer(t);
@@ -568,10 +513,6 @@ test("double elimination defaults to grand-final reset on and generates all sect
   const sections = new Set(bracketOf(view).matches.map((m) => m.bracket));
   expect(sections).toEqual(new Set(["winners", "losers", "grand_final"]));
 });
-
-// ---------------------------------------------------------------------------
-// Lifecycle status enforcement
-// ---------------------------------------------------------------------------
 
 test("publishing requires a draft with a generated bracket", async () => {
   const t = convexTest(schema, modules);
@@ -605,10 +546,6 @@ test("results cannot be recorded on a draft", async () => {
     }),
   ).rejects.toThrow(/draft/);
 });
-
-// ---------------------------------------------------------------------------
-// Authorization (ADR 0003): unauthenticated and foreign callers are refused
-// ---------------------------------------------------------------------------
 
 test("organizer operations refuse unauthenticated callers", async () => {
   const t = convexTest(schema, modules);
@@ -686,14 +623,11 @@ test("another organizer's tournament is untouchable and reads as not found", asy
     intruder.mutation(api.roster.removeParticipant, { participantId: ids.get("A")! }),
   ).rejects.toThrow(/not found/);
 
-  // The owner's state is intact and the intruder's list is empty.
   const intact = await ownedView(owner, tournamentId);
   expect(intact.name).toBe("Test Cup");
   expect(intact.participants).toHaveLength(2);
   expect(await intruder.query(api.tournaments.listMyTournaments, {})).toEqual([]);
 
-  // A foreign document and a missing one read identically, so probing ids
-  // confirms nothing about their existence.
   const foreignError = intruder.mutation(api.roster.renameParticipant, {
     participantId: ids.get("A")!,
     name: "X",
@@ -707,16 +641,11 @@ test("another organizer's tournament is untouchable and reads as not found", asy
   await expect(missingError).rejects.toThrow(/Participant not found/);
 });
 
-// ---------------------------------------------------------------------------
-// The Share Link's public read (stories 17, 21–23)
-// ---------------------------------------------------------------------------
-
 test("the share link works without auth, hides drafts, and leaks nothing organizer-only", async () => {
   const t = convexTest(schema, modules);
   const { userId, as } = await newOrganizer(t);
   const { tournamentId, shareSlug, ids } = await seededTournament(as, ["A", "B", "C", "D"]);
 
-  // Unknown slugs and drafts both read as null.
   expect(await t.query(api.share.getSharedTournament, { shareSlug: "nosuchslug00" })).toBe(null);
   expect(await t.query(api.share.getSharedTournament, { shareSlug })).toBeNull();
 
@@ -727,8 +656,6 @@ test("the share link works without auth, hides drafts, and leaks nothing organiz
     sides: winOver(ids.get("A")!, ids.get("D")!),
   });
 
-  // Spectators (no identity at all) see the live bracket, results, and
-  // standings...
   const shared = await t.query(api.share.getSharedTournament, { shareSlug });
   expect(shared).not.toBeNull();
   expect(shared!.status).toBe("live");
@@ -766,7 +693,6 @@ test("writes are bounded: roster size, name length, and scores", async () => {
   const { as } = await newOrganizer(t);
   const { tournamentId, ids } = await seededTournament(as, ["A", "B"]);
 
-  // Scores must be finite (v.number() admits NaN/Infinity).
   await as.mutation(api.bracket.publishTournament, { tournamentId });
   const view = await ownedView(as, tournamentId);
   await expect(
@@ -893,8 +819,6 @@ test("names refuse control and invisible characters, while ordinary names pass",
     }),
   ).rejects.toThrow(spoofed);
 
-  // Ordinary names — Japanese text and emoji included — pass, on creation
-  // and on the roster alike.
   const { tournamentId } = await as.mutation(api.tournaments.createTournament, {
     name: "宮崎カップ 🏆",
     discipline: "将棋",
@@ -909,10 +833,6 @@ test("names refuse control and invisible characters, while ordinary names pass",
   expect(view.name).toBe("宮崎カップ 🏆");
   expect(view.participants.map((participant) => participant.name)).toEqual(["山田太郎 🎮"]);
 });
-
-// ---------------------------------------------------------------------------
-// Disciplines (story 2)
-// ---------------------------------------------------------------------------
 
 test("disciplines deduplicate on their normalized form and feed suggestions", async () => {
   const t = convexTest(schema, modules);
@@ -936,7 +856,6 @@ test("disciplines deduplicate on their normalized form and feed suggestions", as
   const disciplines = await t.run(async (ctx) => await ctx.db.query("disciplines").take(10));
   expect(disciplines.map((d) => d.name).sort()).toEqual(["Street Fighter 6", "Strive"]);
 
-  // Suggestions are a public prefix search over the normalized form.
   expect(await t.query(api.disciplines.suggestDisciplines, { prefix: "STREET f" })).toEqual([
     "Street Fighter 6",
   ]);
@@ -958,7 +877,6 @@ test("the global discipline list is capped, but existing disciplines stay reusab
     }
   });
 
-  // A brand-new discipline would be row 1001: refused.
   await expect(
     as.mutation(api.tournaments.createTournament, {
       name: "One Too Many",
@@ -989,7 +907,6 @@ test("the 1000th discipline is admitted, and the cap refuses only the 1001st", a
     }
   });
 
-  // The 1000th row is admitted and the table reaches exactly 1000.
   await as.mutation(api.tournaments.createTournament, {
     name: "At The Cap",
     discipline: "Thousandth Discipline",
@@ -998,7 +915,6 @@ test("the 1000th discipline is admitted, and the cap refuses only the 1001st", a
   const atCap = await t.run(async (ctx) => await ctx.db.query("disciplines").take(1001));
   expect(atCap).toHaveLength(1000);
 
-  // A brand-new discipline would be row 1001: refused.
   await expect(
     as.mutation(api.tournaments.createTournament, {
       name: "One Too Many",
@@ -1038,7 +954,6 @@ test("canonically equivalent discipline spellings deduplicate onto one row", asy
   expect(disciplines).toHaveLength(1);
   expect(disciplines[0]!.name).toBe("Caf\u00e9");
 
-  // Suggestions find the row under either spelling.
   expect(await t.query(api.disciplines.suggestDisciplines, { prefix: "caf\u00e9" })).toEqual([
     "Caf\u00e9",
   ]);
@@ -1046,10 +961,6 @@ test("canonically equivalent discipline spellings deduplicate onto one row", asy
     "Caf\u00e9",
   ]);
 });
-
-// ---------------------------------------------------------------------------
-// Tournament settings (story 26)
-// ---------------------------------------------------------------------------
 
 test("name and discipline are editable in every status; the bracket is untouched", async () => {
   const t = convexTest(schema, modules);
@@ -1071,13 +982,11 @@ test("name and discipline are editable in every status; the bracket is untouched
   const disciplines = await t.run(async (ctx) => await ctx.db.query("disciplines").take(10));
   expect(disciplines).toHaveLength(1);
 
-  // A partial update leaves the other fields alone.
   await as.mutation(api.tournaments.updateTournament, { tournamentId, discipline: "Tekken 8" });
   view = await ownedView(as, tournamentId);
   expect(view.name).toBe("Friday Finals");
   expect(view.discipline).toBe("Tekken 8");
 
-  // Still editable once completed: a typo on the record is worth fixing.
   await as.mutation(api.bracket.reportResult, {
     matchId: matchAt(bracketOf(view), "winners", 1, 0).matchId,
     sides: winOver(ids.get("A")!, ids.get("B")!),
@@ -1086,12 +995,10 @@ test("name and discipline are editable in every status; the bracket is untouched
   view = await ownedView(as, tournamentId);
   expect(view.status).toBe("completed");
   expect(view.name).toBe("Friday Finals #1");
-  // The Share Link shows the new labels.
   const shared = await t.query(api.share.getSharedTournament, { shareSlug });
   expect(shared!.name).toBe("Friday Finals #1");
   expect(shared!.discipline).toBe("Tekken 8");
 
-  // The same bounds as creation.
   await expect(
     as.mutation(api.tournaments.updateTournament, { tournamentId, name: "   " }),
   ).rejects.toThrow(/must not be empty/);
@@ -1114,7 +1021,6 @@ test("changing the format drops the bracket pre-live and is refused once live", 
   let view = await ownedView(as, tournamentId);
   expect(view.bracket).not.toBeNull();
 
-  // A real change invalidates the generated structure, like a roster edit.
   await as.mutation(api.tournaments.updateTournament, {
     tournamentId,
     format: { family: "double_elimination" },
@@ -1129,7 +1035,6 @@ test("changing the format drops the bracket pre-live and is refused once live", 
     new Set(["winners", "losers", "grand_final"]),
   );
 
-  // Toggling an option within the family is a change too.
   await as.mutation(api.tournaments.updateTournament, {
     tournamentId,
     format: { family: "double_elimination", grandFinalReset: false },
@@ -1138,7 +1043,6 @@ test("changing the format drops the bracket pre-live and is refused once live", 
   expect(view.format).toEqual({ family: "double_elimination", grandFinalReset: false });
   expect(view.bracket).toBeNull();
 
-  // Once a result exists the structure is locked; the format goes with it.
   await as.mutation(api.bracket.generateBracket, { tournamentId });
   view = await ownedView(as, tournamentId);
   await as.mutation(api.bracket.reportResult, {
@@ -1162,15 +1066,10 @@ test("changing the format drops the bracket pre-live and is refused once live", 
   expect(view.bracket).not.toBeNull();
 });
 
-// ---------------------------------------------------------------------------
-// Tournament deletion (story 27, ADR 0011)
-// ---------------------------------------------------------------------------
-
 test("deleting a tournament removes it whole, in any status, and darkens its Share Link", async () => {
   const t = convexTest(schema, modules);
   const { as } = await newOrganizer(t);
 
-  // A draft with nothing attached.
   const empty = await as.mutation(api.tournaments.createTournament, {
     name: "asdf",
     discipline: "Chess",
@@ -1181,8 +1080,6 @@ test("deleting a tournament removes it whole, in any status, and darkens its Sha
     null,
   );
 
-  // A completed tournament with roster, bracket, and results (including a
-  // correction): everything that hangs off it goes with it.
   const { tournamentId, shareSlug, ids } = await seededTournament(as, ["A", "B", "C", "D"]);
   await as.mutation(api.bracket.publishTournament, { tournamentId });
   let view = await ownedView(as, tournamentId);
@@ -1208,7 +1105,6 @@ test("deleting a tournament removes it whole, in any status, and darkens its Sha
   expect((await ownedView(as, tournamentId)).status).toBe("completed");
   expect(await t.query(api.share.getSharedTournament, { shareSlug })).not.toBeNull();
 
-  // An unrelated tournament of the same Organizer must be untouched.
   const other = await seededTournament(as, ["X", "Y"]);
 
   await as.mutation(api.tournaments.deleteTournament, { tournamentId });
@@ -1243,10 +1139,6 @@ test("deleting a tournament removes it whole, in any status, and darkens its Sha
   expect(intact.bracket).not.toBeNull();
 });
 
-// ---------------------------------------------------------------------------
-// The Organizer read by URL segment
-// ---------------------------------------------------------------------------
-
 test("getTournament answers null for malformed and unknown ids instead of throwing", async () => {
   const t = convexTest(schema, modules);
   const { as } = await newOrganizer(t);
@@ -1254,18 +1146,12 @@ test("getTournament answers null for malformed and unknown ids instead of throwi
   expect(await as.query(api.tournaments.getTournament, { tournamentId: "not-a-real-id" })).toBe(
     null,
   );
-  // A well-formed id from another table is not a tournament either.
   const userId = await t.mutation(internal.auth.createUserAnonymous, {
     provider: { name: "anonymous", accountId: "", profile: {} },
   });
   expect(await as.query(api.tournaments.getTournament, { tournamentId: userId })).toBeNull();
-  // The real one still resolves.
   expect((await ownedView(as, tournamentId)).tournamentId).toBe(tournamentId);
 });
-
-// ---------------------------------------------------------------------------
-// Organizer's tournament list
-// ---------------------------------------------------------------------------
 
 test("listMyTournaments returns only the caller's tournaments, newest first", async () => {
   const t = convexTest(schema, modules);

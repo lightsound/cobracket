@@ -62,25 +62,13 @@ import type {
 // supersedes it — the module is again the single source of the
 // texts.)
 
-// ---------------------------------------------------------------------------
-// Discipline name normalization (spacetimedb/src/lib/disciplines.ts)
-// ---------------------------------------------------------------------------
-
-/** The trimmed, collapsed display form (spacetimedb/src/lib/disciplines.ts). */
 // fallow-ignore-next-line code-duplication -- intentionally mirrors the module's normalization (spacetimedb/src/lib/disciplines.ts); the client copy exists so suggestions can be filtered from cached rows without a round trip
 export function normalizeDisciplineName(raw: string): { name: string; normalizedName: string } {
-  // Canonical equivalence only: NFC folds canonically identical spellings
-  // onto one row; compatibility folding (NFKC) is deliberately NOT applied
-  // (the module copy in spacetimedb/src/lib/disciplines.ts carries the full
-  // rationale).
+  // NFC canonical equivalence only — the full rationale: spacetimedb/src/lib/disciplines.ts.
   const name = raw.trim().replace(/\s+/g, " ").normalize("NFC");
   // Lowercasing can decompose (e.g. İ), so normalize again after it.
   return { name, normalizedName: name.toLowerCase().normalize("NFC") };
 }
-
-// ---------------------------------------------------------------------------
-// Bindings rows -> contract shapes
-// ---------------------------------------------------------------------------
 
 type BindingSeeding = OrganizerTournamentRow["seeding"];
 
@@ -133,10 +121,6 @@ function sideToEngine(side: BindingSide): EngineSide {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Read compositions
-// ---------------------------------------------------------------------------
-
 export function composeMyTournaments(rows: readonly MyTournamentRow[]): TournamentSummary[] {
   return [...rows]
     .sort((a, b) =>
@@ -156,7 +140,6 @@ export function composeCurrentOrganizer(row: CurrentOrganizerRow | undefined): s
   return row === undefined ? null : String(row.userId);
 }
 
-/** The caller's session as the module's session_state view reports it. */
 export type SessionState =
   | { kind: "unauthenticated" }
   | { kind: "user_missing" }
@@ -264,7 +247,6 @@ function bracketView<Match extends MatchView>(
   };
 }
 
-/** The roster in contract shape, by seed — the same on both tournament surfaces. */
 function participantsView(
   rows: readonly { participantId: bigint; name: string; seed: number }[],
 ): ParticipantView[] {
@@ -283,11 +265,6 @@ function bracketSectionOf(
   return tag === "Winners" ? "winners" : tag === "Losers" ? "losers" : "grand_final";
 }
 
-/**
- * Structure + recorded results in, the contract bracket out, with
- * the engine's progression alongside (the Organizer surface's
- * knowledge is built from it).
- */
 function composeBracket<
   MatchRow extends { key: string; round: number; indexInRound: number },
   Match extends MatchView,
@@ -358,13 +335,9 @@ export interface TournamentKnowledge {
   participants: ParticipantView[];
   resultCount: number;
   recorded: RecordedResult[];
-  /** Parallel to `recorded`: the Organizer surface's match row ids, as strings. */
   recordedMatchIds: string[];
-  /** Match row id (string) -> structural key, for every match in the structure. */
   matchKeyById: ReadonlyMap<string, string>;
-  /** The voided records' result row ids, as strings (per-record granularity). */
   voidedResultIds: ReadonlySet<string>;
-  /** Parallel to `recorded`: each record's result row id, as a string. */
   recordedResultIds: string[];
 }
 
@@ -472,10 +445,6 @@ export function composeSharedTournament(rows: SharedRows): TournamentView | null
   };
 }
 
-// ---------------------------------------------------------------------------
-// Contract write arguments -> reducer arguments
-// ---------------------------------------------------------------------------
-
 export function formatArgToBinding(format: FormatArg): BindingFormat {
   return format.family === "single_elimination"
     ? { tag: "SingleElimination" }
@@ -485,7 +454,6 @@ export function formatArgToBinding(format: FormatArg): BindingFormat {
       };
 }
 
-/** The stored-format form of a format argument (defaults applied, as the module applies them). */
 function formatArgEffective(format: FormatArg): Format {
   return formatToContract(formatArgToBinding(format));
 }
@@ -512,10 +480,6 @@ export function parseBulkNames(text: string): string[] {
     .map((line) => line.trim())
     .filter((line) => line !== "");
 }
-
-// ---------------------------------------------------------------------------
-// Write-result synthesis: the returns reducers do not have
-// ---------------------------------------------------------------------------
 
 /**
  * createTournament's return, from the my_tournaments rows that

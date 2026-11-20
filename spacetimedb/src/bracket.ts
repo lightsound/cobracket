@@ -19,9 +19,6 @@ import {
 } from "./lib";
 import { ResultSide, spacetimedb } from "./schema";
 
-// Bracket generation, publishing, and result recording (stories
-// 9–14, ADR 0005), the successor of convex/bracket.ts.
-
 // Generate — or regenerate, freely until the first result locks the
 // structure (story 10). Random seeding (the default) reshuffles on
 // every generation; manual seeding (set by reorderSeeding) uses the
@@ -79,16 +76,10 @@ export const publishTournament = spacetimedb.reducer({ tournamentId: t.u64() }, 
   );
   const bracket = loadBracket(ctx.db, tournament);
   if (bracket.matchDocs.length === 0) {
-    // Published means the bracket is visible on the Share Link; there
-    // must be one to show.
     throw new SenderError("Generate the bracket before publishing");
   }
   ctx.db.tournament.id.update({ ...tournament, status: { tag: "published" } });
 });
-
-// ---------------------------------------------------------------------------
-// Result recording and correction (stories 12–14, ADR 0005)
-// ---------------------------------------------------------------------------
 
 function requireTwoSides(sides: readonly DbSide[]): [DbSide, DbSide] {
   const [sideA, sideB] = sides;
@@ -104,10 +95,6 @@ function requireTwoSides(sides: readonly DbSide[]): [DbSide, DbSide] {
   return [sideA, sideB];
 }
 
-// The automatic transitions a recorded result can cause: the first
-// result flips published to live (story 12), and a resolved final
-// completes the tournament (story 16). Always forward — the lifecycle
-// is one-way.
 function statusAfterResult(current: TournamentStatusTag, completed: boolean): TournamentStatusTag {
   if (completed) {
     return "completed";
@@ -143,17 +130,12 @@ export const reportResult = spacetimedb.reducer(
       throw new SenderError(`A tournament can record at most ${MAX_RESULTS} results`);
     }
     const recorded = toRecordedResults(resultDocs, bracket);
-    // The candidate is validated by the same derivation that computes
-    // the voided set; whether it voided anything is observable through
-    // the composed progression, so only the refusal matters here.
     recorded.push({
       matchKey: match.key,
       sides: [sideToEngine(sides[0]), sideToEngine(sides[1])],
     });
     const progression = deriveOrThrow(bracket.structure, recorded);
     if (progression.voidedResultIndices.includes(recorded.length - 1)) {
-      // The candidate did not decide its match: wrong participants, a
-      // bye-resolved match, or a cancelled one.
       throw new SenderError("This result does not apply to the match's current participants");
     }
     if (tournament.status.tag === "completed" && !progression.completed) {
@@ -164,9 +146,6 @@ export const reportResult = spacetimedb.reducer(
       tournamentId: tournament.id,
       matchId: args.matchId,
       sides,
-      // The actor (ADR 0005). requireOwnedMatch verified the caller IS
-      // the organizer; future self-reporting records the resolved
-      // caller instead.
       recordedBy: tournament.userId,
       reportedAt: ctx.timestamp,
     });

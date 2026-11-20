@@ -47,10 +47,6 @@ export interface BracketLayout {
   edges: BracketEdge[];
 }
 
-/**
- * Fixed card dimensions (ADR 0007): participant names truncate, and small
- * screens pan/zoom via transform instead of reflowing.
- */
 export const CARD_WIDTH = 220;
 
 export const CARD_HEIGHT = 76;
@@ -126,9 +122,7 @@ function grandFinalFeeds(
   ];
 }
 
-// The read-side mirror of the format engine's slot wiring, reconstructed
-// from coordinates alone (the derived view exposes no slots). Kept in
-// lockstep by layout.engine-parity.test.ts.
+// The lockstep mechanism: src/bracket/layout.engine-parity.test.ts.
 function feedsOf(
   match: LayoutMatch,
   byPosition: Map<string, LayoutMatch>,

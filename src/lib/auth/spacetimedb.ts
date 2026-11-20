@@ -7,19 +7,7 @@ import {
   whenSpacetimeSessionReady,
 } from "../spacetimedb";
 
-// The SpacetimeDB implementation behind the auth boundary
-// (`./index`): native Identity plus the module's binding table —
-// no sign-in provider, no keys, no session to refresh (ADR 0031).
-// What the Convex implementation beside it (`./convex`) does with
-// an AuthClient, a token lifecycle, and a cross-tab mutex, this one
-// does with three facts: the server mints the identity on connect
-// and the adapter persists its token (the cross-tab first-connect
-// race is serialized there, at the connection, where it lives);
-// the module binds the identity to its app_user through the
-// bindIdentity reducer (and would bind on any first reducer call,
-// so this is establishment, not a gate); and the session_state view
-// reports what the identity resolves to, in the same three kinds
-// the Convex sessionState query returned.
+// The SpacetimeDB auth model: docs/adr/0031-adopt-spacetimedb-as-the-backend.md.
 
 let started = false;
 
@@ -61,7 +49,6 @@ async function establish(): Promise<void> {
   await waitForOrganizer();
 }
 
-/** Resolve once the session feed reports a live binding; bounded, as a stuck feed is a broken backend. */
 async function waitForOrganizer(): Promise<void> {
   await waitForSpacetimeSession(
     (state) => state.kind === "organizer",

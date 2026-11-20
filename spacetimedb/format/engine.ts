@@ -15,12 +15,7 @@ interface FamilyEngine {
   rules: FamilyRules;
 }
 
-// One entry per format family (ADR 0002): round robin, Swiss, and
-// group-into-playoffs plug in here without touching the existing engines.
-// Note for the round-robin entry: the per-tournament drawsAllowed config
-// (convex/schema.ts) has no path into FamilyRules yet — thread it through
-// FormatOptions when the first draw-capable family lands; elimination
-// families reject draws unconditionally.
+// Draws (the drawsAllowed threading): docs/adr/0002-format-scope-five-families-no-custom.md.
 const engines: Record<FormatFamily, FamilyEngine> = {
   single_elimination: {
     generate: (participantIds) => generateSingleElimination(participantIds),
@@ -36,8 +31,6 @@ const engines: Record<FormatFamily, FamilyEngine> = {
   },
 };
 
-// (participants in seeding order + format options) → bracket structure.
-// Seeding is an input fixed here; only results move the bracket afterwards.
 export function generateBracket(
   participantIds: readonly string[],
   format: FormatOptions,
@@ -45,8 +38,6 @@ export function generateBracket(
   return engines[format.family].generate(participantIds, format);
 }
 
-// (bracket structure + recorded results) → progression, current matches,
-// and standings. Pure and recomputable at any time (ADR 0005).
 export function deriveProgression(
   structure: BracketStructure,
   results: readonly RecordedResult[],

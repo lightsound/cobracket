@@ -43,7 +43,6 @@ test("sets the document's color scheme from the choice", () => {
   button.click();
   flush();
   expect(document.documentElement.style.colorScheme).toBe("dark");
-  // Back to Auto, so the next test in this file starts where this one did.
   button.click();
   flush();
   expect(document.documentElement.style.colorScheme).toBe("light dark");

@@ -222,8 +222,6 @@ function BracketControls(props: {
 function ShareLinkRow(props: { shareSlug: string }) {
   const { t } = useI18n();
   const [copyState, setCopyState] = createSignal<"idle" | "copied" | "failed">("idle");
-  // The share link as text (clipboard, visible label): a zero-arg call is
-  // the path node's plain-string form, which a template literal needs.
   const shareUrl = () => `${window.location.origin}${Router.paths.s(props.shareSlug)()}`;
 
   let resetTimer: ReturnType<typeof setTimeout> | undefined;
@@ -499,9 +497,6 @@ function settingsChanges(view: OrganizerView, draft: SettingsDraft): SettingsCha
   };
 }
 
-// Stories 26–27: the tournament's own record, and the way to remove it. The
-// drafts are writable derivations of the server view, so a save — or an edit
-// landing from another tab — resets them to the committed values.
 function SettingsSection(props: { view: OrganizerView; formatEditable: boolean }) {
   const { t } = useI18n();
   const navigate = useNavigate();

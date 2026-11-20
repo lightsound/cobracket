@@ -20,7 +20,6 @@ function readStoredLocale(): string | null {
   try {
     return localStorage.getItem(STORAGE_KEY);
   } catch {
-    // private mode / disabled storage — fall through to the navigator
     return null;
   }
 }
@@ -38,14 +37,8 @@ function storedLocale(): Locale {
 
 const dictionaries: Record<Locale, Record<MessageKey, string>> = { en, ja };
 
-/**
- * The i18n surface for one mounted app — per browser tab, per SSR request.
- * Components read it through `useI18n()`.
- *
- * @public
- */
+/** @public */
 export interface I18n {
-  /** The current UI locale, reactive. */
   locale: Accessor<Locale>;
   setLocale: (next: Locale) => void;
   /**
@@ -64,9 +57,7 @@ function createI18n(): I18n {
     if (isServer) return;
     try {
       localStorage.setItem(STORAGE_KEY, next);
-    } catch {
-      // private mode / disabled storage — the in-memory locale still applies
-    }
+    } catch {}
   }
 
   function t(key: MessageKey, params?: Record<string, string | number>): string {
@@ -83,13 +74,7 @@ function createI18n(): I18n {
 
 const I18nContext = createContext<I18n>();
 
-/**
- * Mounts the i18n context. Shared state lives in providers at the root of
- * `App`, never at module scope — under SSR one module instance would serve
- * every request.
- *
- * @public
- */
+/** @public */
 export function I18nProvider(props: ParentProps) {
   return <I18nContext value={createI18n()}>{props.children}</I18nContext>;
 }

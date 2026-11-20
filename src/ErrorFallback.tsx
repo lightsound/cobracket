@@ -8,8 +8,6 @@ export function errorMessage(value: unknown): string {
   return value instanceof Error ? value.message : String(value);
 }
 
-// The one presentational error surface: every error message renders through
-// it so the classes, role, and structure cannot drift between call sites.
 export function ErrorNotice(props: { message: string; children?: Element }) {
   return (
     <p
@@ -22,7 +20,6 @@ export function ErrorNotice(props: { message: string; children?: Element }) {
   );
 }
 
-// The adapter every <Errored> boundary passes as its fallback.
 export function errorFallback(error: Accessor<unknown>, reset: () => void) {
   const { t } = useI18n();
   return (

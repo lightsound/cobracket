@@ -1,10 +1,3 @@
-/**
- * The Organizer management page under the diagnostics gate — 766 lines and
- * the most reactive surface in the app: the roster, the bracket controls, the
- * settings form's writable derivations and the report dialog all run for real
- * here. Only the router hooks and the Convex seam are faked
- * (`src/test-fakes`).
- */
 import { expect, test, vi } from "vite-plus/test";
 import { flush } from "solid-js";
 import { api } from "../lib/operations";
@@ -39,7 +32,6 @@ const P = {
   grace: "p2",
 };
 
-/** Rebuilt on every call — the way each subscription push delivers it. */
 function view(overrides: Partial<OrganizerView> = {}): OrganizerView {
   return {
     tournamentId: TOURNAMENT,
@@ -133,13 +125,11 @@ test("keeps the roster's rows across a subscription re-delivery", async () => {
   const host = await open();
   const firstRow = host.querySelector("ol li");
 
-  // Same tournament, all-new objects: an idle push from Convex.
   publishQuery(api.tournaments.getTournament, view());
   await settled();
 
   expect(host.querySelector("ol li")).toBe(firstRow);
 
-  // A real change still lands, in place.
   publishQuery(
     api.tournaments.getTournament,
     view({ participants: [{ participantId: P.ada, name: "Ada Lovelace", seed: 1 }] }),
@@ -192,7 +182,6 @@ test("saves only the settings that actually changed", async () => {
     ?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
   await settled();
 
-  // Discipline and format are untouched, so they are not in the patch.
   expect(mutationCalls()).toEqual([
     {
       name: "tournaments:updateTournament",
@@ -209,7 +198,6 @@ test("sends the settings values it compared, trimmed", async () => {
   const name = field(host, "Tournament name");
   const save = button(host, "Save changes");
 
-  // Whitespace alone is not a change, and the button says so.
   type(name, "  Friday Night Bracket  ");
   expect(save.disabled).toBe(true);
 
@@ -218,8 +206,6 @@ test("sends the settings values it compared, trimmed", async () => {
   save.closest("form")?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
   await settled();
 
-  // The trimmed value, because that is the value the comparison ran on — and
-  // the one the server would have stored either way.
   expect(mutationCalls()).toEqual([
     {
       name: "tournaments:updateTournament",
@@ -286,7 +272,6 @@ test("reports a result from the dialog the bracket opens", async () => {
   });
   answerMutation(api.bracket.reportResult, () => ({ status: "live" as const, voided: [] }));
 
-  // The card is the only way in: the dialog has no independent entry point.
   host.querySelector<HTMLButtonElement>("button[style*='--card-x']")?.click();
   flush();
 
@@ -313,7 +298,6 @@ test("reports a result from the dialog the bracket opens", async () => {
       },
     },
   ]);
-  // Reporting closes the dialog.
   expect(document.body.querySelector("form.max-w-sm")).toBeNull();
 });
 
@@ -366,7 +350,6 @@ test("a tournament-sized roster costs the list no per-row subscription", async (
   expect(host.querySelectorAll("ol li")).toHaveLength(32);
   const firstRow = host.querySelector("ol li");
 
-  // A subscription push with all-new objects, at scale.
   publishQuery(api.tournaments.getTournament, view({ participants: bigRoster() }));
   await settled();
 

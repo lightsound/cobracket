@@ -21,8 +21,6 @@ jobs:
         with:
           auto-changed-since: false
           fail-on-issues: true
-          # Matches `.fallowrc.jsonc` `typeAware.enabled`. `auto` also
-          # provisions the version-matched fallow-type-aware sidecar.
           type-aware: auto
           comment: true
           score: true

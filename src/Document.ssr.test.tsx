@@ -15,7 +15,6 @@ import Document from "./Document";
 
 const STORAGE_KEY = "cobracket:theme";
 
-/** The document shell as the server sends it. */
 function shell(): string {
   return renderToString(() => (
     <Document>
@@ -57,8 +56,6 @@ test("renders the head the app needs, and the children in the body", () => {
   expect(html).toContain('<meta name="viewport" content="width=device-width, initial-scale=1">');
   expect(html).toContain('<link rel="icon" href="/favicon.ico" sizes="32x32">');
   expect(html).toContain('<link rel="icon" href="/favicon.svg" type="image/svg+xml">');
-  // The hydration script has to be in the head, before the app's markup, or
-  // the browser has nothing to hydrate into.
   expect(html.indexOf("_$HY")).toBeLessThan(html.indexOf("<body>"));
   expect(html).toContain('<p id="page">page</p>');
 });

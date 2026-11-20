@@ -14,8 +14,6 @@ export function normalizeDisciplineName(raw: string): { name: string; normalized
   return { name, normalizedName: name.toLowerCase().normalize("NFC") };
 }
 
-// Disciplines are freeform organizer input, normalized into rows so the same
-// discipline entered twice (case/spacing aside) is one row (story 2).
 export async function getOrCreateDiscipline(
   ctx: MutationCtx,
   rawName: string,

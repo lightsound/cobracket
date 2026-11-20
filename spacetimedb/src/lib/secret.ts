@@ -2,17 +2,6 @@ import { hmacSha256 } from "@spacetimedb/crypto";
 import { SenderError } from "spacetimedb/server";
 import type { WritableDb } from "./binding";
 
-// The module secret (ADR 0032): one 32-byte key in the private
-// module_secret table, seeded once at provisioning — after publish,
-// before the database is announced — and never readable through any
-// view. Every module derivation keys off it: the share slug here,
-// and, as they land, Events slice 1's email-code HMAC, the participant
-// code (ADR 0013), and ADR 0022's sanction tags, each carrying the
-// row's keyVersion as ADR 0031's design prescribed.
-
-// The seeded secret row, or null on an unseeded database. The table
-// holds at most one row by the seed rules below, so the first row is
-// the row.
 function secretRow(db: WritableDb) {
   for (const row of db.moduleSecret.iter()) {
     return row;
@@ -27,7 +16,6 @@ function anyRow<T>(rows: Iterable<T>): boolean {
   return false;
 }
 
-/** Hex to bytes, or undefined when the text is not even-length hex. */
 function decodeHex(hex: string): Uint8Array | undefined {
   if (hex.length % 2 !== 0 || !/^[0-9a-fA-F]*$/.test(hex)) {
     return undefined;
@@ -39,16 +27,6 @@ function decodeHex(hex: string): Uint8Array | undefined {
   return bytes;
 }
 
-/**
- * Seed the module secret from its hex form — the provisioning act the
- * seed_module_secret reducer registers. Seeding binds nobody and
- * creates no user: it is accepted only on a completely fresh database
- * (no secret yet, no identity bound, no app_user row), which is what
- * closes the first-caller race — the publisher seeds immediately
- * after publishing, before the database's address is announced, and
- * any later caller finds one of the three facts already true and is
- * refused (ADR 0032).
- */
 export function seedModuleSecret(db: WritableDb, keyHex: string): void {
   const key = decodeHex(keyHex);
   if (key === undefined) {
@@ -66,10 +44,6 @@ export function seedModuleSecret(db: WritableDb, keyHex: string): void {
   db.moduleSecret.insert({ id: 0n, key, keyVersion: 1 });
 }
 
-// ---------------------------------------------------------------------------
-// Share slugs (ADR 0032)
-// ---------------------------------------------------------------------------
-
 const SLUG_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
 const SLUG_LENGTH = 12;
 // Rejection sampling bound: 252 is the largest multiple of the
@@ -77,7 +51,6 @@ const SLUG_LENGTH = 12;
 // makes every alphabet character equally likely.
 const SLUG_BYTE_LIMIT = 252;
 
-/** The counter value this mint consumes for `userId`, stored back +1. */
 function consumeCounter(db: WritableDb, userId: bigint): bigint {
   const row = db.slugCounter.userId.find(userId);
   if (row === null) {
@@ -93,7 +66,6 @@ function consumeCounter(db: WritableDb, userId: bigint): bigint {
 // and fixed-width, so no two (version, organizer, counter) triples
 // can encode to the same bytes.
 function slugInput(keyVersion: number, userId: bigint, counter: bigint): Uint8Array {
-  // "slug" in UTF-8, then a NUL separator before the binary fields.
   const label = new Uint8Array([0x73, 0x6c, 0x75, 0x67, 0x00]);
   const input = new Uint8Array(label.length + 4 + 8 + 8);
   input.set(label);

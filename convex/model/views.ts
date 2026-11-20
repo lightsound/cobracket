@@ -13,9 +13,7 @@ import { MAX_MATCHES, MAX_RESULTS, MAX_ROSTER_SIZE, takeAll } from "./limits";
 import type { OrganizerProgressionView, ProgressionView, TournamentView } from "./validators";
 import { occupantValidator } from "./validators";
 
-// Loading a tournament and deriving its views. Progression is never stored:
-// every read derives it from the generated structure and the append-only
-// results via the format engine (ADR 0005).
+// Progression is derived, never stored: docs/adr/0005-results-are-the-source-of-truth.md.
 
 export async function loadRoster(
   ctx: QueryCtx,
@@ -54,7 +52,6 @@ export async function loadBracket(
       bracket: doc.bracket,
       round: doc.round,
       indexInRound: doc.indexInRound,
-      // Stored as an array (schema limitation); exactly two by construction.
       slots: [doc.slots[0]!, doc.slots[1]!],
     })),
   };
@@ -167,8 +164,6 @@ function toProgressionView(
   };
 }
 
-// The Organizer's variant of the progression: every match also carries its
-// document id, the handle reportResult takes.
 export function withMatchIds(
   view: ProgressionView,
   bracket: StoredBracket,

@@ -15,7 +15,6 @@ const modules = import.meta.glob(["./**/*.ts", "!./**/*.test.ts"]);
 
 type Test = ReturnType<typeof convexTest>;
 
-// What the anonymous provider sends the createUser callback on every sign-up.
 function signUp(t: Test) {
   return t.mutation(internal.auth.createUserAnonymous, {
     provider: { name: "anonymous", accountId: "", profile: {} },

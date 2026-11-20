@@ -21,9 +21,6 @@ import {
   toRecordedResults,
 } from "./model";
 
-// Bracket generation, publishing, and result recording (stories 9–14,
-// ADR 0005).
-
 function shuffled<T>(items: readonly T[]): T[] {
   const result = [...items];
   for (let i = result.length - 1; i > 0; i--) {
@@ -33,9 +30,6 @@ function shuffled<T>(items: readonly T[]): T[] {
   return result;
 }
 
-// Generate — or regenerate, freely until the first result locks the
-// structure (story 10). Random seeding (the default) reshuffles on every
-// generation; manual seeding (set by reorderSeeding) uses the stored order.
 export const generateBracket = mutation({
   args: { tournamentId: v.id("tournaments") },
   returns: v.null(),
@@ -75,8 +69,6 @@ export const generateBracket = mutation({
         bracket: match.bracket,
         round: match.round,
         indexInRound: match.indexInRound,
-        // The engine's participant ids are the roster's document ids we just
-        // passed in; the validator re-checks them on insert.
         slots: match.slots.map((slot) =>
           slot.kind === "participant"
             ? { kind: "participant" as const, participantId: castParticipantId(slot.participantId) }
@@ -95,18 +87,12 @@ export const publishTournament = mutation({
     const tournament = await requireOwnedTournamentIn(ctx, args.tournamentId, ["draft"], "publish");
     const bracket = await loadBracket(ctx, tournament);
     if (bracket.matchDocs.length === 0) {
-      // Published means the bracket is visible on the Share Link; there must
-      // be one to show.
       throw new ConvexError("Generate the bracket before publishing");
     }
     await ctx.db.patch("tournaments", args.tournamentId, { status: "published" });
     return null;
   },
 });
-
-// ---------------------------------------------------------------------------
-// Result recording and correction (stories 12–14, ADR 0005)
-// ---------------------------------------------------------------------------
 
 function requireTwoSides(sides: readonly ResultSide[]): [ResultSide, ResultSide] {
   const [sideA, sideB] = sides;
@@ -122,9 +108,6 @@ function requireTwoSides(sides: readonly ResultSide[]): [ResultSide, ResultSide]
   return [sideA, sideB];
 }
 
-// The automatic transitions a recorded result can cause: the first result
-// flips published to live (story 12), and a resolved final completes the
-// tournament (story 16). Always forward — the lifecycle is one-way.
 function statusAfterResult(current: TournamentStatus, completed: boolean): TournamentStatus {
   if (completed) {
     return "completed";
@@ -132,11 +115,7 @@ function statusAfterResult(current: TournamentStatus, completed: boolean): Tourn
   return current === "published" ? "live" : current;
 }
 
-// Recording and correcting are the same operation: results are append-only,
-// and the latest record per match is the effective one. The mutation derives
-// the progression with the candidate included, which validates it (outcome
-// combination, pairing against current occupants) without reimplementing any
-// engine logic, and reports every downstream result the append voided.
+// Recording and correcting are one append-only operation: docs/adr/0005-results-are-the-source-of-truth.md.
 export const reportResult = mutation({
   args: {
     matchId: v.id("matches"),
@@ -144,8 +123,6 @@ export const reportResult = mutation({
   },
   returns: v.object({
     status: statusValidator,
-    // Downstream results a correction invalidated; their matches are open
-    // again and must be re-entered (spec: Implementation Decisions).
     voided: v.array(v.object({ matchId: v.id("matches"), matchKey: v.string() })),
   }),
   handler: async (ctx, args) => {

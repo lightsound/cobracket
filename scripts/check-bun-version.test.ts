@@ -14,7 +14,6 @@ const SCRIPT = join(import.meta.dirname, "check-bun-version.ts");
 
 let root: string;
 let script: string;
-/** The version the subprocess will report, so cases can be built around it. */
 let running: string;
 
 function versionOffPatch(version: string): string {

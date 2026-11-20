@@ -2,13 +2,7 @@ import { isServer } from "@solidjs/web";
 import { ConvexClient } from "convex/browser";
 import type { FunctionArgs, FunctionReference, FunctionReturnType } from "convex/server";
 
-// The Convex implementation behind the data seam (`./backend`): the
-// client singleton, and the subscription / mutation / prefetch
-// primitives the seam's dispatch calls. Pages never import this
-// module directly — the seam is the only caller, plus `./auth`,
-// whose Convex session machinery is wired to this client. When the
-// migration's M6 removes Convex, this file goes with it and the seam
-// loses nothing but a dispatch branch.
+// This module is removed with Convex at M6: docs/adr/0031-adopt-spacetimedb-as-the-backend.md.
 
 export function getConvexUrl(): string | undefined {
   const url = import.meta.env.VITE_CONVEX_URL;
@@ -25,13 +19,6 @@ export function getConvexClient(): ConvexClient | undefined {
   return client;
 }
 
-/**
- * Subscribe to a query on the shared client, delivering each result
- * and any failure to the callbacks; the returned function ends the
- * subscription. Without a configured client the subscription never
- * delivers — the seam's accessor stays pending, exactly as it did
- * when this bridging lived in the seam itself.
- */
 export function subscribeConvexQuery(
   query: FunctionReference<"query">,
   args: Record<string, unknown>,

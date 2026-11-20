@@ -1,18 +1,9 @@
 import { SenderError } from "spacetimedb/server";
 
-// Write bounds, the successor of convex/model/limits.ts. Anonymous
-// binding is zero-friction (ADR 0031), so every write is bounded:
-// generous for the spec's 8–64 participant target, tight enough that
-// nobody can bloat rows or push generateBracket into transaction
-// limits.
 // fallow-ignore-next-line code-duplication -- intentionally mirrors the Convex original during the migration window (both backends live until M6 deletes the Convex side; this module copy is the survivor)
 const MAX_NAME_LENGTH = 120;
 export const MAX_ROSTER_SIZE = 128;
-// Double elimination with a grand-final reset is the largest MVP format:
-// 2n - 1 matches for n participants.
 export const MAX_MATCHES = 2 * MAX_ROSTER_SIZE;
-// Results are append-only (ADR 0005), so corrections grow them: room for
-// every match to be recorded and then corrected three times.
 export const MAX_RESULTS = 4 * MAX_MATCHES;
 // Disciplines are one global, permanent namespace (not per-tournament data),
 // so the per-tournament bounds above cannot contain minting them. Legitimate

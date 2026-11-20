@@ -8,22 +8,6 @@ import {
   subscribeConvexQuery,
 } from "./convex";
 
-// The app's data seam (ADR 0004), widened for the SpacetimeDB migration
-// (plan §2.5): pages reach the backend only through this module —
-// `createBackendQuery`, `runMutation`, `prefetchBackendQuery`, and
-// `getBackendUrl`, driven by the operation descriptors in
-// `./operations`. Two implementations sit behind it: `./convex`
-// (today's, the production default) and the SpacetimeDB adapter
-// (`./spacetimedb`, the migration's target), selected by a build-time
-// env var — `VITE_BACKEND=spacetimedb` picks the adapter; anything
-// else, including unset, keeps Convex. The adapter module is loaded
-// lazily, so a Convex build never bundles the SpacetimeDB SDK or the
-// generated bindings. Both remain runnable until the M5 cutover.
-
-// ---------------------------------------------------------------------------
-// The implementations behind the seam
-// ---------------------------------------------------------------------------
-
 type Unsubscribe = () => void;
 
 /**
@@ -82,14 +66,7 @@ const spacetimeImpl: BackendImpl = {
   },
 };
 
-/**
- * Which backend this build talks to, from the build-time env:
- * `VITE_BACKEND=spacetimedb` selects the adapter; anything else,
- * including unset, is Convex (the production default until the M5
- * cutover).
- *
- * @public
- */
+/** @public */
 export function backendSelection(): "convex" | "spacetimedb" {
   return import.meta.env.VITE_BACKEND === "spacetimedb" ? "spacetimedb" : "convex";
 }
@@ -112,9 +89,6 @@ export function getBackendUrl(): string | undefined {
   if (backendSelection() === "spacetimedb") {
     const host = import.meta.env.VITE_SPACETIMEDB_HOST;
     const db = import.meta.env.VITE_SPACETIMEDB_DB;
-    // Both halves of the configuration, as the adapter requires
-    // them: a half-configured build has no backend to talk to, and
-    // the pages' setup notice is the honest answer for it.
     return typeof host === "string" && host.length > 0 && typeof db === "string" && db.length > 0
       ? host
       : undefined;
@@ -122,31 +96,8 @@ export function getBackendUrl(): string | undefined {
   return getConvexUrl();
 }
 
-// ---------------------------------------------------------------------------
-// The seam's reactive surface
-// ---------------------------------------------------------------------------
-
 /**
- * Bridges a backend subscription into Solid's async model — the
- * contract `createConvexQuery` has always given pages, now stated
- * against the seam:
- *
- * - Reads suspend to the nearest `<Loading>` until the first result
- *   arrives; subscription errors are thrown into the reactive graph
- *   for `<Errored>`.
- * - `args` may be an accessor: changing args re-subscribes (the
- *   committed view stays visible and `isPending` reports the
- *   in-flight change).
- * - `<Errored>`'s `reset()` and `refresh(query)` re-run the
- *   computation: a fresh subscription starts with a cleared failure,
- *   so retries actually recover.
- * - Results are snapshots, so pending deliveries are conflated to
- *   the latest.
- *
- * The subscription lives inside the computation: it is disposed when
- * args change, on retry, and when the owning component unmounts.
- * Without a configured backend the accessor stays pending forever;
- * callers gate on `getBackendUrl()` before rendering reads.
+ * Bridges a backend subscription into Solid's async model — contract: docs/adr/0004-deliberate-pre-release-stack.md.
  *
  * @public
  */
@@ -171,8 +122,6 @@ export function createBackendQuery<Args, Result>(
       // client inside this computation and find none.
       const configured = getBackendUrl();
       const impl = configured === undefined ? undefined : getImpl();
-      // Reading reactive args here makes them a dependency of the
-      // computation.
       const resolvedArgs = readArgs();
 
       let current: Result | undefined;

@@ -1,9 +1,3 @@
-/**
- * The Share Link page under the diagnostics gate — a whole page, not a
- * component. Only the router hooks and the Convex seam are faked
- * (`src/test-fakes`); the page, its boundaries, the header and the whole
- * bracket render for real, which is what puts them under the gate.
- */
 import { expect, test, vi } from "vite-plus/test";
 import { api } from "../lib/operations";
 import type { TournamentView } from "../lib/operations";
@@ -30,7 +24,6 @@ const P = {
   edsger: "p4",
 };
 
-/** Rebuilt on every call — the way each subscription push delivers it. */
 function sharedView(overrides: Partial<SharedView> = {}): SharedView {
   return {
     name: "Sunday Cup",
@@ -90,7 +83,6 @@ function sharedView(overrides: Partial<SharedView> = {}): SharedView {
   };
 }
 
-/** Let the async memo settle and the DOM catch up. */
 const settled = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 test("shows the loading fallback until the subscription delivers", () => {
@@ -114,7 +106,6 @@ test("renders the tournament the share slug names, bracket and all", async () =>
   expect(host.textContent).toContain("Sunday Cup");
   expect(host.textContent).toContain("Chess");
   expect(host.querySelectorAll("button[style*='--card-x']")).toHaveLength(3);
-  // A viewer has no Organizer controls, so no card is reportable.
   for (const card of host.querySelectorAll("button[style*='--card-x']")) {
     expect(card.hasAttribute("disabled")).toBe(true);
   }
@@ -141,13 +132,11 @@ test("keeps the bracket's DOM across a subscription re-delivery", async () => {
   await settled();
   const firstCard = host.querySelector("button[style*='--card-x']");
 
-  // The same tournament, all-new objects: an idle push from Convex.
   publishQuery(api.share.getSharedTournament, sharedView());
   await settled();
 
   expect(host.querySelector("button[style*='--card-x']")).toBe(firstCard);
 
-  // And a real change still lands, through the page rather than around it.
   publishQuery(api.share.getSharedTournament, sharedView({ name: "Sunday Cup — Final" }));
   await settled();
   expect(host.textContent).toContain("Sunday Cup — Final");

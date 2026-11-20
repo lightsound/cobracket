@@ -43,8 +43,6 @@ test("cycles system → light → dark and back, applying and persisting each", 
   const { themePreference, cycleThemePreference } = createThemePreference();
   document.documentElement.style.colorScheme = "";
   expect(themePreference()).toBe("system");
-  // Nothing is applied at creation: the document's inline bootstrap owns the
-  // first paint (see Document.ssr.test.tsx), this module owns the choice.
   expect(scheme()).toBe("");
 
   cycleThemePreference();
@@ -62,8 +60,6 @@ test("cycles system → light → dark and back, applying and persisting each", 
   cycleThemePreference();
   flush();
   expect(themePreference()).toBe("system");
-  // `light dark` hands the choice back to the OS, rather than leaving the
-  // last explicit scheme in place.
   expect(scheme()).toBe("light dark");
   expect(localStorage.getItem(STORAGE_KEY)).toBe("system");
 });
@@ -92,7 +88,6 @@ test("still applies the scheme when storage cannot be written", () => {
     cycleThemePreference();
     flush();
     expect(themePreference()).toBe("light");
-    // The choice holds for this session even though it cannot be remembered.
     expect(scheme()).toBe("light");
   } finally {
     setItem.mockRestore();

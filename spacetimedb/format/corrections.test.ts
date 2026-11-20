@@ -13,9 +13,6 @@ function winOver(matchKey: string, winner: string, loser: string): RecordedResul
   };
 }
 
-// Corrections append a newer record for the same match (ADR 0005); the
-// latest record per match is the effective one, and downstream records
-// whose pairing the correction invalidates become void.
 describe("corrections and downstream voiding", () => {
   const structure = () =>
     generateBracket(["p1", "p2", "p3", "p4"], {
@@ -39,17 +36,13 @@ describe("corrections and downstream voiding", () => {
   test("correcting a semifinal voids the final played under the old pairing", () => {
     const { generated, semi2, finalKey, results } = playedOut();
 
-    // The tournament had completed with p1 as champion.
     expect(deriveProgression(generated, results).completed).toBe(true);
 
-    // Rounds later: the second semifinal actually went to p3, not p2.
     const corrected = [...results, winOver(semi2, "p3", "p2")];
     const progression = deriveProgression(generated, corrected);
 
     expect(progression.completed).toBe(false);
     expect(progression.championId).toBeUndefined();
-    // The final's recorded p1-vs-p2 result no longer matches its p1-vs-p3
-    // pairing: void, awaiting re-entry.
     expect(progression.voidedResultIndices).toEqual([2]);
     expect(progression.readyMatchKeys).toEqual([finalKey]);
 
@@ -80,7 +73,6 @@ describe("corrections and downstream voiding", () => {
   test("a correction that keeps the winner leaves downstream results standing", () => {
     const { generated, semi1, results } = playedOut();
 
-    // Same winner, corrected score detail: the final's pairing still holds.
     const corrected: RecordedResult[] = [
       ...results,
       {
@@ -110,7 +102,6 @@ describe("corrections and downstream voiding", () => {
     ]);
 
     expect(progression.championId).toBe("p2");
-    // The superseded record is history, not a void needing re-entry.
     expect(progression.voidedResultIndices).toEqual([]);
   });
 });

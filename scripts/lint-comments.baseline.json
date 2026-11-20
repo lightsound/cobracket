@@ -1,0 +1,2230 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "file": ".claude/hooks/session-start.sh",
+      "hash": "0e0778d920dc4d96d8100c9fca74000863bc7d16c827b628e160cfa17ae72cc0",
+      "count": 1
+    },
+    {
+      "file": ".claude/hooks/session-start.sh",
+      "hash": "0ebd78f02714d252ea3c1e7bd764828b1682f1991f7435f98cac139082e070f9",
+      "count": 1
+    },
+    {
+      "file": ".claude/hooks/session-start.sh",
+      "hash": "6f7d143dff2bfb019fed61adc340bb0102a3fef7d2f27077e8eda7f00eac8a2a",
+      "count": 1
+    },
+    {
+      "file": ".claude/hooks/session-start.sh",
+      "hash": "c8c054cc73320281d742dcb7f3f98a0f0a42d10382eb7123f447e0655d90097c",
+      "count": 1
+    },
+    {
+      "file": ".claude/hooks/session-start.sh",
+      "hash": "d7d2dd6efdf73d6eec1a8042d57a2068cffe98d8326e8b8a2456f63f664b5032",
+      "count": 1
+    },
+    {
+      "file": ".env.example",
+      "hash": "4397f4720660894fdfc7c7835741d0a7021f908e83c3a34a345d213a332fa19a",
+      "count": 1
+    },
+    {
+      "file": ".env.example",
+      "hash": "92dc91f3919363cf2cc347077171ef2b18004eafa52cae1f02d7aa2c5756a593",
+      "count": 1
+    },
+    {
+      "file": ".fallowrc.jsonc",
+      "hash": "340923eb10964211a513b7cf20b8b567bc4dcfd965ec4a15578a92f850dc5bfc",
+      "count": 1
+    },
+    {
+      "file": ".fallowrc.jsonc",
+      "hash": "3ffc31164576f6b156e84bdcc62578e8c88a5048d1091cef2f9c757f1959c3f6",
+      "count": 1
+    },
+    {
+      "file": ".fallowrc.jsonc",
+      "hash": "6b1ad271b7ae50a3e0b27d5045f5995b5e06223995e16550f2be6c0e68627555",
+      "count": 1
+    },
+    {
+      "file": ".fallowrc.jsonc",
+      "hash": "7ee4d6ce86709351f74d4722b2cbf637edaec1e458efa7831191e7760477347b",
+      "count": 1
+    },
+    {
+      "file": ".fallowrc.jsonc",
+      "hash": "933f9e9e47fa5904cdd9a858118135c6f3ed53723487bbeeb5cdcca356792304",
+      "count": 1
+    },
+    {
+      "file": ".fallowrc.jsonc",
+      "hash": "cdf189008b3b0262a5836428c7338168ad5a74b965cb7431a1f759ddb4d7925b",
+      "count": 1
+    },
+    {
+      "file": ".fallowrc.jsonc",
+      "hash": "dfa1164b1e5920aed9964454fefbd78bff7e52a68c164bf337cd6e879d8931b2",
+      "count": 1
+    },
+    {
+      "file": ".github/workflows/ci.yml",
+      "hash": "3d9f56c9fe91405e521b11298ec78a07a133182d9a70d3897ae0ed29b90a0794",
+      "count": 1
+    },
+    {
+      "file": ".github/workflows/ci.yml",
+      "hash": "769037ed68ac54360143b5d70e49d58598e7010bb240d0b1f135c13c5ebc08b7",
+      "count": 1
+    },
+    {
+      "file": ".github/workflows/ci.yml",
+      "hash": "89b56715995dd342cf4ebb06c11d11110f755bc55e1f7270d6fff95c2ab7c39b",
+      "count": 1
+    },
+    {
+      "file": ".github/workflows/ci.yml",
+      "hash": "ee6087b4429d67cef241d973bde0959d4b10a9d9e7d16244317bd906f882cc09",
+      "count": 1
+    },
+    {
+      "file": ".github/workflows/ci.yml",
+      "hash": "fe6f925bff2f16df41af128bdf148183fb89ea3d193bda46df08afc693199d82",
+      "count": 1
+    },
+    {
+      "file": ".github/workflows/deploy.yml",
+      "hash": "22a706ae67234e9fce89f07dead8e03e2c9d2e3a3eafa30c86fae1508074a672",
+      "count": 3
+    },
+    {
+      "file": ".github/workflows/deploy.yml",
+      "hash": "3819780f2c7de24b4c4f9550ba6d219212009cc36a90c995bf701c15678545ae",
+      "count": 1
+    },
+    {
+      "file": ".github/workflows/deploy.yml",
+      "hash": "67e03e80ac95d10d9285bc6794d15d1099c9527a794cb8b6a9dd095f9e9b789a",
+      "count": 1
+    },
+    {
+      "file": ".github/workflows/deploy.yml",
+      "hash": "8e38a1ea5c681c8e9a08f1af465f1f07d33d931de8f71af45ecbe957751c9a86",
+      "count": 2
+    },
+    {
+      "file": ".github/workflows/deploy.yml",
+      "hash": "ce2658797547ce35f6b6ee949a6a410866aad22ce582ead380f9bf6c122c663f",
+      "count": 1
+    },
+    {
+      "file": ".github/workflows/deploy.yml",
+      "hash": "fb04dcb6970e4c3d1873de51fd5a50d7bb46b3383113602665c350ec40b5f990",
+      "count": 3
+    },
+    {
+      "file": ".github/workflows/fallow.yml",
+      "hash": "22a706ae67234e9fce89f07dead8e03e2c9d2e3a3eafa30c86fae1508074a672",
+      "count": 1
+    },
+    {
+      "file": ".github/workflows/fallow.yml",
+      "hash": "e0d2747b9ab7abb6eb65e0373fa1b428a28bd6d8a2380106dcc080f58005ee14",
+      "count": 1
+    },
+    {
+      "file": ".github/workflows/pullfrog.yml",
+      "hash": "015b06f80d83065c4d230ff25a6966faf886d5839289e66961f919acf8e61f6c",
+      "count": 1
+    },
+    {
+      "file": ".github/workflows/pullfrog.yml",
+      "hash": "0270da4daac514f30bece5788a87ad7b800f59476d0d7e6f70d4b61fbc4f5e9e",
+      "count": 1
+    },
+    {
+      "file": ".github/workflows/pullfrog.yml",
+      "hash": "30cb633e66dd7cb22d7b597672763127e4fcd975b90dff50ef66135662f42531",
+      "count": 1
+    },
+    {
+      "file": ".github/workflows/pullfrog.yml",
+      "hash": "3e8286044388886ee0875bb280f40fc655f55c2016794d6eee8a6012f9555f29",
+      "count": 1
+    },
+    {
+      "file": ".github/workflows/pullfrog.yml",
+      "hash": "4aa64fd73cf3fff63aafaa4f889904dcb5bdc23d7be4e74026f1c925003c2bd2",
+      "count": 1
+    },
+    {
+      "file": ".github/workflows/pullfrog.yml",
+      "hash": "b382467c71941df7aa7bd01778a9e07177a3d54065d222812d53b67674a6a8c0",
+      "count": 1
+    },
+    {
+      "file": ".github/workflows/pullfrog.yml",
+      "hash": "b99cb68e6774fa8fe4713e8d4d12dab143fe409e3adf4fc9b32015389a04e128",
+      "count": 1
+    },
+    {
+      "file": ".github/workflows/pullfrog.yml",
+      "hash": "bd1da60fc2c225777d498442a506cd648dec821f52de7392c95fe7b1327232fa",
+      "count": 1
+    },
+    {
+      "file": ".importlintrc.jsonc",
+      "hash": "35a91714727219a1bdbb58b54f6043b4f511df828f885b552acb6ef52da2ab98",
+      "count": 1
+    },
+    {
+      "file": ".importlintrc.jsonc",
+      "hash": "e7d27e2a32ab6c529d2d085449575f2f9ae9b23268644a972da5eaf8face7c47",
+      "count": 1
+    },
+    {
+      "file": "convex/auth.config.ts",
+      "hash": "408f1311f68765a79bd0c319374803f84f2322a5a7d35fa588b72bdca2e5ca53",
+      "count": 1
+    },
+    {
+      "file": "convex/auth.config.ts",
+      "hash": "4a4faee5fbd40180de71139be9e4c8e7ebfcd6800e91f500bd8940685723acce",
+      "count": 1
+    },
+    {
+      "file": "convex/auth.test.ts",
+      "hash": "32e6d47a814f8cc414dcc299ddbfc10f60aa0750a5abaec8b2b800b39ffd5e45",
+      "count": 1
+    },
+    {
+      "file": "convex/auth.test.ts",
+      "hash": "5ef67a63883ca0ef1b6df2abcec45885c49cdc8a8434a8219fdff15d3a897368",
+      "count": 1
+    },
+    {
+      "file": "convex/auth.test.ts",
+      "hash": "60ff5b9146e44e0470b185d2e608f4daf1190e8762cde1c13c0def65734ea913",
+      "count": 1
+    },
+    {
+      "file": "convex/auth.test.ts",
+      "hash": "ab9a716df2d27791fc497fce2e96cbe97380aea5de06591f1b278a6361dc3078",
+      "count": 1
+    },
+    {
+      "file": "convex/auth.test.ts",
+      "hash": "f10127c4f4f79f540e93d99b55cef9442f0dcce40fbdba38ad203740eff99f1d",
+      "count": 1
+    },
+    {
+      "file": "convex/auth.ts",
+      "hash": "2b01accc5f4c2dfae7417f01c6589c9f84be4a4486f9707e7b42afd8b7675b4b",
+      "count": 1
+    },
+    {
+      "file": "convex/auth.ts",
+      "hash": "66e0c1e0d18f710a5f86462f689498b6ecfa09064eda86cb56ffd45893c4a671",
+      "count": 1
+    },
+    {
+      "file": "convex/auth.ts",
+      "hash": "b3360ce75cf8516b1ad6766649b940abd4cbb64845469bfc14c89dd3839741c7",
+      "count": 1
+    },
+    {
+      "file": "convex/auth.ts",
+      "hash": "bf2b5795976106e0e9abffa9e6948446092f7bdae960c74b36804214c7124f6b",
+      "count": 1
+    },
+    {
+      "file": "convex/auth.ts",
+      "hash": "d81e593ecea1767422988140d4cfd4d1a4a3c5eac63e1fa11eb9157727253759",
+      "count": 1
+    },
+    {
+      "file": "convex/bracket.ts",
+      "hash": "08bc1911651631d6eb7fd75d6afe41dea7cbe7edafcbc17a8739b9f065916ef6",
+      "count": 1
+    },
+    {
+      "file": "convex/bracket.ts",
+      "hash": "09769c2f6a85427ae5ed8ed9d357713ad1e5c978727b0e6bd4753ebd70075b03",
+      "count": 1
+    },
+    {
+      "file": "convex/bracket.ts",
+      "hash": "68e138afd1e80449b09c53af87f1410150296b85c3d88d2b70dd19ed0c059380",
+      "count": 1
+    },
+    {
+      "file": "convex/bracket.ts",
+      "hash": "6df117517ad6665faa7c06273426c94fe42af5364ce1c67a18c001853fb19f8f",
+      "count": 1
+    },
+    {
+      "file": "convex/bracket.ts",
+      "hash": "73c324522f3c5fb453e5b8cbf3105183c31f4d02d78eb979fc46e8e674dc1d10",
+      "count": 1
+    },
+    {
+      "file": "convex/bracket.ts",
+      "hash": "744a835dc50bd97a82dec69998e15937c83d4c31a8b0a9eecc958770057ad4f4",
+      "count": 1
+    },
+    {
+      "file": "convex/disciplines.ts",
+      "hash": "8f08bbebc0ee5b8a1a3d1aa8e65094336d117257d6f99529a06a0ecfa10980c9",
+      "count": 1
+    },
+    {
+      "file": "convex/model/disciplines.ts",
+      "hash": "00a60cef74e42f3df19c558fe0b743e7490a54a44bb3bb1ad4d68ac225642d11",
+      "count": 1
+    },
+    {
+      "file": "convex/model/disciplines.ts",
+      "hash": "8c7fffaaac3f45693e94c4b41df9f9fa1e773506075b035da7e6cf7cf26ebe1b",
+      "count": 1
+    },
+    {
+      "file": "convex/model/disciplines.ts",
+      "hash": "bd4474fe37d44af842f157ca8bc32765755be5c18910c03533cf4f97e9120c95",
+      "count": 1
+    },
+    {
+      "file": "convex/model/guards.ts",
+      "hash": "01c24e6d593a78882c63389d37b90ef648f1e07b1b0644e17b556e1011bfb26a",
+      "count": 1
+    },
+    {
+      "file": "convex/model/guards.ts",
+      "hash": "4591092a3b2528829afd4336914c347a5669aa241292a02c410156ecb6a9f11e",
+      "count": 1
+    },
+    {
+      "file": "convex/model/guards.ts",
+      "hash": "a20f271f3545fee54597d3d7a3e03dd9e847283dfd3307dfea37c126362a2222",
+      "count": 1
+    },
+    {
+      "file": "convex/model/index.ts",
+      "hash": "115bfc719c52686b8249063474821bf1bd1fcc8c55aacfb2f5cd8bb679f51226",
+      "count": 1
+    },
+    {
+      "file": "convex/model/limits.ts",
+      "hash": "5a3f264526b797062b1125f76589f4695b7639d38b2a1dfd585f49c98801680f",
+      "count": 1
+    },
+    {
+      "file": "convex/model/limits.ts",
+      "hash": "784a9aaef00bf0072639370786f224489b9ace25cabcfd1d959c5bc2259f6912",
+      "count": 1
+    },
+    {
+      "file": "convex/model/limits.ts",
+      "hash": "90c8ce72b46a139214eeed970f3c30305cd93f9307793b87281b0fe24bbd6318",
+      "count": 1
+    },
+    {
+      "file": "convex/model/limits.ts",
+      "hash": "a5432413b20f28bc6115c3123b544af099ad144e2805b859100481db498d9a7a",
+      "count": 1
+    },
+    {
+      "file": "convex/model/limits.ts",
+      "hash": "c26317cafd02038dff8a7bb2d757fa03d29ba042091313add1cb030e5cfdb7c6",
+      "count": 1
+    },
+    {
+      "file": "convex/model/limits.ts",
+      "hash": "f42be09318c56cb07e825f97a8d8fea3edd3b6e77bd7d397147a6e7c55222cfe",
+      "count": 1
+    },
+    {
+      "file": "convex/model/structure.ts",
+      "hash": "512c39a6d721c398d92fea651ec5b7bd740e9eda87b32118b551f40b750b47f3",
+      "count": 1
+    },
+    {
+      "file": "convex/model/validators.ts",
+      "hash": "291f7bc15afc68344a02f7b8c3276f3648e8c274c36e301d01b7796dd2a081ab",
+      "count": 1
+    },
+    {
+      "file": "convex/model/validators.ts",
+      "hash": "65d232b22b718d1ee5f2551705619aec3bdba30d8fdacf6c86658e9ae22d9940",
+      "count": 1
+    },
+    {
+      "file": "convex/model/validators.ts",
+      "hash": "b7726fb23ef9c5dd5b636284a71bb041a071cfcfe33e48d81d4876fc802d9382",
+      "count": 1
+    },
+    {
+      "file": "convex/model/validators.ts",
+      "hash": "cfea60bc9e0fda5678ae782495acc8ea843949367d33becf4bf47a31cc92bf55",
+      "count": 1
+    },
+    {
+      "file": "convex/model/validators.ts",
+      "hash": "fec2fbd4609ce93bdfe30ef8d17d29753f81924ad4032d29141ed4070e62f44f",
+      "count": 1
+    },
+    {
+      "file": "convex/model/views.ts",
+      "hash": "02ca73c9af04147d50629ae5dac07263c79907ea3ecb43bcfc5b24c082223a2b",
+      "count": 1
+    },
+    {
+      "file": "convex/model/views.ts",
+      "hash": "7475b4d612761ec60b57c6d5b93cb5437643b6a44bfb37b00c5eb360f0a8051c",
+      "count": 1
+    },
+    {
+      "file": "convex/model/views.ts",
+      "hash": "8308aeef202cd84a27d0f480c373117aefcaaa7ced81725a131b807333f5ef96",
+      "count": 1
+    },
+    {
+      "file": "convex/model/views.ts",
+      "hash": "d5a60f0cbd0a96018cd444db7bffaa649be0ac0679dc8bb5d8d3b05d0a5e17dd",
+      "count": 1
+    },
+    {
+      "file": "convex/model/views.ts",
+      "hash": "e90a5a5871b5ef47a5896aee6b823740857e6ee17f13e392ba756ec4ada3b1f2",
+      "count": 1
+    },
+    {
+      "file": "convex/model/views.ts",
+      "hash": "f25e702389f8c1540ca03e0fd8cf9e3607a4d92739b93aaecf6d657eee0c9f4c",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "0d4d35d79d5f11ea753ba7604069a0c0b9628f7f16949c1e532df78917325f34",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "171aaab3aa64cbf8ad49647beec1213298007d776442aa2ab2965b2d5c9c8aa5",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "19ef5fb55af8cf48cd4582c60157fafdd2de2b5c287969e1bc5759c05166eee9",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "1a6b2e55ce7e6f26d7dbf94f31c2a1255d6ab77d480909a9b55a2ca03fae01ac",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "1e7e3013522fab151772827e5996eb81f9c0ae2b7f6e3957079119e9caa865bc",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "237b3385cd9d4f2fd279057f5661d30aba37b928e7b27d846249ad9d7a320ba5",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "32e6d47a814f8cc414dcc299ddbfc10f60aa0750a5abaec8b2b800b39ffd5e45",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "43902ba3f4567ac15f7d5238b1acf259ab335debc2b565e9bdd6de3a06f2d74c",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "43e5e482ffe87e7ff29c47414d15c0482009730d77d4363e3a91cb3eccfedc9f",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "46b0fff17544bef2f99f340078bc86c180c3aa502cc63ea96432d56b7c007aa6",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "4ee410abb9842ba44521d3f92402bb0788f3abea55bf527a1853d2141fd5cdab",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "56287a443d0da439af92faec9e1a58d53e825928ce6ff987c98a3283036fea3c",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "6c81fd07f036f9f3d64face83a2bf7f91b387dd3a03fb4e1ada2fbf813e5d7c2",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "6d25dd93852bd37243272c912176f2c80e71bc638c54b6872a682d3f6dbec1fd",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "6e4da3f216fc45287521274a774cccd1d3721833e520e0e7fc96abb8319e0b9e",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "72a40be1e17d9528e128f632ed139692add8c1ffc0b7c83f352024d299673a0e",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "74dcbbd38184fa4390fe2374f40bd9942c48501d1aee179218f9ecc4e7cd1d5e",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "8e6f0b5719a3f8dc1946e5a7e5d8473468b0ae8cad91cebf5d4720736939b38b",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "94035cb3ffef157dbfafd9083f0e1dda7433c6802e6af9071a421d1bef7cd621",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "94a52c55b75a53314fbb0e9c0649165fd231629822fc1a0ff7f08c91dcb4dbe0",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "9806b98e519880488604d7a8e0f7185ce8aabcd3ae0706bba458d73663ba8953",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "a6b5dba1d849bb61860972a24293f38792c9ab2add3a0d5c57d8687b0d3ea2c6",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "b9219afd514d62d7591970e51d39991131ecaf98d9c0fc8ffac0538505413727",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "be8f94b1fec8f286230b6b810a071f5a9978aaffb2e7a2f812bf2c0625c25070",
+      "count": 2
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "c43acb54478c63d2259853617e2f9c60c6f3d11e4f21896b734065090b39d157",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "c776d5285c2e54fa3bf74151705b1a4ea328c7faf5f9114419dd73ebfdc224f4",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "c8f87da330722902f9a0fb94ad3969e6d4ee8b4330c5e44f80acc32c501a58cd",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "e3079057f0a0bd7c37b54ded0107fae237c544a65b39ef876207631975993a80",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "efaf90c1fa69fe62f8bc88ead893d4df6ee470f4c0bf69c94d268e0cfb537602",
+      "count": 1
+    },
+    {
+      "file": "convex/operations.test.ts",
+      "hash": "f10127c4f4f79f540e93d99b55cef9442f0dcce40fbdba38ad203740eff99f1d",
+      "count": 1
+    },
+    {
+      "file": "convex/roster.ts",
+      "hash": "095bf54e0e414f42d92a780e6bd5f2e006f23a9d3c1a18f94e59e502c166cc82",
+      "count": 1
+    },
+    {
+      "file": "convex/roster.ts",
+      "hash": "e4b0272a573cbcff9af67bc164e948356d69ae8cd03feecd0271d2b65b2c243f",
+      "count": 1
+    },
+    {
+      "file": "convex/schema.ts",
+      "hash": "3d7836418a782dc9869c3fea80566954ec1d8c798c57e7e410b295e3ea33e70b",
+      "count": 1
+    },
+    {
+      "file": "convex/schema.ts",
+      "hash": "89730177823f26d3d572770090d589f3e74b99c1704e830d7b6a5123c4bea703",
+      "count": 1
+    },
+    {
+      "file": "convex/schema.ts",
+      "hash": "a67afb0a47a38eef59c9464069bc11f4fad04fe4f764296ffc9375c25146709a",
+      "count": 1
+    },
+    {
+      "file": "convex/schema.ts",
+      "hash": "a732e17e93194f91887726dde37affa485929977289e7f25684a932df148af88",
+      "count": 1
+    },
+    {
+      "file": "convex/schema.ts",
+      "hash": "abd9df408191469fa48345add73506014a544930451dcb34bbf2d31f2e285820",
+      "count": 1
+    },
+    {
+      "file": "convex/schema.ts",
+      "hash": "bdd6aabb4fcb753350a6584dbb3cdf44b60a0c2cfa16a87b69bb5b23c3fb498e",
+      "count": 1
+    },
+    {
+      "file": "convex/schema.ts",
+      "hash": "c16c7a08e12984c8c925d3fe7b076ffe9a4fd6fa972eaed41d98a92509d00a9e",
+      "count": 1
+    },
+    {
+      "file": "convex/schema.ts",
+      "hash": "d218ea8012d428fedeec7f6d752dc6591817be461d0896c29695679175f1a068",
+      "count": 1
+    },
+    {
+      "file": "convex/schema.ts",
+      "hash": "eb46b55f2b68ad7ffad718f64a86f598170bad33a44392cd5ee1d6225610b14c",
+      "count": 1
+    },
+    {
+      "file": "convex/schema.ts",
+      "hash": "edbb6037497b6904c061ed6919239fa92d64d0b2dd94b7c61c5d4603bbd7eddc",
+      "count": 1
+    },
+    {
+      "file": "convex/share.ts",
+      "hash": "a47ad885b6093478a5f5d336aa6a1088d931f0951441c2ff402304c45e676b65",
+      "count": 1
+    },
+    {
+      "file": "convex/share.ts",
+      "hash": "e1606523c9eece1a7a07849141c7daa068848718460ba988a2349efa588309e6",
+      "count": 1
+    },
+    {
+      "file": "convex/tournaments.ts",
+      "hash": "26c9ba3c914618111681a192f8ab7d2bd1221c6e7ab4cd4946572f842e08633e",
+      "count": 1
+    },
+    {
+      "file": "convex/tournaments.ts",
+      "hash": "adcc0dbd18ada668a35c2120598b1ccd1bb520ed9cf68dadef148518879d8528",
+      "count": 1
+    },
+    {
+      "file": "convex/tournaments.ts",
+      "hash": "d4874e86111441b23933ca567625919d6a6cb5396b824899cd5aa2630003d416",
+      "count": 1
+    },
+    {
+      "file": "e2e/global-setup.ts",
+      "hash": "0340ce1d44639d8d547c43bedda4b9f2432f3413bc2a1d536207142c8b1b4d84",
+      "count": 1
+    },
+    {
+      "file": "e2e/global-setup.ts",
+      "hash": "1ca8c5eda4347d64538cf0049c43e9ada69ccc58c98508763479df97fffcb81c",
+      "count": 1
+    },
+    {
+      "file": "e2e/global-setup.ts",
+      "hash": "2374d2fbe1e61d69d8c61b8a24253d7704655a2efc265ce2fe7b0bc6dfa2131d",
+      "count": 1
+    },
+    {
+      "file": "e2e/global-setup.ts",
+      "hash": "4e5cfc606a1c23fca5a498fa15fa71015c13bcb7040532ca549655dafebea0b4",
+      "count": 1
+    },
+    {
+      "file": "e2e/global-setup.ts",
+      "hash": "75240ec69dab274a1c38090d398f1ae8a475088edfbd72fb12bc2c43f93849a7",
+      "count": 1
+    },
+    {
+      "file": "e2e/global-setup.ts",
+      "hash": "75ab91d6558dfac8d251a27dc772b82316ae89913389ee151df2bfc7794db2ae",
+      "count": 1
+    },
+    {
+      "file": "e2e/global-setup.ts",
+      "hash": "75daa28fd6a454e5c7f106cbe9b8e1ad3ae69922cc1ebdf82c7d21a9ed011e71",
+      "count": 1
+    },
+    {
+      "file": "e2e/global-setup.ts",
+      "hash": "76e46eb6c69100027ae57659c5e80d1c1d83e6e072f8a3ff64cf90ce2067d4c3",
+      "count": 1
+    },
+    {
+      "file": "e2e/global-setup.ts",
+      "hash": "848efcd5cbb8679ab60fca9bdbe081c007aa894262a2c4a09256ecd1a01e01b6",
+      "count": 1
+    },
+    {
+      "file": "e2e/global-setup.ts",
+      "hash": "a4a480bd7612a7d668f5405a84b152be03f3bd25f066d721770a101c19f200dd",
+      "count": 1
+    },
+    {
+      "file": "e2e/global-setup.ts",
+      "hash": "aa92b55bd871c4f51875fde001968a8ce9b6a48ecd182f6ca666277c2cccb9b4",
+      "count": 1
+    },
+    {
+      "file": "e2e/global-setup.ts",
+      "hash": "b721e5ed9c212c13f4485c225621f0cf50b12a927d412d419b05411ddfcaab1f",
+      "count": 1
+    },
+    {
+      "file": "e2e/global-setup.ts",
+      "hash": "c7f2965ac3c65fd9497fcba0c76cab593ec4c2c3eed26d6d31860ab5494bdc6a",
+      "count": 1
+    },
+    {
+      "file": "e2e/global-setup.ts",
+      "hash": "da4baa9609eaa534fdb4c84df56c35d670c56a0df382fdaf48641e1b3d18c168",
+      "count": 1
+    },
+    {
+      "file": "e2e/global-setup.ts",
+      "hash": "f3932b42925c0ea57a4afc171bc10ee74eb0183a52af49880776bcfd19d0474e",
+      "count": 1
+    },
+    {
+      "file": "e2e/global-setup.ts",
+      "hash": "f52f6138d86b7dbe49b8a2f693f9f8f27b383c1ec1827ce0a090e1faf3e3e8a5",
+      "count": 1
+    },
+    {
+      "file": "e2e/share-link.test.ts",
+      "hash": "96031ab27622a23ca8a414ad00720c65490e5d061aed01f4a61542daf67b50d9",
+      "count": 1
+    },
+    {
+      "file": "e2e/share-link.test.ts",
+      "hash": "ef168177482353d3f2faf60e37cc97bffee3128300c6483f34aa1702a7406ad9",
+      "count": 1
+    },
+    {
+      "file": "e2e/share-link.test.ts",
+      "hash": "f1e6f78668b59cf30418a6f603e0cabbd9eae17beb617b02ae130c223fa8dbe3",
+      "count": 1
+    },
+    {
+      "file": "scripts/check-bun-version.test.ts",
+      "hash": "2eeb639a90acee7021c6982f587377df29bfc1da428fe525df675791cffa87d4",
+      "count": 1
+    },
+    {
+      "file": "scripts/check-bun-version.test.ts",
+      "hash": "793e95f90df7181a42a60c07728df3c6ea444a4cbb051c476d056a2af36fede6",
+      "count": 1
+    },
+    {
+      "file": "scripts/check-bun-version.test.ts",
+      "hash": "8da0ae15a08670701f672b4a6fd1c1de66b9f7e99ab093ae71543f06187e4300",
+      "count": 1
+    },
+    {
+      "file": "scripts/check-bun-version.ts",
+      "hash": "5e5b823564248c2b1d817332f110fdee96c6f4bece864abffa267f8912df8718",
+      "count": 1
+    },
+    {
+      "file": "scripts/check-bun-version.ts",
+      "hash": "abf33bfcbddebe82b6b0b561c25d224362efad5af17242474b3f362b320d0216",
+      "count": 1
+    },
+    {
+      "file": "scripts/fallow-ci.test.ts",
+      "hash": "04b91f27292a693ca4f7761a9d3f2b0f77284240d2f6c2922fb09853321d667d",
+      "count": 1
+    },
+    {
+      "file": "scripts/lint-comments.test.ts",
+      "hash": "5a26441c2b020bc6af563c874fc8638d7c2916b2b70cf20f68efc45162e2a476",
+      "count": 1
+    },
+    {
+      "file": "scripts/lint-comments.test.ts",
+      "hash": "df1cdd6525c0e6cb4f55fa2e5d7118db1f50f7f16c520650c968563685ed7203",
+      "count": 1
+    },
+    {
+      "file": "scripts/lint-comments.ts",
+      "hash": "4d243da733b436579e0c8029e3e90bf255d1505f96f55c031505a9c6f83f255a",
+      "count": 1
+    },
+    {
+      "file": "scripts/lint-comments.ts",
+      "hash": "5e4d86248c4e42b31e37285e5d86664ab317e015b7c0803dc7b842e75f95b02b",
+      "count": 1
+    },
+    {
+      "file": "scripts/lint-comments.ts",
+      "hash": "63798329da145a1a8badc062fd8831d3d453b46bf930db6e52c0990fb3981ebf",
+      "count": 1
+    },
+    {
+      "file": "scripts/lint-comments.ts",
+      "hash": "7e414af297bf94474f5edeec98f4016445b14b067cfd915b0bea0d9bd50b37f0",
+      "count": 1
+    },
+    {
+      "file": "scripts/lint-comments.ts",
+      "hash": "891b1f15493332974c18c3effb5d1f027ed08ba39fc86856d123121c89fe3e5a",
+      "count": 1
+    },
+    {
+      "file": "scripts/lint-comments.ts",
+      "hash": "8bb5fd54998600fd96587730526ff1183310a1aa28dd6222c6623cc2e51a1988",
+      "count": 1
+    },
+    {
+      "file": "scripts/lint-comments.ts",
+      "hash": "9973e111042041b4c88f3cfdb932708ec5ffc88d52c1fb714e4c75bff46f8655",
+      "count": 1
+    },
+    {
+      "file": "scripts/lint-comments.ts",
+      "hash": "afe32e5e13c5bb28ac3a4deba4a8893515dab34dcc6d8b26846ff2b4dacb7d2d",
+      "count": 1
+    },
+    {
+      "file": "scripts/lint-comments.ts",
+      "hash": "f8c2c1b24b3203888b88b86dafcb96f2221430594d0752c9a53e34ff10ecccaf",
+      "count": 1
+    },
+    {
+      "file": "scripts/lint-comments.ts",
+      "hash": "fd67b2c21070145928f0e647094ee6f42e16a282259920ca40ae9a74a4196b22",
+      "count": 1
+    },
+    {
+      "file": "scripts/lint-comments.ts",
+      "hash": "fe19ba622ef4fa91fe09095fd03b9b252327936553b43f6c435b5e62610e0e42",
+      "count": 1
+    },
+    {
+      "file": "scripts/lint-theme.test.ts",
+      "hash": "8c4c0bd00bd5d6fbd9549164f811e90c1a3edc7df2310ab5d033c500a971d5bd",
+      "count": 1
+    },
+    {
+      "file": "scripts/lint-theme.test.ts",
+      "hash": "bfa600bc02f9cee10f66e06a30d58940eb5450a751059cc973e0d8962edf61c2",
+      "count": 1
+    },
+    {
+      "file": "scripts/lint-theme.ts",
+      "hash": "a563ee4516eae3fc4c7f054c4af9a487881c100d0f133d313247d34680deefef",
+      "count": 1
+    },
+    {
+      "file": "scripts/shadcn-lint.test.ts",
+      "hash": "c9a39f3f83bcf869936d9144687b914aa873f860e36608931cd09739a9a1fb00",
+      "count": 1
+    },
+    {
+      "file": "scripts/shadcn-lint.test.ts",
+      "hash": "ced58fa75c107a6bd5069f1a07735fd591217b32f37f2e5624d5b16c15422839",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/connection/gating.test.ts",
+      "hash": "1ab3227b2ddb7c071cfa4d308d443c1f2cee2d4607701a429fa313d5764cebd4",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/connection/gating.test.ts",
+      "hash": "226d685ab1b929fc91f3af6dbc27d0bc05f6f0a33f5609835f37a9c7215b39ce",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/connection/gating.test.ts",
+      "hash": "5e11a49af9817905054d6a1af7faef736d1dfd88e6cae1436c0c6cdb9ba32f17",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/connection/gating.test.ts",
+      "hash": "84058922fa22776fce2c3fb9069358780993c47900089cb1e3a56fc3b2ab5785",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/connection/gating.test.ts",
+      "hash": "8faa5be83cf21dfbdf4456406a051ac651b1fb14dc11b72fd70951ee7a418a24",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/connection/gating.test.ts",
+      "hash": "a19e00c096ea0b4f17b206ebc97e39209174abd5e40e48b3828a6880741a5311",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/connection/gating.test.ts",
+      "hash": "ca6b0e890293b477b5b249fda837a317012429e527ab0da858a1bd749ebbb558",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/connection/gating.test.ts",
+      "hash": "fd948d1b50c1ac4266fa1cadf488ddb129d06b5a799469e1a9da910870b11c48",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/connection/global-setup.ts",
+      "hash": "157773fd2d140897c45bcfe65da93d13d1af34943650c453ddd0633d4fc66ed3",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/connection/global-setup.ts",
+      "hash": "4e5cfc606a1c23fca5a498fa15fa71015c13bcb7040532ca549655dafebea0b4",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/connection/global-setup.ts",
+      "hash": "6430635dafe09d771b464df6116f7e4597d7f737210343b5103b1c5f04744023",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/connection/global-setup.ts",
+      "hash": "75ab91d6558dfac8d251a27dc772b82316ae89913389ee151df2bfc7794db2ae",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/connection/global-setup.ts",
+      "hash": "85967f02c13bb83848933c00635489cc8fcb1825b8d3c5aad49fff37e0cb6ae5",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/connection/global-setup.ts",
+      "hash": "e1c52153a6d9035b2c25766c38deb9593fbe2448900c207896faf5e3529f10ca",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/connection/global-setup.ts",
+      "hash": "ebb260c99caefcce54abcfa75f9a21997a11e5b70903778e5c04e51cb6c8d98b",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/format/doubleElimination.ts",
+      "hash": "23873500410d78aa1e13d0d98934ae7486854108e04d50b1b64781e5cf1edafb",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/format/doubleElimination.ts",
+      "hash": "f90f0d3730dd78ffc5480bd949968e1901f1ef882e6df7c2245b64951a6ea3be",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/format/engine.ts",
+      "hash": "bc2658f55f8f8d1d6bfa73171a6121cf986677da8fb586961c4ed83ce61ae7fc",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/format/evaluate.test.ts",
+      "hash": "af42dc54f9855f7a6b2b11513ee662fecfce2d35fe532452a723aed0e6c959d3",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/format/evaluate.ts",
+      "hash": "0128c3fbcc052ce1438145376d8d90896b2a7011ab490e1f0b022b9405c92b12",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/format/evaluate.ts",
+      "hash": "39321eefe62b6f89c8890d8eaafcc2b8b180f490f67cae4e1d9ac382ac96639c",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/format/evaluate.ts",
+      "hash": "859ac6283f104d158b3691ffe461c218fe7b3940a018b227009f998b1f690b8f",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/format/evaluate.ts",
+      "hash": "9b093d1a9803073d912bb22168e2e3a2353adaccd7527e76b7e972680fd7a3bd",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/format/evaluate.ts",
+      "hash": "a272bca57fc37eca40c99bf539a56a548b272a94d1accb86338918d42c4a5e75",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/format/evaluate.ts",
+      "hash": "acf8b5eb94c90eaf1be30e86ec430368a8002afb30b2fa2e5367a8502dfa2a52",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/format/evaluate.ts",
+      "hash": "e52afdf2b5d4975ee9e07ed7dcf5d9efeb9bade0c4d65d3cd48c81ed3d802d16",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/format/evaluate.ts",
+      "hash": "f8cb81452fef7dd831db6f3ffa5afd511634c48a78067ddffa3638febca34f26",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/format/seeding.ts",
+      "hash": "29f9add0d8512e0ec00156e91f8830c43fa14023fd701d2d1151de31edb2154a",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/format/seeding.ts",
+      "hash": "ab4b7848ba8829c794525af875b1e03de57ed77fd9a2d86eef596591477e15b5",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/format/types.ts",
+      "hash": "05f7777c879c9112db4046df663f2cfa422b796da22b2be0438babd8589b6426",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/format/types.ts",
+      "hash": "f94cbfc6712495688b235decbf5becefa5e0c428f22497776302e7db4d30e204",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/seed-local.ts",
+      "hash": "302a895d974f10404168614f77c1f2bded33c2106694788aca1fb33da7c921ef",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/seed-local.ts",
+      "hash": "6465164fd61a89a79d05750fc29a4aabf29b8e0b62f7625e7ac2eb57ade08d20",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/spike/fixture/seed.ts",
+      "hash": "05a592e7a3969e8d47b9dd2dfff8d0af4b4c28205304710c32cfc8a1c21f6505",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/spike/fixture/seed.ts",
+      "hash": "27562da1becdd1363ffe1d3908925ccd785125e5dea60cd6d0dd4f51de62eb5e",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/spike/verify-read-surfaces.ts",
+      "hash": "023b2e43b815bf60c815a48b1f50e193fe220801bbd50a40cb7ff9253d7cd49f",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/spike/verify-read-surfaces.ts",
+      "hash": "3f680a659eaa5ec9f2cbb149b0ef538c285dba0df4b99de7bc50095265f06ccc",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/spike/verify-read-surfaces.ts",
+      "hash": "4e5cfc606a1c23fca5a498fa15fa71015c13bcb7040532ca549655dafebea0b4",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/spike/verify-read-surfaces.ts",
+      "hash": "519f01fd06ea77f5333ae372b1faec73e460b8b5452e46aaa07758b1acff4456",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/spike/verify-read-surfaces.ts",
+      "hash": "85967f02c13bb83848933c00635489cc8fcb1825b8d3c5aad49fff37e0cb6ae5",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/spike/verify-read-surfaces.ts",
+      "hash": "9d23c76426fa189156ac0c72853330eccfee06f1c3e846f14137cffcdf883b92",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/spike/verify-read-surfaces.ts",
+      "hash": "a068c17750a772a080bbb052c6a130f0205c03d68f0fe55afc5b0a02d8c2f761",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/spike/verify-read-surfaces.ts",
+      "hash": "d56514c31d99fcaac0e7489805d5436f6bcb628eb33a27ee0574f478efbd72a7",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/spike/verify-read-surfaces.ts",
+      "hash": "f21e489b27ecbc7c814c806740c37464d4dc9fe65d9b78a6f559f424963ae4d7",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/auth.ts",
+      "hash": "4111b7ac060df74b8881f219044368a15e059fcaa6278ad18d6debf3d807d8cc",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/auth.ts",
+      "hash": "cf1299e50a7908183bb0490930ae7e8b8e4085f2efa013b1ccfc0ed827ee16ab",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/bracket.ts",
+      "hash": "033eb3db0837c52bcd17048d0943cd88c4ef28b7e013180fa76d5513866aa889",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/bracket.ts",
+      "hash": "2767212a84d615e60a2b8d1e6e217a7c5e30fb266a14ebaee7aa61f64a1b287c",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/bracket.ts",
+      "hash": "29ff74ccdeb8f025eb7c8773da2407bdbace3b98b9edc5e1aebe91e11ee632eb",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/bracket.ts",
+      "hash": "73c324522f3c5fb453e5b8cbf3105183c31f4d02d78eb979fc46e8e674dc1d10",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/disciplines.ts",
+      "hash": "c5a5e1848f2cb5cc0c5391cfee8d1dbdaa20bba6623420470a7ff89393a5f46b",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/disciplines.ts",
+      "hash": "d73c335f9fb296f58c309ddd50cd4acace9723018bffeb02f7cd8a35380470ee",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/lib/binding.ts",
+      "hash": "975ec56758ba3deae53fcc7206a45488b5d6668f5a26534832cb410d5b8b64b3",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/lib/binding.ts",
+      "hash": "99547ce87785233a00b4e3259b58996f7c367bd34fc6c2d2bd2179394afa4afc",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/lib/convert.ts",
+      "hash": "5538d9706579a486c77ab94a567ebd9c2a1ddaf95178111b733d5f47fcb14621",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/lib/disciplines.ts",
+      "hash": "8c7fffaaac3f45693e94c4b41df9f9fa1e773506075b035da7e6cf7cf26ebe1b",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/lib/disciplines.ts",
+      "hash": "bd4474fe37d44af842f157ca8bc32765755be5c18910c03533cf4f97e9120c95",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/lib/disciplines.ts",
+      "hash": "ea4459e68d62adc3c3065f0674f7d461301e7a69ab9ceff3c60b027ccbc2d301",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/lib/guards.ts",
+      "hash": "c0cae57a8ba8cc4ff2b4cb4b550724d710af686e9cfc2159f49b7ee01f466c76",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/lib/index.ts",
+      "hash": "4fb3d6e2b531c21346063ebf9c9b36cd3618b3cf38283c784f5e804e36ebc802",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/lib/index.ts",
+      "hash": "6e76ec467dd9f722500162cbbf0e9fe9e98d7ce43a617ff36b6800422196a09c",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/lib/index.ts",
+      "hash": "74c0dbc5f40b9b02f2af0dddf793321685e2951cc20f97a74d32a1b11951e1b0",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/lib/index.ts",
+      "hash": "ebc7da74bbea72806af9794870a973785878e51e66f9d817066df9e5e4087d33",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/lib/limits.ts",
+      "hash": "3ec13c8ff5ed695f01edee4e1bb92e9785f28baf3df566489410c2e27c0997d6",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/lib/limits.ts",
+      "hash": "5a3f264526b797062b1125f76589f4695b7639d38b2a1dfd585f49c98801680f",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/lib/limits.ts",
+      "hash": "c26317cafd02038dff8a7bb2d757fa03d29ba042091313add1cb030e5cfdb7c6",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/lib/loaders.ts",
+      "hash": "97bdfb61f1de0a60234a8969b38f86f8de9b44b31e056ce26f7f7c073f462ea9",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/lib/loaders.ts",
+      "hash": "ee88746e91a738c0afed75ff162b7f84e30a9213dc32dfd8368806a7ce15310d",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/lib/reads.ts",
+      "hash": "ff076993109a6c1d8c311a89c56a34d5aadc669ea903cb584d91d4da3d611ca6",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/lib/reads.ts",
+      "hash": "ffca714c74eb43a066ee415323974021e447bd8e3f1ba651c054a7b859cbcdda",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/lib/rows.ts",
+      "hash": "f4cb35507bf855ddf5946c12f4cb8756a56cba9e055288761d79cf5dc8c6c3d6",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/lib/secret.ts",
+      "hash": "21873df8a71fbb633b61a5b98ac247a52b8988afbd7074476ea11c308416bae8",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/lib/secret.ts",
+      "hash": "2f70fd6ce99675276f64abadddd0ec6da3a261160ebd247278ec9c869fbe63d4",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/lib/secret.ts",
+      "hash": "a957a602a2eb6268d35ffd3f68eeae47fdeae0d370984937ecf9a2b5aac761bd",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/lib/secret.ts",
+      "hash": "c2bbc9db4806c759ed0fe1296f518cc526cc60d45e46ac9097da962d1fb86b6b",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/roster.ts",
+      "hash": "e4b0272a573cbcff9af67bc164e948356d69ae8cd03feecd0271d2b65b2c243f",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/schema.ts",
+      "hash": "1dfd5907afab731c26d1d2a278a478a0ee60fe7fd75518d4f63d24e5e4cd4a59",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/schema.ts",
+      "hash": "53dd1b0c093b91b45e738ba90c45954f26b745196a3e84ec29ea536f3d455fa5",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/schema.ts",
+      "hash": "695179ed5c392f9c7abe722254fc9cb899557cba3419b254ebe278705c8237b4",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/schema.ts",
+      "hash": "a5eedf52d50438025784da9bbb2c5ca1b7e253cb3be76b33b5dfb087d9b99497",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/schema.ts",
+      "hash": "ddfb57535e55fb91a9116dbd6a0895adaabd6b167da7d653bf7080c218176a6b",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/schema.ts",
+      "hash": "dee0738545567b4e120e066a6aca09d4ae16568992b2389319050b38aa9bbc3e",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/schema.ts",
+      "hash": "eb46b55f2b68ad7ffad718f64a86f598170bad33a44392cd5ee1d6225610b14c",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/share.ts",
+      "hash": "12060015d300d0a6197f55ea0ac782bf33d7495825ee9ca5762daa6a58f62a97",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/tournaments.ts",
+      "hash": "8a1198b818786a109859cfada81979961300b0036aea10ec3b20acfb8c7d7b22",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/tournaments.ts",
+      "hash": "d4874e86111441b23933ca567625919d6a6cb5396b824899cd5aa2630003d416",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/tournaments.ts",
+      "hash": "ed52000476704b00060c84212e23f8321b7fb6a46b12f17763c48dc46b70e84c",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/test/auth.test.ts",
+      "hash": "5915617f3809e7a7babd271b344b5988644b0368f672ecef20fc11bc42930928",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/test/auth.test.ts",
+      "hash": "a05b20268e9370f8aba1f953e11390254d92f448ef7c5f47efab40757104942b",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/test/auth.test.ts",
+      "hash": "ebc55489523a75e63b8ea56510a69fd6a4753744f2d104cf9f9fa7cb98f459d1",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/test/compose.ts",
+      "hash": "23dbfe44382dfc44c034f96be7b74232b935743a25f287c4933a65e191dd0eeb",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/test/compose.ts",
+      "hash": "6971d0b980e54aa758d511c7503df2bc79e5c38128d63c86bc5464a0508f26ef",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/test/composition.test.ts",
+      "hash": "717d707c0fb448e0651c35abf9ab666cdcc7757f89ac9c26fa873aad74e2a1d8",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/test/composition.test.ts",
+      "hash": "f13c09a5a0a7d61411361c6656adb85cd81969020ee35494806e73ac8db12a48",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/test/harness.ts",
+      "hash": "04abfa6334018b01502360b99778fba2e6634a8cf141a678d0e0b0d3edd6c1ac",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/test/harness.ts",
+      "hash": "96b8e59a4f438b68602100b56a571c87ca2c53e65f02151b25a63a032e9fa61d",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/test/module.test.ts",
+      "hash": "2562d347a8c3d41f8104513fe4f9bd27bc634df6db9badb43c184ed732bc1256",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/test/module.test.ts",
+      "hash": "3bfc49a69c486b1e34fd1bd70e959a9dd79c4b6e6bc08dd61a50b203a0ea09b1",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/test/operations.test.ts",
+      "hash": "28434de04c36bbbc61d3654723156d328afdce3f7651bcbe313343968f8a06ff",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/test/operations.test.ts",
+      "hash": "5ab05e31cf13aa92a38c06a1c8fad6f9caa407414a40f74a596c3aa87a30aab6",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/test/operations.test.ts",
+      "hash": "5abe85f2acc5f73389370e60e64bfe682d88a6fd5c57b2a458304b575d319246",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/test/operations.test.ts",
+      "hash": "71f4b8b54b22dcfd3d2e0dd9e1220585300481ff50d9c7396dfae79bb901b819",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/test/operations.test.ts",
+      "hash": "781907722eeaed8cd9e0be2d59cf710f24414b251d0c20fc40287b52fedd1507",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/test/operations.test.ts",
+      "hash": "8f816d196a6fd627700d95849d031d9ca70ad760bc9dbbfae217b5fb4a9c7f11",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/test/operations.test.ts",
+      "hash": "eba7d58e582ff418c34094327ac6c15dd67ba617822e09c424023f6accf8a33c",
+      "count": 1
+    },
+    {
+      "file": "src/App.test.tsx",
+      "hash": "832c7cd3ddb9c7226e9fff17d2774d8c529e0e98bce4820a6b9ac89c02dc9c7d",
+      "count": 1
+    },
+    {
+      "file": "src/bracket/BracketView.tsx",
+      "hash": "688d10e28b6443acdc7a30a77d585400e3d8c4acf2f2b3d19dd6214308cf446c",
+      "count": 1
+    },
+    {
+      "file": "src/bracket/BracketView.tsx",
+      "hash": "b41567efcc1a6a85975413f2abf1118a0730b11f68d7f175eb5b20fe5f715e3a",
+      "count": 1
+    },
+    {
+      "file": "src/bracket/BracketView.tsx",
+      "hash": "e95e698afc6a65ad79ebeb5253de92a3792ed7f856e744a5230eefd556b3095c",
+      "count": 1
+    },
+    {
+      "file": "src/bracket/BracketView.tsx",
+      "hash": "e9808bc149dc3ba0f58595793585e7982cd28fd8ef494c664226f5b0015bec07",
+      "count": 1
+    },
+    {
+      "file": "src/bracket/layout.engine-parity.test.ts",
+      "hash": "70d684a91ca9bd1cff7a162f03cb4f33736926a20814872089166f4501c51efd",
+      "count": 1
+    },
+    {
+      "file": "src/bracket/layout.ts",
+      "hash": "559a1343c06fe65bcd8604f36732789ee2535e05df81ab0ccc568fe472459db1",
+      "count": 1
+    },
+    {
+      "file": "src/bracket/layout.ts",
+      "hash": "aabec41bf8fc5ed0ce65769a26cfa087d04c5744127aa189ec77aa72ef379a65",
+      "count": 1
+    },
+    {
+      "file": "src/bracket/layout.ts",
+      "hash": "b080a439d67eecfc50f69e0bfb9556d628b734306bb398bf99bdf231db1dc2ca",
+      "count": 1
+    },
+    {
+      "file": "src/bracket/layout.ts",
+      "hash": "b5299e6b3f8dd7367e1fe5aeaefa0566a18223509c39aacc64f99f3b796e79ee",
+      "count": 1
+    },
+    {
+      "file": "src/bracket/layout.ts",
+      "hash": "f6d5b24cf5318d0f6e4edd9096f1f03ea9ff65b8394636c31c8a90aca6ed34f6",
+      "count": 1
+    },
+    {
+      "file": "src/dev-diagnostics.ts",
+      "hash": "d9080da6198f9669d0b2aa7c6843b0d2a67dd3ba74fa3f793a53a25b478c13d3",
+      "count": 1
+    },
+    {
+      "file": "src/dev-diagnostics.ts",
+      "hash": "d962af89eea10a96699c06090c74cc3358d105418a32d8e7b8aabc1da5a59436",
+      "count": 1
+    },
+    {
+      "file": "src/diagnostics-gate.test.tsx",
+      "hash": "b6b1865cb30c98fff80af69bd2b9d7245101fa4dbc8a8b4f802b0493cfa844fd",
+      "count": 1
+    },
+    {
+      "file": "src/diagnostics-gate.test.tsx",
+      "hash": "e7d8835aa355bab64d8ff70c964b4d8a75a2785acba0e6f14ce53bf95f42c192",
+      "count": 1
+    },
+    {
+      "file": "src/diagnostics-verdict.ts",
+      "hash": "4c52112be24f94a2b664c37b83e59c3b0ecd84c7a5d3f1cd6c8b88b65163da1d",
+      "count": 1
+    },
+    {
+      "file": "src/DisciplineField.tsx",
+      "hash": "68531d3d2108a853b59124992f1e3fd6a4980350406f782eb0e27a5e3082d9e8",
+      "count": 1
+    },
+    {
+      "file": "src/DisciplineField.tsx",
+      "hash": "cc42a3b832cd4c4fdafdd224a5da799cc17dd3e247075f0c1bce2f0060482452",
+      "count": 1
+    },
+    {
+      "file": "src/Document.ssr.test.tsx",
+      "hash": "626ac2a47ba9960983a9200dc59d6a7a317866faa97f57ed6321af22bce41381",
+      "count": 1
+    },
+    {
+      "file": "src/Document.ssr.test.tsx",
+      "hash": "98a4826ab7a341e4170297966d1e5eaedcf86e1e7d70821ece763752c214f348",
+      "count": 1
+    },
+    {
+      "file": "src/Document.ssr.test.tsx",
+      "hash": "bf943432447a046c806cb591819a7f1be57f5dafb7504c15f981e3b6dc18908f",
+      "count": 1
+    },
+    {
+      "file": "src/Document.ssr.test.tsx",
+      "hash": "f6c72fb2c00af323351bd658336884e127dfd2a5c80d7280688e1a8b2f6d0537",
+      "count": 1
+    },
+    {
+      "file": "src/ErrorFallback.tsx",
+      "hash": "c1aedffae321d753f408438e5ecb87dec15f345df306afe06c2f3dcfecab2016",
+      "count": 1
+    },
+    {
+      "file": "src/FormatFieldset.tsx",
+      "hash": "f10b37881daa567d3d0c36a35f794dc8d9c81097d5c2a0f4e848772e478fb9f3",
+      "count": 1
+    },
+    {
+      "file": "src/i18n/index.tsx",
+      "hash": "08c9bb62257f88da8d966cda194e3536ba208e38e288d86d0f8a447e2ac21329",
+      "count": 1
+    },
+    {
+      "file": "src/i18n/index.tsx",
+      "hash": "82b41e9fc6332ec1bce245f96aaab5c1539046928e3f1b99ce1d45cb76945d7b",
+      "count": 1
+    },
+    {
+      "file": "src/lib/auth/convex.ts",
+      "hash": "0c3fec8e98e6cde588c6396d8694ebfac75df39370641fed039c4bf8ab27c15f",
+      "count": 1
+    },
+    {
+      "file": "src/lib/auth/convex.ts",
+      "hash": "122b05b3385b0db372083531a1f20014abdaefcfa767708b790a2b1f002a3663",
+      "count": 1
+    },
+    {
+      "file": "src/lib/auth/convex.ts",
+      "hash": "3695e89c17075fe410647dbc261eda2a8464004ea52d1ce50d36d4906611f4c0",
+      "count": 1
+    },
+    {
+      "file": "src/lib/auth/convex.ts",
+      "hash": "79221951db203c48cea8ac12f42f82d18bebe322d7aafe0e15cb424341e32d30",
+      "count": 1
+    },
+    {
+      "file": "src/lib/auth/convex.ts",
+      "hash": "8f27611cde39fe873e20b7526a11fc1e7f20fc7a58a32983a779885ae98f8dde",
+      "count": 1
+    },
+    {
+      "file": "src/lib/auth/convex.ts",
+      "hash": "9045af44665cb58e63765d048ea356777d0980cba720b80ca93d07c1886271fb",
+      "count": 1
+    },
+    {
+      "file": "src/lib/auth/convex.ts",
+      "hash": "a301fed07ee6060c1d2453d4d68356f62f2e2be6a3251e0f9a0536922538c75d",
+      "count": 1
+    },
+    {
+      "file": "src/lib/auth/convex.ts",
+      "hash": "c246ac7384adb869835f4e0c4fc566c30feaade3ba0694e7b63d8edde93beff1",
+      "count": 1
+    },
+    {
+      "file": "src/lib/auth/convex.ts",
+      "hash": "c939ac18dfa2e71fcb64ece9293b21774d53dc9a56426ad6858d4852a5865a87",
+      "count": 1
+    },
+    {
+      "file": "src/lib/auth/convex.ts",
+      "hash": "d42ec9002b95450128ede815410ea41d7f5b8fa9f53235af760f8f81a157ccec",
+      "count": 1
+    },
+    {
+      "file": "src/lib/auth/convex.ts",
+      "hash": "fbdac8694f00746b478468f63c8a8fefffb73b6e3e88a03bd1ecb3297e96dbdd",
+      "count": 1
+    },
+    {
+      "file": "src/lib/auth/index.ts",
+      "hash": "1fd08b6a1099a7c3b565eb9a0b95652a03e890a2937383ed480e83f9986e28dd",
+      "count": 1
+    },
+    {
+      "file": "src/lib/auth/index.ts",
+      "hash": "7c31b481649a18db68d1558c875321c413bebcafc1b84d77bc572a3637929819",
+      "count": 1
+    },
+    {
+      "file": "src/lib/auth/index.ts",
+      "hash": "f907d03c0d94e8e7e84f29ba9f1ef9b97e95744268254f99251bf287b7ad58ba",
+      "count": 1
+    },
+    {
+      "file": "src/lib/auth/spacetimedb.ts",
+      "hash": "967a3280ad2db889292ac68edca44a8bc3a16aa82d43422da1e8d174d6cbb35d",
+      "count": 1
+    },
+    {
+      "file": "src/lib/auth/spacetimedb.ts",
+      "hash": "e73fbcec6f85248c9cb2015089162b1f880981432be0e6e4a1c080828c54edfe",
+      "count": 1
+    },
+    {
+      "file": "src/lib/auth/spacetimedb.ts",
+      "hash": "fbd761b40813db2d18d10aef427cea2dc272941d2472a2f61b5b6b10005aceb0",
+      "count": 1
+    },
+    {
+      "file": "src/lib/backend.ts",
+      "hash": "521af44e6f024aae94a6ff4ee7dcd32cb49eb8506f04dc4ef443207e8bfb10fd",
+      "count": 1
+    },
+    {
+      "file": "src/lib/backend.ts",
+      "hash": "5af46d25b9fcd0563011f13c6e46d2f0fbc0a2a20fd8a7ae9e5c2148e6ca4f2e",
+      "count": 1
+    },
+    {
+      "file": "src/lib/backend.ts",
+      "hash": "8c48a3bb296d0eae853c676d93dd72b1dccc404017ae132bdb2d2c523daa60ed",
+      "count": 1
+    },
+    {
+      "file": "src/lib/backend.ts",
+      "hash": "b97a49b2781d34c9fde9a23be4b1d87e64c410790b3da3d7088d171116f76d16",
+      "count": 1
+    },
+    {
+      "file": "src/lib/backend.ts",
+      "hash": "cf76dd8824d2d61ce70942186258bfff93f760e8f13c4fcc6883e633193d7b43",
+      "count": 1
+    },
+    {
+      "file": "src/lib/backend.ts",
+      "hash": "d196f45b4112284ee6229088c742b2b94af0b328eaf17a6406f2778666b4794b",
+      "count": 1
+    },
+    {
+      "file": "src/lib/backend.ts",
+      "hash": "d3fa7770bd60d84bed601ab089c6e20b4d941fb79a549ef6dbe46c049b13b46f",
+      "count": 1
+    },
+    {
+      "file": "src/lib/backend.ts",
+      "hash": "dd26ef26015415ff63e10ffae8d2f6c06053459ad604facc6e0d3fb99df308c2",
+      "count": 1
+    },
+    {
+      "file": "src/lib/convex.ts",
+      "hash": "45af5874b6a29afd4124fa7eac22a0c1415d6f3cc72a24aac8ba5739997bbd4d",
+      "count": 1
+    },
+    {
+      "file": "src/lib/convex.ts",
+      "hash": "538494bf707a51de65a852b33ddb80fc9566a1a39108367b56145eafb9021bbe",
+      "count": 1
+    },
+    {
+      "file": "src/lib/convex.ts",
+      "hash": "8e4a467a8858a1fe85b8306515773c0d4fc7dccbd10f05d7317471beddfb6131",
+      "count": 1
+    },
+    {
+      "file": "src/lib/convex.ts",
+      "hash": "b433c47af67fd8a14301e0941ce4e4bcd2c7e0e326cb1953c8a15aac57714b2c",
+      "count": 1
+    },
+    {
+      "file": "src/lib/operations.ts",
+      "hash": "83c128326f7bd65963c7ed4015250fc4cba754b2aa8b412e082465f67e4785c5",
+      "count": 1
+    },
+    {
+      "file": "src/lib/operations.ts",
+      "hash": "c9030a6db274be2d87d501f03afa2c9225c01402648d2b82dbf00b3ea31bb7b9",
+      "count": 1
+    },
+    {
+      "file": "src/lib/operations.ts",
+      "hash": "cd9bd26bb143717af76c8d7132f7e1b8076a852b7c66e2c019d0619389cac675",
+      "count": 1
+    },
+    {
+      "file": "src/lib/operations.ts",
+      "hash": "d9883680ffb62545202d54b8138de6514e3dbf9fb6064c07874530ccb2dbf2cc",
+      "count": 1
+    },
+    {
+      "file": "src/lib/operations.ts",
+      "hash": "f448c5f45024e2fd28c9536c7d2bd57420fc36993591ae494439066790b49099",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb-model.ts",
+      "hash": "0fc70b0ec55852cf10f391a9f681775928fa1e5e5e81f11621ef4c7b96b5aa61",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb-model.ts",
+      "hash": "11a9cad96d8e4fc3adc6df4895eeab4792f027e8cb9af18b7f7e7e5d7fa03fc0",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb-model.ts",
+      "hash": "22679b71deb368da8c17aece949234a1aa3b8b9cc532e8072df7dd1109b4a783",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb-model.ts",
+      "hash": "267ed8cf85fc9ce56e4bbe938935486d1c0e7f6f34e3f1733c4e3bb396058f6c",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb-model.ts",
+      "hash": "4b22a875af08f7bc4cc528e61f5e8c2359f488aa70a198b2ee91b7f0a49a5eca",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb-model.ts",
+      "hash": "4f28f515e381ddb0fc01f9da6023e69e13a409c4b32918486060525d948e9dec",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb-model.ts",
+      "hash": "61ebc50ed090ece52ade453a9980e1b49a6bcb1e4fd9d94352e4c1d93266af9f",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb-model.ts",
+      "hash": "9c6c6d07d80526f602d8137596a605fef8a17c7d5679447e08823d04d1cd2bb4",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb-model.ts",
+      "hash": "9d961143d00d4b0d46b64873ade975a95ee9c37a045ced89e9452dd39dc204b8",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb-model.ts",
+      "hash": "a1fc7ed73c22ef502108a5c7d1e104285733d135227b9dccff6c0d2d93bb37c9",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb-model.ts",
+      "hash": "aa96130e4a4b4e38d2415ee0a8865b0a42590923e71ed2710de1a9969314a033",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb-model.ts",
+      "hash": "bd4474fe37d44af842f157ca8bc32765755be5c18910c03533cf4f97e9120c95",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb-model.ts",
+      "hash": "cfd2f6d7ff7e45ed872bc21770a69954b30e23e04e70e0c776b63545a9817c90",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.live.test.tsx",
+      "hash": "0b966487c8a7136faad19de8a62eab133a8f4e25d6ef1190f9aec74a17ede180",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.live.test.tsx",
+      "hash": "12dbe22abe4b72e87b55d6126e5f933c07d63b72c8e5489f4f50728bcefaa181",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.live.test.tsx",
+      "hash": "19da689338471e48f9b026c4a8f43cb3bc1445d6f831d41a0a771d0495c7c9cc",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.live.test.tsx",
+      "hash": "4e5cfc606a1c23fca5a498fa15fa71015c13bcb7040532ca549655dafebea0b4",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.live.test.tsx",
+      "hash": "4f9ba41d9f9b89cce0e590642a2d5b6e12ff6f90bbbcfe8afc40e834a37d4b58",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.live.test.tsx",
+      "hash": "61c2b89e844764d5fcdcac784185b380b65070e4d3da610740f0bb6d73d0ff08",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.live.test.tsx",
+      "hash": "75ab91d6558dfac8d251a27dc772b82316ae89913389ee151df2bfc7794db2ae",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.live.test.tsx",
+      "hash": "795d0e327243de843caac4d7ac84f9410b8e33f3e12fa3388dbdb6496dc57637",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.live.test.tsx",
+      "hash": "85967f02c13bb83848933c00635489cc8fcb1825b8d3c5aad49fff37e0cb6ae5",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.live.test.tsx",
+      "hash": "a67297165cad8766c0f259d1187ca672f54d07c8baf398fc148301d3295769dd",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.live.test.tsx",
+      "hash": "dbacd76fb90c9ac13925119e19ac9d3136b1cb67d5357ce106d4db664bdbda2d",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.live.test.tsx",
+      "hash": "de35b2fed7f3f70555541def0844819b604788d2bb666fad80f7c0fba79cc193",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.test.ts",
+      "hash": "1dd26384d79d6af75561e0c9179f6d7d1b1e7e2242b8cd2612b81379e840bb75",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.test.ts",
+      "hash": "d8f69979370d2723886a913db9f7f20200d4c32a907ed5d8eb797b465a9e8de5",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "046675f6656bbb90cc398b19c3db9d4def876abedf53de7608962197c417f32b",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "06227edd6bc5f66b1f7107c312e05a24fac68e3754527dcee235dcb83401ea13",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "0b712d23a9b855f5cfb86d9c9a222459ad1f3ebdf49dd20c1b13ff3f84db11a7",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "105d7cc980bf529de052c48cf949c2e65bfc880d8b750093cb4335961e1e390e",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "1e1eb5742c974361d837ecb01a53a9d8c5417b5ab024a668c8a74dd13fa69612",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "26f0c7324075bfb9f202f0513e00672836d6ec9fbee6e6046f854aa3a6c1c3d7",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "2890deeae742c8e8e22e6a759e895248e0ecb2b7bb7399ecceed0544d4fe1d2b",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "3f1b18b4fb4010ee8be44d35f0e935569f3f1c8d4e9a548c8efb574209ef3f26",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "41db3ba4976e8548f6f63970254722efd472274fac8fcf7d10701f25e57a8123",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "45e8b2f53586832a2972ed57e7e5cd05982b337d649fbaa71f123d7d39d12890",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "4ac5da1e545071a0940b06c0e124e937dd02787ecb62db5d797c62d0718b145e",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "55dd4f022e76db63cf84f26a5d4b1b8234263bd81ecd3c0441a0e7e8b340f491",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "5bf079c62bc011dc7e56415028cf1ddff9250abc20c437fe45506ffab56d48f2",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "5cba4bd233fbda602487fbb56de2032b4e5a55ce5af082c0e496e37fe441457e",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "706fcdce117f13667a3b530db5316b41d479174853d015e2e477f9fd328aa266",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "94e91b2d4106561abdc306ec0956c86767ffa4f479bb2cdaec117261b9db5a96",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "a307adcb08edb8dc0858419c5de0edbf12c319a93d93cd569c77f0b24a227b04",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "abcb15e60704ec13638b989f4406dbb4cc87dbe3809d9be33a35a09646a560ad",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "aee3d80c3fa23ae4b24c17df7c9ae73d28f22b423374ac918388db1850ae16ef",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "b801e9c7cbd23e26fd6ed974ba9d32e0064927b6307e34132f48678389213875",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "ba7c3cc66eaa0fe3c6891fc75536534ec4fbb8a0f5ddc23f05a65571e37054c6",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "c362958a5d713e385e499661a7629adfb0c7bef366005c1532953bb7f7f3bd58",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "c6583bce7f3ead0641c20e3dceeaa0c8dfa82c32db3676de4005fed8ea3e0c64",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "cae09a5f61e2e5053ebe7f4e6350212369f3eef24542000fe34988f2abb054b3",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "d17c49b390e671b9629728219f155b195eb1efd25a9cf317871efafa66166a6a",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "f9413bf4fe8b27a044795fd016b6779f339a69c3a00e2f1758eb1d697fdbbb49",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "facbd7a3aac78e01e3b7afaad910122b47f05d458aadfd1238b12940928c2248",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "fd0983cb5b58f9072bf7e48d2ea8d5161d89107fba489c7a436f6b8f91d75a4b",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "ff470785678966b12281e810d3459863c433dba08cee080254c58592c1f62140",
+      "count": 1
+    },
+    {
+      "file": "src/organizer.tsx",
+      "hash": "4779d16bcd44b7d012a4e856312f9c273b5198d71cef92386c4d7b45fec56a6c",
+      "count": 1
+    },
+    {
+      "file": "src/pages/Home.test.tsx",
+      "hash": "7850dde5e1d8857f5c4a1008990f0fb33714732a14fc6174f27c8ba863b7624e",
+      "count": 1
+    },
+    {
+      "file": "src/pages/Home.test.tsx",
+      "hash": "7910116e1331bc934278f92e4f75e62f5cf695a6df2274044e679a5e56c916b0",
+      "count": 1
+    },
+    {
+      "file": "src/pages/Home.test.tsx",
+      "hash": "9703f738afcaa0841e223e120f151dd41782c8c7abb047853c78c2368b781ce0",
+      "count": 1
+    },
+    {
+      "file": "src/pages/Home.tsx",
+      "hash": "aabbde64264d96e868cfa660c26ee75367cb4c1d9e8ddf78d3c56f789de73b9d",
+      "count": 1
+    },
+    {
+      "file": "src/pages/Tournament.test.tsx",
+      "hash": "1114048696346e0b3d4fd06414b4460e58f39c178dfd467334ca1c1035b955a8",
+      "count": 1
+    },
+    {
+      "file": "src/pages/Tournament.test.tsx",
+      "hash": "260edf6fb5e804e1b064c648729a7a1b39e3d871f6155c839239ac66407e95f2",
+      "count": 1
+    },
+    {
+      "file": "src/pages/Tournament.test.tsx",
+      "hash": "625271717be4ce1a5d60cb5e0e32ba583b7c768801bb59a72a1e1375b83513e5",
+      "count": 1
+    },
+    {
+      "file": "src/pages/Tournament.test.tsx",
+      "hash": "c6f9f6c5b2e6eba0fefbd950fbd7ba448b9978db8f1fe501ea93833478c3eade",
+      "count": 1
+    },
+    {
+      "file": "src/pages/Tournament.tsx",
+      "hash": "1f7193e21277c4cda0954f9e938737d6814179686ff754ee033984573f35c145",
+      "count": 1
+    },
+    {
+      "file": "src/pages/Tournament.tsx",
+      "hash": "21f5f0800bf6ee9328f2de115378760350c6943cfa8b240ebc43374ba6ef1d65",
+      "count": 1
+    },
+    {
+      "file": "src/pages/Tournament.tsx",
+      "hash": "4bc6a8c7ed5cda242d8a26d1165764ded040482177908e36c1ae28c9edbf658c",
+      "count": 1
+    },
+    {
+      "file": "src/pages/Tournament.tsx",
+      "hash": "7cd2a6c726cf988f31568e2faaab99c01d5b79c03b941d67daa1e3631ebbd1db",
+      "count": 1
+    },
+    {
+      "file": "src/pages/Tournament.tsx",
+      "hash": "96156b3a05678ed08cbb65d9f724e6a32b5d7ffa062486270e4d776f7b8fa42c",
+      "count": 1
+    },
+    {
+      "file": "src/scope-widths.ts",
+      "hash": "1b4a2addec7ba7a1defb64f56306145ddf0ca1f1b932eb3e4eb776738474874a",
+      "count": 1
+    },
+    {
+      "file": "src/scope-widths.ts",
+      "hash": "3070d364f7a8a3933c4a3051cf3fa42b80274798b3a7340e4f64290c36e7c2b3",
+      "count": 1
+    },
+    {
+      "file": "src/scope-widths.ts",
+      "hash": "e09211846d5b6f56c17a3f0816590a04a6cdb739f95e20d9f561e9c74a48dc67",
+      "count": 1
+    },
+    {
+      "file": "src/Standings.test.tsx",
+      "hash": "018a119f0f365b11da800be2eeefe35bf8da14cd500c84cb378d4067b56b7de8",
+      "count": 1
+    },
+    {
+      "file": "src/Standings.test.tsx",
+      "hash": "c64a59db20ae08de74ccd6fdf25f1024478c4ccb8109ce8317101239b5c2fb6f",
+      "count": 1
+    },
+    {
+      "file": "src/Standings.test.tsx",
+      "hash": "e2921c29437d0b8b94e49830e374f5421e270ca388b70dc79b71c0372afda098",
+      "count": 1
+    },
+    {
+      "file": "src/test-fakes.ts",
+      "hash": "2f11abe7e05d416eae7de3afe22e56279479752eae028dc50c73306d1a3fc845",
+      "count": 1
+    },
+    {
+      "file": "src/test-fakes.ts",
+      "hash": "3515e244fd01f773b9d53e4a05041e3ddbd1628aa923f89429c2899ba36a611f",
+      "count": 1
+    },
+    {
+      "file": "src/test-fakes.ts",
+      "hash": "3fa846326baea805ee378314bd6b422e0a093077c7505c400bbac498c61f3f1f",
+      "count": 1
+    },
+    {
+      "file": "src/test-fakes.ts",
+      "hash": "414d79d4fcfd8df66dc41e862c8ffc018b20a83f9224550e4f202e69081033b9",
+      "count": 1
+    },
+    {
+      "file": "src/test-fakes.ts",
+      "hash": "56f7fd3bbf7da4a9868241c47d6f8dff8ffb4c6fd723948eb99be051615a0456",
+      "count": 1
+    },
+    {
+      "file": "src/test-fakes.ts",
+      "hash": "bf7a369b8b1339bd23d12575a3460db2370529b7c6da92f1382e1779ccf4fcfd",
+      "count": 1
+    },
+    {
+      "file": "src/test-fakes.ts",
+      "hash": "d1c15b4055aec7e5db627ab23b54930a5d280701f3f06e5088c1697d96843c53",
+      "count": 1
+    },
+    {
+      "file": "src/test-fakes.ts",
+      "hash": "d31ea91da49328f7d7446c87458ca86ae0bef734ee9da45eb950b1342d6afee7",
+      "count": 1
+    },
+    {
+      "file": "src/test-setup.ts",
+      "hash": "2142da0852f78321561db715b2840d92058ccb7069e66566975837944513353a",
+      "count": 1
+    },
+    {
+      "file": "src/test-setup.ts",
+      "hash": "3c6ca94ec065790f0390c713b3e368cd3191b916f333c4e56cf4d62bd12a80e6",
+      "count": 1
+    },
+    {
+      "file": "src/test-setup.ts",
+      "hash": "86ad391a5a6203c358a2958ea41c59160e253c2030e4d346ff3c7d760ce758c3",
+      "count": 1
+    },
+    {
+      "file": "src/test-setup.ts",
+      "hash": "8e622b83e72d9401a3dacfd4f9c179d19af2d3aa0815b0b6ca3be861bb2334b6",
+      "count": 1
+    },
+    {
+      "file": "src/test-setup.ts",
+      "hash": "da5ff244e173cd4c33fb57d7d80fa95bbd179bbb3fea892b2ed0ecd1e0d0bbb9",
+      "count": 1
+    },
+    {
+      "file": "src/test-setup.ts",
+      "hash": "e5bea1353bb29b3f92f60e0f04aed42092b6660c3d616e54b5156b8c8e85d1be",
+      "count": 1
+    },
+    {
+      "file": "src/theme-preference.test.ts",
+      "hash": "59ac153da1270cd38ed8db35806ccbffbfa75fa03204f60b50d3747e68385da3",
+      "count": 1
+    },
+    {
+      "file": "src/theme-preference.test.ts",
+      "hash": "f384587f01d431bc47de53d6e3885e3495a0eb1e4731153bbcbfa72a173440ac",
+      "count": 1
+    },
+    {
+      "file": "src/theme.css",
+      "hash": "a327be667074c6e062b4efc3ab48a2152be6143843d39da1f5f7575da4b18a2d",
+      "count": 1
+    },
+    {
+      "file": "src/theme.css",
+      "hash": "c3f24a2e1b05d360be1bf7e47f007054f5f50e91e98cfc40b0d75fb665968fa3",
+      "count": 1
+    },
+    {
+      "file": "src/theme.css",
+      "hash": "ca2f67f5101e25cadc5fa0970e538a708312c25526ce2418e726cf255e890abc",
+      "count": 1
+    },
+    {
+      "file": "src/ThemeToggle.test.tsx",
+      "hash": "8fb0d9b7a20a870938f7013b533f6e93ef59d50406787b49a33cead25ed61114",
+      "count": 1
+    },
+    {
+      "file": "src/vite-env.d.ts",
+      "hash": "ed7fc2cb51da6309d31c7a95010c55b0d21895960473cd7c3c2fef4751e79bd8",
+      "count": 1
+    },
+    {
+      "file": "src/vite-env.d.ts",
+      "hash": "f10127c4f4f79f540e93d99b55cef9442f0dcce40fbdba38ad203740eff99f1d",
+      "count": 1
+    },
+    {
+      "file": "vite.config.ts",
+      "hash": "163552b69ac7e1748c9d016f72fe9feb0c0540f8f0cda63b9211c70aa263a8d3",
+      "count": 1
+    },
+    {
+      "file": "vite.config.ts",
+      "hash": "97c78f732335473a819cbec6dc24e519eac58a7fc6f8078d445e4a04cf3367f0",
+      "count": 1
+    },
+    {
+      "file": "vite.config.ts",
+      "hash": "b44eb6d30715bc8304b556f3b4ca22a852737f335ebed2e38ddf8679282f58c7",
+      "count": 1
+    },
+    {
+      "file": "vitest.config.ts",
+      "hash": "15243c1cee02382efcac5af51628c897210bc80a13f9cab42d5caf605d23dff0",
+      "count": 1
+    },
+    {
+      "file": "vitest.config.ts",
+      "hash": "6e070c2aeb9b5d26064361a769b0868e6f04e72eb33e42246259eba78c68c5f6",
+      "count": 1
+    },
+    {
+      "file": "vitest.config.ts",
+      "hash": "744c496c303e3f92a11a99524dbb07493dffc9e207d45313438d7025c9b4bd5a",
+      "count": 1
+    },
+    {
+      "file": "vitest.config.ts",
+      "hash": "7a18a556b1ed4fd08125f2ff0f0ca5ae1690d2d9b205bb45210baa5d4c901bea",
+      "count": 1
+    },
+    {
+      "file": "vitest.config.ts",
+      "hash": "84c3cc7ae97a3177d8d3bb72e01ee876dd31f801afeaf4029e10c571f9f7cd3a",
+      "count": 1
+    },
+    {
+      "file": "vitest.config.ts",
+      "hash": "9004d3d7dfcc96875170d654fd3df583675eec6505311d5e3d8639e5820b130c",
+      "count": 1
+    },
+    {
+      "file": "vitest.config.ts",
+      "hash": "ab744369ba1fac9e9a563cd18e173c52aa3d489150314a8aac67d7cfe84807b8",
+      "count": 1
+    },
+    {
+      "file": "vitest.config.ts",
+      "hash": "d19c7776fc701f732ed029d44510d7f1cd7d8857519d4ec79cf95c9aa4344746",
+      "count": 1
+    }
+  ]
+}

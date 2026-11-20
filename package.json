@@ -21,6 +21,7 @@
     "lint:solid": "solid2-kit check && solid2-kit doctor",
     "lint:imports": "import-lint",
     "lint:theme": "bun scripts/lint-theme.ts",
+    "lint:comments": "bun scripts/lint-comments.ts",
     "check:bun": "bun scripts/check-bun-version.ts",
     "fallow": "fallow",
     "fallow:audit": "fallow audit",
@@ -33,7 +34,7 @@
     "spacetime:publish:local": "spacetime publish cobracket --server local && bun run spacetime:seed:local",
     "spacetime:seed:local": "bun spacetimedb/seed-local.ts",
     "spacetime:spike": "bun spacetimedb/spike/verify-read-surfaces.ts",
-    "verify": "bun run check:bun && bun run typecheck && bun run test && bun x vp check && bun run lint:imports && bun run fallow:ci && bun run lint:solid && bun run lint:theme && bun run build"
+    "verify": "bun run check:bun && bun run typecheck && bun run test && bun x vp check && bun run lint:imports && bun run fallow:ci && bun run lint:solid && bun run lint:theme && bun run lint:comments && bun run build"
   },
   "dependencies": {
     "@convex-dev/auth": "2.0.0-alpha.2",

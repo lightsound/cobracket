@@ -3,12 +3,7 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../../convex/_generated/api";
 import { getConvexClient, getConvexUrl } from "../convex";
 
-// The Convex implementation behind the auth boundary (`./index`):
-// Convex Auth v2 (preview) Anonymous Sign-In — the session manager,
-// the cross-tab mutex, the refresh machinery. It exists for exactly
-// as long as the Convex backend does (until the migration's M6);
-// the SpacetimeDB implementation beside it (`./spacetimedb`) is its
-// successor, and the boundary's @public shape is what both honor.
+// Auth boundary: docs/adr/0003-convex-auth-v2-anonymous-signin.md; the SpacetimeDB successor: docs/adr/0031-adopt-spacetimedb-as-the-backend.md.
 
 type Auth = {
   client: AuthClient;
@@ -30,8 +25,6 @@ let auth: Auth | undefined;
  */
 function getAuth(): Auth | undefined {
   if (auth) return auth;
-  // getConvexClient is undefined during SSR and without VITE_CONVEX_URL;
-  // both mean "no session to manage here".
   const convex = getConvexClient();
   const url = getConvexUrl();
   if (!convex || !url) return undefined;
@@ -128,7 +121,6 @@ async function cachedSessionSatisfies(active: Auth): Promise<boolean> {
   }
 }
 
-/** The locked slow path: reconcile whatever session exists, else sign in. */
 async function establishOrganizerSession(active: Auth): Promise<void> {
   // A fresh token proves some session is live: ours, or one another tab
   // persisted while we waited for the lock — the forced refresh reads the

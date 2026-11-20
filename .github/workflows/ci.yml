@@ -1,20 +1,9 @@
 name: CI
 
-# The repository's gates, on every pull request. `deploy.yml` runs the same
-# set before it touches production, but it only triggers on a push to main, so
-# without this nothing checked a change until after it had landed.
-#
-# Deliberately a separate workflow rather than a `pull_request` trigger added
-# to `deploy.yml`: secrets are available to same-repository pull requests, so
-# that workflow's `preflight` job would report configured and `deploy` would
-# run — deploying production from a pull request. Keeping deploy's trigger at
-# `push: main` makes that impossible by construction instead of prevented by a
-# condition. What the two share is `bun run verify`, so the gate list lives in
-# package.json and neither workflow can drift from the other.
+# PR gates. Why a separate workflow from deploy.yml: docs/adr/0010-cloudflare-workers-static-hosting.md.
 on:
   pull_request:
 
-# A pull request that gets several pushes only needs its newest one checked.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -29,26 +18,11 @@ jobs:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
         with:
-          # Reads `packageManager` from package.json, so the version is
-          # declared once. Named explicitly rather than left to the action's
-          # implicit fallback, which reaches for `engines.bun` (a range) and
-          # then `latest` without failing.
           bun-version-file: package.json
-      # Before install: the lockfile is resolved by whichever Bun is running,
-      # so prove it is the declared one first. --strict also fails if the
-      # action resolved anything other than the pin.
       - run: bun run check:bun -- --strict
       - run: bun install --frozen-lockfile
       - run: bun run verify
 
-  # The real-browser diagnostics gate (e2e/share-link.test.ts): Chromium
-  # driven against the dev server and a local SpacetimeDB standalone,
-  # capturing Solid's diagnostics and attribution channels the way the
-  # `src` tests do on happy-dom. Its own job, not a step of `verify`: it
-  # needs a browser (~300MB) and the SpacetimeDB standalone (~100MB), both
-  # cached below, plus two servers — a minute or two that would otherwise
-  # be added to every `bun run verify`, locally included. The job is
-  # independent, so a red here names the browser gate and nothing else.
   e2e:
     runs-on: ubuntu-26.04
     steps:
@@ -58,15 +32,10 @@ jobs:
           bun-version-file: package.json
       - run: bun run check:bun -- --strict
       - run: bun install --frozen-lockfile
-      # playwright-core is pinned exactly in package.json, and the browser
-      # build it drives is derived from that version, so the lockfile is
-      # the right cache key for the browser store.
       - uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
           key: e2e-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-          # An unrelated lockfile change should top up the store, not
-          # re-download it.
           restore-keys: e2e-${{ runner.os }}-
       # The standalone + CLI are pinned (2.15.0) by the setup itself, so
       # its bin cache is keyed on the release rather than the lockfile

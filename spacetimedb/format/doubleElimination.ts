@@ -19,7 +19,6 @@ function buildLosersBracket(size: number): StructureMatch[] {
     const matchCount = size / 2 ** (j + 1);
 
     if (j === 1) {
-      // Losers round 1: pair up the losers of winners round 1.
       for (let index = 0; index < matchCount; index++) {
         matches.push(
           losersMatch(1, index, [
@@ -29,7 +28,6 @@ function buildLosersBracket(size: number): StructureMatch[] {
         );
       }
     } else {
-      // Odd losers round 2j - 1: survivors of the previous drop-in round.
       for (let index = 0; index < matchCount; index++) {
         matches.push(
           losersMatch(2 * j - 1, index, [
@@ -40,7 +38,6 @@ function buildLosersBracket(size: number): StructureMatch[] {
       }
     }
 
-    // Even losers round 2j: losers of winners round j + 1 drop in.
     const reversed = j % 2 === 1;
     for (let index = 0; index < matchCount; index++) {
       const dropNumber = reversed ? matchCount - index : index + 1;
@@ -78,8 +75,6 @@ export function generateDoubleElimination(
   const winnersRounds = Math.log2(size);
   const losers = size >= 4 ? buildLosersBracket(size) : [];
 
-  // With two participants there is no losers bracket: the loser of the only
-  // winners match goes straight to the grand final for their second chance.
   const losersFinalist: SlotSource =
     losers.length > 0
       ? { kind: "winnerOf", matchKey: losers[losers.length - 1]!.key }
@@ -95,8 +90,6 @@ export function generateDoubleElimination(
 
   const matches = [...winners, ...losers, grandFinal];
   if (grandFinalReset) {
-    // Played only if the losers-side finalist wins the grand final (both
-    // then stand at one loss); otherwise cancelled by the family rules.
     matches.push({
       key: GRAND_FINAL_RESET_KEY,
       bracket: "grand_final",
@@ -122,8 +115,6 @@ function isResetCancelled(
   if (grandFinal?.state !== "completed") {
     return false;
   }
-  // Slot 0 of the grand final is the winners-side finalist: if they won,
-  // the losers-side finalist has their second loss and no reset is needed.
   const winnersSide = grandFinal.occupants[0];
   return (
     grandFinal.winner.kind === "participant" &&

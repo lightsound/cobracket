@@ -5,8 +5,6 @@ export type FormatFamily = "single_elimination" | "double_elimination";
 
 const FAMILIES: readonly FormatFamily[] = ["single_elimination", "double_elimination"];
 
-// The Format choice (story 3), shared by the create form and the tournament
-// settings. `disabled` renders the locked state once the structure is fixed.
 export function FormatFieldset(props: {
   value: FormatFamily;
   onChange: (family: FormatFamily) => void;

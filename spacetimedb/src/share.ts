@@ -16,29 +16,6 @@ import {
   TournamentStatus,
 } from "./schema";
 
-// The Share Link read surface (stories 21–23; ADR 0031): anonymous
-// views keyed by the share slug, the successor of
-// convex/share.ts's getSharedTournament. The slug is the bearer
-// credential; the gate (sharedTournamentBySlug) opens only a
-// published, non-private tournament, and every view below resolves
-// through it, so no shared view can out-read the gate.
-//
-// The row types are the shared audience's own (ADR 0019): they carry
-// no Organizer-only data — no shareSlug, no recordedBy, and none of
-// the row ids an Organizer view or reducer addresses by: not the
-// tournament's (the Organizer surface's addressing key, deliberately
-// absent here as in Convex's shared view validator), not matches',
-// not results'. Participant ids do appear — as in Convex's shared
-// view, they are the public row identity the bracket is drawn and
-// composed with, and no capability accepts them. Shared results are
-// keyed by the match's structural key instead of its row id, so the
-// client can compose the bracket (matches + results + the format
-// engine) without ever holding a handle an Organizer reducer
-// accepts. A result row's `seq` is its append sequence — numerically
-// the row's auto-increment id, exposed only as an ordering token
-// (the engine's correction semantics are defined over append order);
-// nothing on this surface is addressable by it.
-
 const SharedTournamentRow = t.row("SharedTournamentRow", {
   name: t.string(),
   status: TournamentStatus,

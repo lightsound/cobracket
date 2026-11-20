@@ -25,17 +25,10 @@ function applyPreference(pref: ThemePreference): void {
   document.documentElement.style.colorScheme = pref === "system" ? "light dark" : pref;
   try {
     localStorage.setItem(STORAGE_KEY, pref);
-  } catch {
-    // private mode / disabled storage — the scheme still applies
-  }
+  } catch {}
 }
 
-/**
- * The theme surface for one mounted app — per browser tab, per SSR request.
- * Components read it through `useTheme()`.
- */
 export interface Theme {
-  /** The current preference, reactive. */
   themePreference: Accessor<ThemePreference>;
   cycleThemePreference: () => void;
 }

@@ -107,8 +107,6 @@ describe("connection-level gating", () => {
     connAnon = await connect();
     connShare = await connect();
 
-    // Organizer A builds the published tournament the suite probes,
-    // driving the real reducers over the wire.
     await connA.reducers.bindIdentity({});
     await subscribe(connA, ["SELECT * FROM my_tournaments"]);
     await connA.reducers.createTournament({
@@ -126,7 +124,6 @@ describe("connection-level gating", () => {
     await connA.reducers.addParticipants({ tournamentId: wireId, text: "P1\nP2\nP3\nP4" });
     await connA.reducers.generateBracket({ tournamentId: wireId });
     await connA.reducers.publishTournament({ tournamentId: wireId });
-    // A second tournament, never published: its slug must stay dark.
     await connA.reducers.createTournament({
       name: "Draft Cup",
       discipline: "Wire Discipline",
@@ -137,8 +134,6 @@ describe("connection-level gating", () => {
       (row) => row.name === "Draft Cup",
     )!.shareSlug;
 
-    // Organizer B, with a tournament of its own (the positive control
-    // that makes B's empty foreign caches meaningful).
     await connB.reducers.bindIdentity({});
     await subscribe(connB, ["SELECT * FROM my_tournaments"]);
     await connB.reducers.createTournament({
@@ -151,8 +146,6 @@ describe("connection-level gating", () => {
       () => rowsOf(connB.db.myTournaments.iter()).length === 1,
     );
 
-    // A's own organizer surfaces, subscribed once and shared by the
-    // tests below.
     await subscribe(connA, [
       `SELECT * FROM organizer_tournament(${wireId})`,
       `SELECT * FROM organizer_participants(${wireId})`,
@@ -164,9 +157,6 @@ describe("connection-level gating", () => {
       () => rowsOf(connA.db.organizerMatches.iter()).length === 3,
     );
 
-    // Both organizers' session surfaces — the positive control for
-    // the current_organizer / session_state legs of the anonymous
-    // test below: a bound caller DOES receive these rows.
     await subscribe(connA, ["SELECT * FROM session_state", "SELECT * FROM current_organizer"]);
     await subscribe(connB, ["SELECT * FROM session_state", "SELECT * FROM current_organizer"]);
     await waitFor(
@@ -213,8 +203,6 @@ describe("connection-level gating", () => {
         .sort(),
     ).toEqual(["Draft Cup", "Wire Cup"]);
     expect(rowsOf(connB.db.myTournaments.iter()).map((row) => row.name)).toEqual(["B Cup"]);
-    // The session surfaces answer both bound organizers — the rows
-    // the anonymous test below is denied are really deliverable.
     for (const conn of [connA, connB]) {
       expect(rowsOf(conn.db.currentOrganizer.iter()).length).toBe(1);
       const session = rowsOf(conn.db.sessionState.iter());
@@ -235,7 +223,6 @@ describe("connection-level gating", () => {
     expect(rowsOf(connB.db.organizerParticipants.iter())).toEqual([]);
     expect(rowsOf(connB.db.organizerMatches.iter())).toEqual([]);
     expect(rowsOf(connB.db.organizerResults.iter())).toEqual([]);
-    // And its own list still shows only its own tournament.
     expect(rowsOf(connB.db.myTournaments.iter()).map((row) => row.name)).toEqual(["B Cup"]);
   });
 
@@ -256,19 +243,13 @@ describe("connection-level gating", () => {
     expect(rowsOf(connAnon.db.organizerMatches.iter())).toEqual([]);
     expect(rowsOf(connAnon.db.organizerResults.iter())).toEqual([]);
     expect(rowsOf(connAnon.db.currentOrganizer.iter())).toEqual([]);
-    // The one surface that answers a never-bound caller is its own
-    // session state — and it answers "unauthenticated".
     const session = rowsOf(connAnon.db.sessionState.iter());
     expect(session.length).toBe(1);
     expect(session[0]!.state.tag).toBe("Unauthenticated");
   });
 
   test("every private base table rejects a subscription outright", async () => {
-    // All nine base tables are private in the schema; a
-    // subscription to any of them must error, never apply. The last
-    // two are ADR 0032's: the module secret's table above all must
-    // never be subscribable, and the slug counters are organizer
-    // bookkeeping, not a read surface.
+    // Base-table privacy: docs/adr/0031-adopt-spacetimedb-as-the-backend.md; the module-secret tables: docs/adr/0032-module-secret-in-a-private-table.md.
     for (const table of [
       "app_user",
       "identity_user",
@@ -286,9 +267,7 @@ describe("connection-level gating", () => {
   });
 
   test("a second seed over the wire is refused", async () => {
-    // The driver seeded this database once during setup (ADR 0032),
-    // so any further seed call — from any connection — is refused as
-    // a SenderError, and the refusal text names why.
+    // Seed-once refusal is ADR 0032's seeding rule: docs/adr/0032-module-secret-in-a-private-table.md.
     const refusal: unknown = await connA.reducers
       .seedModuleSecret({ keyHex: "ab".repeat(32) })
       .then(
@@ -314,8 +293,6 @@ describe("connection-level gating", () => {
     expect(header.length).toBe(1);
     expect(header[0]!.name).toBe("Wire Cup");
     expect(header[0]!.status.tag).toBe("Published");
-    // Exactly the shared-audience fields — no organizer handle, no
-    // slug, no row ids.
     expect(keysOf(header[0]!)).toEqual(["discipline", "format", "name", "status"]);
     const participants = rowsOf(connAnon.db.sharedParticipants.iter());
     expect(participants.length).toBe(4);
@@ -324,8 +301,6 @@ describe("connection-level gating", () => {
     expect(keysOf(matches[0]!)).toEqual(["bracket", "indexInRound", "key", "round", "slots"]);
     expect(rowsOf(connAnon.db.sharedResults.iter())).toEqual([]);
 
-    // A result reported over the wire reaches the anonymous share
-    // surface as a live update, in the same shared-audience shape.
     const first = rowsOf(connA.db.organizerMatches.iter()).find(
       (row) => row.round === 1 && row.indexInRound === 0,
     )!;
@@ -347,20 +322,14 @@ describe("connection-level gating", () => {
     const result = rowsOf(connAnon.db.sharedResults.iter())[0]!;
     expect(result.matchKey).toBe(first.key);
     expect(keysOf(result)).toEqual(["matchKey", "seq", "sides"]);
-    // The header's status moved with it: published -> live.
     await waitFor(
       "the shared header now live",
       () => rowsOf(connAnon.db.sharedTournament.iter())[0]?.status.tag === "Live",
     );
-    // The owner's results surface receives the same record — the
-    // positive control for the organizer_results legs asserted empty
-    // elsewhere.
     await waitFor(
       "A's organizer results delivered",
       () => rowsOf(connA.db.organizerResults.iter()).length === 1,
     );
-    // And the live delta does not leak sideways: after the mutation,
-    // the foreign and anonymous organizer caches are still empty.
     await sleep(300);
     expect(rowsOf(connB.db.organizerResults.iter())).toEqual([]);
     expect(rowsOf(connB.db.organizerMatches.iter())).toEqual([]);
@@ -375,9 +344,6 @@ describe("connection-level gating", () => {
       `SELECT * FROM shared_matches('${draftSlug}')`,
       "SELECT * FROM shared_tournament('unknownslug0')",
       "SELECT * FROM shared_results('unknownslug0')",
-      // This connection's positive control: its own session surface
-      // answers in the same batch, so the empty share caches are a
-      // gate result, not a dead connection.
       "SELECT * FROM session_state",
     ]);
     await sleep(500);
@@ -413,7 +379,6 @@ describe("connection-level gating", () => {
     expect((refusal as Error).message).toBe("Tournament not found");
     await sleep(300);
     expect(rowsOf(connA.db.organizerParticipants.iter()).length).toBe(4);
-    // B's identical call on its own tournament goes through.
     const bId = rowsOf(connB.db.myTournaments.iter())[0]!.tournamentId;
     await connB.reducers.addParticipant({ tournamentId: bId, name: "B Solo" });
     await subscribe(connB, [`SELECT * FROM organizer_participants(${bId})`]);
@@ -421,10 +386,6 @@ describe("connection-level gating", () => {
       "B's own roster delivered",
       () => rowsOf(connB.db.organizerParticipants.iter()).length === 1,
     );
-    // The same channel carries the other guard families, each with
-    // its own text: a direct reducer refusal (publishing before a
-    // bracket exists), and a lifecycle refusal (requireStatus, via
-    // a second publish once B's cup has left draft).
     const publishRefusal: unknown = await refusalOf(
       connB.reducers.publishTournament({ tournamentId: bId }),
     );
