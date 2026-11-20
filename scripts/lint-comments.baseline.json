@@ -217,11 +217,6 @@
       "count": 1
     },
     {
-      "file": "convex/auth.test.ts",
-      "hash": "f10127c4f4f79f540e93d99b55cef9442f0dcce40fbdba38ad203740eff99f1d",
-      "count": 1
-    },
-    {
       "file": "convex/auth.ts",
       "hash": "2b01accc5f4c2dfae7417f01c6589c9f84be4a4486f9707e7b42afd8b7675b4b",
       "count": 1
@@ -552,11 +547,6 @@
       "count": 1
     },
     {
-      "file": "convex/operations.test.ts",
-      "hash": "f10127c4f4f79f540e93d99b55cef9442f0dcce40fbdba38ad203740eff99f1d",
-      "count": 1
-    },
-    {
       "file": "convex/roster.ts",
       "hash": "095bf54e0e414f42d92a780e6bd5f2e006f23a9d3c1a18f94e59e502c166cc82",
       "count": 1
@@ -818,6 +808,11 @@
     },
     {
       "file": "scripts/lint-comments.ts",
+      "hash": "d208efb95db85a1fd9ef73be4e76761807e697e1e06c6286496626a6bf60b800",
+      "count": 1
+    },
+    {
+      "file": "scripts/lint-comments.ts",
       "hash": "f8c2c1b24b3203888b88b86dafcb96f2221430594d0752c9a53e34ff10ecccaf",
       "count": 1
     },
@@ -1017,11 +1012,6 @@
       "count": 1
     },
     {
-      "file": "spacetimedb/seed-local.ts",
-      "hash": "6465164fd61a89a79d05750fc29a4aabf29b8e0b62f7625e7ac2eb57ade08d20",
-      "count": 1
-    },
-    {
       "file": "spacetimedb/spike/fixture/seed.ts",
       "hash": "05a592e7a3969e8d47b9dd2dfff8d0af4b4c28205304710c32cfc8a1c21f6505",
       "count": 1
@@ -1033,7 +1023,7 @@
     },
     {
       "file": "spacetimedb/spike/verify-read-surfaces.ts",
-      "hash": "023b2e43b815bf60c815a48b1f50e193fe220801bbd50a40cb7ff9253d7cd49f",
+      "hash": "0b493d8e76d6b550b426a9b70cd1603963182705d6def9499732d08008ba453e",
       "count": 1
     },
     {
@@ -1274,6 +1264,11 @@
     {
       "file": "spacetimedb/src/share.ts",
       "hash": "12060015d300d0a6197f55ea0ac782bf33d7495825ee9ca5762daa6a58f62a97",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/share.ts",
+      "hash": "a5bea76a00c391ce82cdcd49a8cb73f3957c5a172dd8a1b9d9745668f81ca75f",
       "count": 1
     },
     {
@@ -2164,11 +2159,6 @@
     {
       "file": "src/vite-env.d.ts",
       "hash": "ed7fc2cb51da6309d31c7a95010c55b0d21895960473cd7c3c2fef4751e79bd8",
-      "count": 1
-    },
-    {
-      "file": "src/vite-env.d.ts",
-      "hash": "f10127c4f4f79f540e93d99b55cef9442f0dcce40fbdba38ad203740eff99f1d",
       "count": 1
     },
     {

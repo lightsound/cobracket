@@ -16,6 +16,8 @@ import {
   TournamentStatus,
 } from "./schema";
 
+// The Share Link read surface (ADR 0031); its addressing invariant — the
+// shared rows carry no Organizer-addressable handles: docs/adr/0019-visibility-and-access.md.
 const SharedTournamentRow = t.row("SharedTournamentRow", {
   name: t.string(),
   status: TournamentStatus,

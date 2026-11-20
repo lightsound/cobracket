@@ -149,6 +149,25 @@ force when each was taken.
   insert effect 0 sources, component rows 1 source each, and rows with a
   per-row `<Show>` 2 — the counts behind disabling solid-refresh in the
   test gate as well as in `--mode e2e`.
+- Page boundaries, measured in Chromium against a local deployment with
+  100ms of one-way latency: when every page called `createOrganizer()`
+  for itself, the Home boundary showed its "Checking your session…"
+  fallback for 200ms and the tournament list behind it for another
+  200ms — the engine names the pair an `[ASYNC_WATERFALL]`. The
+  management page reached from Home answered in 2ms, because the router
+  had created it before disposing the old page; the one app-wide
+  subscription in `src/organizer.tsx` gives every page that behaviour.
+- The same setup, for link-intent preloading: every page boundary
+  showed its fallback for one round trip (200ms) after navigation, and
+  under 150ms of latency the same wait reads as a flicker
+  (`[FALLBACK_FLASH]`). A preload on `"initial"` intent would gain
+  nothing — the page subscribes on mount anyway — and for the two
+  Organizer-gated reads it would run before the session is restored, so
+  it is skipped. Router 2.0.0-next.37 preloaded on hover by default,
+  but its focus and touch listeners were gated on `evt.button`, which
+  those events lack, so they never fired; since next.38, preloading is
+  opt-in (`preloadLinks: intentPreload()` — hover after a 20ms rest,
+  focus and touch).
 
 ## Global-setup boot model
 

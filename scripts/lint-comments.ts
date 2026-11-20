@@ -68,13 +68,13 @@ type CommentBlock = { startLine: number; endLine: number; raw: string; kind: "li
 
 function stripMarkers(raw: string): string[] {
   if (raw.startsWith("//") || raw.startsWith("#")) {
-    return raw
-      .split("\n")
-      .map((line) =>
-        line.trimStart().startsWith("#!")
-          ? line.trim()
-          : line.replace(/^\s*(?:\/\/\/?|#)\s?/, "").trim(),
-      );
+    return raw.split("\n").map((line) => {
+      const trimmed = line.trimStart();
+      // Shebangs and /// <reference ... /> are directives in their raw
+      // form; stripping their markers would make them unrecognisable.
+      if (trimmed.startsWith("#!") || trimmed.startsWith("///")) return line.trim();
+      return line.replace(/^\s*(?:\/\/\/?|#)\s?/, "").trim();
+    });
   }
   const body = raw.replace(/^\/\*\*?/, "").replace(/\*\/$/, "");
   return body.split("\n").map((line) => line.replace(/^\s*\*\s?/, "").trim());

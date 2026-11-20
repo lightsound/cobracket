@@ -42,8 +42,9 @@ counted separately and left intact:
   `@ts-nocheck`, `@vite-ignore`, `prettier-ignore` / `oxfmt-ignore`,
   `v8 ignore` / `istanbul ignore`
 - `/// <reference ... />`, shebangs, `@generated` / DO NOT EDIT headers,
-  SPDX / license lines, `shellcheck` / `yamllint` directives, kit sync
-  markers
+  SPDX / license lines, `shellcheck` / `yamllint` directives. (Kit sync
+  markers live in the Markdown guidance files; documents are outside the
+  corpus.)
 
 If a directive is attached to prose, keep the directive and judge only the
 prose. If prose must shrink around a `/** @public */` JSDoc, the block

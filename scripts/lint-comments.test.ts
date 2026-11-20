@@ -131,6 +131,15 @@ describe("lint:comments", () => {
     expect(output).toContain("lint:comments passed.");
   });
 
+  test("allows a /// <reference /> tag without a baseline entry", async () => {
+    const { status, output } = await lint(
+      { "src/vite-env.d.ts": `/// <reference types="vite/client" />\n` },
+      `{"version":1,"entries":[]}\n`,
+    );
+    expect(status).toBe(0);
+    expect(output).toContain("lint:comments passed.");
+  });
+
   test("does not read comment markers inside strings", async () => {
     const { status, output } = await lint(
       {
