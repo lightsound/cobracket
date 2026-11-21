@@ -173,8 +173,9 @@ force when each was taken.
 
 `e2e/global-setup.ts` boots what the browser gate needs, three ways in
 order of preference: nothing, when `E2E_BASE_URL` is set; only the dev
-server, when `.env.local` selects the SpacetimeDB backend and a _local_
-standalone already answers (a cloud host is never reused) — the current module is published to the reused standalone first, since it republishes nothing itself; otherwise a
+server, when `.env.local` sets `VITE_SPACETIMEDB_HOST` and
+`VITE_SPACETIMEDB_DB` and a _local_ standalone already answers (a cloud
+host is never reused) — the current module is published to the reused standalone first, since it republishes nothing itself; otherwise a
 standalone as well, on the gate's own port, with the module published to
 a database that exists only for the gate. An `.env.local` value that does
 not parse as a local URL selects nothing: mode 2 falls through to mode 3
