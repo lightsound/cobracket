@@ -1,10 +1,13 @@
 import type { FunctionArgs, FunctionReference, FunctionReturnType } from "convex/server";
 import { api as convexApi } from "../../convex/_generated/api";
+import type { TournamentStatus } from "../../spacetimedb/lifecycle";
 
 // Backend-neutral operation descriptors: docs/adr/0001-mcp-first-chat-operations.md, extended by docs/adr/0031-adopt-spacetimedb-as-the-backend.md.
 
 /** @public */
-export type TournamentStatus = "draft" | "published" | "live" | "completed";
+export type { TournamentStatus } from "../../spacetimedb/lifecycle";
+/** @public */
+export { eventAllowed } from "../../spacetimedb/lifecycle";
 
 /** @public */
 export type Format =
