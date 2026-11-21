@@ -2,7 +2,7 @@
 // (ADR 0031): identity resolution, guards, loaders, and the read
 // gates the views are built on. Only this entry point is importable
 // outside spacetimedb/src/lib/.
-export type { TournamentStatusTag, WritableDb } from "./binding";
+export type { WritableDb } from "./binding";
 export { organizerIdFor, requireBoundUser, resolveSession } from "./binding";
 /**
  * The db-to-engine converters and the argument-format type are the
@@ -24,12 +24,13 @@ export { formatToEngine, sideToEngine, slotToEngine } from "./convert";
 export { formatToStored, sameFormat, slotToDb } from "./convert";
 export { getOrCreateDiscipline, normalizeDisciplineName } from "./disciplines";
 export {
-  PRE_LIVE,
+  requireEvent,
+  requireEventAllowed,
   requireOwnedMatch,
   requireOwnedParticipant,
   requireOwnedTournament,
   requireOwnedTournamentIn,
-  requireStatus,
+  updateTournamentStatus,
 } from "./guards";
 export {
   MAX_MATCHES,

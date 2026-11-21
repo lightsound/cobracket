@@ -261,6 +261,7 @@ function assembleModule(): void {
   // The format engine sits beside src/ in the repo layout, and the
   // module's library imports it as ../../format — keep the layout.
   cpSync(join(SPACETIMEDB_DIR, "format"), join(MODULE_DIR, "format"), { recursive: true });
+  cpSync(join(SPACETIMEDB_DIR, "lifecycle"), join(MODULE_DIR, "lifecycle"), { recursive: true });
 }
 
 function jwtKeyPaths(): { pub: string; priv: string } {

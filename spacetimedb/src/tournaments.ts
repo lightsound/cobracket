@@ -3,7 +3,6 @@ import {
   MAX_MATCHES,
   MAX_RESULTS,
   MAX_ROSTER_SIZE,
-  PRE_LIVE,
   compareById,
   compareByIdDesc,
   compareBySeed,
@@ -16,10 +15,10 @@ import {
   ownedTournament,
   participantRow,
   requireBoundUser,
+  requireEvent,
   requireName,
   requireOwnedTournament,
   mintShareSlug,
-  requireStatus,
   sameFormat,
   sortedRows,
   takeAll,
@@ -179,6 +178,37 @@ export const organizerResults = spacetimedb.view(
   },
 );
 
+const OrganizerScoreChangeRow = t.row("OrganizerScoreChangeRow", {
+  changeId: t.u64(),
+  matchId: t.u64(),
+  changedBy: t.u64(),
+  changedAt: t.timestamp(),
+  previousSides: t.array(ResultSide),
+  newSides: t.array(ResultSide),
+});
+
+export const organizerScoreChanges = spacetimedb.view(
+  { name: "organizer_score_changes", public: true },
+  { tournamentId: t.u64() },
+  t.array(OrganizerScoreChangeRow),
+  (ctx, { tournamentId }) => {
+    const found = ownedTournament(ctx.db, ctx.sender, tournamentId);
+    if (found === undefined) {
+      return [];
+    }
+    return sortedRows(ctx.db.scoreChange.tournamentId.filter(found.tournament.id), compareById).map(
+      (change) => ({
+        changeId: change.id,
+        matchId: change.matchId,
+        changedBy: change.changedBy,
+        changedAt: change.changedAt,
+        previousSides: change.previousSides,
+        newSides: change.newSides,
+      }),
+    );
+  },
+);
+
 export const createTournament = spacetimedb.reducer(
   { name: t.string(), discipline: t.string(), format: formatArg },
   (ctx, args) => {
@@ -232,7 +262,7 @@ export const updateTournament = spacetimedb.reducer(
       // Re-submitting the current format is a no-op in every status, so a
       // settings form can always send the whole record.
       if (!sameFormat(format, tournament.format)) {
-        requireStatus(tournament, PRE_LIVE, "change the format");
+        requireEvent(tournament, { type: "changeFormat" }, "change the format");
         updated.format = format;
         invalidateBracket(ctx.db, tournament.id);
         changed = true;
@@ -249,6 +279,14 @@ export const deleteTournament = spacetimedb.reducer({ tournamentId: t.u64() }, (
   const results = takeAll(ctx.db.result.tournamentId.filter(tournament.id), MAX_RESULTS, "results");
   for (const doc of results) {
     ctx.db.result.id.delete(doc.id);
+  }
+  const scoreChanges = takeAll(
+    ctx.db.scoreChange.tournamentId.filter(tournament.id),
+    MAX_RESULTS,
+    "score changes",
+  );
+  for (const doc of scoreChanges) {
+    ctx.db.scoreChange.id.delete(doc.id);
   }
   const matches = takeAll(ctx.db.match.tournamentId.filter(tournament.id), MAX_MATCHES, "matches");
   for (const doc of matches) {

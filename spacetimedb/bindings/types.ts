@@ -158,6 +158,25 @@ export const OrganizerResults = __t.object("OrganizerResults", {
 });
 export type OrganizerResults = __Infer<typeof OrganizerResults>;
 
+export const OrganizerScoreChangeRow = __t.object("OrganizerScoreChangeRow", {
+  changeId: __t.u64(),
+  matchId: __t.u64(),
+  changedBy: __t.u64(),
+  changedAt: __t.timestamp(),
+  get previousSides() {
+    return __t.array(ResultSide);
+  },
+  get newSides() {
+    return __t.array(ResultSide);
+  },
+});
+export type OrganizerScoreChangeRow = __Infer<typeof OrganizerScoreChangeRow>;
+
+export const OrganizerScoreChanges = __t.object("OrganizerScoreChanges", {
+  tournamentId: __t.u64(),
+});
+export type OrganizerScoreChanges = __Infer<typeof OrganizerScoreChanges>;
+
 export const OrganizerTournament = __t.object("OrganizerTournament", {
   tournamentId: __t.u64(),
 });
@@ -223,6 +242,21 @@ export const ResultSide = __t.object("ResultSide", {
   score: __t.option(__t.f64()),
 });
 export type ResultSide = __Infer<typeof ResultSide>;
+
+export const ScoreChange = __t.object("ScoreChange", {
+  id: __t.u64(),
+  tournamentId: __t.u64(),
+  matchId: __t.u64(),
+  changedBy: __t.u64(),
+  changedAt: __t.timestamp(),
+  get previousSides() {
+    return __t.array(ResultSide);
+  },
+  get newSides() {
+    return __t.array(ResultSide);
+  },
+});
+export type ScoreChange = __Infer<typeof ScoreChange>;
 
 // The tagged union or sum type for the algebraic type `SeedingMode`.
 export const SeedingMode = __t.enum("SeedingMode", {

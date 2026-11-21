@@ -127,6 +127,7 @@ function assembleModule(): string {
   // library imports it from src/lib as ../../format, so the assembled
   // layout must keep it beside src/, exactly as in the repo.
   cpSync(join(MODULE_DIR, "format"), join(dir, "format"), { recursive: true });
+  cpSync(join(MODULE_DIR, "lifecycle"), join(dir, "lifecycle"), { recursive: true });
   const seed = readFileSync(join(SPIKE_DIR, "fixture", "seed.ts"), "utf8");
   const marker = 'from "../../src/schema"';
   if (!seed.includes(marker)) {

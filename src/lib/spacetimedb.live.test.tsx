@@ -128,6 +128,7 @@ function assembleModule(): void {
   }
   cpSync(join(source, "src"), join(MODULE_DIR, "src"), { recursive: true });
   cpSync(join(source, "format"), join(MODULE_DIR, "format"), { recursive: true });
+  cpSync(join(source, "lifecycle"), join(MODULE_DIR, "lifecycle"), { recursive: true });
 }
 
 function jwtKeyPaths(): { privateKey: string; publicKey: string } {

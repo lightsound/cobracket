@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from "@solidjs/router";
 import { Portal } from "@solidjs/web";
 import { Errored, For, Loading, Show, createSignal } from "solid-js";
-import { api } from "../lib/operations";
+import { api, eventAllowed } from "../lib/operations";
 import type { OrganizerTournamentView, UpdateTournamentArgs } from "../lib/operations";
 import { DisciplineField } from "../DisciplineField";
 import { NameField } from "../NameField";
@@ -83,8 +83,8 @@ function Manager(props: { view: OrganizerView }) {
   const [voidedCount, setVoidedCount] = createSignal(0);
   const [reportKey, setReportKey] = createSignal<string | null>(null);
 
-  const editable = () => props.view.status === "draft" || props.view.status === "published";
-  const reportingOpen = () => props.view.status !== "draft";
+  const editable = () => eventAllowed(props.view.status, "editRoster");
+  const reportingOpen = () => eventAllowed(props.view.status, "recordResult");
   const reportMatch = () => {
     const key = reportKey();
     if (key === null) return undefined;
@@ -164,7 +164,8 @@ function BracketControls(props: {
   onError: (message: string | null) => void;
 }) {
   const { t } = useI18n();
-  const canPublish = () => props.view.status === "draft" && props.view.bracket !== null;
+  const canPublish = () =>
+    eventAllowed(props.view.status, "publish") && props.view.bracket !== null;
 
   async function run(mutate: () => Promise<unknown>): Promise<void> {
     props.onError(null);

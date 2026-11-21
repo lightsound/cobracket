@@ -1,8 +1,7 @@
 import { SenderError, t } from "spacetimedb/server";
-import type { DbSide, TournamentStatusTag } from "./lib";
+import type { DbSide } from "./lib";
 import {
   MAX_RESULTS,
-  PRE_LIVE,
   deriveOrThrow,
   formatToEngine,
   generateOrThrow,
@@ -10,13 +9,17 @@ import {
   loadBracket,
   loadResults,
   loadRoster,
+  requireEvent,
+  requireEventAllowed,
   requireOwnedMatch,
+  requireOwnedTournament,
   requireOwnedTournamentIn,
-  requireStatus,
   sideToEngine,
   slotToDb,
   toRecordedResults,
+  updateTournamentStatus,
 } from "./lib";
+import { transitionStatus } from "../lifecycle";
 import { ResultSide, spacetimedb } from "./schema";
 
 // Generate — or regenerate, freely until the first result locks the
@@ -33,7 +36,7 @@ export const generateBracket = spacetimedb.reducer({ tournamentId: t.u64() }, (c
     ctx.db,
     ctx.sender,
     args.tournamentId,
-    PRE_LIVE,
+    { type: "generateBracket" },
     "generate the bracket",
   );
   let roster = loadRoster(ctx.db, args.tournamentId);
@@ -67,18 +70,13 @@ export const generateBracket = spacetimedb.reducer({ tournamentId: t.u64() }, (c
 });
 
 export const publishTournament = spacetimedb.reducer({ tournamentId: t.u64() }, (ctx, args) => {
-  const tournament = requireOwnedTournamentIn(
-    ctx.db,
-    ctx.sender,
-    args.tournamentId,
-    ["draft"],
-    "publish",
-  );
+  const tournament = requireOwnedTournament(ctx.db, ctx.sender, args.tournamentId);
+  const next = requireEvent(tournament, { type: "publish" }, "publish");
   const bracket = loadBracket(ctx.db, tournament);
   if (bracket.matchDocs.length === 0) {
     throw new SenderError("Generate the bracket before publishing");
   }
-  ctx.db.tournament.id.update({ ...tournament, status: { tag: "published" } });
+  updateTournamentStatus(ctx.db, tournament, next);
 });
 
 function requireTwoSides(sides: readonly DbSide[]): [DbSide, DbSide] {
@@ -93,13 +91,6 @@ function requireTwoSides(sides: readonly DbSide[]): [DbSide, DbSide] {
     }
   }
   return [sideA, sideB];
-}
-
-function statusAfterResult(current: TournamentStatusTag, completed: boolean): TournamentStatusTag {
-  if (completed) {
-    return "completed";
-  }
-  return current === "published" ? "live" : current;
 }
 
 // Recording and correcting are the same operation: results are
@@ -122,7 +113,7 @@ export const reportResult = spacetimedb.reducer(
     // First result in published flips to live; corrections in completed
     // are allowed only when they keep the tournament completed (the
     // lifecycle is one-way, so a correction may never reopen play).
-    requireStatus(tournament, ["published", "live", "completed"], "report a result");
+    requireEventAllowed(tournament, "recordResult", "report a result");
     const sides = requireTwoSides(args.sides);
     const bracket = loadBracket(ctx.db, tournament);
     const resultDocs = loadResults(ctx.db, tournament.id);
@@ -138,8 +129,20 @@ export const reportResult = spacetimedb.reducer(
     if (progression.voidedResultIndices.includes(recorded.length - 1)) {
       throw new SenderError("This result does not apply to the match's current participants");
     }
-    if (tournament.status.tag === "completed" && !progression.completed) {
+    const next = transitionStatus(tournament.status.tag, {
+      type: "recordResult",
+      completesTournament: progression.completed,
+    });
+    if (next === undefined) {
       throw new SenderError("Cannot correct: this would reopen a completed tournament");
+    }
+    let previousSides: DbSide[] = [];
+    let previousId: bigint | undefined;
+    for (const doc of resultDocs) {
+      if (doc.matchId === args.matchId && (previousId === undefined || doc.id > previousId)) {
+        previousId = doc.id;
+        previousSides = [...doc.sides];
+      }
     }
     ctx.db.result.insert({
       id: 0n,
@@ -149,9 +152,17 @@ export const reportResult = spacetimedb.reducer(
       recordedBy: tournament.userId,
       reportedAt: ctx.timestamp,
     });
-    const status = statusAfterResult(tournament.status.tag, progression.completed);
-    if (status !== tournament.status.tag) {
-      ctx.db.tournament.id.update({ ...tournament, status: { tag: status } });
+    ctx.db.scoreChange.insert({
+      id: 0n,
+      tournamentId: tournament.id,
+      matchId: args.matchId,
+      changedBy: tournament.userId,
+      changedAt: ctx.timestamp,
+      previousSides,
+      newSides: sides,
+    });
+    if (next !== tournament.status.tag) {
+      updateTournamentStatus(ctx.db, tournament, next);
     }
   },
 );
