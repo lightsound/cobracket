@@ -60,7 +60,7 @@ Judge every prose comment — a block, not a line — as exactly one of:
   `src/theme.css` (`/* Chrome */`, `/* Brand ("venom" lime) */`).
 - **Stale** — states a fact that is no longer true. Examples:
   `convex/schema.ts` said the auth module "lands in a separate task"
-  (`convex/auth.ts` exists and implements it); `spacetimedb/src/schema.ts`
+  (`convex/auth.ts` then existed and implemented it — both Convex files are first-run examples from the 2026-11-21 audit, when that tree still existed); `spacetimedb/src/schema.ts`
   called the share slug "a crypto-random token" (it is ADR 0032's
   HMAC derivation); `deploy.yml` said production is "deliberately not
   live" (live for design review since 2026-09-27). Verify staleness
@@ -68,7 +68,7 @@ Judge every prose comment — a block, not a line — as exactly one of:
 - **Excuse** — excuses or justifies a hacky implementation ("temporary",
   "for now we just…", "good enough") where the code diverges from the
   design. The first run found **zero**: every candidate was sanctioned
-  design on inspection (the newest-100 cap in `convex/tournaments.ts` is
+  design on inspection (the newest-100 cap in the since-deleted `convex/tournaments.ts` was
   the spec's Deferred section verbatim; the SpacetimeDB adapter's
   write-result synthesis is ADR 0031's design). Check the spec and ADRs
   before calling a comment an excuse.
