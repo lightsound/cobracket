@@ -97,6 +97,12 @@ jobs:
           tar xzf "/tmp/$asset" -C "$HOME/.local/bin" --no-same-owner
           mv "$HOME/.local/bin/spacetimedb-cli" "$HOME/.local/bin/spacetime"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          [[ "$("$HOME/.local/bin/spacetime" --version)" == *"2.15.0"* ]]
+
+      - name: Log in to SpacetimeDB as the production owner
+        run: spacetime login --token "$SPACETIMEDB_TOKEN"
+        env:
+          SPACETIMEDB_TOKEN: ${{ secrets.SPACETIMEDB_TOKEN }}
 
       - name: Publish the SpacetimeDB module and build the web UI
         run: bun run deploy:backend
