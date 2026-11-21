@@ -137,8 +137,10 @@ export const reportResult = spacetimedb.reducer(
       throw new SenderError("Cannot correct: this would reopen a completed tournament");
     }
     let previousSides: DbSide[] = [];
+    let previousId: bigint | undefined;
     for (const doc of resultDocs) {
-      if (doc.matchId === args.matchId) {
+      if (doc.matchId === args.matchId && (previousId === undefined || doc.id > previousId)) {
+        previousId = doc.id;
         previousSides = [...doc.sides];
       }
     }

@@ -90,6 +90,15 @@ function changes(harness: Harness, sub: string, tournamentId: bigint) {
   return moduleExports.organizerScoreChanges(harness.viewContext(authFor(sub)), { tournamentId });
 }
 
+function rowCounts(harness: Harness, tournamentId: bigint) {
+  return asModule(harness, (ctx) => ({
+    // oxlint-disable-next-line unicorn/no-useless-spread -- SpacetimeDB index filters return a lazy iterator with no array methods; the spread is what materializes it
+    scoreChanges: [...ctx.db.scoreChange.tournamentId.filter(tournamentId)].length,
+    // oxlint-disable-next-line unicorn/no-useless-spread -- SpacetimeDB index filters return a lazy iterator with no array methods; the spread is what materializes it
+    results: [...ctx.db.result.tournamentId.filter(tournamentId)].length,
+  }));
+}
+
 function report(harness: Harness, matchId: bigint, sides: DbSide[]): void {
   as(harness, ALICE, (ctx) => {
     moduleExports.reportResult(ctx, { matchId, sides });
@@ -203,19 +212,25 @@ describe("lifecycle rejection messages", () => {
     const matches = moduleExports.organizerMatches(harness.viewContext(authFor(ALICE)), {
       tournamentId,
     });
+    const before = rowCounts(harness, tournamentId);
+    expect(before).toEqual({ scoreChanges: 0, results: 0 });
     expect(() =>
       report(harness, matches[0]!.matchId, winOver(ids.get("A")!, ids.get("B")!)),
     ).toThrow("Cannot report a result: the tournament is draft");
+    expect(rowCounts(harness, tournamentId)).toEqual(before);
   });
 
   test("a correction that would reopen a completed tournament carries the exact legacy message", () => {
     const harness = makeHarness();
-    const { ids, matchIds } = publishedTournament(harness, ["A", "B", "C", "D"]);
+    const { tournamentId, ids, matchIds } = publishedTournament(harness, ["A", "B", "C", "D"]);
     report(harness, matchIds[0]!, winOver(ids.get("A")!, ids.get("D")!));
     report(harness, matchIds[1]!, winOver(ids.get("B")!, ids.get("C")!));
     report(harness, matchIds[2]!, winOver(ids.get("A")!, ids.get("B")!));
+    const before = rowCounts(harness, tournamentId);
+    expect(before).toEqual({ scoreChanges: 3, results: 3 });
     expect(() => report(harness, matchIds[0]!, winOver(ids.get("D")!, ids.get("A")!))).toThrow(
       "Cannot correct: this would reopen a completed tournament",
     );
+    expect(rowCounts(harness, tournamentId)).toEqual(before);
   });
 });
