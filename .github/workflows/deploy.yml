@@ -106,8 +106,6 @@ jobs:
 
       - name: Publish the SpacetimeDB module and build the web UI
         run: bun run deploy:backend
-        env:
-          SPACETIMEDB_TOKEN: ${{ secrets.SPACETIMEDB_TOKEN }}
 
       - name: Deploy the web UI
         run: bun run deploy:web
