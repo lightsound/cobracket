@@ -1,14 +1,13 @@
 import { SenderError, t } from "spacetimedb/server";
 import type { WritableDb } from "./lib";
 import {
-  PRE_LIVE,
   invalidateBracket,
   loadRoster,
+  requireEvent,
   requireName,
   requireOwnedParticipant,
   requireOwnedTournamentIn,
   requireRosterCapacity,
-  requireStatus,
 } from "./lib";
 import { spacetimedb } from "./schema";
 
@@ -25,7 +24,13 @@ function insertParticipant(
 export const addParticipant = spacetimedb.reducer(
   { tournamentId: t.u64(), name: t.string() },
   (ctx, args) => {
-    requireOwnedTournamentIn(ctx.db, ctx.sender, args.tournamentId, PRE_LIVE, "edit the roster");
+    requireOwnedTournamentIn(
+      ctx.db,
+      ctx.sender,
+      args.tournamentId,
+      { type: "editRoster" },
+      "edit the roster",
+    );
     const roster = loadRoster(ctx.db, args.tournamentId);
     requireRosterCapacity(roster.length, 1);
     insertParticipant(ctx.db, args.tournamentId, args.name, roster.length + 1);
@@ -36,7 +41,13 @@ export const addParticipant = spacetimedb.reducer(
 export const addParticipants = spacetimedb.reducer(
   { tournamentId: t.u64(), text: t.string() },
   (ctx, args) => {
-    requireOwnedTournamentIn(ctx.db, ctx.sender, args.tournamentId, PRE_LIVE, "edit the roster");
+    requireOwnedTournamentIn(
+      ctx.db,
+      ctx.sender,
+      args.tournamentId,
+      { type: "editRoster" },
+      "edit the roster",
+    );
     // fallow-ignore-next-line code-duplication -- intentionally mirrors the Convex original during the migration window (both backends live until M6 deletes the Convex side; this module copy is the survivor)
     const names = args.text
       .split(/\r?\n/)
@@ -62,7 +73,7 @@ export const renameParticipant = spacetimedb.reducer(
       ctx.sender,
       args.participantId,
     );
-    requireStatus(tournament, PRE_LIVE, "edit the roster");
+    requireEvent(tournament, { type: "editRoster" }, "edit the roster");
     const name = requireName(args.name, "Participant name");
     ctx.db.participant.id.update({ ...participant, name });
   },
@@ -74,7 +85,7 @@ export const removeParticipant = spacetimedb.reducer({ participantId: t.u64() },
     ctx.sender,
     args.participantId,
   );
-  requireStatus(tournament, PRE_LIVE, "edit the roster");
+  requireEvent(tournament, { type: "editRoster" }, "edit the roster");
   ctx.db.participant.id.delete(participant.id);
   const roster = loadRoster(ctx.db, tournament.id);
   for (const other of roster) {
@@ -95,7 +106,7 @@ export const reorderSeeding = spacetimedb.reducer(
       ctx.db,
       ctx.sender,
       args.tournamentId,
-      PRE_LIVE,
+      { type: "editRoster" },
       "reorder the seeding",
     );
     const roster = loadRoster(ctx.db, args.tournamentId);

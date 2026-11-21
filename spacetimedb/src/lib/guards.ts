@@ -7,6 +7,8 @@ import type {
   WritableDb,
 } from "./binding";
 import { SenderError } from "spacetimedb/server";
+import type { LifecycleEvent, LifecycleEventType } from "../../lifecycle";
+import { eventAllowed, transitionStatus } from "../../lifecycle";
 import { requireBoundUser } from "./binding";
 
 // Identity, ownership, and lifecycle guards — the successor of
@@ -19,14 +21,34 @@ import { requireBoundUser } from "./binding";
 // throwing: a URL that names nothing is a state to render, while a
 // mutation refuses with one error.)
 
-export function requireStatus(
+export function requireEvent(
   tournament: TournamentRow,
-  allowed: readonly TournamentStatusTag[],
+  event: LifecycleEvent,
   operation: string,
-): void {
-  if (!allowed.includes(tournament.status.tag)) {
+): TournamentStatusTag {
+  const next = transitionStatus(tournament.status.tag, event);
+  if (next === undefined) {
     throw new SenderError(`Cannot ${operation}: the tournament is ${tournament.status.tag}`);
   }
+  return next;
+}
+
+export function requireEventAllowed(
+  tournament: TournamentRow,
+  eventType: LifecycleEventType,
+  operation: string,
+): void {
+  if (!eventAllowed(tournament.status.tag, eventType)) {
+    throw new SenderError(`Cannot ${operation}: the tournament is ${tournament.status.tag}`);
+  }
+}
+
+export function updateTournamentStatus(
+  db: WritableDb,
+  tournament: TournamentRow,
+  next: TournamentStatusTag,
+): void {
+  db.tournament.id.update({ ...tournament, status: { tag: next } });
 }
 
 export function requireOwnedTournament(
@@ -46,11 +68,11 @@ export function requireOwnedTournamentIn(
   db: WritableDb,
   sender: Identity,
   tournamentId: bigint,
-  allowed: readonly TournamentStatusTag[],
+  event: LifecycleEvent,
   operation: string,
 ): TournamentRow {
   const tournament = requireOwnedTournament(db, sender, tournamentId);
-  requireStatus(tournament, allowed, operation);
+  requireEvent(tournament, event, operation);
   return tournament;
 }
 
@@ -81,5 +103,3 @@ export function requireOwnedMatch(
   }
   return { match, tournament };
 }
-
-export const PRE_LIVE: readonly TournamentStatusTag[] = ["draft", "published"];

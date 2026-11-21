@@ -141,6 +141,7 @@ function assembleModule(): string {
   cpSync(join(MODULE_DIR, "tsconfig.json"), join(dir, "tsconfig.json"));
   cpSync(join(MODULE_DIR, "src"), join(dir, "src"), { recursive: true });
   cpSync(join(MODULE_DIR, "format"), join(dir, "format"), { recursive: true });
+  cpSync(join(MODULE_DIR, "lifecycle"), join(dir, "lifecycle"), { recursive: true });
   return dir;
 }
 

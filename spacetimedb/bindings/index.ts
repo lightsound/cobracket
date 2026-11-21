@@ -56,6 +56,7 @@ import MyTournamentsRow from "./my_tournaments_table";
 import OrganizerMatchesRow from "./organizer_matches_table";
 import OrganizerParticipantsRow from "./organizer_participants_table";
 import OrganizerResultsRow from "./organizer_results_table";
+import OrganizerScoreChangesRow from "./organizer_score_changes_table";
 import OrganizerTournamentRow from "./organizer_tournament_table";
 import SessionStateRow from "./session_state_table";
 import SharedMatchesRow from "./shared_matches_table";
@@ -103,6 +104,13 @@ const tablesSchema = __schema({
     constraints: [
     ],
   }, OrganizerResultsRow),
+  organizerScoreChanges: __table({
+    name: 'organizer_score_changes',
+    indexes: [
+    ],
+    constraints: [
+    ],
+  }, OrganizerScoreChangesRow),
   organizerTournament: __table({
     name: 'organizer_tournament',
     indexes: [
@@ -181,7 +189,7 @@ const REMOTE_MODULE = {
     cliVersion: "2.15.0" as const,
   },
   tables: tablesSchema.schemaType.tables,
-  viewsWithArgs: ["organizer_matches", "organizer_participants", "organizer_results", "organizer_tournament", "shared_matches", "shared_participants", "shared_results", "shared_tournament", "suggest_disciplines"],
+  viewsWithArgs: ["organizer_matches", "organizer_participants", "organizer_results", "organizer_score_changes", "organizer_tournament", "shared_matches", "shared_participants", "shared_results", "shared_tournament", "suggest_disciplines"],
   reducers: reducersSchema.reducersType.reducers,
   ...proceduresSchema,
 } satisfies __RemoteModule<

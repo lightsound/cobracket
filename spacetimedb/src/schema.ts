@@ -154,6 +154,19 @@ const result = table(
   },
 );
 
+const scoreChange = table(
+  { name: "score_change" },
+  {
+    id: t.u64().primaryKey().autoInc(),
+    tournamentId: t.u64().index("btree"),
+    matchId: t.u64().index("btree"),
+    changedBy: t.u64(),
+    changedAt: t.timestamp(),
+    previousSides: t.array(ResultSide),
+    newSides: t.array(ResultSide),
+  },
+);
+
 /**
  * The module's schema object: the entry's default export, and the
  * registrar every registration file builds on. Tagged @public for
@@ -174,4 +187,5 @@ export const spacetimedb = schema({
   participant,
   match,
   result,
+  scoreChange,
 });
