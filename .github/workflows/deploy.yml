@@ -5,9 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# One production deploy at a time, and never cancel one midway: `convex deploy`
-# pushes functions and `cf deploy` uploads assets, so an interrupted run
-# can leave the two halves on different revisions.
+# One production deploy at a time, and never cancel one midway: `spacetime
+# publish` pushes the module and `cf deploy` uploads assets, so an
+# interrupted run can leave the two halves on different revisions.
 concurrency:
   group: deploy-production
   cancel-in-progress: false
@@ -61,12 +61,12 @@ jobs:
     steps:
       - id: check
         env:
-          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+          SPACETIMEDB_TOKEN: ${{ secrets.SPACETIMEDB_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           missing=()
-          for name in CONVEX_DEPLOY_KEY CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID; do
+          for name in SPACETIMEDB_TOKEN CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID; do
             [ -n "${!name}" ] || missing+=("$name")
           done
           if [ "${#missing[@]}" -eq 0 ]; then
@@ -88,21 +88,20 @@ jobs:
           bun-version-file: package.json
       - run: bun install --frozen-lockfile
 
-      - name: Seed the auth signing keys on a fresh deployment
+      - name: Install the SpacetimeDB CLI (pinned, checksum-verified)
         run: |
-          names=$(bun x convex env list --names-only)
-          if grep -qx AUTH_PRIVATE_KEY <<<"$names" && grep -qx AUTH_JWKS <<<"$names"; then
-            echo "AUTH_PRIVATE_KEY and AUTH_JWKS are set; left unchanged."
-          else
-            bun run auth:keys
-          fi
-        env:
-          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+          asset="spacetime-x86_64-unknown-linux-gnu.tar.gz"
+          curl -fSL -o "/tmp/$asset" "https://github.com/clockworklabs/SpacetimeDB/releases/download/v2.15.0/$asset"
+          echo "30ee1d0ad345eb479bc269423f1c0f2f21fc564cd634fcb115c248465358b062  /tmp/$asset" | sha256sum -c -
+          mkdir -p "$HOME/.local/bin"
+          tar xzf "/tmp/$asset" -C "$HOME/.local/bin" --no-same-owner
+          mv "$HOME/.local/bin/spacetimedb-cli" "$HOME/.local/bin/spacetime"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
-      - name: Deploy Convex functions and build the web UI
+      - name: Publish the SpacetimeDB module and build the web UI
         run: bun run deploy:backend
         env:
-          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+          SPACETIMEDB_TOKEN: ${{ secrets.SPACETIMEDB_TOKEN }}
 
       - name: Deploy the web UI
         run: bun run deploy:web

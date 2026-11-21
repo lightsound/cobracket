@@ -12,7 +12,7 @@
     "convex:dev": "convex dev",
     "convex:codegen": "convex codegen",
     "deploy": "bun run deploy:backend && bun run deploy:web",
-    "deploy:backend": "convex deploy --cmd 'bun run build' --cmd-url-env-var-name VITE_CONVEX_URL",
+    "deploy:backend": "spacetime publish --server maincloud --module-path spacetimedb --yes cobracket && VITE_BACKEND=spacetimedb VITE_SPACETIMEDB_HOST=https://maincloud.spacetimedb.com VITE_SPACETIMEDB_DB=cobracket bun run build",
     "deploy:web": "cf deploy dist/client",
     "serve:hosting": "vp preview",
     "test": "vp test run --project '!e2e' --project '!connection'",
