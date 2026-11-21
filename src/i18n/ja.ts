@@ -7,7 +7,7 @@ export const ja: Record<MessageKey, string> = {
   "app.notFound": "ページが見つかりません。",
   "app.backHome": "ホームに戻る",
   "app.setupBackend":
-    "ローカルサーバーを `spacetime start` で起動し、.env.local に VITE_SPACETIMEDB_HOST と VITE_SPACETIMEDB_DB を設定して、`bun run spacetime:publish:local` でモジュールを公開してください。",
+    "ローカルサーバーを `spacetime start --listen-addr 127.0.0.1:3100` で起動し、.env.local に VITE_SPACETIMEDB_HOST と VITE_SPACETIMEDB_DB を設定して、`bun run spacetime:publish:local` でモジュールを公開してください。",
 
   "theme.label": "テーマ",
   "theme.system": "自動",
