@@ -4,7 +4,8 @@ export const en = {
   "app.retry": "Retry",
   "app.notFound": "Page not found.",
   "app.backHome": "Back to home",
-  "app.setupConvex": "Set VITE_CONVEX_URL in .env.local and run `bun run convex:dev`.",
+  "app.setupBackend":
+    "Set VITE_SPACETIMEDB_HOST and VITE_SPACETIMEDB_DB in .env.local and publish the module with `bun run spacetime:publish:local`.",
 
   "theme.label": "Theme",
   "theme.system": "Auto",

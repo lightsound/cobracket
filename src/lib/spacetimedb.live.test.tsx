@@ -317,7 +317,6 @@ function occurrences(host: HTMLElement, needle: string): number {
 
 beforeAll(async () => {
   await boot();
-  vi.stubEnv("VITE_BACKEND", "spacetimedb");
   vi.stubEnv("VITE_SPACETIMEDB_HOST", HOST);
   vi.stubEnv("VITE_SPACETIMEDB_DB", DB_NAME);
 }, 240_000);
@@ -412,8 +411,7 @@ test("surfaces the module's refusal text when a write is refused", async () => {
     ?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
   // The module's guard refuses with a SenderError carrying this text,
   // and the adapter surfaces it as the write's failure — the failure
-  // contract Convex's error texts used to provide, now carried by the
-  // module itself across the wire.
+  // contract the module itself carries across the wire.
   await waitFor("the refusal text", () =>
     (host.querySelector("main")?.textContent ?? "").includes("Discipline must not be empty"),
   );

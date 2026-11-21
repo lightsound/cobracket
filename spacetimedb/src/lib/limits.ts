@@ -1,6 +1,5 @@
 import { SenderError } from "spacetimedb/server";
 
-// fallow-ignore-next-line code-duplication -- intentionally mirrors the Convex original during the migration window (both backends live until M6 deletes the Convex side; this module copy is the survivor)
 const MAX_NAME_LENGTH = 120;
 export const MAX_ROSTER_SIZE = 128;
 export const MAX_MATCHES = 2 * MAX_ROSTER_SIZE;

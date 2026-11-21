@@ -4,12 +4,11 @@ import { organizerIdFor } from "./binding";
 
 // Shared read helpers behind the views in share.ts and
 // tournaments.ts. Both surfaces resolve their tournament through one
-// of these two gates, so the access rules live in exactly one place —
-// the successor of convex/share.ts's canViewShared and the model
-// layer's owned-tournament loads. Each returns the tournament row
+// of these two gates, so the access rules live in exactly one place.
+// Each returns the tournament row
 // plus its discipline's display name, or undefined.
 
-// The Share Link gate (convex/share.ts): the slug is the bearer
+// The Share Link gate: the slug is the bearer
 // credential, and it opens only a published, non-private tournament.
 // MVP behavior is unlisted-only, but the gate reads the visibility
 // field from day one so a future mutation exposing it cannot leak by

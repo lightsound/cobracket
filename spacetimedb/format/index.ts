@@ -6,7 +6,6 @@ export { FormatEngineError } from "./errors";
 export type {
   BracketStructure,
   FormatOptions,
-  Occupant,
   Progression,
   RecordedResult,
   ResultSide,

@@ -2,16 +2,14 @@ import { describe, expect, test } from "vite-plus/test";
 import * as moduleExports from "../src/index";
 import { as, asModule, authFor, makeHarness, type Harness } from "./harness";
 
-// The identity seam's tests (migration slice M2): the port of
-// convex/auth.test.ts to the module harness. The Convex file covered
-// what the app owned around the auth library — the createUser
-// callback and the identity queries. The module owns the whole seam,
-// and the mapping is: anonymous sign-up (createUserAnonymous) becomes
-// bindIdentity, the first-act binding of ADR 0031; a verified JWT
-// subject becomes a harness identity derived from a test JWT (see
-// harness.ts); the session queries become sender-gated views.
+// The identity seam's tests: what the app owns around the auth
+// library — the binding on first act and the identity queries. The
+// module owns the whole seam, and the mapping is: anonymous sign-up
+// becomes bindIdentity, the first-act binding of ADR 0031; a verified
+// JWT subject becomes a harness identity derived from a test JWT (see
+// harness.ts); the session queries are sender-gated views.
 //
-// One Convex case has no counterpart and is replaced, not dropped:
+// One case has no counterpart and is replaced, not dropped:
 // "the subject is not a user" (a user id forged as a subject, or a
 // well-formed id from another table) cannot occur here — an Identity
 // is server-minted and unforgeable, and the binding table is the only

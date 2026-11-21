@@ -47,8 +47,7 @@ import type {
 // The SpacetimeDB implementation behind the data seam (`./backend`):
 // one DbConnection, the view subscriptions the read operations
 // compose from, and the reducer calls the write operations dispatch
-// to — the counterpart of `./convex`, selected when a build sets
-// VITE_BACKEND=spacetimedb (see `./backend`). Plan §2.5 is the design;
+// to. Plan §2.5 is the design;
 // `./spacetimedb-model` holds the pure half (row mapping, composition,
 // write-argument mapping, result synthesis) and this module the live half.
 //
@@ -62,9 +61,8 @@ import type {
 //   client cache on every event batch, and hands pages their
 //   contract rows through an identity cache (see "Contract row
 //   identity" below): a row whose fields are unchanged keeps its
-//   object across deliveries, as the Convex client's cache hands
-//   back — the delivery shape the seam's consumers are written
-//   against.
+//   object across deliveries, as a subscription cache hands back —
+//   the delivery shape the seam's consumers are written against.
 // - A view's client cache merges the rows of every live subscription
 //   of that view on the connection, and the rows carry no
 //   tournamentId to sort them by. So tournament-scoped views are
@@ -100,7 +98,7 @@ const GENERIC_WRITE_ERROR = "The operation could not be completed. Please try ag
 // 0031): the server mints the identity on a tokenless connect and
 // the SDK hands the token back through onConnect; persisting it is
 // the app's job (the SDK does not touch storage). Namespaced by
-// host and database, like the Convex auth storage was by URL.
+// host and database.
 function tokenKey(config: SpacetimeConfig): string {
   return `cobracket.spacetimedb.token:${config.host}:${config.db}`;
 }
@@ -176,8 +174,7 @@ export function getSpacetimeConnection(): Promise<DbConnection> {
  * across tabs: two tabs opening the app together, neither holding a
  * stored token yet, would otherwise each be minted their own
  * identity and each persist it (last writer wins), leaving one tab
- * acting as a second anonymous user (plan §5, Q5 — the race the
- * Convex side's sign-in mutex prevented). Under the Web Lock, the
+ * acting as a second anonymous user (plan §5, Q5). Under the Web Lock, the
  * second tab's build re-reads storage after the first's token
  * landed and connects as the same identity. Once a token exists,
  * no lock is taken.
@@ -396,17 +393,16 @@ const ALL_VIEWS: readonly ViewName[] = [
  * An identity cache for contract rows, keyed by id. Reconciling a fresh
  * row set returns the rows in order, reusing the previous object for a
  * row whose fields are all unchanged and adopting the fresh object for
- * a row that changed — the delivery shape of the Convex client, whose
- * cache hands back the same object for an unchanged row and a new one
- * for a changed row, with plain (untracked) field reads throughout.
+ * a row that changed — the delivery shape the seam promises: a cache
+ * hands back the same object for an unchanged row and a new one for
+ * a changed row, with plain (untracked) field reads throughout.
  *
  * The trial's adapter kept these rows in Solid stores instead, and the
  * live gate at app scale (PR-C) showed why that cannot stand: a store
  * row's field reads are reactive sources, so a consumer memo that maps
  * over the rows (the bracket's participant-name join) tracks one source
  * per field per row and crosses the gate's scope-width threshold at
- * sixteen participants, where the Convex client's plain rows track
- * only the array. Field-stable store nodes were the trial's answer to
+ * sixteen participants, where plain rows track only the array. Field-stable store nodes were the trial's answer to
  * wholesale replacement tripping IMMUTABLE_UPDATE_IN_STORE; identity
  * caching gets the same list stability — an unchanged row keeps its
  * object, so keyed lists do not churn — without putting a store
@@ -521,10 +517,9 @@ function subscribeChannel(
   };
   channel.listeners.add(listener);
   if (channel.hasValue) {
-    // A warm channel answers a new subscriber from what it holds,
-    // as the Convex client answered from its cache; the deliver
-    // below then catches it (and everyone) up if the held value is
-    // behind the current state.
+    // A warm channel answers a new subscriber from what it holds;
+    // the deliver below then catches it (and everyone) up if the
+    // held value is behind the current state.
     onValue(channel.value);
   }
   deliver(channel);
@@ -534,7 +529,7 @@ function subscribeChannel(
     released = true;
     channel.listeners.delete(listener);
     if (channel.listeners.size === 0) {
-      // The Convex prefetch hold, applied to every seam release: a
+      // The prefetch hold, applied to every seam release: a
       // subscription dropped on navigation is kept for a grace
       // period, so coming straight back finds it warm.
       setTimeout(() => {
@@ -1388,8 +1383,7 @@ export async function bindSpacetimeIdentity(): Promise<void> {
  * Drop the stored identity and rebuild the connection: the remedy
  * for a binding whose app_user row is gone (session user_missing) —
  * the dead identity can never act again, so the client starts over
- * tokenless and the server mints a fresh one, as a Convex sign-out
- * and fresh anonymous sign-in did. Live subscriptions are
+ * tokenless and the server mints a fresh one. Live subscriptions are
  * re-established on the new connection (system feeds and the current
  * scopes); channels keep their last values until the new feeds
  * apply.

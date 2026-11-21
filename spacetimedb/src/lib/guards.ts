@@ -11,8 +11,8 @@ import type { LifecycleEvent, LifecycleEventType } from "../../lifecycle";
 import { eventAllowed, transitionStatus } from "../../lifecycle";
 import { requireBoundUser } from "./binding";
 
-// Identity, ownership, and lifecycle guards — the successor of
-// convex/model/guards.ts. Every guard resolves identity FIRST through
+// Identity, ownership, and lifecycle guards. Every guard resolves
+// identity FIRST through
 // the binding seam (requireBoundUser), before any row lookup, so a
 // caller learns nothing about rows they do not own; and "missing" and
 // "not yours" deliberately read the same, so the API never confirms a

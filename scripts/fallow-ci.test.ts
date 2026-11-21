@@ -7,11 +7,12 @@ import { workingTreeFiles } from "./fallow-ci";
 // `bun run fallow:ci`, which verify runs.
 
 test("keeps listed paths that exist and drops deleted ones", () => {
-  const listed = "convex/schema.ts\0convex/operations.ts\0convex/model/views.ts\0";
-  const onDisk = new Set(["convex/schema.ts", "convex/model/views.ts"]);
+  const listed =
+    "spacetimedb/src/schema.ts\0spacetimedb/src/operations.ts\0spacetimedb/src/lib/views.ts\0";
+  const onDisk = new Set(["spacetimedb/src/schema.ts", "spacetimedb/src/lib/views.ts"]);
   expect(workingTreeFiles(listed, (path) => onDisk.has(path))).toEqual([
-    "convex/schema.ts",
-    "convex/model/views.ts",
+    "spacetimedb/src/schema.ts",
+    "spacetimedb/src/lib/views.ts",
   ]);
 });
 

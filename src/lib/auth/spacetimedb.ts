@@ -39,8 +39,7 @@ async function establish(): Promise<void> {
   if (state.kind === "user_missing") {
     // The binding's app_user row is gone (a cleared backend, a
     // deleted user): the identity is genuinely dead and can never
-    // act again. Drop it and start over tokenless — the Convex
-    // path's sign-out and fresh sign-in, in this platform's shape.
+    // act again. Drop it and start over tokenless.
     await resetSpacetimeIdentity();
     state = await whenSpacetimeSessionReady();
     if (state.kind === "organizer") return;

@@ -28,12 +28,7 @@
     },
     {
       "file": ".env.example",
-      "hash": "4397f4720660894fdfc7c7835741d0a7021f908e83c3a34a345d213a332fa19a",
-      "count": 1
-    },
-    {
-      "file": ".env.example",
-      "hash": "92dc91f3919363cf2cc347077171ef2b18004eafa52cae1f02d7aa2c5756a593",
+      "hash": "bb2d2e49b43607016598d4cebfe728cb1e37564d88486f674096dd470b188280",
       "count": 1
     },
     {
@@ -53,17 +48,17 @@
     },
     {
       "file": ".fallowrc.jsonc",
-      "hash": "7ee4d6ce86709351f74d4722b2cbf637edaec1e458efa7831191e7760477347b",
-      "count": 1
-    },
-    {
-      "file": ".fallowrc.jsonc",
       "hash": "933f9e9e47fa5904cdd9a858118135c6f3ed53723487bbeeb5cdcca356792304",
       "count": 1
     },
     {
       "file": ".fallowrc.jsonc",
-      "hash": "cdf189008b3b0262a5836428c7338168ad5a74b965cb7431a1f759ddb4d7925b",
+      "hash": "a1b264dc76042877d95c1678e93d53bfc2cc0ea65893e2f820c76df6dfc88f37",
+      "count": 1
+    },
+    {
+      "file": ".fallowrc.jsonc",
+      "hash": "acd9d78c4758fef54542b98dcd05ee3d20a2826e2a473515c1effcae8173edd3",
       "count": 1
     },
     {
@@ -183,452 +178,7 @@
     },
     {
       "file": ".importlintrc.jsonc",
-      "hash": "e7d27e2a32ab6c529d2d085449575f2f9ae9b23268644a972da5eaf8face7c47",
-      "count": 1
-    },
-    {
-      "file": "convex/auth.config.ts",
-      "hash": "408f1311f68765a79bd0c319374803f84f2322a5a7d35fa588b72bdca2e5ca53",
-      "count": 1
-    },
-    {
-      "file": "convex/auth.config.ts",
-      "hash": "4a4faee5fbd40180de71139be9e4c8e7ebfcd6800e91f500bd8940685723acce",
-      "count": 1
-    },
-    {
-      "file": "convex/auth.test.ts",
-      "hash": "32e6d47a814f8cc414dcc299ddbfc10f60aa0750a5abaec8b2b800b39ffd5e45",
-      "count": 1
-    },
-    {
-      "file": "convex/auth.test.ts",
-      "hash": "5ef67a63883ca0ef1b6df2abcec45885c49cdc8a8434a8219fdff15d3a897368",
-      "count": 1
-    },
-    {
-      "file": "convex/auth.test.ts",
-      "hash": "60ff5b9146e44e0470b185d2e608f4daf1190e8762cde1c13c0def65734ea913",
-      "count": 1
-    },
-    {
-      "file": "convex/auth.test.ts",
-      "hash": "ab9a716df2d27791fc497fce2e96cbe97380aea5de06591f1b278a6361dc3078",
-      "count": 1
-    },
-    {
-      "file": "convex/auth.ts",
-      "hash": "2b01accc5f4c2dfae7417f01c6589c9f84be4a4486f9707e7b42afd8b7675b4b",
-      "count": 1
-    },
-    {
-      "file": "convex/auth.ts",
-      "hash": "66e0c1e0d18f710a5f86462f689498b6ecfa09064eda86cb56ffd45893c4a671",
-      "count": 1
-    },
-    {
-      "file": "convex/auth.ts",
-      "hash": "b3360ce75cf8516b1ad6766649b940abd4cbb64845469bfc14c89dd3839741c7",
-      "count": 1
-    },
-    {
-      "file": "convex/auth.ts",
-      "hash": "bf2b5795976106e0e9abffa9e6948446092f7bdae960c74b36804214c7124f6b",
-      "count": 1
-    },
-    {
-      "file": "convex/auth.ts",
-      "hash": "d81e593ecea1767422988140d4cfd4d1a4a3c5eac63e1fa11eb9157727253759",
-      "count": 1
-    },
-    {
-      "file": "convex/bracket.ts",
-      "hash": "08bc1911651631d6eb7fd75d6afe41dea7cbe7edafcbc17a8739b9f065916ef6",
-      "count": 1
-    },
-    {
-      "file": "convex/bracket.ts",
-      "hash": "09769c2f6a85427ae5ed8ed9d357713ad1e5c978727b0e6bd4753ebd70075b03",
-      "count": 1
-    },
-    {
-      "file": "convex/bracket.ts",
-      "hash": "68e138afd1e80449b09c53af87f1410150296b85c3d88d2b70dd19ed0c059380",
-      "count": 1
-    },
-    {
-      "file": "convex/bracket.ts",
-      "hash": "6df117517ad6665faa7c06273426c94fe42af5364ce1c67a18c001853fb19f8f",
-      "count": 1
-    },
-    {
-      "file": "convex/bracket.ts",
-      "hash": "73c324522f3c5fb453e5b8cbf3105183c31f4d02d78eb979fc46e8e674dc1d10",
-      "count": 1
-    },
-    {
-      "file": "convex/bracket.ts",
-      "hash": "744a835dc50bd97a82dec69998e15937c83d4c31a8b0a9eecc958770057ad4f4",
-      "count": 1
-    },
-    {
-      "file": "convex/disciplines.ts",
-      "hash": "8f08bbebc0ee5b8a1a3d1aa8e65094336d117257d6f99529a06a0ecfa10980c9",
-      "count": 1
-    },
-    {
-      "file": "convex/model/disciplines.ts",
-      "hash": "00a60cef74e42f3df19c558fe0b743e7490a54a44bb3bb1ad4d68ac225642d11",
-      "count": 1
-    },
-    {
-      "file": "convex/model/disciplines.ts",
-      "hash": "8c7fffaaac3f45693e94c4b41df9f9fa1e773506075b035da7e6cf7cf26ebe1b",
-      "count": 1
-    },
-    {
-      "file": "convex/model/disciplines.ts",
-      "hash": "bd4474fe37d44af842f157ca8bc32765755be5c18910c03533cf4f97e9120c95",
-      "count": 1
-    },
-    {
-      "file": "convex/model/guards.ts",
-      "hash": "01c24e6d593a78882c63389d37b90ef648f1e07b1b0644e17b556e1011bfb26a",
-      "count": 1
-    },
-    {
-      "file": "convex/model/guards.ts",
-      "hash": "4591092a3b2528829afd4336914c347a5669aa241292a02c410156ecb6a9f11e",
-      "count": 1
-    },
-    {
-      "file": "convex/model/guards.ts",
-      "hash": "a20f271f3545fee54597d3d7a3e03dd9e847283dfd3307dfea37c126362a2222",
-      "count": 1
-    },
-    {
-      "file": "convex/model/index.ts",
-      "hash": "115bfc719c52686b8249063474821bf1bd1fcc8c55aacfb2f5cd8bb679f51226",
-      "count": 1
-    },
-    {
-      "file": "convex/model/limits.ts",
-      "hash": "5a3f264526b797062b1125f76589f4695b7639d38b2a1dfd585f49c98801680f",
-      "count": 1
-    },
-    {
-      "file": "convex/model/limits.ts",
-      "hash": "784a9aaef00bf0072639370786f224489b9ace25cabcfd1d959c5bc2259f6912",
-      "count": 1
-    },
-    {
-      "file": "convex/model/limits.ts",
-      "hash": "90c8ce72b46a139214eeed970f3c30305cd93f9307793b87281b0fe24bbd6318",
-      "count": 1
-    },
-    {
-      "file": "convex/model/limits.ts",
-      "hash": "a5432413b20f28bc6115c3123b544af099ad144e2805b859100481db498d9a7a",
-      "count": 1
-    },
-    {
-      "file": "convex/model/limits.ts",
-      "hash": "c26317cafd02038dff8a7bb2d757fa03d29ba042091313add1cb030e5cfdb7c6",
-      "count": 1
-    },
-    {
-      "file": "convex/model/limits.ts",
-      "hash": "f42be09318c56cb07e825f97a8d8fea3edd3b6e77bd7d397147a6e7c55222cfe",
-      "count": 1
-    },
-    {
-      "file": "convex/model/structure.ts",
-      "hash": "512c39a6d721c398d92fea651ec5b7bd740e9eda87b32118b551f40b750b47f3",
-      "count": 1
-    },
-    {
-      "file": "convex/model/validators.ts",
-      "hash": "291f7bc15afc68344a02f7b8c3276f3648e8c274c36e301d01b7796dd2a081ab",
-      "count": 1
-    },
-    {
-      "file": "convex/model/validators.ts",
-      "hash": "65d232b22b718d1ee5f2551705619aec3bdba30d8fdacf6c86658e9ae22d9940",
-      "count": 1
-    },
-    {
-      "file": "convex/model/validators.ts",
-      "hash": "b7726fb23ef9c5dd5b636284a71bb041a071cfcfe33e48d81d4876fc802d9382",
-      "count": 1
-    },
-    {
-      "file": "convex/model/validators.ts",
-      "hash": "cfea60bc9e0fda5678ae782495acc8ea843949367d33becf4bf47a31cc92bf55",
-      "count": 1
-    },
-    {
-      "file": "convex/model/validators.ts",
-      "hash": "fec2fbd4609ce93bdfe30ef8d17d29753f81924ad4032d29141ed4070e62f44f",
-      "count": 1
-    },
-    {
-      "file": "convex/model/views.ts",
-      "hash": "02ca73c9af04147d50629ae5dac07263c79907ea3ecb43bcfc5b24c082223a2b",
-      "count": 1
-    },
-    {
-      "file": "convex/model/views.ts",
-      "hash": "7475b4d612761ec60b57c6d5b93cb5437643b6a44bfb37b00c5eb360f0a8051c",
-      "count": 1
-    },
-    {
-      "file": "convex/model/views.ts",
-      "hash": "8308aeef202cd84a27d0f480c373117aefcaaa7ced81725a131b807333f5ef96",
-      "count": 1
-    },
-    {
-      "file": "convex/model/views.ts",
-      "hash": "d5a60f0cbd0a96018cd444db7bffaa649be0ac0679dc8bb5d8d3b05d0a5e17dd",
-      "count": 1
-    },
-    {
-      "file": "convex/model/views.ts",
-      "hash": "e90a5a5871b5ef47a5896aee6b823740857e6ee17f13e392ba756ec4ada3b1f2",
-      "count": 1
-    },
-    {
-      "file": "convex/model/views.ts",
-      "hash": "f25e702389f8c1540ca03e0fd8cf9e3607a4d92739b93aaecf6d657eee0c9f4c",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "0d4d35d79d5f11ea753ba7604069a0c0b9628f7f16949c1e532df78917325f34",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "171aaab3aa64cbf8ad49647beec1213298007d776442aa2ab2965b2d5c9c8aa5",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "19ef5fb55af8cf48cd4582c60157fafdd2de2b5c287969e1bc5759c05166eee9",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "1a6b2e55ce7e6f26d7dbf94f31c2a1255d6ab77d480909a9b55a2ca03fae01ac",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "1e7e3013522fab151772827e5996eb81f9c0ae2b7f6e3957079119e9caa865bc",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "237b3385cd9d4f2fd279057f5661d30aba37b928e7b27d846249ad9d7a320ba5",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "32e6d47a814f8cc414dcc299ddbfc10f60aa0750a5abaec8b2b800b39ffd5e45",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "43902ba3f4567ac15f7d5238b1acf259ab335debc2b565e9bdd6de3a06f2d74c",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "43e5e482ffe87e7ff29c47414d15c0482009730d77d4363e3a91cb3eccfedc9f",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "46b0fff17544bef2f99f340078bc86c180c3aa502cc63ea96432d56b7c007aa6",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "4ee410abb9842ba44521d3f92402bb0788f3abea55bf527a1853d2141fd5cdab",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "56287a443d0da439af92faec9e1a58d53e825928ce6ff987c98a3283036fea3c",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "6c81fd07f036f9f3d64face83a2bf7f91b387dd3a03fb4e1ada2fbf813e5d7c2",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "6d25dd93852bd37243272c912176f2c80e71bc638c54b6872a682d3f6dbec1fd",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "6e4da3f216fc45287521274a774cccd1d3721833e520e0e7fc96abb8319e0b9e",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "72a40be1e17d9528e128f632ed139692add8c1ffc0b7c83f352024d299673a0e",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "74dcbbd38184fa4390fe2374f40bd9942c48501d1aee179218f9ecc4e7cd1d5e",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "8e6f0b5719a3f8dc1946e5a7e5d8473468b0ae8cad91cebf5d4720736939b38b",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "94035cb3ffef157dbfafd9083f0e1dda7433c6802e6af9071a421d1bef7cd621",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "94a52c55b75a53314fbb0e9c0649165fd231629822fc1a0ff7f08c91dcb4dbe0",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "9806b98e519880488604d7a8e0f7185ce8aabcd3ae0706bba458d73663ba8953",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "a6b5dba1d849bb61860972a24293f38792c9ab2add3a0d5c57d8687b0d3ea2c6",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "b9219afd514d62d7591970e51d39991131ecaf98d9c0fc8ffac0538505413727",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "be8f94b1fec8f286230b6b810a071f5a9978aaffb2e7a2f812bf2c0625c25070",
-      "count": 2
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "c43acb54478c63d2259853617e2f9c60c6f3d11e4f21896b734065090b39d157",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "c776d5285c2e54fa3bf74151705b1a4ea328c7faf5f9114419dd73ebfdc224f4",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "c8f87da330722902f9a0fb94ad3969e6d4ee8b4330c5e44f80acc32c501a58cd",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "e3079057f0a0bd7c37b54ded0107fae237c544a65b39ef876207631975993a80",
-      "count": 1
-    },
-    {
-      "file": "convex/operations.test.ts",
-      "hash": "efaf90c1fa69fe62f8bc88ead893d4df6ee470f4c0bf69c94d268e0cfb537602",
-      "count": 1
-    },
-    {
-      "file": "convex/roster.ts",
-      "hash": "095bf54e0e414f42d92a780e6bd5f2e006f23a9d3c1a18f94e59e502c166cc82",
-      "count": 1
-    },
-    {
-      "file": "convex/roster.ts",
-      "hash": "e4b0272a573cbcff9af67bc164e948356d69ae8cd03feecd0271d2b65b2c243f",
-      "count": 1
-    },
-    {
-      "file": "convex/schema.ts",
-      "hash": "3d7836418a782dc9869c3fea80566954ec1d8c798c57e7e410b295e3ea33e70b",
-      "count": 1
-    },
-    {
-      "file": "convex/schema.ts",
-      "hash": "89730177823f26d3d572770090d589f3e74b99c1704e830d7b6a5123c4bea703",
-      "count": 1
-    },
-    {
-      "file": "convex/schema.ts",
-      "hash": "a67afb0a47a38eef59c9464069bc11f4fad04fe4f764296ffc9375c25146709a",
-      "count": 1
-    },
-    {
-      "file": "convex/schema.ts",
-      "hash": "a732e17e93194f91887726dde37affa485929977289e7f25684a932df148af88",
-      "count": 1
-    },
-    {
-      "file": "convex/schema.ts",
-      "hash": "abd9df408191469fa48345add73506014a544930451dcb34bbf2d31f2e285820",
-      "count": 1
-    },
-    {
-      "file": "convex/schema.ts",
-      "hash": "bdd6aabb4fcb753350a6584dbb3cdf44b60a0c2cfa16a87b69bb5b23c3fb498e",
-      "count": 1
-    },
-    {
-      "file": "convex/schema.ts",
-      "hash": "c16c7a08e12984c8c925d3fe7b076ffe9a4fd6fa972eaed41d98a92509d00a9e",
-      "count": 1
-    },
-    {
-      "file": "convex/schema.ts",
-      "hash": "d218ea8012d428fedeec7f6d752dc6591817be461d0896c29695679175f1a068",
-      "count": 1
-    },
-    {
-      "file": "convex/schema.ts",
-      "hash": "eb46b55f2b68ad7ffad718f64a86f598170bad33a44392cd5ee1d6225610b14c",
-      "count": 1
-    },
-    {
-      "file": "convex/schema.ts",
-      "hash": "edbb6037497b6904c061ed6919239fa92d64d0b2dd94b7c61c5d4603bbd7eddc",
-      "count": 1
-    },
-    {
-      "file": "convex/share.ts",
-      "hash": "a47ad885b6093478a5f5d336aa6a1088d931f0951441c2ff402304c45e676b65",
-      "count": 1
-    },
-    {
-      "file": "convex/share.ts",
-      "hash": "e1606523c9eece1a7a07849141c7daa068848718460ba988a2349efa588309e6",
-      "count": 1
-    },
-    {
-      "file": "convex/tournaments.ts",
-      "hash": "26c9ba3c914618111681a192f8ab7d2bd1221c6e7ab4cd4946572f842e08633e",
-      "count": 1
-    },
-    {
-      "file": "convex/tournaments.ts",
-      "hash": "adcc0dbd18ada668a35c2120598b1ccd1bb520ed9cf68dadef148518879d8528",
-      "count": 1
-    },
-    {
-      "file": "convex/tournaments.ts",
-      "hash": "d4874e86111441b23933ca567625919d6a6cb5396b824899cd5aa2630003d416",
+      "hash": "bf2bdbbed84cbe5a0b40c40360d8e76d49c36ee2d8c69dc915cbb10781e5f552",
       "count": 1
     },
     {
@@ -1068,17 +618,12 @@
     },
     {
       "file": "spacetimedb/src/auth.ts",
-      "hash": "4111b7ac060df74b8881f219044368a15e059fcaa6278ad18d6debf3d807d8cc",
+      "hash": "a08abf371625fe1c61bca180bd7237ace499bba59f9b2c0a214079e8c31dfdc4",
       "count": 1
     },
     {
       "file": "spacetimedb/src/auth.ts",
-      "hash": "cf1299e50a7908183bb0490930ae7e8b8e4085f2efa013b1ccfc0ed827ee16ab",
-      "count": 1
-    },
-    {
-      "file": "spacetimedb/src/bracket.ts",
-      "hash": "033eb3db0837c52bcd17048d0943cd88c4ef28b7e013180fa76d5513866aa889",
+      "hash": "ffd0d0a4528755882ab237707091d65dc3e1f5d9f5012ac538d5f53550959ce8",
       "count": 1
     },
     {
@@ -1088,22 +633,27 @@
     },
     {
       "file": "spacetimedb/src/bracket.ts",
-      "hash": "29ff74ccdeb8f025eb7c8773da2407bdbace3b98b9edc5e1aebe91e11ee632eb",
-      "count": 1
-    },
-    {
-      "file": "spacetimedb/src/bracket.ts",
       "hash": "73c324522f3c5fb453e5b8cbf3105183c31f4d02d78eb979fc46e8e674dc1d10",
       "count": 1
     },
     {
-      "file": "spacetimedb/src/disciplines.ts",
-      "hash": "c5a5e1848f2cb5cc0c5391cfee8d1dbdaa20bba6623420470a7ff89393a5f46b",
+      "file": "spacetimedb/src/bracket.ts",
+      "hash": "743dafbd46358141eb11ad5be3bf9839502c2083494ae97e52c565a1314acf42",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/bracket.ts",
+      "hash": "9510617fe2c9469c97d9693883c5ba4351314c3b7e030135bbe309243cff8297",
       "count": 1
     },
     {
       "file": "spacetimedb/src/disciplines.ts",
-      "hash": "d73c335f9fb296f58c309ddd50cd4acace9723018bffeb02f7cd8a35380470ee",
+      "hash": "11ebf55e3c675ce60d7163eba14b3a792e919d1612b21120c4e2d5ec396b67bc",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/src/disciplines.ts",
+      "hash": "5fc746aee41b9abefa6dc7c9363460078a653b6a673ce6a2c0e61fe914e204f2",
       "count": 1
     },
     {
@@ -1113,7 +663,7 @@
     },
     {
       "file": "spacetimedb/src/lib/binding.ts",
-      "hash": "99547ce87785233a00b4e3259b58996f7c367bd34fc6c2d2bd2179394afa4afc",
+      "hash": "9fe67bd77b2b06d400569d1888948c78b0ad72289d98693b1b5bd7587ece173b",
       "count": 1
     },
     {
@@ -1138,7 +688,7 @@
     },
     {
       "file": "spacetimedb/src/lib/guards.ts",
-      "hash": "c0cae57a8ba8cc4ff2b4cb4b550724d710af686e9cfc2159f49b7ee01f466c76",
+      "hash": "f6f745f69e2339a71871f8117a2050421c41f03fc20c5736e998c21140d91566",
       "count": 1
     },
     {
@@ -1178,22 +728,22 @@
     },
     {
       "file": "spacetimedb/src/lib/loaders.ts",
-      "hash": "97bdfb61f1de0a60234a8969b38f86f8de9b44b31e056ce26f7f7c073f462ea9",
+      "hash": "92a9884275374385b98382be2d6402903a6f7329ae4d43cf86dd0dd849eefdd7",
       "count": 1
     },
     {
       "file": "spacetimedb/src/lib/loaders.ts",
-      "hash": "ee88746e91a738c0afed75ff162b7f84e30a9213dc32dfd8368806a7ce15310d",
+      "hash": "a54381512539703358d5cc68d014c293033b0d399c0d33a6a680b30ce00d3c37",
       "count": 1
     },
     {
       "file": "spacetimedb/src/lib/reads.ts",
-      "hash": "ff076993109a6c1d8c311a89c56a34d5aadc669ea903cb584d91d4da3d611ca6",
+      "hash": "313d9f41b05340d22a0ce172a137bc469315817aee36a5513de2bd17d1bd6b18",
       "count": 1
     },
     {
       "file": "spacetimedb/src/lib/reads.ts",
-      "hash": "ffca714c74eb43a066ee415323974021e447bd8e3f1ba651c054a7b859cbcdda",
+      "hash": "d537d4fa360e1dc2bc96a330777122a8de3a7e315aafd7aa1581e10461e52783",
       "count": 1
     },
     {
@@ -1278,12 +828,17 @@
     },
     {
       "file": "spacetimedb/src/tournaments.ts",
-      "hash": "d4874e86111441b23933ca567625919d6a6cb5396b824899cd5aa2630003d416",
+      "hash": "9d4690aefe8b276c17682347b9385a6f5b1b7f3d9a2094f1de12911da247943b",
       "count": 1
     },
     {
       "file": "spacetimedb/src/tournaments.ts",
-      "hash": "ed52000476704b00060c84212e23f8321b7fb6a46b12f17763c48dc46b70e84c",
+      "hash": "d4874e86111441b23933ca567625919d6a6cb5396b824899cd5aa2630003d416",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/test/auth.test.ts",
+      "hash": "1fa92c0534e4d5cd12efc9ecf5e5b749fb03869fa3572a012795fd1674c615cd",
       "count": 1
     },
     {
@@ -1297,23 +852,18 @@
       "count": 1
     },
     {
-      "file": "spacetimedb/test/auth.test.ts",
-      "hash": "ebc55489523a75e63b8ea56510a69fd6a4753744f2d104cf9f9fa7cb98f459d1",
-      "count": 1
-    },
-    {
-      "file": "spacetimedb/test/compose.ts",
-      "hash": "23dbfe44382dfc44c034f96be7b74232b935743a25f287c4933a65e191dd0eeb",
-      "count": 1
-    },
-    {
       "file": "spacetimedb/test/compose.ts",
       "hash": "6971d0b980e54aa758d511c7503df2bc79e5c38128d63c86bc5464a0508f26ef",
       "count": 1
     },
     {
+      "file": "spacetimedb/test/compose.ts",
+      "hash": "80ef4146ac9e35d7c1d9badd78ec8532582558062ac40e5f52bd810433cd6872",
+      "count": 1
+    },
+    {
       "file": "spacetimedb/test/composition.test.ts",
-      "hash": "717d707c0fb448e0651c35abf9ab666cdcc7757f89ac9c26fa873aad74e2a1d8",
+      "hash": "3ef600d47fab12bc30338c88fcce4145dc772c1481e3f8681e47681f64842fff",
       "count": 1
     },
     {
@@ -1343,17 +893,17 @@
     },
     {
       "file": "spacetimedb/test/operations.test.ts",
+      "hash": "10a3b0bbe7dd7a9a82c5eccd677ab38f1b6c3ab579f8b7a4c66ec0c3cfff9560",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/test/operations.test.ts",
       "hash": "28434de04c36bbbc61d3654723156d328afdce3f7651bcbe313343968f8a06ff",
       "count": 1
     },
     {
       "file": "spacetimedb/test/operations.test.ts",
       "hash": "5ab05e31cf13aa92a38c06a1c8fad6f9caa407414a40f74a596c3aa87a30aab6",
-      "count": 1
-    },
-    {
-      "file": "spacetimedb/test/operations.test.ts",
-      "hash": "5abe85f2acc5f73389370e60e64bfe682d88a6fd5c57b2a458304b575d319246",
       "count": 1
     },
     {
@@ -1373,12 +923,12 @@
     },
     {
       "file": "spacetimedb/test/operations.test.ts",
-      "hash": "eba7d58e582ff418c34094327ac6c15dd67ba617822e09c424023f6accf8a33c",
+      "hash": "f2f9eec5e1eaeb1e3499b5979366224b6c4e2a639a9e6b2e8ee51e03b66795c8",
       "count": 1
     },
     {
       "file": "src/App.test.tsx",
-      "hash": "832c7cd3ddb9c7226e9fff17d2774d8c529e0e98bce4820a6b9ac89c02dc9c7d",
+      "hash": "d519e321011867daf86da0daf130f91caed082cd7c839f53456103c3263046dd",
       "count": 1
     },
     {
@@ -1507,63 +1057,13 @@
       "count": 1
     },
     {
-      "file": "src/lib/auth/convex.ts",
-      "hash": "0c3fec8e98e6cde588c6396d8694ebfac75df39370641fed039c4bf8ab27c15f",
-      "count": 1
-    },
-    {
-      "file": "src/lib/auth/convex.ts",
-      "hash": "122b05b3385b0db372083531a1f20014abdaefcfa767708b790a2b1f002a3663",
-      "count": 1
-    },
-    {
-      "file": "src/lib/auth/convex.ts",
-      "hash": "3695e89c17075fe410647dbc261eda2a8464004ea52d1ce50d36d4906611f4c0",
-      "count": 1
-    },
-    {
-      "file": "src/lib/auth/convex.ts",
-      "hash": "79221951db203c48cea8ac12f42f82d18bebe322d7aafe0e15cb424341e32d30",
-      "count": 1
-    },
-    {
-      "file": "src/lib/auth/convex.ts",
-      "hash": "8f27611cde39fe873e20b7526a11fc1e7f20fc7a58a32983a779885ae98f8dde",
-      "count": 1
-    },
-    {
-      "file": "src/lib/auth/convex.ts",
-      "hash": "9045af44665cb58e63765d048ea356777d0980cba720b80ca93d07c1886271fb",
-      "count": 1
-    },
-    {
-      "file": "src/lib/auth/convex.ts",
-      "hash": "a301fed07ee6060c1d2453d4d68356f62f2e2be6a3251e0f9a0536922538c75d",
-      "count": 1
-    },
-    {
-      "file": "src/lib/auth/convex.ts",
-      "hash": "c246ac7384adb869835f4e0c4fc566c30feaade3ba0694e7b63d8edde93beff1",
-      "count": 1
-    },
-    {
-      "file": "src/lib/auth/convex.ts",
-      "hash": "c939ac18dfa2e71fcb64ece9293b21774d53dc9a56426ad6858d4852a5865a87",
-      "count": 1
-    },
-    {
-      "file": "src/lib/auth/convex.ts",
-      "hash": "d42ec9002b95450128ede815410ea41d7f5b8fa9f53235af760f8f81a157ccec",
-      "count": 1
-    },
-    {
-      "file": "src/lib/auth/convex.ts",
-      "hash": "fbdac8694f00746b478468f63c8a8fefffb73b6e3e88a03bd1ecb3297e96dbdd",
+      "file": "src/lib/auth/index.ts",
+      "hash": "1fd08b6a1099a7c3b565eb9a0b95652a03e890a2937383ed480e83f9986e28dd",
       "count": 1
     },
     {
       "file": "src/lib/auth/index.ts",
-      "hash": "1fd08b6a1099a7c3b565eb9a0b95652a03e890a2937383ed480e83f9986e28dd",
+      "hash": "57deb84dfce4efedf72c2659099755755b4756d46ad4370b534f25bdd58ed830",
       "count": 1
     },
     {
@@ -1572,8 +1072,8 @@
       "count": 1
     },
     {
-      "file": "src/lib/auth/index.ts",
-      "hash": "f907d03c0d94e8e7e84f29ba9f1ef9b97e95744268254f99251bf287b7ad58ba",
+      "file": "src/lib/auth/spacetimedb.ts",
+      "hash": "82341065e17bcaed63aa2bd9068db79cbef5a081be1546232b2b7fc6ee5808ee",
       "count": 1
     },
     {
@@ -1583,12 +1083,12 @@
     },
     {
       "file": "src/lib/auth/spacetimedb.ts",
-      "hash": "e73fbcec6f85248c9cb2015089162b1f880981432be0e6e4a1c080828c54edfe",
+      "hash": "fbd761b40813db2d18d10aef427cea2dc272941d2472a2f61b5b6b10005aceb0",
       "count": 1
     },
     {
-      "file": "src/lib/auth/spacetimedb.ts",
-      "hash": "fbd761b40813db2d18d10aef427cea2dc272941d2472a2f61b5b6b10005aceb0",
+      "file": "src/lib/backend.ts",
+      "hash": "07ae362a2a9d01f577a67b30be2fa9ec6710539825ae5a31f3238ceb64865878",
       "count": 1
     },
     {
@@ -1598,22 +1098,7 @@
     },
     {
       "file": "src/lib/backend.ts",
-      "hash": "5af46d25b9fcd0563011f13c6e46d2f0fbc0a2a20fd8a7ae9e5c2148e6ca4f2e",
-      "count": 1
-    },
-    {
-      "file": "src/lib/backend.ts",
-      "hash": "8c48a3bb296d0eae853c676d93dd72b1dccc404017ae132bdb2d2c523daa60ed",
-      "count": 1
-    },
-    {
-      "file": "src/lib/backend.ts",
-      "hash": "b97a49b2781d34c9fde9a23be4b1d87e64c410790b3da3d7088d171116f76d16",
-      "count": 1
-    },
-    {
-      "file": "src/lib/backend.ts",
-      "hash": "cf76dd8824d2d61ce70942186258bfff93f760e8f13c4fcc6883e633193d7b43",
+      "hash": "7e095f9a19216d5053cccc51157b57bf51212029e443213495a0ebb184a8af73",
       "count": 1
     },
     {
@@ -1628,32 +1113,12 @@
     },
     {
       "file": "src/lib/backend.ts",
-      "hash": "dd26ef26015415ff63e10ffae8d2f6c06053459ad604facc6e0d3fb99df308c2",
+      "hash": "d58d296c7797a94d7e40fc52dbe1b2718d79690c8663ce7c4d3c0378b112af21",
       "count": 1
     },
     {
-      "file": "src/lib/convex.ts",
-      "hash": "45af5874b6a29afd4124fa7eac22a0c1415d6f3cc72a24aac8ba5739997bbd4d",
-      "count": 1
-    },
-    {
-      "file": "src/lib/convex.ts",
-      "hash": "538494bf707a51de65a852b33ddb80fc9566a1a39108367b56145eafb9021bbe",
-      "count": 1
-    },
-    {
-      "file": "src/lib/convex.ts",
-      "hash": "8e4a467a8858a1fe85b8306515773c0d4fc7dccbd10f05d7317471beddfb6131",
-      "count": 1
-    },
-    {
-      "file": "src/lib/convex.ts",
-      "hash": "b433c47af67fd8a14301e0941ce4e4bcd2c7e0e326cb1953c8a15aac57714b2c",
-      "count": 1
-    },
-    {
-      "file": "src/lib/operations.ts",
-      "hash": "83c128326f7bd65963c7ed4015250fc4cba754b2aa8b412e082465f67e4785c5",
+      "file": "src/lib/backend.ts",
+      "hash": "e60854c79b13bc0c237e82c69737842861b78a40f215aba35b4d9dc0fcb1c697",
       "count": 1
     },
     {
@@ -1663,17 +1128,7 @@
     },
     {
       "file": "src/lib/operations.ts",
-      "hash": "cd9bd26bb143717af76c8d7132f7e1b8076a852b7c66e2c019d0619389cac675",
-      "count": 1
-    },
-    {
-      "file": "src/lib/operations.ts",
       "hash": "d9883680ffb62545202d54b8138de6514e3dbf9fb6064c07874530ccb2dbf2cc",
-      "count": 1
-    },
-    {
-      "file": "src/lib/operations.ts",
-      "hash": "f448c5f45024e2fd28c9536c7d2bd57420fc36993591ae494439066790b49099",
       "count": 1
     },
     {
@@ -1703,12 +1158,12 @@
     },
     {
       "file": "src/lib/spacetimedb-model.ts",
-      "hash": "4f28f515e381ddb0fc01f9da6023e69e13a409c4b32918486060525d948e9dec",
+      "hash": "7afdc0c461c4de4c493aa7fc9e2c9f4a785a3a9db4e53e9bdb0d7fba4f665ced",
       "count": 1
     },
     {
       "file": "src/lib/spacetimedb-model.ts",
-      "hash": "61ebc50ed090ece52ade453a9980e1b49a6bcb1e4fd9d94352e4c1d93266af9f",
+      "hash": "96645b2d148f9bcfc549fb0ffac7b347db3fc209017d06d75713550ee0f0867a",
       "count": 1
     },
     {
@@ -1723,22 +1178,22 @@
     },
     {
       "file": "src/lib/spacetimedb-model.ts",
-      "hash": "a1fc7ed73c22ef502108a5c7d1e104285733d135227b9dccff6c0d2d93bb37c9",
-      "count": 1
-    },
-    {
-      "file": "src/lib/spacetimedb-model.ts",
-      "hash": "aa96130e4a4b4e38d2415ee0a8865b0a42590923e71ed2710de1a9969314a033",
-      "count": 1
-    },
-    {
-      "file": "src/lib/spacetimedb-model.ts",
       "hash": "bd4474fe37d44af842f157ca8bc32765755be5c18910c03533cf4f97e9120c95",
       "count": 1
     },
     {
       "file": "src/lib/spacetimedb-model.ts",
       "hash": "cfd2f6d7ff7e45ed872bc21770a69954b30e23e04e70e0c776b63545a9817c90",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb-model.ts",
+      "hash": "dddc967f2b6f20a4b3b8a76e26b766ff31334598a01e64c9ef54b96337908cee",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb-model.ts",
+      "hash": "ddea8d1459b5be93fa089e57c32e8922c762b0325fcc895b900b12356a50e640",
       "count": 1
     },
     {
@@ -1754,6 +1209,11 @@
     {
       "file": "src/lib/spacetimedb.live.test.tsx",
       "hash": "19da689338471e48f9b026c4a8f43cb3bc1445d6f831d41a0a771d0495c7c9cc",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.live.test.tsx",
+      "hash": "4cec3bfbffa64bbc0c53210232fb9fee18be407e8481b11c5f6b7635837f813c",
       "count": 1
     },
     {
@@ -1788,11 +1248,6 @@
     },
     {
       "file": "src/lib/spacetimedb.live.test.tsx",
-      "hash": "a67297165cad8766c0f259d1187ca672f54d07c8baf398fc148301d3295769dd",
-      "count": 1
-    },
-    {
-      "file": "src/lib/spacetimedb.live.test.tsx",
       "hash": "dbacd76fb90c9ac13925119e19ac9d3136b1cb67d5357ce106d4db664bdbda2d",
       "count": 1
     },
@@ -1818,11 +1273,6 @@
     },
     {
       "file": "src/lib/spacetimedb.ts",
-      "hash": "06227edd6bc5f66b1f7107c312e05a24fac68e3754527dcee235dcb83401ea13",
-      "count": 1
-    },
-    {
-      "file": "src/lib/spacetimedb.ts",
       "hash": "0b712d23a9b855f5cfb86d9c9a222459ad1f3ebdf49dd20c1b13ff3f84db11a7",
       "count": 1
     },
@@ -1833,7 +1283,17 @@
     },
     {
       "file": "src/lib/spacetimedb.ts",
+      "hash": "16d4c61fae989f684ec7fa377831d79b4cb2e837bb10d62a960ba77655e62deb",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
       "hash": "1e1eb5742c974361d837ecb01a53a9d8c5417b5ab024a668c8a74dd13fa69612",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "25fe915ea540b5befb176df8643287a2c4f21ffb045d5f50710970e583fa0663",
       "count": 1
     },
     {
@@ -1843,7 +1303,12 @@
     },
     {
       "file": "src/lib/spacetimedb.ts",
-      "hash": "2890deeae742c8e8e22e6a759e895248e0ecb2b7bb7399ecceed0544d4fe1d2b",
+      "hash": "292122b6a15f5f623a56bc463a00f674255ad79aede3376e826ddb03bca4cb63",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "3db2832c3c8d4400981430c4a3764f40ed9e51117c6e40a99ce7520deef34734",
       "count": 1
     },
     {
@@ -1868,22 +1333,7 @@
     },
     {
       "file": "src/lib/spacetimedb.ts",
-      "hash": "55dd4f022e76db63cf84f26a5d4b1b8234263bd81ecd3c0441a0e7e8b340f491",
-      "count": 1
-    },
-    {
-      "file": "src/lib/spacetimedb.ts",
       "hash": "5bf079c62bc011dc7e56415028cf1ddff9250abc20c437fe45506ffab56d48f2",
-      "count": 1
-    },
-    {
-      "file": "src/lib/spacetimedb.ts",
-      "hash": "5cba4bd233fbda602487fbb56de2032b4e5a55ce5af082c0e496e37fe441457e",
-      "count": 1
-    },
-    {
-      "file": "src/lib/spacetimedb.ts",
-      "hash": "706fcdce117f13667a3b530db5316b41d479174853d015e2e477f9fd328aa266",
       "count": 1
     },
     {
@@ -1913,17 +1363,12 @@
     },
     {
       "file": "src/lib/spacetimedb.ts",
-      "hash": "ba7c3cc66eaa0fe3c6891fc75536534ec4fbb8a0f5ddc23f05a65571e37054c6",
-      "count": 1
-    },
-    {
-      "file": "src/lib/spacetimedb.ts",
       "hash": "c362958a5d713e385e499661a7629adfb0c7bef366005c1532953bb7f7f3bd58",
       "count": 1
     },
     {
       "file": "src/lib/spacetimedb.ts",
-      "hash": "c6583bce7f3ead0641c20e3dceeaa0c8dfa82c32db3676de4005fed8ea3e0c64",
+      "hash": "c989204add5675b7bad528910f8882e1643c0286722dd6927e87be5f472dde0a",
       "count": 1
     },
     {
@@ -1934,6 +1379,16 @@
     {
       "file": "src/lib/spacetimedb.ts",
       "hash": "d17c49b390e671b9629728219f155b195eb1efd25a9cf317871efafa66166a6a",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "ea4572ad10b7b41b01830a51a97746338c9c3dc95425cb3b9f88cf996c14c654",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "f37e83dca283590d24e4d95602359bd31d1377604a9744fda6858e8a86c620a7",
       "count": 1
     },
     {
@@ -2163,17 +1618,17 @@
     },
     {
       "file": "vite.config.ts",
-      "hash": "163552b69ac7e1748c9d016f72fe9feb0c0540f8f0cda63b9211c70aa263a8d3",
-      "count": 1
-    },
-    {
-      "file": "vite.config.ts",
-      "hash": "97c78f732335473a819cbec6dc24e519eac58a7fc6f8078d445e4a04cf3367f0",
+      "hash": "8bad052dd4982b0963ff387b9bc23397ff369116751ff8e59319f05397918dcb",
       "count": 1
     },
     {
       "file": "vite.config.ts",
       "hash": "b44eb6d30715bc8304b556f3b4ca22a852737f335ebed2e38ddf8679282f58c7",
+      "count": 1
+    },
+    {
+      "file": "vite.config.ts",
+      "hash": "f72e782d93ba55f5c4fd598997130df0ae7e28630fcb90f0826e9cd9a107b0bc",
       "count": 1
     },
     {
@@ -2204,11 +1659,6 @@
     {
       "file": "vitest.config.ts",
       "hash": "9004d3d7dfcc96875170d654fd3df583675eec6505311d5e3d8639e5820b130c",
-      "count": 1
-    },
-    {
-      "file": "vitest.config.ts",
-      "hash": "ab744369ba1fac9e9a563cd18e173c52aa3d489150314a8aac67d7cfe84807b8",
       "count": 1
     },
     {

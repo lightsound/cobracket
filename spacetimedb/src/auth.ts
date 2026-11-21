@@ -6,14 +6,13 @@ import { spacetimedb } from "./schema";
 // (idempotent per identity). The standing rule is that every reducer
 // binds on first use through requireBoundUser; this entry exists so a
 // client can establish the binding before it has any operation to
-// perform (the ensureOrganizer seam of src/lib/auth), exactly as
-// anonymous sign-in preceded the first mutation on Convex.
+// perform (the ensureOrganizer seam of src/lib/auth).
 export const bindIdentity = spacetimedb.reducer({}, (ctx) => {
   requireBoundUser(ctx.db, ctx.sender);
 });
 
 // What the caller's identity resolves to — the three-way union
-// convex/auth.ts's sessionState returned, kept exactly: the client
+// the session-state view returns, kept exactly: the client
 // reacts differently to an identity that was never bound (bind it),
 // one whose user row is gone (drop the dead identity), and a live
 // binding (proceed). (The type is named SessionStateKind, not

@@ -25,9 +25,8 @@ import { ResultSide, spacetimedb } from "./schema";
 // Generate — or regenerate, freely until the first result locks the
 // structure (story 10). Random seeding (the default) reshuffles on
 // every generation; manual seeding (set by reorderSeeding) uses the
-// stored order. The shuffle is ctx.random's unbiased Fisher-Yates —
-// the platform form of Convex's Math.random hand-roll, at the same
-// call site. One platform difference from Math.random: the stream is
+// stored order. The shuffle is ctx.random's unbiased Fisher-Yates.
+// One platform difference from Math.random: the stream is
 // seeded by the transaction timestamp, so two generations inside the
 // same timestamp shuffle identically — reducer determinism requires
 // exactly that.
@@ -97,12 +96,12 @@ function requireTwoSides(sides: readonly DbSide[]): [DbSide, DbSide] {
 // append-only, and the latest record per match is the effective one.
 // The reducer derives the progression with the candidate included,
 // which validates it (outcome combination, pairing against current
-// occupants) without reimplementing any engine logic. Convex derived
-// twice — before, to compute its voided return, and after, with the
-// candidate; deriving only with the candidate is equivalent for
-// every reducer-reachable history, because each prefix was validated
-// when it was appended. Convex's return of { status, voided } has no
-// reducer counterpart: the client reads the status from
+// occupants) without reimplementing any engine logic. A query-side
+// API would derive twice — before, to compute its voided return, and
+// after, with the candidate; deriving only with the candidate is
+// equivalent for every reducer-reachable history, because each prefix
+// was validated when it was appended. The { status, voided } return
+// has no reducer counterpart: the client reads the status from
 // organizer_tournament and the voided set from the composed
 // progression (voidedMatchKeys), both re-derived from the same
 // append-only records.

@@ -47,10 +47,10 @@ import type {
 // feeds this layer snapshots of what its subscriptions currently
 // hold, and the unit tests feed it fixtures.
 //
-// Write failures need no mirror here: on Convex a refused mutation
-// delivers the guard's own text ("Tournament not found", "Cannot
-// publish: …") and the pages print it — that text is the failure
-// contract. SpacetimeDB 2.15 carries the same contract natively: a
+// Write failures need no mirror here: a refused write delivers the
+// guard's own text ("Tournament not found", "Cannot publish: …") and
+// the pages print it — that text is the failure contract.
+// SpacetimeDB 2.15 carries that contract natively: a
 // reducer that throws SenderError (from spacetimedb/server) fails
 // gracefully, and the calling client's promise rejects with a
 // SenderError carrying the message — so the module's guards throw
@@ -473,7 +473,7 @@ export interface ReportResultArgs {
   sides: ResultSideInput[];
 }
 
-/** The bulk-entry parse, mirrored from the roster reducer (and Convex before it). */
+/** The bulk-entry parse, mirrored from the roster reducer. */
 export function parseBulkNames(text: string): string[] {
   return text
     .split(/\r\n|\r|\n|\u2028|\u2029/)
@@ -487,7 +487,7 @@ export function parseBulkNames(text: string): string[] {
  * matches the submitted name, discipline, and format. (A concurrent
  * create from another tab of the same identity can add a second
  * matching row in the same window; the newest is the best answer
- * available — the Convex return had no such ambiguity.)
+ * available — a direct return would have no such ambiguity.)
  */
 export function synthesizeCreated(
   beforeIds: ReadonlySet<string>,
@@ -539,7 +539,7 @@ export function synthesizeAddedParticipants(
  * reportResult's return, from the compositions before and after the
  * call: the header's new status, and the records this write voided —
  * those voided after that were not voided before, by result row id,
- * at the per-record granularity Convex's return used.
+ * at the per-record granularity the return contract uses.
  */
 export function synthesizeReport(
   before: TournamentKnowledge,
