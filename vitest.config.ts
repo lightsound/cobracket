@@ -65,16 +65,6 @@ export default defineConfig({
         },
       },
       {
-        test: {
-          name: "convex",
-          include: ["convex/**/*.test.ts"],
-          // Extend the defaults (node_modules, dist, ...) — a bare exclude
-          // would replace them.
-          exclude: [...configDefaults.exclude],
-          environment: "edge-runtime",
-        },
-      },
-      {
         // The SpacetimeDB module (spacetimedb/): its official test
         // harness runs the real module against a portable in-process
         // datastore. The plugin makes `spacetimedb/server` importable

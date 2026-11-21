@@ -10,9 +10,6 @@ app.config.timestamp_*.js
 .env
 .env*.local
 
-# Convex local backend
-.convex/
-
 # The local module secret (ADR 0032), created by spacetime:seed:local
 .spacetime-secret
 

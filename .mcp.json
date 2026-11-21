@@ -7,16 +7,6 @@
         "--no",
         "fallow-mcp"
       ]
-    },
-    "convex": {
-      "type": "stdio",
-      "command": "npx",
-      "args": [
-        "--no",
-        "convex",
-        "mcp",
-        "start"
-      ]
     }
   }
 }
