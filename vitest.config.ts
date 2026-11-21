@@ -13,6 +13,13 @@ export default defineConfig({
         },
       },
       {
+        test: {
+          name: "lifecycle",
+          include: ["spacetimedb/lifecycle/**/*.test.ts"],
+          environment: "node",
+        },
+      },
+      {
         plugins: [solid({ refresh: false })],
         test: {
           name: "src",
