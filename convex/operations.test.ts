@@ -1153,6 +1153,29 @@ test("getTournament answers null for malformed and unknown ids instead of throwi
   expect((await ownedView(as, tournamentId)).tournamentId).toBe(tournamentId);
 });
 
+test("bulk paste splits on CR, line separator, and paragraph separator", async () => {
+  const t = convexTest(schema, modules);
+  const { as } = await newOrganizer(t);
+  const { tournamentId } = await as.mutation(api.tournaments.createTournament, {
+    name: "Separators",
+    discipline: "Chess",
+    format: { family: "single_elimination" },
+  });
+  await as.mutation(api.roster.addParticipants, {
+    tournamentId,
+    text: "Alice\rBob\u2028Carol\u2029Dave\nEve\r\nFrank",
+  });
+  const view = await ownedView(as, tournamentId);
+  expect(view.participants.map((p) => p.name)).toEqual([
+    "Alice",
+    "Bob",
+    "Carol",
+    "Dave",
+    "Eve",
+    "Frank",
+  ]);
+});
+
 test("listMyTournaments returns only the caller's tournaments, newest first", async () => {
   const t = convexTest(schema, modules);
   const { as: one } = await newOrganizer(t);

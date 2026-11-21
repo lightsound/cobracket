@@ -1250,6 +1250,30 @@ describe("operations parity", () => {
     expect(ownedView(harness, ALICE, tournamentId).tournamentId).toBe(tournamentId);
   });
 
+  test("bulk paste splits on CR, line separator, and paragraph separator", () => {
+    const harness = makeHarness();
+    const { tournamentId } = create(harness, ALICE, {
+      name: "Separators",
+      discipline: "Chess",
+      format: { tag: "single_elimination" },
+    });
+    as(harness, ALICE, (ctx) => {
+      moduleExports.addParticipants(ctx, {
+        tournamentId,
+        text: "Alice\rBob\u2028Carol\u2029Dave\nEve\r\nFrank",
+      });
+    });
+    const view = ownedView(harness, ALICE, tournamentId);
+    expect(view.participants.map((p) => p.name)).toEqual([
+      "Alice",
+      "Bob",
+      "Carol",
+      "Dave",
+      "Eve",
+      "Frank",
+    ]);
+  });
+
   test("listMyTournaments returns only the caller's tournaments, newest first", () => {
     const harness = makeHarness();
     const first = create(harness, ALICE, {

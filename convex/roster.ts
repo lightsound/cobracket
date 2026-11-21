@@ -47,7 +47,7 @@ export const addParticipants = mutation({
   handler: async (ctx, args) => {
     await requireOwnedTournamentIn(ctx, args.tournamentId, PRE_LIVE, "edit the roster");
     const names = args.text
-      .split(/\r?\n/)
+      .split(/\r\n|\r|\n|\u2028|\u2029/)
       .map((line) => line.trim())
       .filter((line) => line !== "");
     if (names.length === 0) {

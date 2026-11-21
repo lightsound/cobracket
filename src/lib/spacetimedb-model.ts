@@ -476,7 +476,7 @@ export interface ReportResultArgs {
 /** The bulk-entry parse, mirrored from the roster reducer (and Convex before it). */
 export function parseBulkNames(text: string): string[] {
   return text
-    .split(/\r?\n/)
+    .split(/\r\n|\r|\n|\u2028|\u2029/)
     .map((line) => line.trim())
     .filter((line) => line !== "");
 }

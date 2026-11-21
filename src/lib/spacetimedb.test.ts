@@ -268,6 +268,10 @@ describe("write-result synthesis", () => {
   it("parses bulk names the roster reducer's way", () => {
     expect(parseBulkNames(" A \n\nB\r\n C ")).toEqual(["A", "B", "C"]);
     expect(parseBulkNames(" \n ")).toEqual([]);
+    expect(parseBulkNames("A\rB\rC")).toEqual(["A", "B", "C"]);
+    expect(parseBulkNames("A\u2028B\u2028C")).toEqual(["A", "B", "C"]);
+    expect(parseBulkNames("A\u2029B\u2029C")).toEqual(["A", "B", "C"]);
+    expect(parseBulkNames("A\nB\r\nC\rD\u2028E\u2029F")).toEqual(["A", "B", "C", "D", "E", "F"]);
   });
 
   it("finds the created tournament among the new summaries", () => {
