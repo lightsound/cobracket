@@ -5,7 +5,7 @@ export const en = {
   "app.notFound": "Page not found.",
   "app.backHome": "Back to home",
   "app.setupBackend":
-    "Set VITE_SPACETIMEDB_HOST and VITE_SPACETIMEDB_DB in .env.local and publish the module with `bun run spacetime:publish:local`.",
+    "Start the local server with `spacetime start`, set VITE_SPACETIMEDB_HOST and VITE_SPACETIMEDB_DB in .env.local, and publish the module with `bun run spacetime:publish:local`.",
 
   "theme.label": "Theme",
   "theme.system": "Auto",
