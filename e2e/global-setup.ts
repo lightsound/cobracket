@@ -378,7 +378,6 @@ interface Backend {
 }
 
 function envLocalBackend(): { host: string; db: string } | undefined {
-  if (envLocalValue("VITE_BACKEND") !== "spacetimedb") return undefined;
   const host = envLocalValue("VITE_SPACETIMEDB_HOST");
   const db = envLocalValue("VITE_SPACETIMEDB_DB");
   if (host === undefined || db === undefined) return undefined;
@@ -492,7 +491,6 @@ async function startVite(port: number, backend: Backend): Promise<Child> {
     ["bun", "x", "vp", "dev", "--mode", "e2e", "--port", String(port), "--strictPort"],
     {
       ...process.env,
-      VITE_BACKEND: "spacetimedb",
       VITE_SPACETIMEDB_HOST: backend.host,
       VITE_SPACETIMEDB_DB: backend.db,
     },

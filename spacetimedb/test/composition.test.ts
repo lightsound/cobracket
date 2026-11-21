@@ -94,8 +94,7 @@ interface Header {
   seeding: string;
 }
 
-// The assembly convex/model/views.ts performs server-side today
-// (buildTournamentView + toProgressionView + withMatchIds), written
+// The assembly the module's views perform server-side, written
 // once over engine inputs; the fixture side and the view side both
 // feed it, so any transport loss through the tables and views shows
 // up as an input difference.

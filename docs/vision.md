@@ -91,7 +91,7 @@ Direction settled by the owner on 2026-10-22: **cobracket earns from the people 
 
 ## Project posture (current)
 
-cobracket is a learning project first — a way to learn Solid 2.0 and Convex by building something real — and it is developed the way a real product would be: features land continuously, with the domain model, specs, ADRs, and gates of a product that intends to ship. That is the point of the exercise, not a contradiction. The consequences for planning:
+cobracket is a learning project first — a way to learn Solid 2.0 and SpacetimeDB by building something real — and it is developed the way a real product would be: features land continuously, with the domain model, specs, ADRs, and gates of a product that intends to ship. That is the point of the exercise, not a contradiction. The consequences for planning:
 
 - **Production is live for the owner's design review** (decided 2026-09-27). The deployment pipeline (ADR 0010) deploys every push to `main`, so design feedback is given against the real URL rather than a local dev server. The URL is not yet shared with real people.
 - **Sharing it with real people is the owner's call, on the owner's timing** — when the feature set and the UI feel ready, which they judge as they build. It is not gated on a checklist in this document, and nobody else decides it.
@@ -104,7 +104,7 @@ Run one real community tournament (8–16 participants) end to end on cobracket 
 
 ## Plan (current)
 
-Re-sequenced 2026-09-27 by the owner: the project is a way to exercise Convex and Solid 2.0 on a real product, so feature work is the main line and anything whose only purpose is real use waits for the sharing decision.
+Re-sequenced 2026-09-27 by the owner: the project is a way to exercise SpacetimeDB and Solid 2.0 on a real product, so feature work is the main line and anything whose only purpose is real use waits for the sharing decision.
 
 1. **Feature work** — the main line. It continues from the roadmap candidates below, in whatever order the owner picks.
 2. A **deliberate UI/UX overhaul** once the feature set has settled, before the sharing decision. The **mobile experience** (touch pan/zoom, fit-to-view, narrow layouts) lands as part of that overhaul, not piecemeal before it. The desktop UI raised no major issue in the owner's review on 2026-09-27.
@@ -135,5 +135,5 @@ Deferred deliberately — none of these threaten the domain model, but they must
 - Day-of operation under poor venue connectivity (the stack is online-first)
 - Match-call notifications for participants at large events
 - Rendering and querying very large brackets: a major can exceed 2,000 participants — the core design target stays 8–64, but the schema must not hard-cap size
-- Global read latency from a single-region Convex deployment
+- Global read latency from the single-region Maincloud deployment
 - Public read API / data export for communities (roadmap candidate)

@@ -5,8 +5,7 @@ import { spacetimedb } from "./schema";
 const DisciplineSuggestionRow = t.row("DisciplineSuggestionRow", { name: t.string() });
 
 // Suggestions for the freeform Discipline field (story 2): prefix
-// search on the normalized form, the successor of
-// convex/disciplines.ts's suggestDisciplines. Public on purpose —
+// search on the normalized form. Public on purpose —
 // discipline names are not organizer-private, and the create form
 // runs before any tournament exists — so this is an anonymous view:
 // no sender, no binding. A view returns rows, not bare strings: the
@@ -21,8 +20,8 @@ const DisciplineSuggestionRow = t.row("DisciplineSuggestionRow", { name: t.strin
 // multi-column indexes alike (measured, 2026-11-15). Discipline rows
 // are few and organizer-created, and the catalogue itself is capped
 // (MAX_DISCIPLINES in lib/limits.ts), so filtering and sorting the
-// table in the view is bounded by that cap; the behavior mirrors
-// Convex's range scan exactly (normalized order, first ten).
+// table in the view is bounded by that cap; the behavior is a range
+// scan (normalized order, first ten).
 export const suggestDisciplines = spacetimedb.anonymousView(
   { name: "suggest_disciplines", public: true },
   { prefix: t.string() },
@@ -32,7 +31,7 @@ export const suggestDisciplines = spacetimedb.anonymousView(
     if (normalizedName === "") {
       return [];
     }
-    // The filter reproduces Convex's range [prefix, prefix + "\uffff")
+    // The filter reproduces the range [prefix, prefix + "\uffff")
     // exactly, including its exclusive end: a name whose next
     // character after the prefix is U+FFFF falls outside. The sort is
     // JS code-unit order, which agrees with the index order for BMP

@@ -48,7 +48,6 @@ export const addParticipants = spacetimedb.reducer(
       { type: "editRoster" },
       "edit the roster",
     );
-    // fallow-ignore-next-line code-duplication -- intentionally mirrors the Convex original during the migration window (both backends live until M6 deletes the Convex side; this module copy is the survivor)
     const names = args.text
       .split(/\r\n|\r|\n|\u2028|\u2029/)
       .map((line) => line.trim())
@@ -110,7 +109,6 @@ export const reorderSeeding = spacetimedb.reducer(
       "reorder the seeding",
     );
     const roster = loadRoster(ctx.db, args.tournamentId);
-    // fallow-ignore-next-line code-duplication -- intentionally mirrors the Convex original during the migration window (both backends live until M6 deletes the Convex side; this module copy is the survivor)
     const rosterIds = new Set<bigint>(roster.map((participant) => participant.id));
     const orderedIds = new Set<bigint>(args.orderedParticipantIds);
     if (

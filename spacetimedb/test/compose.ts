@@ -37,7 +37,7 @@ export interface ComposedBracket {
   championId?: bigint;
   standings: { participantId: bigint; placement: number }[];
   // One entry per voided RECORD (a key repeats when two of its
-  // records are voided at once) — the granularity of Convex's voided
+  // records are voided at once) — the granularity of the voided
   // return, which filters the engine's per-record indices.
   voidedMatchKeys: string[];
 }

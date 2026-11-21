@@ -6,8 +6,8 @@ import { SenderError } from "spacetimedb/server";
 import { MAX_MATCHES, MAX_RESULTS, MAX_ROSTER_SIZE, takeAll } from "./limits";
 import { compareById, compareBySeed, sortedRows } from "./rows";
 
-// Loading a tournament's sets and deriving its progression — the
-// successor of convex/model/views.ts's loaders. Progression is never
+// Loading a tournament's sets and deriving its progression.
+// Progression is never
 // stored: every derivation runs the format engine over the stored
 // structure and the append-only results (ADR 0005). Every load sorts
 // explicitly; index iteration order is never trusted for semantics
@@ -43,7 +43,6 @@ export function loadBracket(db: WritableDb, tournament: TournamentRow): StoredBr
       round: doc.round,
       indexInRound: doc.indexInRound,
       slots: [slotToEngine(doc.slots[0]!), slotToEngine(doc.slots[1]!)],
-      // fallow-ignore-next-line code-duplication -- intentionally mirrors the Convex original during the migration window (both backends live until M6 deletes the Convex side; this module copy is the survivor)
     })),
   };
   return {
@@ -65,7 +64,6 @@ export function toRecordedResults(
   resultDocs: readonly ResultRow[],
   bracket: StoredBracket,
 ): RecordedResult[] {
-  // fallow-ignore-next-line code-duplication -- intentionally mirrors the Convex original during the migration window (both backends live until M6 deletes the Convex side; this module copy is the survivor)
   return resultDocs.map((doc) => {
     const match = bracket.byId.get(doc.matchId);
     if (match === undefined) {
@@ -81,11 +79,10 @@ export function toRecordedResults(
 
 // Engine errors carry client-actionable messages (invalid outcome
 // combos, draws under elimination, ...); surface them unchanged, as a
-// SenderError — the message is the contract the Convex API returned
-// as a ConvexError, and SenderError is what carries it to the caller.
+// SenderError — the message is the contract the API returns, and
+// SenderError is what carries it to the caller.
 function rethrowEngineError(error: unknown): never {
   if (error instanceof FormatEngineError) {
-    // fallow-ignore-next-line code-duplication -- intentionally mirrors the Convex original during the migration window (both backends live until M6 deletes the Convex side; this module copy is the survivor)
     throw new SenderError(error.message);
   }
   throw error;

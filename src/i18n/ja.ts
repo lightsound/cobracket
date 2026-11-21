@@ -6,8 +6,8 @@ export const ja: Record<MessageKey, string> = {
   "app.retry": "再試行",
   "app.notFound": "ページが見つかりません。",
   "app.backHome": "ホームに戻る",
-  "app.setupConvex":
-    ".env.local に VITE_CONVEX_URL を設定し、`bun run convex:dev` を実行してください。",
+  "app.setupBackend":
+    "ローカルサーバーを `spacetime start --listen-addr 127.0.0.1:3100` で起動し、.env.local に VITE_SPACETIMEDB_HOST と VITE_SPACETIMEDB_DB を設定して、`bun run spacetime:publish:local` でモジュールを公開してください。",
 
   "theme.label": "テーマ",
   "theme.system": "自動",

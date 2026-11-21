@@ -43,9 +43,8 @@ const MyTournamentRow = t.row("MyTournamentRow", {
 });
 
 // The Organizer's own tournaments, drafts included, newest first,
-// capped at 100 — the contract of Convex's listMyTournaments
-// (.order("desc").take(100)): callers must not assume the list is
-// complete. No argument: the sender is the only key.
+// capped at 100: callers must not assume the list is complete.
+// No argument: the sender is the only key.
 export const myTournaments = spacetimedb.view(
   { name: "my_tournaments", public: true },
   t.array(MyTournamentRow),

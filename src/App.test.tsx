@@ -4,7 +4,7 @@
  *
  * The router is the real one (`src/router.ts`), so this also covers the one
  * thing no page test can: that a URL reaches its page through
- * `createRouter`'s lazy import, inside App's boundaries. Only the Convex seam
+ * `createRouter`'s lazy import, inside App's boundaries. Only the data seam
  * and the auth module are faked, as everywhere else — `src/test-fakes.ts`.
  */
 import { expect, test, vi } from "vite-plus/test";

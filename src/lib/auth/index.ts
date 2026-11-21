@@ -1,9 +1,8 @@
 import type { Accessor } from "solid-js";
-import { backendSelection, createBackendQuery } from "../backend";
+import { createBackendQuery } from "../backend";
 import { api as seamApi } from "../operations";
-import { ensureConvexOrganizer, initConvexAuth } from "./convex";
 
-// The auth boundary and its two implementations: docs/adr/0031-adopt-spacetimedb-as-the-backend.md.
+// The auth boundary and its implementation: docs/adr/0031-adopt-spacetimedb-as-the-backend.md.
 
 /**
  * Bootstrap the auth session for this browser — contract: docs/adr/0031-adopt-spacetimedb-as-the-backend.md.
@@ -11,11 +10,7 @@ import { ensureConvexOrganizer, initConvexAuth } from "./convex";
  * @public
  */
 export function initAuth(): void {
-  if (backendSelection() === "spacetimedb") {
-    void import("./spacetimedb").then((impl) => impl.initSpacetimeAuth());
-  } else {
-    initConvexAuth();
-  }
+  void import("./spacetimedb").then((impl) => impl.initSpacetimeAuth());
 }
 
 /**
@@ -24,12 +19,8 @@ export function initAuth(): void {
  * @public
  */
 export async function ensureOrganizer(): Promise<void> {
-  if (backendSelection() === "spacetimedb") {
-    const impl = await import("./spacetimedb");
-    await impl.ensureSpacetimeOrganizer();
-  } else {
-    await ensureConvexOrganizer();
-  }
+  const impl = await import("./spacetimedb");
+  await impl.ensureSpacetimeOrganizer();
 }
 
 /** @public */

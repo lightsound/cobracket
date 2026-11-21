@@ -23,7 +23,7 @@ function bindingFor(db: Db, sender: Identity) {
 }
 
 // What a connection identity resolves to — the three-way distinction
-// convex/auth.ts's resolveSession kept, re-expressed (ADR 0031): no
+// of session resolution, re-expressed (ADR 0031): no
 // binding yet is "unauthenticated" (the identity has never acted, so
 // it has no user); a binding whose app_user row is gone is
 // "user_missing" (today that is a deleted user; ADR 0031's alias case

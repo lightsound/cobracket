@@ -2,7 +2,6 @@ import { SenderError } from "spacetimedb/server";
 import type { WritableDb } from "./binding";
 import { MAX_DISCIPLINES, requireName } from "./limits";
 
-// fallow-ignore-next-line code-duplication -- intentionally mirrors the Convex original during the migration window (both backends live until M6 deletes the Convex side; this module copy is the survivor)
 export function normalizeDisciplineName(raw: string): { name: string; normalizedName: string } {
   // Canonical equivalence only: NFC folds canonically identical spellings
   // (e.g. a precomposed accented letter vs. the letter plus a combining

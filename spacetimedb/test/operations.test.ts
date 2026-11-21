@@ -131,7 +131,7 @@ function voidedKeys(harness: Harness, sub: string, tournamentId: bigint): string
 // composed voidedMatchKeys across the call (multiset difference — a
 // key whose second record is voided by this call counts, even when
 // the key was already voided before it), as { matchId, matchKey }
-// pairs — the module form of the Convex mutation's `voided` return,
+// pairs — the module form of the mutation's `voided` return,
 // which filters the same per-record indices against a pre-call
 // derivation.
 function newlyVoided(
@@ -754,15 +754,14 @@ describe("operations parity", () => {
     expect(matchAt(sharedBracket, "winners", 1, 0).winnerId).toBe(ids.get("A"));
     expect(sharedBracket.standings.length).toBe(4);
 
-    // ...but nothing organizer-only. Convex's test string-scans the
+    // ...but nothing organizer-only. The check string-scans the
     // serialized view for the forbidden field names and the
-    // organizer's id value. The port runs the name half verbatim on
-    // the serialized composed shape, and the structural half as a key
-    // walk over the same shape (module.test.ts pins the underlying
-    // view rows' key sets exactly). The id-value half has no u64
-    // analogue: ids are per-table sequence numbers whose decimal
-    // forms collide with ordinary values (seeds, scores), where
-    // Convex's are long random strings.
+    // organizer's id value: the name half runs on the serialized
+    // composed shape, and the structural half as a key walk over the
+    // same shape (module.test.ts pins the underlying view rows' key
+    // sets exactly). The id-value half has no u64 analogue: ids are
+    // per-table sequence numbers whose decimal forms collide with
+    // ordinary values (seeds, scores), unlike long random document ids.
     const serialized = JSON.stringify(shared, (_key, value: unknown) =>
       typeof value === "bigint" ? value.toString() : value,
     );

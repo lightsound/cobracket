@@ -57,7 +57,7 @@ if (!/^[0-9a-f]{64}$/.test(keyHex)) {
 
 const result = spawnSync(
   "spacetime",
-  ["call", DB_NAME, "seed_module_secret", keyHex, "--server", "local"],
+  ["call", DB_NAME, "seed_module_secret", keyHex, "--server", "http://127.0.0.1:3100"],
   { encoding: "utf8" },
 );
 const output = `${result.stdout ?? ""}\n${result.stderr ?? ""}`;

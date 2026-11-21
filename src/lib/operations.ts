@@ -1,5 +1,3 @@
-import type { FunctionArgs, FunctionReference, FunctionReturnType } from "convex/server";
-import { api as convexApi } from "../../convex/_generated/api";
 import type { TournamentStatus } from "../../spacetimedb/lifecycle";
 
 // Backend-neutral operation descriptors: docs/adr/0001-mcp-first-chat-operations.md, extended by docs/adr/0031-adopt-spacetimedb-as-the-backend.md.
@@ -139,15 +137,10 @@ export type SpacetimeWriteKey =
   | "publishTournament"
   | "reportResult";
 
-/**
- * One descriptor for both implementations: docs/adr/0001-mcp-first-chat-operations.md.
- *
- * @public
- */
+/** @public */
 export interface ReadOp<Args, Result> {
   readonly kind: "read";
   readonly name: string;
-  readonly convex: FunctionReference<"query">;
   readonly spacetime: SpacetimeReadKey;
   /** Phantom carrier for the Args/Result typing; never present at runtime. */
   readonly __types?: { args: Args; result: Result };
@@ -157,134 +150,93 @@ export interface ReadOp<Args, Result> {
 export interface WriteOp<Args, Result> {
   readonly kind: "write";
   readonly name: string;
-  readonly convex: FunctionReference<"mutation">;
   readonly spacetime: SpacetimeWriteKey;
   readonly __types?: { args: Args; result: Result };
 }
 
-/**
- * The seam's id rule applied to a Convex type: branded document ids
- * become plain strings, recursively; everything else passes through.
- * Deriving each descriptor's Args/Result from its generated reference
- * this way is the compile-time anchor that keeps the hand-written
- * contract types honest — a fixture or call site typed against them
- * fails `tsc` the moment the backend's real shape moves.
- */
-type StringIds<T> = T extends { __tableName: string }
-  ? string
-  : T extends readonly (infer U)[]
-    ? StringIds<U>[]
-    : T extends object
-      ? { [K in keyof T]: StringIds<T[K]> }
-      : T;
-
-function read<Ref extends FunctionReference<"query">>(
-  name: string,
-  convex: Ref,
-  spacetime: SpacetimeReadKey,
-): ReadOp<StringIds<FunctionArgs<Ref>>, StringIds<FunctionReturnType<Ref>>> {
-  return { kind: "read", name, convex, spacetime };
+function read<Args, Result>(name: string, spacetime: SpacetimeReadKey): ReadOp<Args, Result> {
+  return { kind: "read", name, spacetime };
 }
 
-function write<Ref extends FunctionReference<"mutation">>(
-  name: string,
-  convex: Ref,
-  spacetime: SpacetimeWriteKey,
-): WriteOp<StringIds<FunctionArgs<Ref>>, StringIds<FunctionReturnType<Ref>>> {
-  return { kind: "write", name, convex, spacetime };
+function write<Args, Result>(name: string, spacetime: SpacetimeWriteKey): WriteOp<Args, Result> {
+  return { kind: "write", name, spacetime };
 }
 
-/**
- * The descriptors-as-api-tree decision: docs/adr/0001-mcp-first-chat-operations.md.
- *
- * @public
- */
+/** @public */
 export const api = {
   tournaments: {
-    listMyTournaments: read(
+    listMyTournaments: read<Record<string, never>, TournamentSummary[]>(
       "tournaments:listMyTournaments",
-      convexApi.tournaments.listMyTournaments,
       "myTournaments",
     ),
-    getTournament: read(
+    getTournament: read<{ tournamentId: string }, OrganizerTournamentView | null>(
       "tournaments:getTournament",
-      convexApi.tournaments.getTournament,
       "organizerTournament",
     ),
-    createTournament: write(
+    createTournament: write<CreateTournamentArgs, { tournamentId: string; shareSlug: string }>(
       "tournaments:createTournament",
-      convexApi.tournaments.createTournament,
       "createTournament",
     ),
-    updateTournament: write(
+    updateTournament: write<UpdateTournamentArgs, null>(
       "tournaments:updateTournament",
-      convexApi.tournaments.updateTournament,
       "updateTournament",
     ),
-    deleteTournament: write(
+    deleteTournament: write<{ tournamentId: string }, null>(
       "tournaments:deleteTournament",
-      convexApi.tournaments.deleteTournament,
       "deleteTournament",
     ),
   },
   roster: {
-    addParticipant: write(
+    addParticipant: write<{ tournamentId: string; name: string }, string>(
       "roster:addParticipant",
-      convexApi.roster.addParticipant,
       "addParticipant",
     ),
-    addParticipants: write(
+    addParticipants: write<{ tournamentId: string; text: string }, string[]>(
       "roster:addParticipants",
-      convexApi.roster.addParticipants,
       "addParticipants",
     ),
-    renameParticipant: write(
+    renameParticipant: write<{ participantId: string; name: string }, null>(
       "roster:renameParticipant",
-      convexApi.roster.renameParticipant,
       "renameParticipant",
     ),
-    removeParticipant: write(
+    removeParticipant: write<{ participantId: string }, null>(
       "roster:removeParticipant",
-      convexApi.roster.removeParticipant,
       "removeParticipant",
     ),
-    reorderSeeding: write(
+    reorderSeeding: write<{ tournamentId: string; orderedParticipantIds: string[] }, null>(
       "roster:reorderSeeding",
-      convexApi.roster.reorderSeeding,
       "reorderSeeding",
     ),
   },
   bracket: {
-    generateBracket: write(
+    generateBracket: write<{ tournamentId: string }, null>(
       "bracket:generateBracket",
-      convexApi.bracket.generateBracket,
       "generateBracket",
     ),
-    publishTournament: write(
+    publishTournament: write<{ tournamentId: string }, null>(
       "bracket:publishTournament",
-      convexApi.bracket.publishTournament,
       "publishTournament",
     ),
-    reportResult: write("bracket:reportResult", convexApi.bracket.reportResult, "reportResult"),
+    reportResult: write<{ matchId: string; sides: ResultSideInput[] }, ReportResult>(
+      "bracket:reportResult",
+      "reportResult",
+    ),
   },
   share: {
-    getSharedTournament: read(
+    getSharedTournament: read<{ shareSlug: string }, TournamentView | null>(
       "share:getSharedTournament",
-      convexApi.share.getSharedTournament,
       "sharedTournament",
     ),
   },
   disciplines: {
-    suggestDisciplines: read(
+    suggestDisciplines: read<{ prefix: string }, string[]>(
       "disciplines:suggestDisciplines",
-      convexApi.disciplines.suggestDisciplines,
       "suggestDisciplines",
     ),
   },
   auth: {
-    currentOrganizer: read(
+    currentOrganizer: read<Record<string, never>, string | null>(
       "auth:currentOrganizer",
-      convexApi.auth.currentOrganizer,
       "currentOrganizer",
     ),
   },

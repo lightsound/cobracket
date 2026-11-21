@@ -41,7 +41,6 @@ const DIRECTIVE_LINE: readonly RegExp[] = [
 
 const EXCLUDED_PREFIXES = [
   "node_modules/",
-  "convex/_generated/",
   "spacetimedb/bindings/",
   ".claude/skills/",
   ".agents/skills/",

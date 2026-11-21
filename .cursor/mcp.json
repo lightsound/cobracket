@@ -6,15 +6,6 @@
         "--no",
         "fallow-mcp"
       ]
-    },
-    "convex": {
-      "command": "npx",
-      "args": [
-        "--no",
-        "convex",
-        "mcp",
-        "start"
-      ]
     }
   }
 }
