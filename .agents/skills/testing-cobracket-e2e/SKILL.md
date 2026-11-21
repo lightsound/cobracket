@@ -36,14 +36,14 @@ Follow AGENTS.md's dev flow — two long-running processes: the standalone and t
 Write `.env.local` (gitignored) before Vite boots, or every page shows the setup notice until Vite is restarted:
 
 ```bash
-VITE_SPACETIMEDB_HOST=http://127.0.0.1:3000
+VITE_SPACETIMEDB_HOST=http://127.0.0.1:3100
 VITE_SPACETIMEDB_DB=cobracket
 ```
 
 Then:
 
 ```bash
-spacetime start                    # local standalone; leave running
+spacetime start --listen-addr 127.0.0.1:3100   # local standalone; leave running (port 3100 — 3000 is the dev server's)
 bun run spacetime:publish:local    # once; publishes the module and seeds the module secret
 bun dev                            # frontend; leave running
 ```
