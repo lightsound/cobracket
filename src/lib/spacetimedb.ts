@@ -551,10 +551,10 @@ let systemApplied = false;
 let systemHandle: { unsubscribe: () => void } | undefined;
 const watchedConnections = new WeakSet<DbConnection>();
 
-function startPendingScopes(): void {
+function startPendingScopes(conn: DbConnection): void {
   for (const scope of [scopes.organizer, scopes.shared]) {
     if (scope !== undefined && !scope.started && !scopeDraining[scope.kind]) {
-      startScope(scope);
+      startScope(scope, conn);
     }
   }
 }
@@ -574,7 +574,7 @@ function onConnected(conn: DbConnection): void {
     watchedConnections.add(conn);
     for (const view of ALL_VIEWS) watchView(conn, view);
   }
-  startPendingScopes();
+  startPendingScopes(conn);
   resubscribeSuggests();
   if (systemHandle !== undefined) return;
   systemHandle = conn
@@ -653,11 +653,11 @@ function scopeQueries(scope: Scope): string[] {
   ];
 }
 
-function startScope(scope: Scope): void {
-  if (live === undefined) return;
-  const conn = live.conn;
+function startScope(scope: Scope, conn?: DbConnection): void {
+  const connection = conn ?? live?.conn;
+  if (connection === undefined) return;
   scope.started = true;
-  scope.handle = conn
+  scope.handle = connection
     .subscriptionBuilder()
     .onApplied(() => {
       scope.applied = true;
