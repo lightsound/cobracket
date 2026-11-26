@@ -40,26 +40,27 @@
     "@spacetimedb/crypto": "0.1.0",
     "solid-js": "^2.0.1",
     "spacetimedb": "2.15.0",
-    "tailwindcss": "^4.3.3"
+    "tailwindcss": "^4.3.5"
   },
   "devDependencies": {
-    "@import-lint/cli": "^0.1.9",
-    "@shadcn/lint": "^0.2.0",
+    "@import-lint/cli": "^0.1.10",
+    "@shadcn/lint": "^0.2.5",
     "@solidjs/diagnostics": "^2.0.1",
     "@solidjs/vite-plugin": "^3.0.1",
-    "@tailwindcss/vite": "^4.3.3",
-    "@types/bun": "^1.4.2",
-    "cf": "^1.0.0-rc.1",
-    "fallow": "3.42.0",
+    "@tailwindcss/vite": "^4.3.5",
+    "@types/bun": "^1.4.5",
+    "cf": "^1.0.0-rc.6",
+    "fallow": "3.48.0",
+    "fallow-type-aware": "3.48.0",
     "happy-dom": "^21.0.4",
     "playwright-core": "1.65.1",
     "solid2-agent-kit": "0.29.0",
     "typescript": "7.0.2",
-    "vite": "npm:@voidzero-dev/vite-plus-core@8.3.8000",
-    "vite-plus": "1.7.0"
+    "vite": "npm:@voidzero-dev/vite-plus-core@8.3.8001",
+    "vite-plus": "1.8.0"
   },
   "overrides": {
-    "vite": "npm:@voidzero-dev/vite-plus-core@8.3.8000"
+    "vite": "npm:@voidzero-dev/vite-plus-core@8.3.8001"
   },
   "engines": {
     "bun": "^1.4.0"
