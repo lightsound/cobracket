@@ -70,7 +70,7 @@ import type {
 //   of an organizer view only ever holds the current tournament's
 //   rows, and composition keys from the subscription's arguments.
 // - A reducer's deliberate refusal crosses the wire as a
-//   SenderError carrying the module guard's own text (2.15's
+//   SenderError carrying the module guard's own text (2.16.3's
 //   documented failure channel — the module's guards throw
 //   SenderError, never a plain Error for a refusal), and the write
 //   path surfaces that text as the write's failure: the failure

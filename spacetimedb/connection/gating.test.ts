@@ -358,7 +358,7 @@ describe("connection-level gating", () => {
 
   test("a reducer call across the boundary is refused on the wire", async () => {
     // The refusal crosses the wire with its reason: the module's
-    // guards throw SenderError (2.15's documented channel for a
+    // guards throw SenderError (2.16.3's documented channel for a
     // deliberate refusal), so the caller's promise rejects with a
     // SenderError carrying "Tournament not found" — the same text
     // the harness suite pins server-side. (A plain throw arrives as

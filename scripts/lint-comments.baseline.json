@@ -413,6 +413,11 @@
     },
     {
       "file": "spacetimedb/connection/gating.test.ts",
+      "hash": "552e04780f4efa3035f6bc55752d70e50149cff521d7be10faf2b98b8add47d1",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/connection/gating.test.ts",
       "hash": "5e11a49af9817905054d6a1af7faef736d1dfd88e6cae1436c0c6cdb9ba32f17",
       "count": 1
     },
@@ -429,11 +434,6 @@
     {
       "file": "spacetimedb/connection/gating.test.ts",
       "hash": "a19e00c096ea0b4f17b206ebc97e39209174abd5e40e48b3828a6880741a5311",
-      "count": 1
-    },
-    {
-      "file": "spacetimedb/connection/gating.test.ts",
-      "hash": "ca6b0e890293b477b5b249fda837a317012429e527ab0da858a1bd749ebbb558",
       "count": 1
     },
     {
@@ -873,12 +873,12 @@
     },
     {
       "file": "spacetimedb/test/harness.ts",
-      "hash": "04abfa6334018b01502360b99778fba2e6634a8cf141a678d0e0b0d3edd6c1ac",
+      "hash": "96b8e59a4f438b68602100b56a571c87ca2c53e65f02151b25a63a032e9fa61d",
       "count": 1
     },
     {
       "file": "spacetimedb/test/harness.ts",
-      "hash": "96b8e59a4f438b68602100b56a571c87ca2c53e65f02151b25a63a032e9fa61d",
+      "hash": "ad1eaead363d98e02e5ce661c161e3b305fb7f018c5492f3fb3bdf1076a72dee",
       "count": 1
     },
     {
@@ -1148,6 +1148,11 @@
     },
     {
       "file": "src/lib/spacetimedb-model.ts",
+      "hash": "265b8c506ac6efe382871ac8b47d5f04d7eb15e3b9b7ccebd8b079358144d570",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb-model.ts",
       "hash": "267ed8cf85fc9ce56e4bbe938935486d1c0e7f6f34e3f1733c4e3bb396058f6c",
       "count": 1
     },
@@ -1159,11 +1164,6 @@
     {
       "file": "src/lib/spacetimedb-model.ts",
       "hash": "7afdc0c461c4de4c493aa7fc9e2c9f4a785a3a9db4e53e9bdb0d7fba4f665ced",
-      "count": 1
-    },
-    {
-      "file": "src/lib/spacetimedb-model.ts",
-      "hash": "96645b2d148f9bcfc549fb0ffac7b347db3fc209017d06d75713550ee0f0867a",
       "count": 1
     },
     {
@@ -1303,11 +1303,6 @@
     },
     {
       "file": "src/lib/spacetimedb.ts",
-      "hash": "292122b6a15f5f623a56bc463a00f674255ad79aede3376e826ddb03bca4cb63",
-      "count": 1
-    },
-    {
-      "file": "src/lib/spacetimedb.ts",
       "hash": "3db2832c3c8d4400981430c4a3764f40ed9e51117c6e40a99ce7520deef34734",
       "count": 1
     },
@@ -1339,6 +1334,11 @@
     {
       "file": "src/lib/spacetimedb.ts",
       "hash": "94e91b2d4106561abdc306ec0956c86767ffa4f479bb2cdaec117261b9db5a96",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.ts",
+      "hash": "9ce6678e786430a1f60f7e6a93b783e4ed6374b5069915a8d517018132ff1232",
       "count": 1
     },
     {

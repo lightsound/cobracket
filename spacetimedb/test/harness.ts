@@ -10,7 +10,7 @@ import schema, * as moduleExports from "../src/index";
 
 /**
  * The seam the module tests are written against: the official
- * SpacetimeDB module test harness (SpacetimeDB 2.15's
+ * SpacetimeDB module test harness (SpacetimeDB 2.16.3's
  * `spacetimedb/server/test-utils`). The real `spacetimedb/server`
  * entry cannot be imported outside a module host (it loads the
  * host-only `spacetime:sys` module), so the `spacetimedb` Vitest

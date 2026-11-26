@@ -50,7 +50,7 @@ import type {
 // Write failures need no mirror here: a refused write delivers the
 // guard's own text ("Tournament not found", "Cannot publish: …") and
 // the pages print it — that text is the failure contract.
-// SpacetimeDB 2.15 carries that contract natively: a
+// SpacetimeDB 2.16.3 carries that contract natively: a
 // reducer that throws SenderError (from spacetimedb/server) fails
 // gracefully, and the calling client's promise rejects with a
 // SenderError carrying the message — so the module's guards throw
