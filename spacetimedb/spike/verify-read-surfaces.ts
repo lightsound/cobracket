@@ -11,7 +11,7 @@
 //
 //   1. assembles a module from the committed sources in ../src plus
 //      the fixture reducers in ./fixture (seed data + a mutation),
-//   2. downloads the pinned SpacetimeDB 2.15.0 server binaries (or
+//   2. downloads the pinned SpacetimeDB 2.16.3 server binaries (or
 //      reuses SPACETIME_BIN_DIR), starts a standalone on a scratch
 //      port with a fresh data dir under ./.spike-build (gitignored),
 //   3. publishes, generates client bindings, and probes over real
@@ -43,14 +43,14 @@ const BUILD_DIR = join(MODULE_DIR, ".spike-build");
 const PORT = Number(process.env.SPIKE_PORT ?? 3111);
 const HOST = `http://127.0.0.1:${PORT}`;
 const DB_NAME = "cobracket-spike";
-const SERVER_VERSION = "2.15.0";
+const SERVER_VERSION = "2.16.3";
 /**
- * The SHA-256 of the SpacetimeDB 2.15.0 release tarball from the
+ * The SHA-256 of the SpacetimeDB 2.16.3 release tarball from the
  * official GitHub release. Verification happens before extraction, so
  * a substituted asset never executes. Refresh this hash together with
  * SERVER_VERSION on every version bump.
  */
-const SERVER_TARBALL_SHA256 = "30ee1d0ad345eb479bc269423f1c0f2f21fc564cd634fcb115c248465358b062";
+const SERVER_TARBALL_SHA256 = "e2731e956a339d01a75500b164e7922fa3dd02a7315aecd35ed22d61a13fb338";
 
 interface Check {
   name: string;
@@ -99,7 +99,7 @@ function verifyTarball(tarball: string): void {
 function downloadBinaries(binDir: string): string {
   if (process.platform !== "linux" || process.arch !== "x64") {
     throw new Error(
-      "the spike's binary download covers linux-x64 only; set SPACETIME_BIN_DIR to a directory holding the SpacetimeDB 2.15.0 spacetime + spacetimedb-standalone binaries",
+      "the spike's binary download covers linux-x64 only; set SPACETIME_BIN_DIR to a directory holding the SpacetimeDB 2.16.3 spacetime + spacetimedb-standalone binaries",
     );
   }
   mkdirSync(binDir, { recursive: true });

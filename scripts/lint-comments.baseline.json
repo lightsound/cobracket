@@ -68,17 +68,17 @@
     },
     {
       "file": ".github/workflows/ci.yml",
-      "hash": "3d9f56c9fe91405e521b11298ec78a07a133182d9a70d3897ae0ed29b90a0794",
-      "count": 1
-    },
-    {
-      "file": ".github/workflows/ci.yml",
-      "hash": "769037ed68ac54360143b5d70e49d58598e7010bb240d0b1f135c13c5ebc08b7",
+      "hash": "3534245e85a5b419a8257213015fa3d9c90a2cfdbf03ba9b671e6d8d7ebfed88",
       "count": 1
     },
     {
       "file": ".github/workflows/ci.yml",
       "hash": "89b56715995dd342cf4ebb06c11d11110f755bc55e1f7270d6fff95c2ab7c39b",
+      "count": 1
+    },
+    {
+      "file": ".github/workflows/ci.yml",
+      "hash": "b86fa72088425406b1609eb88c81d00f63d3a8baaea42ffda08a8563d93490b4",
       "count": 1
     },
     {
@@ -198,11 +198,6 @@
     },
     {
       "file": "e2e/global-setup.ts",
-      "hash": "4e5cfc606a1c23fca5a498fa15fa71015c13bcb7040532ca549655dafebea0b4",
-      "count": 1
-    },
-    {
-      "file": "e2e/global-setup.ts",
       "hash": "75240ec69dab274a1c38090d398f1ae8a475088edfbd72fb12bc2c43f93849a7",
       "count": 1
     },
@@ -249,6 +244,11 @@
     {
       "file": "e2e/global-setup.ts",
       "hash": "da4baa9609eaa534fdb4c84df56c35d670c56a0df382fdaf48641e1b3d18c168",
+      "count": 1
+    },
+    {
+      "file": "e2e/global-setup.ts",
+      "hash": "ea34dc7037376db43ac85a8d6e47c2216f2b4652d0186e9b46c83598e3794d7b",
       "count": 1
     },
     {
@@ -448,7 +448,7 @@
     },
     {
       "file": "spacetimedb/connection/global-setup.ts",
-      "hash": "4e5cfc606a1c23fca5a498fa15fa71015c13bcb7040532ca549655dafebea0b4",
+      "hash": "3036517ba6ed8c0025517589352dca90154a80ef72246fc3136cf3f98788fcd0",
       "count": 1
     },
     {
@@ -468,7 +468,7 @@
     },
     {
       "file": "spacetimedb/connection/global-setup.ts",
-      "hash": "e1c52153a6d9035b2c25766c38deb9593fbe2448900c207896faf5e3529f10ca",
+      "hash": "ea34dc7037376db43ac85a8d6e47c2216f2b4652d0186e9b46c83598e3794d7b",
       "count": 1
     },
     {
@@ -573,17 +573,7 @@
     },
     {
       "file": "spacetimedb/spike/verify-read-surfaces.ts",
-      "hash": "0b493d8e76d6b550b426a9b70cd1603963182705d6def9499732d08008ba453e",
-      "count": 1
-    },
-    {
-      "file": "spacetimedb/spike/verify-read-surfaces.ts",
       "hash": "3f680a659eaa5ec9f2cbb149b0ef538c285dba0df4b99de7bc50095265f06ccc",
-      "count": 1
-    },
-    {
-      "file": "spacetimedb/spike/verify-read-surfaces.ts",
-      "hash": "4e5cfc606a1c23fca5a498fa15fa71015c13bcb7040532ca549655dafebea0b4",
       "count": 1
     },
     {
@@ -594,6 +584,11 @@
     {
       "file": "spacetimedb/spike/verify-read-surfaces.ts",
       "hash": "85967f02c13bb83848933c00635489cc8fcb1825b8d3c5aad49fff37e0cb6ae5",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/spike/verify-read-surfaces.ts",
+      "hash": "8c0eae5b1b3b8518a789a112ddf7c016d3a9e14487cd469c130404674f2e6dbc",
       "count": 1
     },
     {
@@ -609,6 +604,11 @@
     {
       "file": "spacetimedb/spike/verify-read-surfaces.ts",
       "hash": "d56514c31d99fcaac0e7489805d5436f6bcb628eb33a27ee0574f478efbd72a7",
+      "count": 1
+    },
+    {
+      "file": "spacetimedb/spike/verify-read-surfaces.ts",
+      "hash": "ea34dc7037376db43ac85a8d6e47c2216f2b4652d0186e9b46c83598e3794d7b",
       "count": 1
     },
     {
@@ -1218,11 +1218,6 @@
     },
     {
       "file": "src/lib/spacetimedb.live.test.tsx",
-      "hash": "4e5cfc606a1c23fca5a498fa15fa71015c13bcb7040532ca549655dafebea0b4",
-      "count": 1
-    },
-    {
-      "file": "src/lib/spacetimedb.live.test.tsx",
       "hash": "4f9ba41d9f9b89cce0e590642a2d5b6e12ff6f90bbbcfe8afc40e834a37d4b58",
       "count": 1
     },
@@ -1254,6 +1249,11 @@
     {
       "file": "src/lib/spacetimedb.live.test.tsx",
       "hash": "de35b2fed7f3f70555541def0844819b604788d2bb666fad80f7c0fba79cc193",
+      "count": 1
+    },
+    {
+      "file": "src/lib/spacetimedb.live.test.tsx",
+      "hash": "ea34dc7037376db43ac85a8d6e47c2216f2b4652d0186e9b46c83598e3794d7b",
       "count": 1
     },
     {

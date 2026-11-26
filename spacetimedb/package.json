@@ -5,6 +5,6 @@
   "type": "module",
   "dependencies": {
     "@spacetimedb/crypto": "0.1.0",
-    "spacetimedb": "2.15.0"
+    "spacetimedb": "2.16.3"
   }
 }

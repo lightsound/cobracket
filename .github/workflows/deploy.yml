@@ -50,7 +50,7 @@ jobs:
       - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: spacetimedb/.e2e-build/bin
-          key: e2e-${{ runner.os }}-spacetimedb-2.15.0
+          key: e2e-${{ runner.os }}-spacetimedb-2.16.3
       - run: bun x playwright-core install chromium
       - run: bun run test:e2e
 
@@ -91,13 +91,13 @@ jobs:
       - name: Install the SpacetimeDB CLI (pinned, checksum-verified)
         run: |
           asset="spacetime-x86_64-unknown-linux-gnu.tar.gz"
-          curl -fSL -o "/tmp/$asset" "https://github.com/clockworklabs/SpacetimeDB/releases/download/v2.15.0/$asset"
-          echo "30ee1d0ad345eb479bc269423f1c0f2f21fc564cd634fcb115c248465358b062  /tmp/$asset" | sha256sum -c -
+          curl -fSL -o "/tmp/$asset" "https://github.com/clockworklabs/SpacetimeDB/releases/download/v2.16.3/$asset"
+          echo "e2731e956a339d01a75500b164e7922fa3dd02a7315aecd35ed22d61a13fb338  /tmp/$asset" | sha256sum -c -
           mkdir -p "$HOME/.local/bin"
           tar xzf "/tmp/$asset" -C "$HOME/.local/bin" --no-same-owner
           mv "$HOME/.local/bin/spacetimedb-cli" "$HOME/.local/bin/spacetime"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-          [[ "$("$HOME/.local/bin/spacetime" --version)" == *"2.15.0"* ]]
+          [[ "$("$HOME/.local/bin/spacetime" --version)" == *"2.16.3"* ]]
 
       - name: Log in to SpacetimeDB as the production owner
         run: spacetime login --token "$SPACETIMEDB_TOKEN"

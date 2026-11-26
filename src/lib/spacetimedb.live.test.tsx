@@ -20,14 +20,14 @@ const DATA_DIR = join(BUILD_DIR, "data");
 const PORT = Number(process.env["LIVE_PORT"] ?? 3124);
 const HOST = `http://127.0.0.1:${PORT}`;
 const DB_NAME = "cobracket-live";
-const SERVER_VERSION = "2.15.0";
+const SERVER_VERSION = "2.16.3";
 /**
- * The SHA-256 of the SpacetimeDB 2.15.0 release tarball from the
+ * The SHA-256 of the SpacetimeDB 2.16.3 release tarball from the
  * official GitHub release. Verification happens before extraction, so
  * a substituted asset never executes. Refresh this hash together with
  * SERVER_VERSION on every version bump.
  */
-const SERVER_TARBALL_SHA256 = "30ee1d0ad345eb479bc269423f1c0f2f21fc564cd634fcb115c248465358b062";
+const SERVER_TARBALL_SHA256 = "e2731e956a339d01a75500b164e7922fa3dd02a7315aecd35ed22d61a13fb338";
 
 let server: ChildProcess | undefined;
 
@@ -87,7 +87,7 @@ function verifyTarball(tarball: string): void {
 function downloadBinaries(binDir: string): string {
   if (process.platform !== "linux" || process.arch !== "x64") {
     throw new Error(
-      "the live suite's binary download covers linux-x64 only; set SPACETIME_BIN_DIR to a directory holding the SpacetimeDB 2.15.0 spacetime + spacetimedb-standalone binaries",
+      "the live suite's binary download covers linux-x64 only; set SPACETIME_BIN_DIR to a directory holding the SpacetimeDB 2.16.3 spacetime + spacetimedb-standalone binaries",
     );
   }
   mkdirSync(binDir, { recursive: true });

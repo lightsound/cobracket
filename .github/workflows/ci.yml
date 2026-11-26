@@ -37,14 +37,14 @@ jobs:
           path: ~/.cache/ms-playwright
           key: e2e-${{ runner.os }}-${{ hashFiles('bun.lock') }}
           restore-keys: e2e-${{ runner.os }}-
-      # The standalone + CLI are pinned (2.15.0) by the setup itself, so
+      # The standalone + CLI are pinned (2.16.3) by the setup itself, so
       # its bin cache is keyed on the release rather than the lockfile
       # (the connection job's pattern); the version is in the key so a
       # pin change cannot restore a stale binary.
       - uses: actions/cache@v4
         with:
           path: spacetimedb/.e2e-build/bin
-          key: e2e-${{ runner.os }}-spacetimedb-2.15.0
+          key: e2e-${{ runner.os }}-spacetimedb-2.16.3
       # Chromium only — playwright-core downloads nothing on install. Add
       # `--with-deps` here if the runner image ever stops carrying the
       # shared libraries the browser needs.
@@ -69,12 +69,12 @@ jobs:
           bun-version-file: package.json
       - run: bun run check:bun -- --strict
       - run: bun install --frozen-lockfile
-      # The standalone + CLI are pinned (2.15.0) by the suite itself,
+      # The standalone + CLI are pinned (2.16.3) by the suite itself,
       # so the build dir's bin cache is keyed on the release rather
       # than the lockfile; the version is in the key so a pin change
       # cannot restore a stale binary.
       - uses: actions/cache@v4
         with:
           path: spacetimedb/.connection-build/bin
-          key: connection-${{ runner.os }}-spacetimedb-2.15.0
+          key: connection-${{ runner.os }}-spacetimedb-2.16.3
       - run: bun run test:connection

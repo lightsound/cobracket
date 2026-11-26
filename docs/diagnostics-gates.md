@@ -197,7 +197,7 @@ whatever it was told to read; no counterpart exists now.
 Mechanics. Binaries come from `SPACETIME_BIN_DIR`, the connection
 suite's cached store, or the official release tarball — pinned by
 SHA-256 and failing closed on a mismatch — downloaded into the gate's
-own build directory. Both binaries' versions are asserted (2.15.0)
+own build directory. Both binaries' versions are asserted (2.16.3)
 before the publish: the gate asserts the wire behaviour of one exact
 server release, the standalone serves and the CLI publishes, and a stale
 or mismatched binary would prove things about the wrong server. The

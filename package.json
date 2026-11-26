@@ -39,7 +39,7 @@
     "@solidjs/web": "^2.0.1",
     "@spacetimedb/crypto": "0.1.0",
     "solid-js": "^2.0.1",
-    "spacetimedb": "2.15.0",
+    "spacetimedb": "2.16.3",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
